@@ -54,7 +54,6 @@ class OtpService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.otp,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class OtpService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.otp,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

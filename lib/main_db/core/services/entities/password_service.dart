@@ -54,7 +54,6 @@ class PasswordService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.password,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class PasswordService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.password,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

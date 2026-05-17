@@ -54,7 +54,6 @@ class DocumentService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.document,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class DocumentService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.document,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

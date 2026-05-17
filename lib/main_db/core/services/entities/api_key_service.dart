@@ -58,7 +58,6 @@ class ApiKeyService {
 
         // 4. Пишем snapshot created (After create)
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.apiKey,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -106,7 +105,6 @@ class ApiKeyService {
 
         // 2. Пишем snapshot before update
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.apiKey,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

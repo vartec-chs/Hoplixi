@@ -54,7 +54,6 @@ class RecoveryCodesService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.recoveryCodes,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class RecoveryCodesService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.recoveryCodes,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

@@ -3,7 +3,6 @@ import 'package:hoplixi/main_db/core/services/history/history.dart';
 
 import '../../../models/dto_history/cards/vault_history_revision_detail_dto.dart';
 
-
 class VaultHistoryDiffService {
   VaultHistoryDiffService();
 

@@ -54,7 +54,6 @@ class NoteService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.note,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class NoteService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.note,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

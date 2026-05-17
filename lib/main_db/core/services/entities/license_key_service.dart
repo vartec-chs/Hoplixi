@@ -54,7 +54,6 @@ class LicenseKeyService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.licenseKey,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class LicenseKeyService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.licenseKey,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

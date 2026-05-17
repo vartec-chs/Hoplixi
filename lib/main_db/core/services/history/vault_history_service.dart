@@ -1,5 +1,6 @@
 import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/main_db/core/errors/db_result.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/services/history/policy/store_history_policy_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_event_history_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_snapshot_writer.dart';
@@ -19,8 +20,7 @@ class VaultHistoryService {
   final VaultEventHistoryService eventHistoryService;
 
   Future<DbResult<String>?> snapshotAfterCreate({
-    required VaultItemType type,
-    required Object createdView,
+    required VaultEntityViewDto createdView,
     required VaultEventHistoryAction action,
     bool includeSecrets = true,
     bool includeRelations = true,
@@ -30,22 +30,19 @@ class VaultHistoryService {
         return null;
       }
 
-      final id = await snapshotWriter.writeSnapshot(
-        type: type,
+      return await snapshotWriter.writeSnapshot(
         view: createdView,
         action: action,
         includeSecrets: includeSecrets,
         includeRelations: includeRelations,
       );
-      return Success(id);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }
   }
 
   Future<DbResult<String>?> snapshotBeforeUpdate({
-    required VaultItemType type,
-    required Object oldView,
+    required VaultEntityViewDto oldView,
     required VaultEventHistoryAction action,
     bool includeSecrets = true,
     bool includeRelations = true,
@@ -55,14 +52,12 @@ class VaultHistoryService {
         return null;
       }
 
-      final id = await snapshotWriter.writeSnapshot(
-        type: type,
+      return await snapshotWriter.writeSnapshot(
         view: oldView,
         action: action,
         includeSecrets: includeSecrets,
         includeRelations: includeRelations,
       );
-      return Success(id);
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }

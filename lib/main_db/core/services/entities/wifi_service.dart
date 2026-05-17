@@ -54,7 +54,6 @@ class WifiService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.wifi,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -102,7 +101,6 @@ class WifiService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.wifi,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

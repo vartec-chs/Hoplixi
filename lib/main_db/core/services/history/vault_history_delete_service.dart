@@ -9,55 +9,10 @@ import '../../tables/vault_items/vault_items.dart';
 class VaultHistoryDeleteService {
   VaultHistoryDeleteService({
     required this.db,
-    required this.snapshotsHistoryDao,
-    required this.apiKeyHistoryDao,
-    required this.passwordHistoryDao,
-    required this.bankCardHistoryDao,
-    required this.certificateHistoryDao,
-    required this.cryptoWalletHistoryDao,
-    required this.wifiHistoryDao,
-    required this.sshKeyHistoryDao,
-    required this.licenseKeyHistoryDao,
-    required this.otpHistoryDao,
-    required this.recoveryCodesHistoryDao,
-    required this.recoveryCodeValuesHistoryDao,
-    required this.loyaltyCardHistoryDao,
-    required this.fileHistoryDao,
-    required this.fileMetadataHistoryDao,
-    required this.contactHistoryDao,
-    required this.identityHistoryDao,
-    required this.noteHistoryDao,
-    required this.customFieldsHistoryDao,
-    required this.vaultItemTagHistoryDao,
-    required this.itemLinkHistoryDao,
-    required this.itemCategoryHistoryDao,
-    required this.vaultEventsHistoryDao,
   });
 
   final MainStore db;
-  final VaultSnapshotsHistoryDao snapshotsHistoryDao;
-  final ApiKeyHistoryDao apiKeyHistoryDao;
-  final PasswordHistoryDao passwordHistoryDao;
-  final BankCardHistoryDao bankCardHistoryDao;
-  final CertificateHistoryDao certificateHistoryDao;
-  final CryptoWalletHistoryDao cryptoWalletHistoryDao;
-  final WifiHistoryDao wifiHistoryDao;
-  final SshKeyHistoryDao sshKeyHistoryDao;
-  final LicenseKeyHistoryDao licenseKeyHistoryDao;
-  final OtpHistoryDao otpHistoryDao;
-  final RecoveryCodesHistoryDao recoveryCodesHistoryDao;
-  final RecoveryCodeValuesHistoryDao recoveryCodeValuesHistoryDao;
-  final LoyaltyCardHistoryDao loyaltyCardHistoryDao;
-  final FileHistoryDao fileHistoryDao;
-  final FileMetadataHistoryDao fileMetadataHistoryDao;
-  final ContactHistoryDao contactHistoryDao;
-  final IdentityHistoryDao identityHistoryDao;
-  final NoteHistoryDao noteHistoryDao;
-  final VaultItemCustomFieldsHistoryDao customFieldsHistoryDao;
-  final VaultItemTagHistoryDao vaultItemTagHistoryDao;
-  final ItemLinkHistoryDao itemLinkHistoryDao;
-  final ItemCategoryHistoryDao itemCategoryHistoryDao;
-  final VaultEventsHistoryDao vaultEventsHistoryDao;
+
 
   Future<DbResult<Unit>> deleteRevision(String historyId) async {
     try {
@@ -73,83 +28,83 @@ class VaultHistoryDeleteService {
   }
 
   Future<void> _deleteRevisionUnsafe(String historyId) async {
-    final snapshot = await snapshotsHistoryDao.getSnapshotById(historyId);
+    final snapshot = await db.vaultSnapshotsHistoryDao.getSnapshotById(historyId);
     if (snapshot == null) {
       throw Exception('History snapshot not found: $historyId');
     }
 
     // 1. Clear event snapshot reference (audit log stays)
-    await vaultEventsHistoryDao.clearSnapshotReference(historyId);
+    await db.vaultEventsHistoryDao.clearSnapshotReference(historyId);
 
     // 2. Delete relation history
-    await customFieldsHistoryDao.deleteCustomFieldsHistoryBySnapshotHistoryId(
+    await db.vaultItemCustomFieldsHistoryDao.deleteCustomFieldsHistoryBySnapshotHistoryId(
       historyId,
     );
-    await vaultItemTagHistoryDao.deleteTagsBySnapshotHistoryId(historyId);
+    await db.vaultItemTagHistoryDao.deleteTagsBySnapshotHistoryId(historyId);
 
-    await itemLinkHistoryDao.deleteLinksBySnapshotHistoryId(historyId);
+    await db.itemLinkHistoryDao.deleteLinksBySnapshotHistoryId(historyId);
 
     // 3. Delete type-specific history row
     switch (snapshot.type) {
       case VaultItemType.apiKey:
-        await apiKeyHistoryDao.deleteApiKeyHistoryByHistoryId(historyId);
+        await db.apiKeyHistoryDao.deleteApiKeyHistoryByHistoryId(historyId);
         break;
       case VaultItemType.password:
-        await passwordHistoryDao.deletePasswordHistoryByHistoryId(historyId);
+        await db.passwordHistoryDao.deletePasswordHistoryByHistoryId(historyId);
         break;
       case VaultItemType.bankCard:
-        await bankCardHistoryDao.deleteBankCardHistoryByHistoryId(historyId);
+        await db.bankCardHistoryDao.deleteBankCardHistoryByHistoryId(historyId);
         break;
       case VaultItemType.certificate:
-        await certificateHistoryDao.deleteCertificateHistoryByHistoryId(
+        await db.certificateHistoryDao.deleteCertificateHistoryByHistoryId(
           historyId,
         );
         break;
       case VaultItemType.cryptoWallet:
-        await cryptoWalletHistoryDao.deleteCryptoWalletHistoryByHistoryId(
+        await db.cryptoWalletHistoryDao.deleteCryptoWalletHistoryByHistoryId(
           historyId,
         );
         break;
       case VaultItemType.wifi:
-        await wifiHistoryDao.deleteWifiHistoryByHistoryId(historyId);
+        await db.wifiHistoryDao.deleteWifiHistoryByHistoryId(historyId);
         break;
       case VaultItemType.sshKey:
-        await sshKeyHistoryDao.deleteSshKeyHistoryByHistoryId(historyId);
+        await db.sshKeyHistoryDao.deleteSshKeyHistoryByHistoryId(historyId);
         break;
       case VaultItemType.licenseKey:
-        await licenseKeyHistoryDao.deleteLicenseKeyHistoryByHistoryId(
+        await db.licenseKeyHistoryDao.deleteLicenseKeyHistoryByHistoryId(
           historyId,
         );
         break;
       case VaultItemType.otp:
-        await otpHistoryDao.deleteOtpHistoryByHistoryId(historyId);
+        await db.otpHistoryDao.deleteOtpHistoryByHistoryId(historyId);
         break;
       case VaultItemType.recoveryCodes:
-        await recoveryCodeValuesHistoryDao
+        await db.recoveryCodeValuesHistoryDao
             .deleteRecoveryCodeValuesHistoryByHistoryId(historyId);
-        await recoveryCodesHistoryDao.deleteRecoveryCodesHistoryByHistoryId(
+        await db.recoveryCodesHistoryDao.deleteRecoveryCodesHistoryByHistoryId(
           historyId,
         );
         break;
       case VaultItemType.loyaltyCard:
-        await loyaltyCardHistoryDao.deleteLoyaltyCardHistoryByHistoryId(
+        await db.loyaltyCardHistoryDao.deleteLoyaltyCardHistoryByHistoryId(
           historyId,
         );
         break;
       case VaultItemType.file:
-        await fileMetadataHistoryDao.deleteFileMetadataHistoryByHistoryId(
+        await db.fileMetadataHistoryDao.deleteFileMetadataHistoryByHistoryId(
           historyId,
         );
-        await fileHistoryDao.deleteFileHistoryByHistoryId(historyId);
+        await db.fileHistoryDao.deleteFileHistoryByHistoryId(historyId);
         break;
       case VaultItemType.contact:
-        await contactHistoryDao.deleteContactHistoryByHistoryId(historyId);
+        await db.contactHistoryDao.deleteContactHistoryByHistoryId(historyId);
         break;
       case VaultItemType.identity:
-        await identityHistoryDao.deleteIdentityHistoryByHistoryId(historyId);
+        await db.identityHistoryDao.deleteIdentityHistoryByHistoryId(historyId);
         break;
       case VaultItemType.note:
-        await noteHistoryDao.deleteNoteHistoryByHistoryId(historyId);
+        await db.noteHistoryDao.deleteNoteHistoryByHistoryId(historyId);
         break;
       case VaultItemType.document:
         break;
@@ -157,13 +112,13 @@ class VaultHistoryDeleteService {
 
     // 4. Delete item category history snapshot if it exists
     if (snapshot.categoryHistoryId != null) {
-      await itemCategoryHistoryDao.deleteCategoryHistoryById(
+      await db.itemCategoryHistoryDao.deleteCategoryHistoryById(
         snapshot.categoryHistoryId!,
       );
     }
 
     // 5. Delete vault snapshot row
-    await snapshotsHistoryDao.deleteSnapshotById(historyId);
+    await db.vaultSnapshotsHistoryDao.deleteSnapshotById(historyId);
   }
 
   Future<DbResult<Unit>> clearItemHistory({
@@ -172,7 +127,7 @@ class VaultHistoryDeleteService {
   }) async {
     try {
       await db.transaction(() async {
-        final ids = await snapshotsHistoryDao.getSnapshotIdsForItem(
+        final ids = await db.vaultSnapshotsHistoryDao.getSnapshotIdsForItem(
           itemId: itemId,
           type: type,
         );

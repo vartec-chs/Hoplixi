@@ -13,20 +13,12 @@ import 'package:hoplixi/main_db/core/repositories/base/password_repository.dart'
 import 'package:hoplixi/main_db/core/repositories/base/recovery_codes_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/ssh_key_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/wifi_repository.dart';
-import 'package:hoplixi/main_db/core/services/history/custom_fields/custom_fields_restore_service.dart';
-import 'package:hoplixi/main_db/core/services/history/item_links_restore_service.dart';
-import 'package:hoplixi/main_db/core/services/history/tags_restore_service.dart';
+import 'package:hoplixi/main_db/core/services/history/history.dart';
+import 'package:hoplixi/main_db/core/services/history/snapshot_handlers/note_snapshot_handler.dart';
 
 import '../../main_store.dart';
-import 'normalizers/normalizers.dart';
-import 'readers/readers.dart';
-import 'restore_handlers/restore_handlers.dart';
-import 'vault_history_detail_service.dart';
-import 'utils/vault_history_diff_service.dart';
-import 'vault_history_normalized_loader.dart';
-import 'vault_history_read_service.dart';
-import 'policy/vault_history_restore_policy_service.dart';
-import 'vault_history_restore_service.dart';
+import '../relations/snapshot_relations_service.dart';
+import 'snapshot_handlers/snapshot_handlers.dart';
 
 class VaultHistoryServiceAssembly {
   VaultHistoryServiceAssembly(this.db);
@@ -135,6 +127,34 @@ class VaultHistoryServiceAssembly {
         DocumentHistoryRestoreHandler(),
       ]);
 
+  late final VaultSnapshotTypeHandlerRegistry
+  snapshotHandlerRegistry = VaultSnapshotTypeHandlerRegistry([
+    ApiKeySnapshotHandler(apiKeyHistoryDao: db.apiKeyHistoryDao),
+    PasswordSnapshotHandler(passwordHistoryDao: db.passwordHistoryDao),
+    NoteSnapshotHandler(noteHistoryDao: db.noteHistoryDao),
+    BankCardSnapshotHandler(bankCardHistoryDao: db.bankCardHistoryDao),
+    CertificateSnapshotHandler(certificateHistoryDao: db.certificateHistoryDao),
+    ContactSnapshotHandler(contactHistoryDao: db.contactHistoryDao),
+    CryptoWalletSnapshotHandler(
+      cryptoWalletHistoryDao: db.cryptoWalletHistoryDao,
+    ),
+    FileSnapshotHandler(
+      fileHistoryDao: db.fileHistoryDao,
+      fileMetadataHistoryDao: db.fileMetadataHistoryDao,
+    ),
+    IdentitySnapshotHandler(identityHistoryDao: db.identityHistoryDao),
+    LicenseKeySnapshotHandler(licenseKeyHistoryDao: db.licenseKeyHistoryDao),
+    LoyaltyCardSnapshotHandler(loyaltyCardHistoryDao: db.loyaltyCardHistoryDao),
+    OtpSnapshotHandler(otpHistoryDao: db.otpHistoryDao),
+    RecoveryCodesSnapshotHandler(
+      recoveryCodesHistoryDao: db.recoveryCodesHistoryDao,
+      recoveryCodeValuesHistoryDao: db.recoveryCodeValuesHistoryDao,
+    ),
+    SshKeySnapshotHandler(sshKeyHistoryDao: db.sshKeyHistoryDao),
+    WifiSnapshotHandler(wifiHistoryDao: db.wifiHistoryDao),
+    DocumentSnapshotHandler(),
+  ]);
+
   late final VaultHistoryCardReaderRegistry readerRegistry =
       VaultHistoryCardReaderRegistry([
         ApiKeyHistoryCardReader(apiKeyHistoryDao: db.apiKeyHistoryDao),
@@ -196,6 +216,36 @@ class VaultHistoryServiceAssembly {
         restorePolicy: restorePolicy,
       );
 
+  late final VaultSnapshotWriter snapshotWriter = VaultSnapshotWriter(
+    vaultSnapshotsHistoryDao: db.vaultSnapshotsHistoryDao,
+    snapshotRelationsService: SnapshotRelationsService(
+      categoriesDao: db.categoriesDao,
+      tagsDao: db.tagsDao,
+      itemTagsDao: db.itemTagsDao,
+      itemLinksDao: db.itemLinksDao,
+      itemLinkHistoryDao: db.itemLinkHistoryDao,
+      itemCategoryHistoryDao: db.itemCategoryHistoryDao,
+      vaultItemTagHistoryDao: db.vaultItemTagHistoryDao,
+    ),
+    customFieldsSnapshotService: CustomFieldsSnapshotService(
+      customFieldsDao: db.vaultItemCustomFieldsDao,
+      customFieldsHistoryDao: db.vaultItemCustomFieldsHistoryDao,
+    ),
+    handlerRegistry: snapshotHandlerRegistry,
+  );
+
+  late final StoreHistoryPolicyService policyService =
+      StoreHistoryPolicyService(db.storeSettingsDao);
+
+  late final VaultEventHistoryService eventHistoryService =
+      VaultEventHistoryService(db.vaultEventsHistoryDao);
+
+  late final VaultHistoryService historyService = VaultHistoryService(
+    policyService: policyService,
+    snapshotWriter: snapshotWriter,
+    eventHistoryService: eventHistoryService,
+  );
+
   late final VaultHistoryRestoreService restoreService =
       VaultHistoryRestoreService(
         loader: loader,
@@ -213,9 +263,19 @@ class VaultHistoryServiceAssembly {
           vaultItemTagHistoryDao: db.vaultItemTagHistoryDao,
         ),
         itemLinksRestoreService: ItemLinksRestoreService(
-          itemLinksDao: db.itemLinksDao,
           itemLinkHistoryDao: db.itemLinkHistoryDao,
+          itemLinksDao: db.itemLinksDao,
           vaultItemsDao: db.vaultItemsDao,
         ),
+      );
+
+  late final VaultHistoryDeleteService deleteService =
+      VaultHistoryDeleteService(db: db);
+
+  late final VaultHistoryRetentionService retentionService =
+      VaultHistoryRetentionService(
+        snapshotsHistoryDao: db.vaultSnapshotsHistoryDao,
+        deleteService: deleteService,
+        settingsDao: db.storeSettingsDao,
       );
 }

@@ -54,7 +54,6 @@ class SshKeyService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.sshKey,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class SshKeyService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.sshKey,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

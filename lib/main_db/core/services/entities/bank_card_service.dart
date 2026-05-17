@@ -50,7 +50,6 @@ class BankCardService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.bankCard,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -91,7 +90,6 @@ class BankCardService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.bankCard,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

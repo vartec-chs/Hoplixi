@@ -54,7 +54,6 @@ class ContactService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.contact,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class ContactService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.contact,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

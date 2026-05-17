@@ -47,7 +47,6 @@ class VaultItemMutationService {
 
         // 2. Пишем snapshot before update
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: type,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );
@@ -103,7 +102,6 @@ class VaultItemMutationService {
 
         // 2. Пишем snapshot before update
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: type,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

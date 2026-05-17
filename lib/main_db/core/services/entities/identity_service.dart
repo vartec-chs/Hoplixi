@@ -54,7 +54,6 @@ class IdentityService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.identity,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class IdentityService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.identity,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

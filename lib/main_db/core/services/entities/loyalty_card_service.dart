@@ -54,7 +54,6 @@ class LoyaltyCardService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.loyaltyCard,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class LoyaltyCardService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.loyaltyCard,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

@@ -54,7 +54,6 @@ class CertificateService {
         }
 
         final snapshotRes = await historyService.snapshotAfterCreate(
-          type: VaultItemType.certificate,
           createdView: createdView,
           action: VaultEventHistoryAction.created,
         );
@@ -99,7 +98,6 @@ class CertificateService {
         }
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: VaultItemType.certificate,
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
         );

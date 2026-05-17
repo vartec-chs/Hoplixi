@@ -131,7 +131,6 @@ class VaultItemsStateService {
         final VaultEntityViewDto oldView = untypedOldView as VaultEntityViewDto;
 
         final snapshotRes = await historyService.snapshotBeforeUpdate(
-          type: type,
           oldView: oldView,
           action: action,
         );
