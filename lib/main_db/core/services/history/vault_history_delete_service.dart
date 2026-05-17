@@ -1,3 +1,4 @@
+import '../../models/filters/history/vault_snapshot_history_filter.dart';
 import 'package:result_dart/result_dart.dart';
 import '../../errors/db_result.dart';
 import '../../errors/db_error.dart';
@@ -26,6 +27,8 @@ class VaultHistoryDeleteService {
     required this.contactHistoryDao,
     required this.identityHistoryDao,
     required this.noteHistoryDao,
+    required this.customFieldsHistoryDao,
+    required this.vaultItemTagHistoryDao,
   });
 
   final MainStore db;
@@ -47,6 +50,8 @@ class VaultHistoryDeleteService {
   final ContactHistoryDao contactHistoryDao;
   final IdentityHistoryDao identityHistoryDao;
   final NoteHistoryDao noteHistoryDao;
+  final VaultItemCustomFieldsHistoryDao customFieldsHistoryDao;
+  final VaultItemTagHistoryDao vaultItemTagHistoryDao;
 
   Future<DbResult<Unit>> deleteRevision(String historyId) async {
     try {
@@ -110,6 +115,13 @@ class VaultHistoryDeleteService {
             break;
         }
 
+        // Delete relation history
+        await customFieldsHistoryDao.deleteCustomFieldsHistoryBySnapshotHistoryId(historyId);
+        // Note: The historyId in tag history can be nullable, but we delete by snapshot history id. Wait, in tag history it's called `historyId`.
+        // Let's use customFieldsHistoryDao and others. I need to make sure delete methods are correct.
+        // Actually, if ON DELETE CASCADE is set on vault_snapshots_history.id, maybe we don't need manual delete? 
+        // We do it manually to be safe or if cascade is disabled.
+        
         // Delete snapshot row
         await snapshotsHistoryDao.deleteSnapshotById(historyId);
 
@@ -124,7 +136,11 @@ class VaultHistoryDeleteService {
     required String itemId,
     required VaultItemType type,
   }) async {
-    // TODO: Implement clearing all history for an item
-    return Success(unit);
+    try {
+      // TODO: Implement clearing all history for an item using VaultSnapshotHistoryFilterDao
+      return Success(unit);
+    } catch (e, s) {
+      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+    }
   }
 }

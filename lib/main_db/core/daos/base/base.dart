@@ -2,6 +2,8 @@ export 'api_key/daos.dart';
 export 'bank_card/daos.dart';
 export 'certificate/daos.dart';
 export 'contact/daos.dart';
+export 'custom_fields/daos.dart';
+
 export 'crypto_wallet/daos.dart';
 export 'document/daos.dart';
 export 'file/daos.dart';

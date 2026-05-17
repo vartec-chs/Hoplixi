@@ -41,6 +41,7 @@ class VaultHistoryNormalizedLoader {
     required this.contactHistoryDao,
     required this.identityHistoryDao,
     required this.noteHistoryDao,
+    required this.customFieldsHistoryDao,
   });
 
   final VaultSnapshotsHistoryDao snapshotsHistoryDao;
@@ -62,6 +63,7 @@ class VaultHistoryNormalizedLoader {
   final ContactHistoryDao contactHistoryDao;
   final IdentityHistoryDao identityHistoryDao;
   final NoteHistoryDao noteHistoryDao;
+  final VaultItemCustomFieldsHistoryDao customFieldsHistoryDao;
 
   Future<NormalizedHistorySnapshot?> loadHistorySnapshot(
     String historyId,
@@ -358,11 +360,13 @@ class VaultHistoryNormalizedLoader {
         break;
     }
 
+    final customFieldsHistory = await customFieldsHistoryDao.getCustomFieldsHistoryBySnapshotHistoryId(historyId);
+
     final normalized = NormalizedHistorySnapshot(
       snapshot: snapshotDto,
       fields: fields,
       sensitiveKeys: sensitiveKeys,
-      customFields: const [],
+      customFields: customFieldsHistory,
       restoreWarnings: [],
     );
 
@@ -370,7 +374,7 @@ class VaultHistoryNormalizedLoader {
       snapshot: snapshotDto,
       fields: fields,
       sensitiveKeys: sensitiveKeys,
-      customFields: const [],
+      customFields: customFieldsHistory,
       restoreWarnings: restorePolicyService.restoreWarnings(normalized),
     );
   }

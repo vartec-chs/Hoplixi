@@ -9,6 +9,8 @@ import '../../main_store.dart';
 import '../../tables/tables.dart';
 import 'vault_history_normalized_loader.dart';
 import 'vault_history_restore_policy_service.dart';
+import 'custom_fields_restore_service.dart';
+import 'tags_restore_service.dart';
 
 class VaultHistoryRestoreService {
   VaultHistoryRestoreService({
@@ -37,6 +39,8 @@ class VaultHistoryRestoreService {
     required this.recoveryCodesDao,
     required this.recoveryCodesHistoryDao,
     required this.recoveryCodeValuesHistoryDao,
+    required this.customFieldsRestoreService,
+    required this.tagsRestoreService,
   });
 
   final VaultHistoryNormalizedLoader loader;
@@ -64,6 +68,8 @@ class VaultHistoryRestoreService {
   final RecoveryCodesDao recoveryCodesDao;
   final RecoveryCodesHistoryDao recoveryCodesHistoryDao;
   final RecoveryCodeValuesHistoryDao recoveryCodeValuesHistoryDao;
+  final CustomFieldsRestoreService customFieldsRestoreService;
+  final TagsRestoreService tagsRestoreService;
 
   Future<DbResult<Unit>> restoreRevision({
     required String historyId,

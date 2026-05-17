@@ -24,6 +24,25 @@ sealed class CustomFieldDto with _$CustomFieldDto {
   factory CustomFieldDto.fromJson(Map<String, dynamic> json) =>
       _$CustomFieldDtoFromJson(json);
 }
+
+@freezed
+sealed class VaultItemCustomFieldCardDataDto with _$VaultItemCustomFieldCardDataDto {
+  const factory VaultItemCustomFieldCardDataDto({
+    required String id,
+    required String itemId,
+    required String label,
+    required CustomFieldType fieldType,
+    required bool isSecret,
+    required int sortOrder,
+    required bool hasValue,
+    required DateTime createdAt,
+    required DateTime modifiedAt,
+  }) = _VaultItemCustomFieldCardDataDto;
+
+  factory VaultItemCustomFieldCardDataDto.fromJson(Map<String, dynamic> json) =>
+      _$VaultItemCustomFieldCardDataDtoFromJson(json);
+}
+
 @freezed
 sealed class PatchCustomFieldDto with _$PatchCustomFieldDto {
   const factory PatchCustomFieldDto({
@@ -35,5 +54,3 @@ sealed class PatchCustomFieldDto with _$PatchCustomFieldDto {
     @Default(FieldUpdate.keep()) FieldUpdate<int> sortOrder,
   }) = _PatchCustomFieldDto;
 }
-
-

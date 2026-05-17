@@ -15,7 +15,9 @@ export 'identity_history_card_dto.dart';
 export 'note_history_card_dto.dart';
 export 'document_history_card_dto.dart';
 export 'generic_history_card_dto.dart';
+export 'custom_field_history_card_dto.dart';
 export 'vault_history_card_dto.dart';
+
 export 'vault_snapshot_card_dto.dart';
 export 'vault_history_timeline_item_dto.dart';
 export 'vault_history_revision_detail_dto.dart';
