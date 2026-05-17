@@ -35,8 +35,10 @@ class ItemLinksRestoreService {
     required String snapshotHistoryId,
   }) async {
     try {
-      final historyLinks = await itemLinkHistoryDao.getLinksBySnapshotHistoryId(snapshotHistoryId);
-      
+      final historyLinks = await itemLinkHistoryDao.getLinksBySnapshotHistoryId(
+        snapshotHistoryId,
+      );
+
       await itemLinksDao.deleteLinksForItem(itemId);
 
       int restoredCount = 0;
@@ -49,9 +51,12 @@ class ItemLinksRestoreService {
           continue;
         }
 
-        final sourceExists = await vaultItemsDao.existsVaultItem(h.sourceItemId);
-        final targetExists = await vaultItemsDao.existsVaultItem(h.targetItemId);
-
+        final sourceExists = await vaultItemsDao.existsVaultItem(
+          h.sourceItemId,
+        );
+        final targetExists = await vaultItemsDao.existsVaultItem(
+          h.targetItemId,
+        );
 
         if (!sourceExists) {
           skippedMissingItemIds.add(h.sourceItemId);
@@ -62,29 +67,34 @@ class ItemLinksRestoreService {
           continue;
         }
 
-        await itemLinksDao.insertRestoredLink(ItemLinksCompanion(
-          id: Value(h.sourceLinkId ?? const Uuid().v4()),
-          sourceItemId: Value(h.sourceItemId),
-          targetItemId: Value(h.targetItemId),
-          relationType: Value(h.relationType),
-          relationTypeOther: Value(h.relationTypeOther),
-          label: Value(h.label),
-          sortOrder: Value(h.sortOrder),
-          createdAt: Value(h.createdAt),
-          modifiedAt: Value(h.modifiedAt),
-        ));
+        await itemLinksDao.insertRestoredLink(
+          ItemLinksCompanion(
+            id: Value(h.sourceLinkId ?? const Uuid().v4()),
+            sourceItemId: Value(h.sourceItemId),
+            targetItemId: Value(h.targetItemId),
+            relationType: Value(h.relationType),
+            relationTypeOther: Value(h.relationTypeOther),
+            label: Value(h.label),
+            sortOrder: Value(h.sortOrder),
+            createdAt: Value(h.createdAt),
+            modifiedAt: Value(h.modifiedAt),
+          ),
+        );
 
-        
         restoredCount++;
       }
 
-      return Success(ItemLinksRestoreResult(
-        restoredCount: restoredCount,
-        skippedMissingItemIds: skippedMissingItemIds.toSet().toList(),
-        skippedSelfLinksCount: skippedSelfLinksCount,
-      ));
+      return Success(
+        ItemLinksRestoreResult(
+          restoredCount: restoredCount,
+          skippedMissingItemIds: skippedMissingItemIds.toSet().toList(),
+          skippedSelfLinksCount: skippedSelfLinksCount,
+        ),
+      );
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 }

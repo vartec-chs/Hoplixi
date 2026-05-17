@@ -66,7 +66,9 @@ class VaultHistoryDeleteService {
       });
       return Success(unit);
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 
@@ -80,11 +82,12 @@ class VaultHistoryDeleteService {
     await vaultEventsHistoryDao.clearSnapshotReference(historyId);
 
     // 2. Delete relation history
-    await customFieldsHistoryDao.deleteCustomFieldsHistoryBySnapshotHistoryId(historyId);
+    await customFieldsHistoryDao.deleteCustomFieldsHistoryBySnapshotHistoryId(
+      historyId,
+    );
     await vaultItemTagHistoryDao.deleteTagsBySnapshotHistoryId(historyId);
-    
-    await itemLinkHistoryDao.deleteLinksBySnapshotHistoryId(historyId);
 
+    await itemLinkHistoryDao.deleteLinksBySnapshotHistoryId(historyId);
 
     // 3. Delete type-specific history row
     switch (snapshot.type) {
@@ -98,10 +101,14 @@ class VaultHistoryDeleteService {
         await bankCardHistoryDao.deleteBankCardHistoryByHistoryId(historyId);
         break;
       case VaultItemType.certificate:
-        await certificateHistoryDao.deleteCertificateHistoryByHistoryId(historyId);
+        await certificateHistoryDao.deleteCertificateHistoryByHistoryId(
+          historyId,
+        );
         break;
       case VaultItemType.cryptoWallet:
-        await cryptoWalletHistoryDao.deleteCryptoWalletHistoryByHistoryId(historyId);
+        await cryptoWalletHistoryDao.deleteCryptoWalletHistoryByHistoryId(
+          historyId,
+        );
         break;
       case VaultItemType.wifi:
         await wifiHistoryDao.deleteWifiHistoryByHistoryId(historyId);
@@ -110,20 +117,29 @@ class VaultHistoryDeleteService {
         await sshKeyHistoryDao.deleteSshKeyHistoryByHistoryId(historyId);
         break;
       case VaultItemType.licenseKey:
-        await licenseKeyHistoryDao.deleteLicenseKeyHistoryByHistoryId(historyId);
+        await licenseKeyHistoryDao.deleteLicenseKeyHistoryByHistoryId(
+          historyId,
+        );
         break;
       case VaultItemType.otp:
         await otpHistoryDao.deleteOtpHistoryByHistoryId(historyId);
         break;
       case VaultItemType.recoveryCodes:
-        await recoveryCodeValuesHistoryDao.deleteRecoveryCodeValuesHistoryByHistoryId(historyId);
-        await recoveryCodesHistoryDao.deleteRecoveryCodesHistoryByHistoryId(historyId);
+        await recoveryCodeValuesHistoryDao
+            .deleteRecoveryCodeValuesHistoryByHistoryId(historyId);
+        await recoveryCodesHistoryDao.deleteRecoveryCodesHistoryByHistoryId(
+          historyId,
+        );
         break;
       case VaultItemType.loyaltyCard:
-        await loyaltyCardHistoryDao.deleteLoyaltyCardHistoryByHistoryId(historyId);
+        await loyaltyCardHistoryDao.deleteLoyaltyCardHistoryByHistoryId(
+          historyId,
+        );
         break;
       case VaultItemType.file:
-        await fileMetadataHistoryDao.deleteFileMetadataHistoryByHistoryId(historyId);
+        await fileMetadataHistoryDao.deleteFileMetadataHistoryByHistoryId(
+          historyId,
+        );
         await fileHistoryDao.deleteFileHistoryByHistoryId(historyId);
         break;
       case VaultItemType.contact:
@@ -141,7 +157,9 @@ class VaultHistoryDeleteService {
 
     // 4. Delete item category history snapshot if it exists
     if (snapshot.categoryHistoryId != null) {
-      await itemCategoryHistoryDao.deleteCategoryHistoryById(snapshot.categoryHistoryId!);
+      await itemCategoryHistoryDao.deleteCategoryHistoryById(
+        snapshot.categoryHistoryId!,
+      );
     }
 
     // 5. Delete vault snapshot row
@@ -166,7 +184,9 @@ class VaultHistoryDeleteService {
 
       return Success(unit);
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 }

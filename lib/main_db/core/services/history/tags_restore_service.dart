@@ -52,12 +52,16 @@ class TagsRestoreService {
         }
       }
 
-      return Success(TagsRestoreResult(
-        restoredCount: restoredCount,
-        skippedMissingTagIds: skippedMissingTagIds,
-      ));
+      return Success(
+        TagsRestoreResult(
+          restoredCount: restoredCount,
+          skippedMissingTagIds: skippedMissingTagIds,
+        ),
+      );
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 }

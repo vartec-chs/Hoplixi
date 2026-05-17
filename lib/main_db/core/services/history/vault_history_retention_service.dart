@@ -19,12 +19,19 @@ class VaultHistoryRetentionService {
 
   Future<DbResult<Unit>> maybeCleanup() async {
     try {
-      final enabled = await settingsDao.getBool(StoreSettingsKey.historyEnabled) ?? true;
+      final enabled =
+          await settingsDao.getBool(StoreSettingsKey.historyEnabled) ?? true;
       if (!enabled) return Success(unit);
 
-      final intervalDays = await settingsDao.getInt(StoreSettingsKey.historyCleanupIntervalDays) ?? 7;
-      final lastCleanupStr = await settingsDao.getString(StoreSettingsKey.historyLastCleanupTimestamp);
-      
+      final intervalDays =
+          await settingsDao.getInt(
+            StoreSettingsKey.historyCleanupIntervalDays,
+          ) ??
+          7;
+      final lastCleanupStr = await settingsDao.getString(
+        StoreSettingsKey.historyLastCleanupTimestamp,
+      );
+
       if (lastCleanupStr != null) {
         final lastCleanup = DateTime.tryParse(lastCleanupStr);
         if (lastCleanup != null) {
@@ -36,12 +43,16 @@ class VaultHistoryRetentionService {
       }
 
       // Perform cleanup
-      final maxAgeDays = await settingsDao.getInt(StoreSettingsKey.historyMaxAgeDays);
+      final maxAgeDays = await settingsDao.getInt(
+        StoreSettingsKey.historyMaxAgeDays,
+      );
       if (maxAgeDays != null && maxAgeDays > 0) {
         await cleanupByMaxAge(maxAgeDays: maxAgeDays);
       }
 
-      final historyLimit = await settingsDao.getInt(StoreSettingsKey.historyLimit);
+      final historyLimit = await settingsDao.getInt(
+        StoreSettingsKey.historyLimit,
+      );
       if (historyLimit != null && historyLimit > 0) {
         final groups = await snapshotsHistoryDao.getSnapshotItemGroups();
         for (final group in groups) {
@@ -61,7 +72,9 @@ class VaultHistoryRetentionService {
 
       return Success(unit);
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 
@@ -91,18 +104,20 @@ class VaultHistoryRetentionService {
 
       return Success(unit);
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 
-  Future<DbResult<Unit>> cleanupByMaxAge({
-    required int maxAgeDays,
-  }) async {
+  Future<DbResult<Unit>> cleanupByMaxAge({required int maxAgeDays}) async {
     if (maxAgeDays <= 0) {
-      return const Failure(DBCoreError.validation(
-        code: 'history.cleanup.invalid_age',
-        message: 'Max age must be greater than 0',
-      ));
+      return const Failure(
+        DBCoreError.validation(
+          code: 'history.cleanup.invalid_age',
+          message: 'Max age must be greater than 0',
+        ),
+      );
     }
 
     try {
@@ -118,7 +133,9 @@ class VaultHistoryRetentionService {
 
       return Success(unit);
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 }

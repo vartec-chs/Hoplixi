@@ -45,7 +45,9 @@ class CustomFieldsRestoreService {
 
       return Success(unit);
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 }

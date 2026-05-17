@@ -80,7 +80,9 @@ class VaultHistoryNormalizedLoader {
 
     switch (snapshotDto.type) {
       case VaultItemType.apiKey:
-        final data = await apiKeyHistoryDao.getApiKeyHistoryByHistoryIds([historyId]);
+        final data = await apiKeyHistoryDao.getApiKeyHistoryByHistoryIds([
+          historyId,
+        ]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['service'] = item.service;
@@ -97,7 +99,9 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.password:
-        final data = await passwordHistoryDao.getPasswordHistoryByHistoryIds([historyId]);
+        final data = await passwordHistoryDao.getPasswordHistoryByHistoryIds([
+          historyId,
+        ]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['login'] = item.login;
@@ -109,7 +113,9 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.bankCard:
-        final data = await bankCardHistoryDao.getBankCardHistoryByHistoryIds([historyId]);
+        final data = await bankCardHistoryDao.getBankCardHistoryByHistoryIds([
+          historyId,
+        ]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['cardholderName'] = item.cardholderName;
@@ -131,7 +137,8 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.certificate:
-        final data = await certificateHistoryDao.getCertificateHistoryByHistoryIds([historyId]);
+        final data = await certificateHistoryDao
+            .getCertificateHistoryByHistoryIds([historyId]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['certificateFormat'] = item.certificateFormat?.name;
@@ -157,7 +164,8 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.cryptoWallet:
-        final data = await cryptoWalletHistoryDao.getCryptoWalletHistoryByHistoryIds([historyId]);
+        final data = await cryptoWalletHistoryDao
+            .getCryptoWalletHistoryByHistoryIds([historyId]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['walletType'] = item.walletType?.name;
@@ -180,7 +188,9 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.wifi:
-        final data = await wifiHistoryDao.getWifiHistoryByHistoryIds([historyId]);
+        final data = await wifiHistoryDao.getWifiHistoryByHistoryIds([
+          historyId,
+        ]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['ssid'] = item.ssid;
@@ -194,7 +204,9 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.sshKey:
-        final data = await sshKeyHistoryDao.getSshKeyHistoryByHistoryIds([historyId]);
+        final data = await sshKeyHistoryDao.getSshKeyHistoryByHistoryIds([
+          historyId,
+        ]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['publicKey'] = item.publicKey;
@@ -206,7 +218,8 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.licenseKey:
-        final data = await licenseKeyHistoryDao.getLicenseKeyHistoryByHistoryIds([historyId]);
+        final data = await licenseKeyHistoryDao
+            .getLicenseKeyHistoryByHistoryIds([historyId]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['productName'] = item.productName;
@@ -246,22 +259,27 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.recoveryCodes:
-        final data = await recoveryCodesHistoryDao.getRecoveryCodesHistoryByHistoryIds([historyId]);
+        final data = await recoveryCodesHistoryDao
+            .getRecoveryCodesHistoryByHistoryIds([historyId]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['codesCount'] = item.codesCount;
           fields['usedCount'] = item.usedCount;
           fields['generatedAt'] = item.generatedAt;
           fields['oneTime'] = item.oneTime;
-          
-          final values = await recoveryCodeValuesHistoryDao.getRecoveryCodeValuesByHistoryId(historyId);
+
+          final values = await recoveryCodeValuesHistoryDao
+              .getRecoveryCodeValuesByHistoryId(historyId);
           fields['valuesCount'] = values.length;
-          fields['missingValuesCount'] = values.where((v) => v.code == null).length;
+          fields['missingValuesCount'] = values
+              .where((v) => v.code == null)
+              .length;
           fields['usedValuesCount'] = values.where((v) => v.used).length;
         }
         break;
       case VaultItemType.loyaltyCard:
-        final data = await loyaltyCardHistoryDao.getLoyaltyCardHistoryByHistoryIds([historyId]);
+        final data = await loyaltyCardHistoryDao
+            .getLoyaltyCardHistoryByHistoryIds([historyId]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['programName'] = item.programName;
@@ -282,13 +300,16 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.file:
-        final historyList = await fileHistoryDao.getFileHistoryByHistoryIds([historyId]);
+        final historyList = await fileHistoryDao.getFileHistoryByHistoryIds([
+          historyId,
+        ]);
         if (historyList.isNotEmpty) {
           final history = historyList.first;
           fields['metadataHistoryId'] = history.metadataHistoryId;
-          
+
           if (history.metadataHistoryId != null) {
-            final metaHistory = await fileMetadataHistoryDao.getFileMetadataHistoryById(history.metadataHistoryId!);
+            final metaHistory = await fileMetadataHistoryDao
+                .getFileMetadataHistoryById(history.metadataHistoryId!);
             if (metaHistory != null) {
               fields['metadataId'] = metaHistory.metadataId;
               fields['fileName'] = metaHistory.fileName;
@@ -297,20 +318,23 @@ class VaultHistoryNormalizedLoader {
               fields['mimeType'] = metaHistory.mimeType;
               fields['fileSize'] = metaHistory.fileSize;
               fields['sha256'] = metaHistory.sha256;
-              fields['availabilityStatus'] = metaHistory.availabilityStatus.name;
+              fields['availabilityStatus'] =
+                  metaHistory.availabilityStatus.name;
               fields['integrityStatus'] = metaHistory.integrityStatus.name;
               fields['missingDetectedAt'] = metaHistory.missingDetectedAt;
               fields['deletedAt'] = metaHistory.deletedAt;
               fields['lastIntegrityCheckAt'] = metaHistory.lastIntegrityCheckAt;
               fields['snapshotCreatedAt'] = metaHistory.snapshotCreatedAt;
-              
+
               sensitiveKeys.add('filePath');
             }
           }
         }
         break;
       case VaultItemType.contact:
-        final data = await contactHistoryDao.getContactHistoryByHistoryIds([historyId]);
+        final data = await contactHistoryDao.getContactHistoryByHistoryIds([
+          historyId,
+        ]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['firstName'] = item.firstName;
@@ -327,7 +351,9 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.identity:
-        final data = await identityHistoryDao.getIdentityHistoryByHistoryIds([historyId]);
+        final data = await identityHistoryDao.getIdentityHistoryByHistoryIds([
+          historyId,
+        ]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['firstName'] = item.firstName;
@@ -349,7 +375,9 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.note:
-        final data = await noteHistoryDao.getNoteHistoryByHistoryIds([historyId]);
+        final data = await noteHistoryDao.getNoteHistoryByHistoryIds([
+          historyId,
+        ]);
         if (data.isNotEmpty) {
           final item = data.first;
           fields['deltaJson'] = item.deltaJson;
@@ -360,7 +388,8 @@ class VaultHistoryNormalizedLoader {
         break;
     }
 
-    final customFieldsHistory = await customFieldsHistoryDao.getCustomFieldsHistoryBySnapshotHistoryId(historyId);
+    final customFieldsHistory = await customFieldsHistoryDao
+        .getCustomFieldsHistoryBySnapshotHistoryId(historyId);
 
     final normalized = NormalizedHistorySnapshot(
       snapshot: snapshotDto,

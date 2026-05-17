@@ -23,7 +23,9 @@ class VaultHistoryDetailService {
     try {
       final selected = await loader.loadHistorySnapshot(historyId);
       if (selected == null) {
-        return Failure(DBCoreError.notFound(entity: 'HistorySnapshot', id: historyId));
+        return Failure(
+          DBCoreError.notFound(entity: 'HistorySnapshot', id: historyId),
+        );
       }
 
       // TODO: Load compare target (newer revision or current live)
@@ -41,16 +43,21 @@ class VaultHistoryDetailService {
         replacement: selected,
       );
 
-      return Success(VaultHistoryRevisionDetailDto(
-        selected: selected.snapshot,
-        compareTargetKind: HistoryCompareTargetKind.currentLive, // Placeholder
-        fieldDiffs: fieldDiffs,
-        customFieldDiffs: const [],
-        isRestorable: restorePolicy.isRestorable(selected),
-        restoreWarnings: restorePolicy.restoreWarnings(selected),
-      ));
+      return Success(
+        VaultHistoryRevisionDetailDto(
+          selected: selected.snapshot,
+          compareTargetKind:
+              HistoryCompareTargetKind.currentLive, // Placeholder
+          fieldDiffs: fieldDiffs,
+          customFieldDiffs: const [],
+          isRestorable: restorePolicy.isRestorable(selected),
+          restoreWarnings: restorePolicy.restoreWarnings(selected),
+        ),
+      );
     } catch (e, s) {
-      return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
+      return Failure(
+        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
+      );
     }
   }
 }
