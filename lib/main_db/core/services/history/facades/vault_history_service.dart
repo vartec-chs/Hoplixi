@@ -1,12 +1,13 @@
 import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/main_db/core/errors/db_result.dart';
-import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/core/services/history/policy/store_history_policy_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_event_history_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_snapshot_writer.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 import 'package:result_dart/result_dart.dart';
+
+import '../../../models/dto/vault_item_base_dto.dart';
 
 class VaultHistoryService {
   VaultHistoryService({

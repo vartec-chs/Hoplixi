@@ -1,10 +1,10 @@
 import 'package:result_dart/result_dart.dart';
 
-import '../../daos/daos.dart';
-import '../../errors/db_error.dart';
-import '../../errors/db_result.dart';
-import '../../main_store.dart';
-import '../../tables/vault_items/vault_items.dart';
+import '../../../daos/daos.dart';
+import '../../../errors/db_error.dart';
+import '../../../errors/db_result.dart';
+import '../../../main_store.dart';
+import '../../../tables/vault_items/vault_items.dart';
 
 class VaultHistoryDeleteService {
   VaultHistoryDeleteService({required this.db});

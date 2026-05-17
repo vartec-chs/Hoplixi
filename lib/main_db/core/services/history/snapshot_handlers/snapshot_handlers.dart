@@ -8,6 +8,7 @@ export 'file_snapshot_handler.dart';
 export 'identity_snapshot_handler.dart';
 export 'license_key_snapshot_handler.dart';
 export 'loyalty_card_snapshot_handler.dart';
+export 'note_snapshot_handler.dart';
 export 'otp_snapshot_handler.dart';
 export 'password_snapshot_handler.dart';
 export 'recovery_codes_snapshot_handler.dart';
