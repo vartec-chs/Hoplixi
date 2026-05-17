@@ -13,7 +13,7 @@ import 'package:hoplixi/main_db/core/repositories/base/password_repository.dart'
 import 'package:hoplixi/main_db/core/repositories/base/recovery_codes_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/ssh_key_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/wifi_repository.dart';
-import 'package:hoplixi/main_db/core/services/history/custom_fields_restore_service.dart';
+import 'package:hoplixi/main_db/core/services/history/custom_fields/custom_fields_restore_service.dart';
 import 'package:hoplixi/main_db/core/services/history/item_links_restore_service.dart';
 import 'package:hoplixi/main_db/core/services/history/tags_restore_service.dart';
 
@@ -22,10 +22,10 @@ import 'normalizers/normalizers.dart';
 import 'readers/readers.dart';
 import 'restore_handlers/restore_handlers.dart';
 import 'vault_history_detail_service.dart';
-import 'vault_history_diff_service.dart';
+import 'utils/vault_history_diff_service.dart';
 import 'vault_history_normalized_loader.dart';
 import 'vault_history_read_service.dart';
-import 'vault_history_restore_policy_service.dart';
+import 'policy/vault_history_restore_policy_service.dart';
 import 'vault_history_restore_service.dart';
 
 class VaultHistoryServiceAssembly {

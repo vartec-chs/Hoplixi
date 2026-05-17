@@ -1,4 +1,4 @@
-import '../../tables/vault_items/vault_items.dart';
+import '../../../tables/vault_items/vault_items.dart';
 
 class HistoryFieldLabelResolver {
   String labelFor({required VaultItemType type, required String fieldKey}) {

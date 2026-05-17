@@ -1,4 +1,4 @@
-import 'package:hoplixi/main_db/core/services/history/history_services.dart';
+import 'package:hoplixi/main_db/core/services/history/history.dart';
 
 import '../../daos/daos.dart';
 import '../../models/mappers/history/vault_item_base_history_payload_mapper.dart';

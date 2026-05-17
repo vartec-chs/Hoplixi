@@ -1,9 +1,8 @@
 import 'package:collection/collection.dart';
-import 'package:hoplixi/main_db/core/services/history/history_services.dart';
+import 'package:hoplixi/main_db/core/services/history/history.dart';
 
-import '../../models/dto_history/cards/vault_history_revision_detail_dto.dart';
-import '../../tables/vault_items/vault_item_custom_fields.dart';
-import 'vault_history_normalized_loader.dart';
+import '../../../models/dto_history/cards/vault_history_revision_detail_dto.dart';
+
 
 class VaultHistoryDiffService {
   VaultHistoryDiffService();

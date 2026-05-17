@@ -5,9 +5,9 @@ import '../../models/dto_history/cards/vault_history_revision_detail_dto.dart';
 import '../../models/mappers/history/vault_item_base_history_payload_mapper.dart';
 import 'models/normalized_history_snapshot.dart';
 import 'payloads/empty_history_payload.dart';
-import 'vault_history_diff_service.dart';
+import 'utils/vault_history_diff_service.dart';
 import 'vault_history_normalized_loader.dart';
-import 'vault_history_restore_policy_service.dart';
+import 'policy/vault_history_restore_policy_service.dart';
 
 class VaultHistoryDetailService {
   VaultHistoryDetailService({

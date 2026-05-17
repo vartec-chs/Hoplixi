@@ -1,6 +1,6 @@
 import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/main_db/core/errors/db_result.dart';
-import 'package:hoplixi/main_db/core/services/history/store_history_policy_service.dart';
+import 'package:hoplixi/main_db/core/services/history/policy/store_history_policy_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_event_history_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_snapshot_writer.dart';
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';

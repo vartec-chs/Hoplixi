@@ -31,7 +31,7 @@ import 'package:hoplixi/main_db/core/services/entities/password_service.dart';
 import 'package:hoplixi/main_db/core/services/entities/recovery_codes_service.dart';
 import 'package:hoplixi/main_db/core/services/entities/ssh_key_service.dart';
 import 'package:hoplixi/main_db/core/services/entities/wifi_service.dart';
-import 'package:hoplixi/main_db/core/services/history/store_history_policy_service.dart';
+import 'package:hoplixi/main_db/core/services/history/policy/store_history_policy_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_event_history_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_history_service.dart';
 import 'package:hoplixi/main_db/core/services/history/vault_snapshot_writer.dart';

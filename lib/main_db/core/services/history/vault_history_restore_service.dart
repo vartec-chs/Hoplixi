@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/services/history/custom_fields_restore_service.dart';
+import 'package:hoplixi/main_db/core/services/history/custom_fields/custom_fields_restore_service.dart';
 import 'package:hoplixi/main_db/core/services/history/item_links_restore_service.dart';
 import 'package:hoplixi/main_db/core/services/history/tags_restore_service.dart';
 import 'package:result_dart/result_dart.dart';
@@ -9,11 +9,10 @@ import '../../daos/daos.dart';
 import '../../errors/db_error.dart';
 import '../../errors/db_exception_mapper.dart';
 import '../../errors/db_result.dart';
-import '../../tables/tables.dart';
 
 import 'restore_handlers/restore_handlers.dart';
 import 'vault_history_normalized_loader.dart';
-import 'vault_history_restore_policy_service.dart';
+import 'policy/vault_history_restore_policy_service.dart';
 
 class VaultHistoryRestoreService {
   VaultHistoryRestoreService({

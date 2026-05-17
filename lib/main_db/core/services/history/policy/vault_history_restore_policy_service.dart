@@ -1,8 +1,7 @@
-import 'package:hoplixi/main_db/core/services/history/history_services.dart';
+import 'package:hoplixi/main_db/core/services/history/history.dart';
 import 'package:hoplixi/main_db/core/tables/file/file_metadata.dart';
 
-import '../../tables/vault_items/vault_items.dart';
-import 'vault_history_normalized_loader.dart';
+import '../../../tables/vault_items/vault_items.dart';
 
 class VaultHistoryRestorePolicyService {
   bool isRestorable(AnyNormalizedHistorySnapshot snapshot) {
