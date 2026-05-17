@@ -2,7 +2,6 @@ import 'package:hoplixi/main_db/core/main_store.dart';
 
 import '../../tables/tables.dart';
 import '../../tables/vault_items/vault_item_custom_fields.dart';
-import '../../tables/vault_items/vault_item_custom_fields_history.dart';
 import 'package:collection/collection.dart';
 import '../../models/dto_history/cards/vault_history_revision_detail_dto.dart';
 import 'vault_history_normalized_loader.dart';

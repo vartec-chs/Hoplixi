@@ -40,6 +40,16 @@ class ItemLinksDao extends DatabaseAccessor<MainStore> with _$ItemLinksDaoMixin 
     return (delete(itemLinks)..where((t) => t.id.equals(id))).go();
   }
 
+  Future<int> deleteLinksForItem(String itemId) {
+    return (delete(itemLinks)
+          ..where((t) => t.sourceItemId.equals(itemId) | t.targetItemId.equals(itemId)))
+        .go();
+  }
+
+  Future<void> insertRestoredLink(ItemLinksCompanion companion) {
+    return into(itemLinks).insert(companion, mode: InsertMode.insertOrReplace);
+  }
+
   Future<bool> existsLink(String id) async {
     final query = selectOnly(itemLinks)
       ..addColumns([itemLinks.id])

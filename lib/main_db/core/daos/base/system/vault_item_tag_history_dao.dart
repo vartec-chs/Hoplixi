@@ -28,4 +28,10 @@ class VaultItemTagHistoryDao extends DatabaseAccessor<MainStore>
   Future<int> deleteTagHistoryById(String id) {
     return (delete(vaultItemTagHistory)..where((t) => t.id.equals(id))).go();
   }
+
+  Future<int> deleteTagsBySnapshotHistoryId(String snapshotHistoryId) {
+    return (delete(vaultItemTagHistory)
+          ..where((t) => t.historyId.equals(snapshotHistoryId)))
+        .go();
+  }
 }

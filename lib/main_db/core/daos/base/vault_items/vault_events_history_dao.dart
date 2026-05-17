@@ -20,4 +20,14 @@ class VaultEventsHistoryDao extends DatabaseAccessor<MainStore>
           ..orderBy([(t) => OrderingTerm.desc(t.eventCreatedAt)]))
         .get();
   }
+
+  Future<int> clearSnapshotReference(String snapshotHistoryId) {
+    return (update(vaultEventsHistory)
+          ..where((tbl) => tbl.snapshotHistoryId.equals(snapshotHistoryId)))
+        .write(
+      const VaultEventsHistoryCompanion(
+        snapshotHistoryId: Value(null),
+      ),
+    );
+  }
 }

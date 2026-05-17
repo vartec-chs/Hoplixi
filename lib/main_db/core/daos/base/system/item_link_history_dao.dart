@@ -40,4 +40,10 @@ class ItemLinkHistoryDao extends DatabaseAccessor<MainStore>
   Future<int> deleteItemLinkHistoryById(String id) {
     return (delete(itemLinkHistory)..where((t) => t.id.equals(id))).go();
   }
+
+  Future<int> deleteLinksBySnapshotHistoryId(String snapshotHistoryId) {
+    return (delete(itemLinkHistory)
+          ..where((t) => t.historyId.equals(snapshotHistoryId)))
+        .go();
+  }
 }
