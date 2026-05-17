@@ -46,4 +46,8 @@ class FileItemsDao extends DatabaseAccessor<MainStore> with _$FileItemsDaoMixin 
   Future<int> deleteFileItemByItemId(String itemId) {
     return (delete(fileItems)..where((t) => t.itemId.equals(itemId))).go();
   }
+
+  Future<void> upsertFileItem(FileItemsCompanion companion) {
+    return into(fileItems).insertOnConflictUpdate(companion);
+  }
 }

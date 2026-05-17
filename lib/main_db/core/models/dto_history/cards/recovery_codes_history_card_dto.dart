@@ -19,6 +19,19 @@ sealed class RecoveryCodesHistoryCardDataDto with _$RecoveryCodesHistoryCardData
 }
 
 @freezed
+sealed class RecoveryCodeValueHistorySecretDto with _$RecoveryCodeValueHistorySecretDto {
+  const factory RecoveryCodeValueHistorySecretDto({
+    required int id,
+    required String code,
+    required bool used,
+    DateTime? usedAt,
+    int? position,
+  }) = _RecoveryCodeValueHistorySecretDto;
+
+  factory RecoveryCodeValueHistorySecretDto.fromJson(Map<String, dynamic> json) => _$RecoveryCodeValueHistorySecretDtoFromJson(json);
+}
+
+@freezed
 sealed class RecoveryCodesHistoryCardDto with _$RecoveryCodesHistoryCardDto implements VaultHistoryCardDto {
   const factory RecoveryCodesHistoryCardDto({
     required VaultSnapshotCardDto snapshot,

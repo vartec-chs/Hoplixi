@@ -1,7 +1,9 @@
 import 'package:drift/drift.dart';
+import '../../../models/dto_history/cards/recovery_codes_history_card_dto.dart';
 
 import '../../../main_store.dart';
 import '../../../tables/recovery_codes/recovery_code_values_history.dart';
+
 
 part 'recovery_code_values_history_dao.g.dart';
 
@@ -71,5 +73,24 @@ class RecoveryCodeValuesHistoryDao extends DatabaseAccessor<MainStore>
     return (delete(recoveryCodeValuesHistory)
           ..where((tbl) => tbl.historyId.equals(historyId)))
         .go();
+  }
+
+  Future<List<RecoveryCodeValueHistorySecretDto>> getRecoveryCodeSecretsByHistoryId(
+    String historyId,
+  ) async {
+    final rows = await (select(recoveryCodeValuesHistory)
+          ..where((tbl) => tbl.historyId.equals(historyId))
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.position)]))
+        .get();
+
+    return rows
+        .map((r) => RecoveryCodeValueHistorySecretDto(
+              id: r.id,
+              code: r.code ?? '',
+              used: r.used,
+              usedAt: r.usedAt,
+              position: r.position,
+            ))
+        .toList();
   }
 }

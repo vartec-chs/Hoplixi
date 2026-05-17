@@ -36,6 +36,10 @@ class FileMetadataDao extends DatabaseAccessor<MainStore>
     return (delete(fileMetadata)..where((t) => t.id.equals(id))).go();
   }
 
+  Future<void> upsertFileMetadata(FileMetadataCompanion companion) {
+    return into(fileMetadata).insertOnConflictUpdate(companion);
+  }
+
   Future<List<FileMetadataData>> getByAvailabilityStatus(
     FileAvailabilityStatus status,
   ) {

@@ -1,7 +1,7 @@
 import '../../daos/daos.dart';
 import '../../models/dto_history/cards/cards_exports.dart';
-import '../../tables/vault_items/vault_items.dart';
 import '../../models/mappers/history/vault_snapshot_history_mapper.dart';
+import '../../tables/vault_items/vault_items.dart';
 import 'vault_history_restore_policy_service.dart';
 
 class NormalizedHistorySnapshot {
@@ -34,8 +34,10 @@ class VaultHistoryNormalizedLoader {
     required this.licenseKeyHistoryDao,
     required this.otpHistoryDao,
     required this.recoveryCodesHistoryDao,
+    required this.recoveryCodeValuesHistoryDao,
     required this.loyaltyCardHistoryDao,
     required this.fileHistoryDao,
+    required this.fileMetadataHistoryDao,
     required this.contactHistoryDao,
     required this.identityHistoryDao,
     required this.noteHistoryDao,
@@ -53,13 +55,17 @@ class VaultHistoryNormalizedLoader {
   final LicenseKeyHistoryDao licenseKeyHistoryDao;
   final OtpHistoryDao otpHistoryDao;
   final RecoveryCodesHistoryDao recoveryCodesHistoryDao;
+  final RecoveryCodeValuesHistoryDao recoveryCodeValuesHistoryDao;
   final LoyaltyCardHistoryDao loyaltyCardHistoryDao;
-  final FileMetadataHistoryDao fileHistoryDao;
+  final FileHistoryDao fileHistoryDao;
+  final FileMetadataHistoryDao fileMetadataHistoryDao;
   final ContactHistoryDao contactHistoryDao;
   final IdentityHistoryDao identityHistoryDao;
   final NoteHistoryDao noteHistoryDao;
 
-  Future<NormalizedHistorySnapshot?> loadHistorySnapshot(String historyId) async {
+  Future<NormalizedHistorySnapshot?> loadHistorySnapshot(
+    String historyId,
+  ) async {
     final snapshotData = await snapshotsHistoryDao.getSnapshotById(historyId);
     if (snapshotData == null) return null;
 
@@ -245,6 +251,11 @@ class VaultHistoryNormalizedLoader {
           fields['usedCount'] = item.usedCount;
           fields['generatedAt'] = item.generatedAt;
           fields['oneTime'] = item.oneTime;
+          
+          final values = await recoveryCodeValuesHistoryDao.getRecoveryCodeValuesByHistoryId(historyId);
+          fields['valuesCount'] = values.length;
+          fields['missingValuesCount'] = values.where((v) => v.code == null).length;
+          fields['usedValuesCount'] = values.where((v) => v.used).length;
         }
         break;
       case VaultItemType.loyaltyCard:
@@ -269,21 +280,31 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.file:
-        final data = await fileHistoryDao.getFileHistoryByHistoryIds([historyId]);
-        if (data.isNotEmpty) {
-          final item = data.first;
-          fields['fileName'] = item.fileName;
-          fields['fileExtension'] = item.fileExtension;
-          fields['mimeType'] = item.mimeType;
-          fields['fileSize'] = item.fileSize;
-          fields['sha256'] = item.sha256;
-          fields['availabilityStatus'] = item.availabilityStatus?.name;
-          fields['integrityStatus'] = item.integrityStatus?.name;
-          fields['missingDetectedAt'] = item.missingDetectedAt;
-          fields['deletedAt'] = item.deletedAt;
-          fields['lastIntegrityCheckAt'] = item.lastIntegrityCheckAt;
-          fields['snapshotCreatedAt'] = item.snapshotCreatedAt;
-          sensitiveKeys.add('filePath');
+        final historyList = await fileHistoryDao.getFileHistoryByHistoryIds([historyId]);
+        if (historyList.isNotEmpty) {
+          final history = historyList.first;
+          fields['metadataHistoryId'] = history.metadataHistoryId;
+          
+          if (history.metadataHistoryId != null) {
+            final metaHistory = await fileMetadataHistoryDao.getFileMetadataHistoryById(history.metadataHistoryId!);
+            if (metaHistory != null) {
+              fields['metadataId'] = metaHistory.metadataId;
+              fields['fileName'] = metaHistory.fileName;
+              fields['fileExtension'] = metaHistory.fileExtension;
+              fields['filePath'] = metaHistory.filePath;
+              fields['mimeType'] = metaHistory.mimeType;
+              fields['fileSize'] = metaHistory.fileSize;
+              fields['sha256'] = metaHistory.sha256;
+              fields['availabilityStatus'] = metaHistory.availabilityStatus.name;
+              fields['integrityStatus'] = metaHistory.integrityStatus.name;
+              fields['missingDetectedAt'] = metaHistory.missingDetectedAt;
+              fields['deletedAt'] = metaHistory.deletedAt;
+              fields['lastIntegrityCheckAt'] = metaHistory.lastIntegrityCheckAt;
+              fields['snapshotCreatedAt'] = metaHistory.snapshotCreatedAt;
+              
+              sensitiveKeys.add('filePath');
+            }
+          }
         }
         break;
       case VaultItemType.contact:
@@ -334,7 +355,6 @@ class VaultHistoryNormalizedLoader {
         }
         break;
       case VaultItemType.document:
-        // Documents only have snapshot data for now
         break;
     }
 

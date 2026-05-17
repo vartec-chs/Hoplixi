@@ -9,7 +9,10 @@ part 'file_history_card_dto.g.dart';
 @freezed
 sealed class FileHistoryCardDataDto with _$FileHistoryCardDataDto {
   const factory FileHistoryCardDataDto({
+    String? metadataId,
+    String? metadataHistoryId,
     String? fileName,
+
     String? fileExtension,
     String? mimeType,
     int? fileSize,

@@ -105,4 +105,16 @@ class RecoveryCodesDao extends DatabaseAccessor<MainStore>
     final rows = await query.get();
     return rows.map((r) => r.read(recoveryCodes.id)!).toList();
   }
+
+  Future<void> replaceRecoveryCodesForItem({
+    required String itemId,
+    required List<RecoveryCodesCompanion> codes,
+  }) async {
+    await transaction(() async {
+      await deleteRecoveryCodesByItemId(itemId);
+      await batch((batch) {
+        batch.insertAll(recoveryCodes, codes);
+      });
+    });
+  }
 }

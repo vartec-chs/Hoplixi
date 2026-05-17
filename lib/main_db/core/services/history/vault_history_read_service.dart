@@ -24,6 +24,7 @@ class VaultHistoryReadService {
     required this.recoveryCodesHistoryDao,
     required this.loyaltyCardHistoryDao,
     required this.fileHistoryDao,
+    required this.fileMetadataHistoryDao,
     required this.contactHistoryDao,
     required this.identityHistoryDao,
     required this.noteHistoryDao,
@@ -42,7 +43,8 @@ class VaultHistoryReadService {
   final OtpHistoryDao otpHistoryDao;
   final RecoveryCodesHistoryDao recoveryCodesHistoryDao;
   final LoyaltyCardHistoryDao loyaltyCardHistoryDao;
-  final FileMetadataHistoryDao fileHistoryDao;
+  final FileHistoryDao fileHistoryDao;
+  final FileMetadataHistoryDao fileMetadataHistoryDao;
   final ContactHistoryDao contactHistoryDao;
   final IdentityHistoryDao identityHistoryDao;
   final NoteHistoryDao noteHistoryDao;
@@ -75,6 +77,7 @@ class VaultHistoryReadService {
       return Failure(DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s));
     }
   }
+
   Future<List<VaultHistoryCardDto>> _assembleCards(
     List<VaultSnapshotHistoryData> snapshots,
   ) async {
@@ -142,7 +145,7 @@ class VaultHistoryReadService {
     }
     if (historyIdsByType.containsKey(VaultItemType.file)) {
       final ids = historyIdsByType[VaultItemType.file]!;
-      final map = await fileHistoryDao.getFileHistoryCardDataByHistoryIds(ids);
+      final map = await fileMetadataHistoryDao.getFileHistoryCardDataByHistoryIds(ids);
       dataMap.addAll(map);
     }
     if (historyIdsByType.containsKey(VaultItemType.contact)) {

@@ -5,11 +5,18 @@ class VaultHistoryRestorePolicyService {
   bool isRestorable(NormalizedHistorySnapshot snapshot) {
     switch (snapshot.snapshot.type) {
       case VaultItemType.document:
-      case VaultItemType.file:
-      case VaultItemType.recoveryCodes:
         return false;
+      case VaultItemType.recoveryCodes:
+        // Recovery codes are restorable only if values are present and not null
+        final missingCount = snapshot.fields['missingValuesCount'] as int? ?? 0;
+        final valuesCount = snapshot.fields['valuesCount'] as int? ?? 0;
+        final codesCount = snapshot.fields['codesCount'] as int? ?? 0;
+        
+        if (codesCount > 0 && valuesCount == 0) return false;
+        if (missingCount > 0) return false;
+        
+        return true;
       default:
-        // Regular items are restorable if we have the snapshot
         return true;
     }
   }
@@ -20,11 +27,25 @@ class VaultHistoryRestorePolicyService {
     final type = snapshot.snapshot.type;
 
     if (type == VaultItemType.file) {
-      warnings.add('Восстановление файлов пока не поддерживается.');
+      final availabilityStatus = snapshot.fields['availabilityStatus'] as String?;
+      if (availabilityStatus == 'missing') {
+        warnings.add('Файл помечен как отсутствующий. Будет восстановлена только метаинформация.');
+      } else if (availabilityStatus == 'deleted') {
+        warnings.add('Файл помечен как удалённый. Будет восстановлена только метаинформация.');
+      } else {
+        warnings.add('Восстановление файла восстановит только запись в БД. Убедитесь, что физический файл всё ещё на месте.');
+      }
+      
+      if (snapshot.fields['filePath'] == null) {
+        warnings.add('Путь к файлу в снимке отсутствует.');
+      }
     } else if (type == VaultItemType.document) {
       warnings.add('Восстановление документов пока не поддерживается.');
     } else if (type == VaultItemType.recoveryCodes) {
-      warnings.add('Восстановление кодов восстановления пока не поддерживается.');
+      final usedValuesCount = snapshot.fields['usedValuesCount'] as int? ?? 0;
+      if (usedValuesCount > 0) {
+        warnings.add('Будет восстановлен статус использованных кодов ($usedValuesCount шт.).');
+      }
     }
 
     // Check for missing secrets
@@ -37,9 +58,6 @@ class VaultHistoryRestorePolicyService {
     if (snapshot.snapshot.isDeleted) {
       warnings.add('Запись сейчас находится в корзине. Восстановление переместит её в активные.');
     }
-
-    // Custom fields warning (not implemented yet)
-    // warnings.add('Восстановление дополнительных полей пока не реализовано.');
 
     return warnings;
   }

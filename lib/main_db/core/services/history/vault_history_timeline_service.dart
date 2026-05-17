@@ -1,13 +1,10 @@
-import 'package:result_dart/result_dart.dart';
 import '../../errors/db_result.dart';
 import '../../models/dto_history/cards/cards_exports.dart';
 import '../../models/filters/history/vault_snapshot_history_filter.dart';
 import 'vault_history_read_service.dart';
 
 class VaultHistoryTimelineService {
-  VaultHistoryTimelineService({
-    required this.readService,
-  });
+  VaultHistoryTimelineService({required this.readService});
 
   final VaultHistoryReadService readService;
 
