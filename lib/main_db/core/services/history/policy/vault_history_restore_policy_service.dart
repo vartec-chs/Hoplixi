@@ -2,6 +2,7 @@ import 'package:hoplixi/main_db/core/services/history/history.dart';
 import 'package:hoplixi/main_db/core/tables/file/file_metadata.dart';
 
 import '../../../tables/vault_items/vault_items.dart';
+import '../../../models/dto_history/cards/cards_exports.dart';
 
 class VaultHistoryRestorePolicyService {
   bool isRestorable(AnyNormalizedHistorySnapshot snapshot) {
@@ -23,6 +24,32 @@ class VaultHistoryRestorePolicyService {
       default:
         return true;
     }
+  }
+
+  bool isCardRestorable(VaultHistoryCardDto card) {
+    switch (card.snapshot.type) {
+      case VaultItemType.document:
+        return false;
+      default:
+        return true;
+    }
+  }
+
+  List<String> restoreWarningsForCard(VaultHistoryCardDto card) {
+    final type = card.snapshot.type;
+    if (type == VaultItemType.document) {
+      return ['Восстановление документов из истории пока не поддерживается'];
+    } else if (type == VaultItemType.file) {
+      return [
+        'Восстанавливаются только данные и метаинформация файла',
+        'Физический файл не копируется и не проверяется автоматически',
+      ];
+    } else if (type == VaultItemType.recoveryCodes) {
+      return [
+        'Recovery codes будут восстановлены только если значения кодов сохранены в снимке',
+      ];
+    }
+    return const [];
   }
 
   List<String> restoreWarnings(AnyNormalizedHistorySnapshot snapshot) {

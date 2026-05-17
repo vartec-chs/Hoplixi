@@ -7,12 +7,9 @@ import '../../main_store.dart';
 import '../../tables/vault_items/vault_items.dart';
 
 class VaultHistoryDeleteService {
-  VaultHistoryDeleteService({
-    required this.db,
-  });
+  VaultHistoryDeleteService({required this.db});
 
   final MainStore db;
-
 
   Future<DbResult<Unit>> deleteRevision(String historyId) async {
     try {
@@ -28,7 +25,9 @@ class VaultHistoryDeleteService {
   }
 
   Future<void> _deleteRevisionUnsafe(String historyId) async {
-    final snapshot = await db.vaultSnapshotsHistoryDao.getSnapshotById(historyId);
+    final snapshot = await db.vaultSnapshotsHistoryDao.getSnapshotById(
+      historyId,
+    );
     if (snapshot == null) {
       throw Exception('History snapshot not found: $historyId');
     }
@@ -37,9 +36,8 @@ class VaultHistoryDeleteService {
     await db.vaultEventsHistoryDao.clearSnapshotReference(historyId);
 
     // 2. Delete relation history
-    await db.vaultItemCustomFieldsHistoryDao.deleteCustomFieldsHistoryBySnapshotHistoryId(
-      historyId,
-    );
+    await db.vaultItemCustomFieldsHistoryDao
+        .deleteCustomFieldsHistoryBySnapshotHistoryId(historyId);
     await db.vaultItemTagHistoryDao.deleteTagsBySnapshotHistoryId(historyId);
 
     await db.itemLinkHistoryDao.deleteLinksBySnapshotHistoryId(historyId);
