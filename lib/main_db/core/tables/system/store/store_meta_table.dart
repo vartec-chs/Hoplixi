@@ -23,14 +23,7 @@ class StoreMetaTable extends Table {
   /// Хэш/верификатор мастер-пароля.
   TextColumn get passwordHash => text()();
 
-  /// Salt, если он нужен внутри БД.
-  ///
-  /// Если salt полностью хранится в store_key.json, это поле можно убрать.
-  TextColumn get salt => text()();
-
-  /// Ключ/обёртка ключа для attachments.
-  ///
-  /// Если это не raw key, лучше назвать wrappedAttachmentKey.
+  /// Ключ для attachments.
   TextColumn get attachmentKey => text()();
 
   DateTimeColumn get createdAt =>
@@ -87,13 +80,6 @@ class StoreMetaTable extends Table {
     ''',
 
     '''
-    CONSTRAINT ${StoreMetaConstraint.saltNotBlank.constraintName}
-    CHECK (
-      length(trim(salt)) > 0
-    )
-    ''',
-
-    '''
     CONSTRAINT ${StoreMetaConstraint.attachmentKeyNotBlank.constraintName}
     CHECK (
       length(trim(attachment_key)) > 0
@@ -113,11 +99,60 @@ enum StoreMetaConstraint {
 
   passwordHashNotBlank('chk_store_meta_password_hash_not_blank'),
 
-  saltNotBlank('chk_store_meta_salt_not_blank'),
-
   attachmentKeyNotBlank('chk_store_meta_attachment_key_not_blank');
 
   const StoreMetaConstraint(this.constraintName);
 
   final String constraintName;
 }
+
+enum StoreMetaTrigger {
+  preventMultipleRowsOnInsert('trg_store_meta_prevent_multiple_rows_on_insert'),
+
+  preventSingletonIdUpdate('trg_store_meta_prevent_singleton_id_update');
+
+  const StoreMetaTrigger(this.triggerName);
+
+  final String triggerName;
+}
+
+enum StoreMetaRaise {
+  onlyOneRowAllowed('store_meta can contain only one row'),
+
+  singletonIdImmutable('store_meta.singleton_id is immutable');
+
+  const StoreMetaRaise(this.message);
+
+  final String message;
+}
+
+final List<String> storeMetaTableTriggers = [
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${StoreMetaTrigger.preventMultipleRowsOnInsert.triggerName}
+  BEFORE INSERT ON store_meta
+  FOR EACH ROW
+  WHEN EXISTS (
+    SELECT 1
+    FROM store_meta
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${StoreMetaRaise.onlyOneRowAllowed.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${StoreMetaTrigger.preventSingletonIdUpdate.triggerName}
+  BEFORE UPDATE OF singleton_id ON store_meta
+  FOR EACH ROW
+  WHEN NEW.singleton_id <> OLD.singleton_id
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${StoreMetaRaise.singletonIdImmutable.message}'
+    );
+  END;
+  ''',
+];

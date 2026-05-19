@@ -53,4 +53,5 @@ final List<String> allTableTriggers = [
   ...vaultSnapshotsHistoryTableTriggers,
   ...wifiHistoryTableTriggers,
   ...wifiItemsTableTriggers,
+  ...storeMetaTableTriggers,
 ];

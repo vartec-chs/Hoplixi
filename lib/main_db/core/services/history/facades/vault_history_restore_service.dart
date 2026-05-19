@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/main_db/core/repositories/vault_event_history_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/custom_fields/custom_fields_restore_service.dart';
 import 'package:hoplixi/main_db/core/services/history/item_links_restore_service.dart';
 import 'package:hoplixi/main_db/core/services/history/tags_restore_service.dart';
@@ -13,7 +14,6 @@ import '../../../models/dto/dto.dart';
 import '../../../tables/vault_items/vault_events_history.dart';
 import '../../vault_typed_view_resolver.dart';
 import '../restore_handlers/restore_handlers.dart';
-import '../vault_event_history_service.dart';
 import '../vault_history_normalized_loader.dart';
 import '../policy/vault_history_restore_policy_service.dart';
 import '../vault_snapshot_writer.dart';
@@ -30,7 +30,7 @@ class VaultHistoryRestoreService {
     required this.itemLinksRestoreService,
     required this.viewResolver,
     required this.snapshotWriter,
-    required this.eventHistoryService,
+    required this.eventHistoryRepository,
   });
 
   final VaultHistoryNormalizedLoader loader;
@@ -43,7 +43,7 @@ class VaultHistoryRestoreService {
   final ItemLinksRestoreService itemLinksRestoreService;
   final VaultTypedViewResolver viewResolver;
   final VaultSnapshotWriter snapshotWriter;
-  final VaultEventHistoryService eventHistoryService;
+  final VaultEventHistoryRepository eventHistoryRepository;
 
   Future<DbResult<Unit>> restoreRevision({
     required String historyId,
@@ -177,7 +177,7 @@ class VaultHistoryRestoreService {
           throw _InternalRestoreFailure(linksRes.exceptionOrNull()!);
         }
 
-        final eventRes = await eventHistoryService.writeEvent(
+        final eventRes = await eventHistoryRepository.writeEvent(
           itemId: selected.base.itemId,
           type: selected.base.type,
           action: VaultEventHistoryAction.restored,

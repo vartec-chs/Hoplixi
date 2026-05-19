@@ -14,6 +14,7 @@ import 'package:hoplixi/main_db/core/repositories/base/password_repository.dart'
 import 'package:hoplixi/main_db/core/repositories/base/recovery_codes_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/ssh_key_repository.dart';
 import 'package:hoplixi/main_db/core/repositories/base/wifi_repository.dart';
+import 'package:hoplixi/main_db/core/repositories/vault_event_history_repository.dart';
 import 'package:hoplixi/main_db/core/services/history/history.dart';
 import 'package:hoplixi/main_db/core/services/vault_typed_view_resolver.dart';
 
@@ -248,13 +249,13 @@ class VaultHistoryServiceAssembly {
   late final StoreHistoryPolicyService policyService =
       StoreHistoryPolicyService(db.storeSettingsDao);
 
-  late final VaultEventHistoryService eventHistoryService =
-      VaultEventHistoryService(db.vaultEventsHistoryDao);
+  late final VaultEventHistoryRepository eventHistoryRepository =
+      VaultEventHistoryRepository(db.vaultEventsHistoryDao);
 
   late final VaultHistoryService historyService = VaultHistoryService(
     policyService: policyService,
     snapshotWriter: snapshotWriter,
-    eventHistoryService: eventHistoryService,
+    eventHistoryRepository: eventHistoryRepository,
   );
 
   late final VaultHistoryRestoreService restoreService =
@@ -280,7 +281,7 @@ class VaultHistoryServiceAssembly {
         ),
         viewResolver: viewResolver,
         snapshotWriter: snapshotWriter,
-        eventHistoryService: eventHistoryService,
+        eventHistoryRepository: eventHistoryRepository,
       );
 
   late final VaultHistoryDeleteService deleteService =

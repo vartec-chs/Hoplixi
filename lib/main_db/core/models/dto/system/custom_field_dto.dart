@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/vault_items/vault_item_custom_fields.dart';
-import '../field_update.dart';
+import '../../../tables/vault_items/vault_item_custom_fields.dart';
+import '../../field_update.dart';
 
 part 'custom_field_dto.freezed.dart';
 part 'custom_field_dto.g.dart';

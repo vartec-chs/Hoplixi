@@ -6,10 +6,10 @@ import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dar
 import 'package:hoplixi/main_db/core/tables/vault_items/vault_items.dart';
 import 'package:result_dart/result_dart.dart';
 
-import '../../main_store.dart';
+import '../main_store.dart';
 
-class VaultEventHistoryService {
-  VaultEventHistoryService(this.eventsHistoryDao);
+class VaultEventHistoryRepository {
+  VaultEventHistoryRepository(this.eventsHistoryDao);
 
   final VaultEventsHistoryDao eventsHistoryDao;
 

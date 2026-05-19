@@ -4,8 +4,7 @@ import 'package:result_dart/result_dart.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
 import '../../../main_store.dart';
-import '../../../models/dto/store_meta_dto.dart';
-import '../../../models/mappers/store_meta_mapper.dart';
+import '../../../models/dto/system/store_meta_dto.dart';
 
 class StoreMetaRepository {
   final MainStore db;
@@ -17,19 +16,23 @@ class StoreMetaRepository {
     try {
       final data = await db.storeMetaDao.getStoreMeta();
       if (data == null) {
-        return const Failure(DBCoreError.notFound(
-          entity: 'store_meta',
-          id: 'singleton',
-          message: 'Метаданные хранилища не инициализированы',
-        ));
+        return const Failure(
+          DBCoreError.notFound(
+            entity: 'store_meta',
+            id: 'singleton',
+            message: 'Метаданные хранилища не инициализированы',
+          ),
+        );
       }
-      return Success(data.toDto());
+      return Success(data);
     } catch (e, st) {
-      return Failure(DBCoreError.unknown(
-        message: 'Ошибка при получении метаданных',
-        cause: e,
-        stackTrace: st,
-      ));
+      return Failure(
+        DBCoreError.unknown(
+          message: 'Ошибка при получении метаданных',
+          cause: e,
+          stackTrace: st,
+        ),
+      );
     }
   }
 
@@ -39,11 +42,13 @@ class StoreMetaRepository {
       final exists = await db.storeMetaDao.hasStoreMeta();
       return Success(exists);
     } catch (e, st) {
-      return Failure(DBCoreError.unknown(
-        message: 'Ошибка при проверке наличия хранилища',
-        cause: e,
-        stackTrace: st,
-      ));
+      return Failure(
+        DBCoreError.unknown(
+          message: 'Ошибка при проверке наличия хранилища',
+          cause: e,
+          stackTrace: st,
+        ),
+      );
     }
   }
 
@@ -60,16 +65,20 @@ class StoreMetaRepository {
           modifiedAt: Value(DateTime.now()),
         ),
       );
-      
-      return rows > 0 
-        ? const Success(unit) 
-        : const Failure(DBCoreError.notFound(entity: 'store_meta', id: 'singleton'));
+
+      return rows > 0
+          ? const Success(unit)
+          : const Failure(
+              DBCoreError.notFound(entity: 'store_meta', id: 'singleton'),
+            );
     } catch (e, st) {
-      return Failure(DBCoreError.unknown(
-        message: 'Ошибка при обновлении информации о хранилище',
-        cause: e,
-        stackTrace: st,
-      ));
+      return Failure(
+        DBCoreError.unknown(
+          message: 'Ошибка при обновлении информации о хранилище',
+          cause: e,
+          stackTrace: st,
+        ),
+      );
     }
   }
 
@@ -77,17 +86,13 @@ class StoreMetaRepository {
   Future<DbResult<Unit>> updateLastOpened() async {
     try {
       await db.storeMetaDao.updateStoreMeta(
-        StoreMetaTableCompanion(
-          lastOpenedAt: Value(DateTime.now()),
-        ),
+        StoreMetaTableCompanion(lastOpenedAt: Value(DateTime.now())),
       );
       return const Success(unit);
     } catch (e, st) {
-      return Failure(DBCoreError.sqlite(
-        message: e.toString(),
-        cause: e,
-        stackTrace: st,
-      ));
+      return Failure(
+        DBCoreError.sqlite(message: e.toString(), cause: e, stackTrace: st),
+      );
     }
   }
 
@@ -101,15 +106,99 @@ class StoreMetaRepository {
         modifiedAt: Value(DateTime.now()),
         lastOpenedAt: Value(DateTime.now()),
       );
-      
+
       await db.storeMetaDao.insertStoreMeta(finalCompanion);
       return const Success(unit);
     } catch (e) {
-      return Failure(DBCoreError.conflict(
-        code: 'store.init_failed',
-        message: 'Не удалось инициализировать хранилище (возможно, уже существует)',
-        data: {'error': e.toString()},
-      ));
+      return Failure(
+        DBCoreError.conflict(
+          code: 'store.init_failed',
+          message:
+              'Не удалось инициализировать хранилище (возможно, уже существует)',
+          data: {'error': e.toString()},
+        ),
+      );
+    }
+  }
+
+  /// Получить краткую информацию о хранилище (без секретных данных).
+  Future<DbResult<StoreInfoDto>> getStoreInfo() async {
+    try {
+      final data = await db.storeMetaDao.getStoreInfo();
+
+      if (data == null) {
+        return const Failure(
+          DBCoreError.notFound(
+            entity: 'store_meta',
+            id: 'singleton',
+            message: 'Информация о хранилище не найдена',
+          ),
+        );
+      }
+
+      return Success(data);
+    } catch (e, st) {
+      return Failure(
+        DBCoreError.unknown(
+          message: 'Ошибка при получении информации о хранилище',
+          cause: e,
+          stackTrace: st,
+        ),
+      );
+    }
+  }
+
+  /// Получить ключ для вложений (encryption key).
+  Future<DbResult<String>> getAttachmentKey() async {
+    try {
+      final key = await db.storeMetaDao.getAttachmentKey();
+
+      if (key == null) {
+        return const Failure(
+          DBCoreError.notFound(
+            entity: 'store_meta',
+            id: 'attachment_key',
+            message: 'Attachment key не найден',
+          ),
+        );
+      }
+
+      return Success(key);
+    } catch (e, st) {
+      return Failure(
+        DBCoreError.unknown(
+          message: 'Ошибка при получении attachment key',
+          cause: e,
+          stackTrace: st,
+        ),
+      );
+    }
+  }
+
+  /// Получить хэш пароля хранилища.
+  Future<DbResult<String>> getPasswordHash() async {
+    try {
+      final hash = await db.storeMetaDao.getPasswordHash();
+
+      if (hash == null) {
+        return const Failure(
+          DBCoreError.notFound(
+            entity: 'store_meta',
+            id: 'password_hash',
+            message: 'Password hash не найден',
+          ),
+        );
+      }
+
+      return Success(hash);
+    } catch (e, st) {
+      return Failure(
+        DBCoreError.unknown(
+          message: 'Ошибка при получении password hash',
+          cause: e,
+          stackTrace: st,
+        ),
+      );
     }
   }
 }

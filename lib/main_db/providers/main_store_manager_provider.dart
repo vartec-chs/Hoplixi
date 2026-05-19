@@ -7,7 +7,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/models/db_state.dart';
 import 'package:hoplixi/main_db/models/session.dart';
 import 'package:synchronized/synchronized.dart';
@@ -568,7 +568,7 @@ class MainStoreManagerNotifier extends AsyncNotifier<DatabaseState> {
     }
   }
 
-  Future<bool> updateStore(UpdateStoreDto dto) async {
+  Future<bool> updateStore(PatchStoreDto dto) async {
     return _lock.synchronized(() async {
       try {
         final session = _manager.currentSession;

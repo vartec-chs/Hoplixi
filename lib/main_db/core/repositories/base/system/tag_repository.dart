@@ -3,7 +3,6 @@ import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../main_store.dart';
-import '../../../models/dto/system/tag_dto.dart';
 import '../../../models/mappers/system/tag_mapper.dart';
 
 class TagRepository {
@@ -47,7 +46,6 @@ class TagRepository {
       TagsCompanion(
         name: dto.name.toRequiredValue(),
         color: dto.color.toRequiredValue(),
-        type: dto.type.toRequiredValue(),
         modifiedAt: drift.Value(DateTime.now()),
       ),
     );

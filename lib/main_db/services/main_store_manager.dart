@@ -2,18 +2,18 @@ import 'dart:async';
 
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
-import 'package:hoplixi/main_db/core/old/daos/daos.dart';
+import 'package:hoplixi/main_db/core/daos/daos.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:hoplixi/main_db/models/session.dart';
 import 'package:hoplixi/main_db/services/db_history_services/db_history_services.dart';
 import 'package:hoplixi/main_db/services/main_store_storage_service.dart';
+import 'package:hoplixi/main_db/services/other/file_storage_service.dart';
 import 'package:hoplixi/main_db/usecases/close_main_store.dart';
 import 'package:hoplixi/main_db/usecases/create_main_store.dart';
 import 'package:hoplixi/main_db/usecases/open_main_store.dart';
 import 'package:hoplixi/main_db/usecases/perform_store_cleanup.dart';
 import 'package:hoplixi/main_db/usecases/update_main_store.dart';
-import 'package:hoplixi/main_db/services/other/file_storage_service.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -364,9 +364,7 @@ class MainStoreManager {
     });
   }
 
-  AsyncResultDart<StoreInfoDto, AppError> updateStore(
-    UpdateStoreDto dto,
-  ) async {
+  AsyncResultDart<StoreInfoDto, AppError> updateStore(PatchStoreDto dto) async {
     return _lock.synchronized(() async {
       final session = _currentSession;
       if (session == null) {
@@ -399,12 +397,13 @@ class MainStoreManager {
         );
         if (historyEntry != null) {
           final shouldSavePassword =
-              dto.saveMasterPassword ?? historyEntry.savePassword;
+              dto.saveMasterPassword.valueOrNull ?? historyEntry.savePassword;
 
           await _dbHistoryService.update(
             historyEntry.copyWith(
-              name: dto.name ?? historyEntry.name,
-              description: dto.description ?? historyEntry.description,
+              name: dto.name.valueOrNull ?? historyEntry.name,
+              description:
+                  dto.description.valueOrNull ?? historyEntry.description,
               savePassword: shouldSavePassword,
             ),
           );
@@ -417,7 +416,7 @@ class MainStoreManager {
           } else if (dto.password != null && shouldSavePassword) {
             await _dbHistoryService.setSavedPasswordByPath(
               session.storeDirectoryPath,
-              dto.password,
+              dto.password.valueOrNull,
             );
           }
 
@@ -475,7 +474,6 @@ class MainStoreManager {
             createdAt: meta.createdAt,
             modifiedAt: meta.modifiedAt,
             lastOpenedAt: meta.lastOpenedAt,
-            version: meta.version,
           ),
         );
       } catch (error, stackTrace) {

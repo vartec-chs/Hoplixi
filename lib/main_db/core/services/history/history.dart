@@ -31,7 +31,6 @@ export 'facades/vault_history_timeline_service.dart';
 export 'facades/vault_history_service.dart';
 export 'vault_snapshot_writer.dart';
 export 'policy/store_history_policy_service.dart';
-export 'vault_event_history_service.dart';
 export 'facades/vault_history_delete_service.dart';
 export 'facades/vault_history_detail_service.dart';
 export 'utils/vault_history_diff_service.dart';

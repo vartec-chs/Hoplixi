@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../../tables/system/store/store_settings.dart';
+import '../../field_update.dart';
 
 part 'store_settings_dto.freezed.dart';
 part 'store_settings_dto.g.dart';
@@ -27,4 +29,14 @@ sealed class StoreSettingsViewDto with _$StoreSettingsViewDto {
 
   factory StoreSettingsViewDto.fromJson(Map<String, dynamic> json) =>
       _$StoreSettingsViewDtoFromJson(json);
+}
+
+@freezed
+sealed class PatchStoreSettingDto with _$PatchStoreSettingDto {
+  const factory PatchStoreSettingDto({
+    required String key,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> value,
+    @Default(FieldUpdate.keep()) FieldUpdate<StoreSettingValueType> valueType,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> description,
+  }) = _PatchStoreSettingDto;
 }

@@ -5,7 +5,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
+import 'package:hoplixi/main_db/core/models/dto/dto.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
@@ -69,7 +69,7 @@ class MainStoreMetadataService {
 
   AsyncResultDart<StoreInfoDto, AppError> updateStore(
     MainStore database,
-    UpdateStoreDto dto,
+    PatchStoreDto dto,
   ) async {
     try {
       final currentMetaResult = await getStoreMeta(database);
@@ -90,17 +90,17 @@ class MainStoreMetadataService {
 
       var updatedMeta = currentMeta.copyWith(modifiedAt: DateTime.now());
 
-      if (dto.name != null) {
-        updatedMeta = updatedMeta.copyWith(name: dto.name);
+      if (dto.name.valueOrNull != null) {
+        updatedMeta = updatedMeta.copyWith(name: dto.name.valueOrNull);
       }
 
-      if (dto.description != null) {
-        updatedMeta = updatedMeta.copyWith(description: Value(dto.description));
+      if (dto.description.valueOrNull != null) {
+        updatedMeta = updatedMeta.copyWith(description: Value(dto.description.valueOrNull));
       }
 
-      if (dto.password != null) {
+      if (dto.password.valueOrNull != null) {
         final newSalt = _uuid.v4();
-        final newPasswordHash = _hashPassword(dto.password!, newSalt);
+        final newPasswordHash = _hashPassword(dto.password.valueOrNull!, newSalt);
         updatedMeta = updatedMeta.copyWith(
           passwordHash: newPasswordHash,
           salt: newSalt,
@@ -122,7 +122,7 @@ class MainStoreMetadataService {
     }
   }
 
-  AsyncResultDart<StoreMeta, AppError> getStoreMeta(MainStore database) async {
+  AsyncResultDart<StoreMetaDto, AppError> getStoreMeta(MainStore database) async {
     try {
       final meta = await database.storeMetaDao.getStoreMeta();
 
