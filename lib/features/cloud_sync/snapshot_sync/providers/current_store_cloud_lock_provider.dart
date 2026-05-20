@@ -4,7 +4,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/providers/auth_tokens_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_store_lock.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
-import 'package:hoplixi/main_db/models/db_state.dart';
+import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:result_dart/result_dart.dart';
 
 final currentStoreCloudLockProvider =

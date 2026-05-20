@@ -18,19 +18,19 @@
 - Доработан `VaultCardFilterService` в
   [lib/main_db/core/services/entities/vault_card_filter_service.dart](lib/main_db/core/services/entities/vault_card_filter_service.dart):
   сервис теперь покрывает все карточные `getFiltered`/`countFiltered` вызовы и
-  получает filter DAO напрямую из `MainStore` в момент вызова.
+  получает filter DAO напрямую из `VaultDB` в момент вызова.
 
 ## 2026-05-17
 
 ### docs
 
 - Обновлён [lib/main_db/core/README.md](lib/main_db/core/README.md): добавлена
-  точка входа `MainStore`, уточнены публичные поверхности `tables/tables.dart`,
+  точка входа `VaultDB`, уточнены публичные поверхности `tables/tables.dart`,
   `daos/daos.dart` и `models/dto/dto.dart`, а также текущая структура
   `services/` и `errors/`.
 - Добавлены `VaultSnapshotHistoryFilterDao` и `VaultEventHistoryFilterDao` для
   фильтрации `VaultSnapshotsHistory` и `VaultEventsHistory`; DAO подключены к
-  `MainStore`, экспортам и provider-слою.
+  `VaultDB`, экспортам и provider-слою.
 - В [lib/main_db/core/README.md](lib/main_db/core/README.md) добавлено описание
   `VaultSnapshotHistoryFilter` и `VaultEventHistoryFilter` с примерами
   фильтрации таблиц `VaultSnapshotsHistory` и `VaultEventsHistory`.
@@ -133,7 +133,7 @@
 
 - Добавлены таблицы нового формата документов: `document_versions`,
   `document_version_pages` и `file_metadata_history`, включая Drift-схемы,
-  индексы, timestamp-триггеры, подключение к `MainStore` и миграцию v5.
+  индексы, timestamp-триггеры, подключение к `VaultDB` и миграцию v5.
   `document_versions` хранит snapshot типа документа, а файловые snapshot-ссылки
   вынесены на уровень страниц версии; страницы версии не хранят usage и
   modified/last-used timestamps.
@@ -181,8 +181,8 @@
   `categories.iconId` удалён из схемы таблицы.
 - В `vault_item_history` добавлен snapshot `iconRefId`, history-триггеры теперь
   сохраняют `icon_ref_id` из `vault_items`.
-- `MainStore` переведен на schema version 4 без отдельной versioned migration,
-  так как новый формат иконок несовместим со старой моделью.
+- `VaultDB` переведен на schema version 4 без отдельной versioned migration, так
+  как новый формат иконок несовместим со старой моделью.
 
 ## 2026-05-10
 
@@ -676,8 +676,8 @@
 ### cloud_sync (snapshot sync)
 
 - `SnapshotSyncService` и `StoreSnapshotManifestBuilder` переведены с удалённого
-  `MainStoreStorageService` на new `MainStoreFileService`.
-- В `MainStoreFileService` добавлены helpers для snapshot sync import-flow:
+  `VaultDBStorageService` на new `VaultDBFileService`.
+- В `VaultDBFileService` добавлены helpers для snapshot sync import-flow:
   построение пути файла БД, подготовка уникальной директории импорта и
   нормализация имени хранилища.
 
@@ -691,7 +691,7 @@
 - В new main-store добавлены совместимые facade-экспорты и методы для
   `mainStoreProvider`, `dataUpdateStreamProvider`, backup orchestrator,
   storage-service providers и путей вложений, чтобы UI работал поверх нового
-  `MainStoreManagerNotifier`.
+  `VaultDBManagerNotifier`.
 - Исправлены diagnostics после переключения на non-null
   `mainStoreManagerProvider`: удалены лишние null-checks, устаревший
   `withOpacity`, unused поле автобэкапа и async-gap предупреждения в карточке
@@ -699,11 +699,11 @@
 
 ### db_core (main store manager notifier)
 
-- Добавлена синхронизация на уровне `MainStoreManagerNotifier`: все
-  state-changing операции (`createStore`, `openStore`, `closeStore`,
-  `lockStore`, `unlockStore`, `deleteStore`, `updateStore`) обёрнуты в
-  `_lock.synchronized()` для предотвращения race conditions при одновременных
-  вызовах из разных потоков/async-контекстов.
+- Добавлена синхронизация на уровне `VaultDBManagerNotifier`: все state-changing
+  операции (`createStore`, `openStore`, `closeStore`, `lockStore`,
+  `unlockStore`, `deleteStore`, `updateStore`) обёрнуты в `_lock.synchronized()`
+  для предотвращения race conditions при одновременных вызовах из разных
+  потоков/async-контекстов.
 
 ### db_core (dao providers)
 
@@ -712,7 +712,7 @@
 
 ### db_core (main store metadata)
 
-- `MainStoreMetadataService` переведён с `DatabaseError` на `AppError` для
+- `VaultDBMetadataService` переведён с `DatabaseError` на `AppError` для
   сценариев `recordNotFound`, `queryFailed` и `updateFailed`.
 
 ### archive_storage (import ui)
@@ -723,9 +723,9 @@
 
 ### db_core (main store manager)
 
-- `MainStoreManager.createStore()` и `MainStoreManager.openStore()` теперь
-  закрывают ранее открытое хранилище перед открытием нового, чтобы избежать
-  утечек ресурсов и конфликтов при переключении между хранилищами.
+- `VaultDBManager.createStore()` и `VaultDBManager.openStore()` теперь закрывают
+  ранее открытое хранилище перед открытием нового, чтобы избежать утечек
+  ресурсов и конфликтов при переключении между хранилищами.
 
 ### docs (db_core)
 
@@ -743,21 +743,21 @@
 
 - `DatabaseStatus.closingWithCloudSync` удалён из new-ветки: cloud-sync close
   flow больше не хранится в состоянии БД.
-- `MainStoreManagerNotifier.closeStore()` теперь запускает close-sync только
-  если `closeSyncTrackingProvider` фиксирует логические изменения текущего
+- `VaultDBManagerNotifier.closeStore()` теперь запускает close-sync только если
+  `closeSyncTrackingProvider` фиксирует логические изменения текущего
   `StoreMeta.modifiedAt`; прогресс, prompt и ошибка синхронизации вынесены в
   отдельный `mainStoreCloseSyncProvider`.
-- В new `MainStoreManagerNotifier` реализованы `lockStore(...)` и
+- В new `VaultDBManagerNotifier` реализованы `lockStore(...)` и
   `unlockStore(...)`: lock закрывает текущую сессию с сохранением path/info в
   `DatabaseStatus.locked`, unlock повторно открывает store и заново стартует
   close-sync tracking.
-- В new `MainStoreManager` / `MainStoreManagerNotifier` реализованы
+- В new `VaultDBManager` / `VaultDBManagerNotifier` реализованы
   `deleteStore(...)` и `deleteStoreFromDisk(...)` с закрытием активной сессии,
   удалением history entry и опциональным удалением директории store.
-- `MainStoreManager` в new-ветке теперь сам владеет startup cleanup после
+- `VaultDBManager` в new-ветке теперь сам владеет startup cleanup после
   create/open, а provider больше не запускает cleanup повторно при unlock.
 - Порядок закрытия в new-ветке изменён на after-close sync:
-  `MainStoreManagerNotifier` сначала успешно закрывает store и выставляет
+  `VaultDBManagerNotifier` сначала успешно закрывает store и выставляет
   `DatabaseStatus.closed`, затем запускает snapshot upload и переводит state в
   `DatabaseStatus.idle` только после завершения sync-попытки.
 - `mainStoreCloseSyncController.dart` в new-ветке переписан в service +
@@ -772,30 +772,30 @@
 - Из close-sync service API удалены callback-параметры для prompt/progress flow;
   решение пользователя и progress теперь проходят через state
   `mainStoreCloseSyncProvider`.
-- `MainStoreCloseSyncNotifier.uploadSnapshotAfterClose(...)` ждёт решение
+- `VaultDBCloseSyncNotifier.uploadSnapshotAfterClose(...)` ждёт решение
   пользователя через внутренний `Completer`, публикуя
-  `MainStoreCloseSyncPhase.waitingForDecision` для UI.
-- `MainStoreCloseSyncNotifier.uploadSnapshotAfterClose(...)` не принимает
-  `logTag` и не импортирует manager-provider; manager передаёт только уже
-  прочитанные `StoreInfoDto` и путь текущего хранилища.
-- В new `MainStoreManager` добавлен `getStoreInfo()` с `AppError` mapping для
+  `VaultDBCloseSyncPhase.waitingForDecision` для UI.
+- `VaultDBCloseSyncNotifier.uploadSnapshotAfterClose(...)` не принимает `logTag`
+  и не импортирует manager-provider; manager передаёт только уже прочитанные
+  `StoreInfoDto` и путь текущего хранилища.
+- В new `VaultDBManager` добавлен `getStoreInfo()` с `AppError` mapping для
   чтения актуального `StoreMeta` перед close-sync проверкой.
 - Добавлен `closeSyncTrackingProvider` для new-ветки: Riverpod-state для
   отслеживания `openedModifiedAt`, `forceUpload` и pending close-sync prompt.
 - `CloseSyncTrackingState` оставлен простым immutable state-контейнером, вся
   логика изменения close-sync tracking перенесена в notifier.
-- `MainStoreManagerNotifier` теперь стартует close-sync tracking после успешного
+- `VaultDBManagerNotifier` теперь стартует close-sync tracking после успешного
   `create/open` и сбрасывает его при закрытии/reset состояния.
 - Добавлен `mainStoreManagerStateProvider` для new-ветки:
-  `AsyncNotifierProvider<MainStoreManagerNotifier, DatabaseState>` управляет
-  состоянием `create/open/close/update` поверх `MainStoreManager` без
+  `AsyncNotifierProvider<VaultDBManagerNotifier, DatabaseState>` управляет
+  состоянием `create/open/close/update` поверх `VaultDBManager` без
   дополнительного lock-слоя.
-- `MainStoreManager.openStore(...)` в new-ветке теперь после успешного открытия
+- `VaultDBManager.openStore(...)` в new-ветке теперь после успешного открытия
   запускает стартовую очистку хранилища через `unawaited(...)`, как
   old-provider.
 - В `lib/main_db/new/main_store_manager.dart` возвращено stateful-поведение
-  manager как в old-версии: добавлены поля текущего стора (`MainStore`) и
-  текущей `Session`, а также геттеры
+  manager как в old-версии: добавлены поля текущего стора (`VaultDB`) и текущей
+  `Session`, а также геттеры
   `isStoreOpen/currentStore/currentSession/currentStorePath`.
 - В `createStore(...)` и `openStore(...)` текущая сессия теперь сохраняется в
   менеджере после успешного открытия.
@@ -805,12 +805,12 @@
 - `closeStore(...)` теперь закрывает именно текущий активный стор из state
   менеджера (`currentSession`), а при передаче неактивной сессии логирует
   warning и всё равно закрывает активную.
-- В `MainStoreManager.closeStore(...)` (new-ветка) удалён параметр `session`:
+- В `VaultDBManager.closeStore(...)` (new-ветка) удалён параметр `session`:
   метод закрывает только текущую активную `currentSession` из внутреннего
   состояния менеджера.
-- В `MainStoreManager` (new-ветка) добавлен метод
-  `getStoreMeta(MainStore database)` для чтения `StoreMeta` с явным
-  `AppError.mainDatabase`-маппингом (`recordNotFound` / `queryFailed`).
+- В `VaultDBManager` (new-ветка) добавлен метод `getStoreMeta(VaultDB database)`
+  для чтения `StoreMeta` с явным `AppError.mainDatabase`-маппингом
+  (`recordNotFound` / `queryFailed`).
 
 ### docs (agents / errors)
 
@@ -833,16 +833,16 @@
 - Реализован новый use case `lib/main_db/new/usecases/update_main_store.dart`
   для обновления metadata хранилища в открытой `Session` (имя, описание,
   хеш/соль пароля).
-- `MainStoreManager` в new-ветке переведён на `UpdateMainStore`:
-  `updateStore(...)` больше не `UnimplementedError` и выполняет синхронизацию
-  истории (`DatabaseHistoryService`) по аналогии с old-реализацией.
+- `VaultDBManager` в new-ветке переведён на `UpdateVaultDB`: `updateStore(...)`
+  больше не `UnimplementedError` и выполняет синхронизацию истории
+  (`DatabaseHistoryService`) по аналогии с old-реализацией.
 
 ### db_core (usecases utils)
 
 - Общий обработчик ошибок `_handleError` вынесен из `create_main_store.dart` и
   `open_main_store.dart` в `lib/main_db/new/usecases/utils/error_handling.dart`.
-- `CreateMainStore` и `OpenMainStore` переведены на общий helper
-  `handleMainStoreUseCaseError(...)` без изменения сценариев обработки ошибок.
+- `CreateVaultDB` и `OpenVaultDB` переведены на общий helper
+  `handleVaultDBUseCaseError(...)` без изменения сценариев обработки ошибок.
 
 ### db_core (compatibility model)
 
@@ -870,75 +870,73 @@
 
 - Добавлен `mainStoreServiceProvider` в
   `lib/main_db/new/providers/main_store_service_provider.dart`: провайдер
-  ожидает `dbHistoryProvider`, после чего создаёт `MainStoreService` с
+  ожидает `dbHistoryProvider`, после чего создаёт `VaultDBService` с
   инициализированным `DatabaseHistoryService`.
 - Обновлён экспорт new-провайдеров в `lib/main_db/new/providers/index.dart`.
 
 ### db_core (new main store factory)
 
-- Добавлен use case `OpenMainStore` для new-ветки: открытие стора вынесено из
-  будущего `MainStoreService` в отдельный слой с чтением `store_manifest.json`,
-  деривацией ключа, подключением `MainStore`, fallback-подбором `DBCipher` и
+- Добавлен use case `OpenVaultDB` для new-ветки: открытие стора вынесено из
+  будущего `VaultDBService` в отдельный слой с чтением `store_manifest.json`,
+  деривацией ключа, подключением `VaultDB`, fallback-подбором `DBCipher` и
   возвратом `Session`.
-- В new-ветку добавлен `MainStoreCompatibilityService` на `AppError`: проверяет
+- В new-ветку добавлен `VaultDBCompatibilityService` на `AppError`: проверяет
   `manifestVersion`, `lastMigrationVersion` и `appVersion`, блокирует слишком
   новые хранилища и явно сообщает о требуемой миграции.
-- `MainStoreFileService` получил `resolveExistingStoragePath(...)`, чтобы
+- `VaultDBFileService` получил `resolveExistingStoragePath(...)`, чтобы
   `openStore` принимал как директорию хранилища, так и прямой путь к файлу БД.
-- `MainStoreService.openStore(...)` подключён к `OpenMainStore` и после
-  успешного открытия создаёт или обновляет запись `DatabaseHistoryService`;
-  ошибка history логируется warning и не отменяет открытую сессию.
-- Добавлен use case `CloseMainStore` для закрытия `MainStore`; новый
-  `MainStoreManager.closeStore(...)` принимает `Session` явно и не хранит
+- `VaultDBService.openStore(...)` подключён к `OpenVaultDB` и после успешного
+  открытия создаёт или обновляет запись `DatabaseHistoryService`; ошибка history
+  логируется warning и не отменяет открытую сессию.
+- Добавлен use case `CloseVaultDB` для закрытия `VaultDB`; новый
+  `VaultDBManager.closeStore(...)` принимает `Session` явно и не хранит
   состояние открытого стора внутри manager.
-- `MainStoreManager` оставлен stateless-оркестратором use case’ов:
+- `VaultDBManager` оставлен stateless-оркестратором use case’ов:
   `createStore/openStore` возвращают `Session`, а владение текущей сессией будет
   вынесено в отдельный provider.
-- Поток создания нового стора вынесен из `MainStoreFactory` в use case
-  `CreateMainStore` (`lib/main_db/new/usecases/create_main_store.dart`) с единым
-  входом `call(...)`; `MainStoreService` теперь зависит от use case.
+- Поток создания нового стора вынесен из `VaultDBFactory` в use case
+  `CreateVaultDB` (`lib/main_db/new/usecases/create_main_store.dart`) с единым
+  входом `call(...)`; `VaultDBService` теперь зависит от use case.
 - `main_store_factory.dart` оставлен как временная совместимая обёртка над
-  `CreateMainStore` для старых импортов.
+  `CreateVaultDB` для старых импортов.
 - Низкоуровневый поток `createStore(...)` в новой DB-ветке перенесён из
-  `MainStoreService` в `MainStoreFactory`: подготовка директории, создание
-  encrypted `MainStore`, запись `store_meta`, cleanup при ошибках и возврат
-  `Session`.
-- `MainStoreService` оставлен тонкой оболочкой над `MainStoreFactory` с
+  `VaultDBService` в `VaultDBFactory`: подготовка директории, создание encrypted
+  `VaultDB`, запись `store_meta`, cleanup при ошибках и возврат `Session`.
+- `VaultDBService` оставлен тонкой оболочкой над `VaultDBFactory` с
   синхронизацией через `Lock` и делегированием вспомогательных методов путей.
-- `MainStoreFactory` теперь использует существующий `MainStoreConnectionService`
-  для создания encrypted `MainStore`, без дублирования setup
-  SQLite/PRAGMA/cipher в factory.
-- `MainStoreConnectionService` переведён с `DatabaseError` на `AppError`;
-  временный маппинг ошибок подключения в `MainStoreFactory` удалён.
-- Логирование в `MainStoreConnectionService` переведено с `debugPrint` на
+- `VaultDBFactory` теперь использует существующий `VaultDBConnectionService` для
+  создания encrypted `VaultDB`, без дублирования setup SQLite/PRAGMA/cipher в
+  factory.
+- `VaultDBConnectionService` переведён с `DatabaseError` на `AppError`;
+  временный маппинг ошибок подключения в `VaultDBFactory` удалён.
+- Логирование в `VaultDBConnectionService` переведено с `debugPrint` на
   проектные `logInfo/logWarning/logError`.
-- `MainStoreFactory.createStore(...)` снова использует Argon2/HKDF-деривацию
-  через `DbKeyDerivationService`: генерирует `argon2Salt`, передаёт в SQLite
-  derived `pragmaKey` вместо master password и пишет `keyConfig` в
+- `VaultDBFactory.createStore(...)` снова использует Argon2/HKDF-деривацию через
+  `DbKeyDerivationService`: генерирует `argon2Salt`, передаёт в SQLite derived
+  `pragmaKey` вместо master password и пишет `keyConfig` в
   `store_manifest.json`.
 - В `DbKeyDerivationService` сохранён размер соли как в старой реализации:
   `saltLength = 32` (256 бит).
-- `MainStoreService.createStore(...)` после успешного `CreateMainStore` создаёт
+- `VaultDBService.createStore(...)` после успешного `CreateVaultDB` создаёт
   запись в `DatabaseHistoryService` с путём стора, id, именем, описанием и
   опционально сохранённым master password.
 - Для записи history используется фактический `session.storeDirectoryPath`,
-  возвращённый `CreateMainStore`, без повторного вычисления пути в сервисе.
+  возвращённый `CreateVaultDB`, без повторного вычисления пути в сервисе.
 - Ошибка записи в `DatabaseHistoryService` больше не делает `createStore(...)`
   неуспешным: созданная сессия возвращается как `Success(session)`, а сбой
   history логируется как warning.
 - Методы путей и операций директории стора (`getAttachmentsPath`,
   `getDecryptedAttachmentsPath`, `storageDirectoryExists`,
-  `deleteStorageDirectory`) вынесены из `CreateMainStore` в отдельный
-  `MainStoreFileService`.
-- Поиск файла базы (`findDatabaseFile`) также перенесён в
-  `MainStoreFileService`; `CreateMainStore` использует сервис вместо
-  собственного метода.
-- `CreateMainStore` стал устойчивее к будущим сбоям: путь директории строится
-  один раз из уже нормализованного имени, backup-имя для папок без БД больше не
+  `deleteStorageDirectory`) вынесены из `CreateVaultDB` в отдельный
+  `VaultDBFileService`.
+- Поиск файла базы (`findDatabaseFile`) также перенесён в `VaultDBFileService`;
+  `CreateVaultDB` использует сервис вместо собственного метода.
+- `CreateVaultDB` стал устойчивее к будущим сбоям: путь директории строится один
+  раз из уже нормализованного имени, backup-имя для папок без БД больше не
   берётся из raw `storeName`, а cleanup директории выполняется даже если
-  закрытие частично созданного `MainStore` завершилось ошибкой.
-- `CreateMainStore.normalizeStorageName(...)` теперь отсекает имена, которые
-  могут превратиться в некорректный путь (`.`, `..`, имена только из точек и
+  закрытие частично созданного `VaultDB` завершилось ошибкой.
+- `CreateVaultDB.normalizeStorageName(...)` теперь отсекает имена, которые могут
+  превратиться в некорректный путь (`.`, `..`, имена только из точек и
   Windows-reserved имена вроде `CON`, `NUL`, `COM1`, `LPT1`).
 
 ### db_core (store cleanup)
@@ -981,9 +979,9 @@
 
 ### db_core (new main store service)
 
-- `MainStoreService.createStore(...)` в новой DB-ветке переписан как
+- `VaultDBService.createStore(...)` в новой DB-ветке переписан как
   низкоуровневое создание стора: подготовка директории, создание encrypted
-  `MainStore`, первичная запись `store_meta` через DAO и возврат открытой сессии
+  `VaultDB`, первичная запись `store_meta` через DAO и возврат открытой сессии
   без подключения history/manifest/runtime-сервисов.
 
 ## 2026-04-21
@@ -993,41 +991,40 @@
 - Удалён отдельный `mainStoreOpeningOverlayProvider`: глобальный overlay
   открытия хранилища теперь определяется напрямую по `DatabaseState`, а не по
   побочному boolean-провайдеру.
-- В `DatabaseStatus` добавлено явное состояние `opening`;
-  `MainStoreAsyncNotifier` переводит хранилище в него в начале `openStore(...)`,
-  а migration-flow использует тот же статус уже на этапе
-  `backup -> migrate -> open`.
+- В `DatabaseStatus` добавлено явное состояние `opening`; `VaultDBAsyncNotifier`
+  переводит хранилище в него в начале `openStore(...)`, а migration-flow
+  использует тот же статус уже на этапе `backup -> migrate -> open`.
 - Обновлены потребители UI-состояния открытия: `AppRuntimeWrapper`,
   `RecentDatabaseCard` и status bar теперь различают `opening` и обычный
   `loading`.
 
 ### db_core (runtime split)
 
-- `MainStoreManager` вынесен из `MainStoreRuntime` в отдельный
+- `VaultDBManager` вынесен из `VaultDBRuntime` в отдельный
   `mainStoreManagerRuntimeProvider`, чтобы runtime больше не смешивал manager и
   service-зависимости в одном объекте.
-- `MainStoreAsyncNotifier`, `MainStoreStorageController`,
-  `MainStoreBackupController`, `MainStoreBackupOrchestrator` и
-  `MainStoreCloseSyncController` переведены на явные зависимости
-  `manager + runtime`, без доступа к manager через `runtime.manager`.
-- `MainStoreBackupService` также вынесен из `MainStoreRuntime` в отдельный
+- `VaultDBAsyncNotifier`, `VaultDBStorageController`, `VaultDBBackupController`,
+  `VaultDBBackupOrchestrator` и `VaultDBCloseSyncController` переведены на явные
+  зависимости `manager + runtime`, без доступа к manager через
+  `runtime.manager`.
+- `VaultDBBackupService` также вынесен из `VaultDBRuntime` в отдельный
   `mainStoreBackupServiceProvider`; backup-поток теперь получает сервис
   напрямую, а runtime оставлен только для maintenance-зависимостей.
-- `MainStoreMaintenanceService` вынесен из `MainStoreRuntime` в отдельный
-  `mainStoreMaintenanceServiceProvider`; после этого `MainStoreRuntime` и
+- `VaultDBMaintenanceService` вынесен из `VaultDBRuntime` в отдельный
+  `mainStoreMaintenanceServiceProvider`; после этого `VaultDBRuntime` и
   `mainStoreRuntimeProvider` полностью удалены, а storage-операции получают
   maintenance-сервис напрямую.
-- В `MainStoreAsyncNotifier` удалены приватные helpers `_handleOpenStoreSuccess`
-  / `_handleOpenStoreFailure`: open-flow теперь замкнут локально внутри
+- В `VaultDBAsyncNotifier` удалены приватные helpers `_handleOpenStoreSuccess` /
+  `_handleOpenStoreFailure`: open-flow теперь замкнут локально внутри
   `_openStore()`, без лишнего прыжка по файлу.
 
 ### db_core (backup isolation)
 
-- Backup-логика полностью вынесена из `MainStoreAsyncNotifier` в отдельный
+- Backup-логика полностью вынесена из `VaultDBAsyncNotifier` в отдельный
   orchestration-слой
   `lib/db_core/provider/main_store_backup_orchestrator_provider.dart`.
-- В `MainStoreAsyncNotifier` удалены backup-методы и backup-controller
-  зависимости (`createBackup`, `startPeriodicBackup`, `stopPeriodicBackup`,
+- В `VaultDBAsyncNotifier` удалены backup-методы и backup-controller зависимости
+  (`createBackup`, `startPeriodicBackup`, `stopPeriodicBackup`,
   `isPeriodicBackupActive`, `backupAndMigrateStore`), чтобы notifier больше не
   зависел от backup-потока.
 - Добавлены `openStoreWithMigration(...)` и `setOpenFailure(...)` как
@@ -1040,7 +1037,7 @@
 ### docs-ai
 
 - Добавлен подробный технический разбор связей и зависимостей
-  `MainStoreAsyncNotifier` в `docs-ai/main-store-async-notifier-analysis.md`:
+  `VaultDBAsyncNotifier` в `docs-ai/main-store-async-notifier-analysis.md`:
   карта используемых сервисов/контроллеров/провайдеров, внутренняя call-graph
   логика, и матрица зависимостей по каждому публичному и приватному методу.
 - В `docs-ai/main-store-async-notifier-analysis.md` добавлена отдельная секция
@@ -1054,7 +1051,7 @@
 
 - `lib/db_core/provider/main_store_provider.dart` декомпозирован на отдельные
   модули библиотеки (`backup`, `lifecycle`, `snapshot_sync`, `storage`) без
-  изменения публичного API `mainStoreProvider` / `MainStoreAsyncNotifier`.
+  изменения публичного API `mainStoreProvider` / `VaultDBAsyncNotifier`.
 - В корневом файле провайдера оставлен только entrypoint библиотеки, общее
   состояние/таймеры и короткие delegating-методы, чтобы lifecycle стора,
   backup-логика, cloud close-sync и storage-операции больше не были смешаны в
@@ -1067,8 +1064,8 @@
 - Fake-модульность через `part` заменена на явные standalone-компоненты:
   добавлены `main_store_runtime_provider.dart`,
   `main_store_backup_controller.dart`, `main_store_storage_controller.dart` и
-  `main_store_close_sync_controller.dart`, а `MainStoreAsyncNotifier` превращён
-  в тонкий session/lifecycle facade.
+  `main_store_close_sync_controller.dart`, а `VaultDBAsyncNotifier` превращён в
+  тонкий session/lifecycle facade.
 - `mainStoreManagerProvider` больше не зависит от внутренних геттеров notifier-а
   и строится через `mainStoreRuntimeProvider` + текущее `DatabaseState`, что
   убирает протекание manager-деталей наружу из session-слоя.
@@ -1305,9 +1302,9 @@
   выделены раннер, runtime-контекст и файл миграции
   `versions/migration_v2.dart`.
 
-- `MainStore.onUpgrade` переведен на вызов централизованного раннера
-  `runMainStoreKnownMigrations(...)`, чтобы новые миграции добавлялись в
-  отдельные файлы по версии.
+- `VaultDB.onUpgrade` переведен на вызов централизованного раннера
+  `runVaultDBKnownMigrations(...)`, чтобы новые миграции добавлялись в отдельные
+  файлы по версии.
 
 - В `main_store_migration_types.dart` уточнены generic-типы колонок до
   `GeneratedColumn<Object>`, чтобы убрать несовместимость с
@@ -1320,10 +1317,10 @@
 ### db_core (main_store_manager)
 
 - Файл `lib/db_core/main_store_manager.dart` очищен и упрощён: логика проверки
-  совместимости версий/миграции вынесена в `MainStoreCompatibilityService`, а
-  сборка и запись `store_manifest.json` — в `MainStoreManifestSyncService`.
-- `MainStoreManager` оставлен как оркестратор жизненного цикла стора без
-  изменения публичного API (`createStore/openStore/closeStore/updateStore`).
+  совместимости версий/миграции вынесена в `VaultDBCompatibilityService`, а
+  сборка и запись `store_manifest.json` — в `VaultDBManifestSyncService`.
+- `VaultDBManager` оставлен как оркестратор жизненного цикла стора без изменения
+  публичного API (`createStore/openStore/closeStore/updateStore`).
 - Добавлены экспорты новых сервисов в `lib/db_core/services/index.dart`.
 
 ### db_core (main_store)
@@ -1332,9 +1329,8 @@
   индексов в отдельные файлы:
   `lib/db_core/main_store_history_triggers_installer.dart` и
   `lib/db_core/main_store_indexes_installer.dart`.
-- В `MainStore` оставлены компактные делегирующие методы
-  `_installHistoryTriggers` и `_installIndexes`, чтобы упростить поддержку и
-  навигацию по файлу.
+- В `VaultDB` оставлены компактные делегирующие методы `_installHistoryTriggers`
+  и `_installIndexes`, чтобы упростить поддержку и навигацию по файлу.
 
 ### db_core (store manifest compatibility)
 
@@ -1358,7 +1354,7 @@
   `OpenStoreScreen`, быстрый вход из `RecentDatabaseCard` и открытие БД по
   launch-path показывают пользователю диалог с предложением создать backup и
   выполнить миграцию.
-- Исправлено сравнение `appVersion` в `MainStoreCompatibilityService`: суффикс
+- Исправлено сравнение `appVersion` в `VaultDBCompatibilityService`: суффикс
   build metadata (`+buildNumber`) больше не влияет на решение о миграции, чтобы
   одинаковая версия приложения с другим номером сборки не считалась
   несовместимой.
@@ -1366,7 +1362,7 @@
 ### docs (agent)
 
 - В `AGENT.md` добавлено упоминание гайда `docs-ai/db-migrations.md` как
-  основного источника по реализации версионированных миграций `MainStore`.
+  основного источника по реализации версионированных миграций `VaultDB`.
 
 ### docs (release)
 

@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 part 'icon_pagination_state.freezed.dart';
 

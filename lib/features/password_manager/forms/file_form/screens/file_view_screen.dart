@@ -10,7 +10,7 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_f
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';

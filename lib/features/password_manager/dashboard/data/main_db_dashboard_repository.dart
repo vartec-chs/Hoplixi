@@ -7,7 +7,7 @@ import 'package:hoplixi/main_db/core/old/daos/crud/vault_item_dao.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/main_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../models/entity_type.dart';

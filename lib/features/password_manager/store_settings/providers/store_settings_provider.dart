@@ -5,17 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
-import 'package:hoplixi/main_db/core/config/store_settings_keys.dart';
-import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
-import 'package:hoplixi/main_db/providers/db_history_provider.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/main_db/providers/other/service_providers.dart';
-import 'package:hoplixi/main_db/services/db_key_derivation_service.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
-import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
+import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
+import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/services/db_key_derivation_service.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
@@ -1009,7 +1009,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     return null;
   }
 
-  /// Хешировать пароль с солью (аналогично MainStoreManager)
+  /// Хешировать пароль с солью (аналогично VaultDBManager)
   String _hashPassword(String password, String salt) {
     final bytes = utf8.encode(password + salt);
     final digest = sha512.convert(bytes);

@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/models/dto/dto.dart';
-import 'package:hoplixi/main_db/core/tables/tables.dart';
-import 'package:hoplixi/main_db/core/tables/vault_items/vault_events_history.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/tables/vault_items/vault_events_history.dart';
 import 'package:uuid/uuid.dart';
 
 import 'test_service_factory.dart';
@@ -10,7 +10,7 @@ import 'test_service_factory.dart';
 class TestDataFactory {
   TestDataFactory(this.db);
 
-  final MainStore db;
+  final VaultDB db;
 
   Future<String> insertCategory({
     String name = 'Work',
@@ -67,11 +67,7 @@ class TestDataFactory {
         ),
       );
       await db.apiKeyItemsDao.insertApiKey(
-        ApiKeyItemsCompanion.insert(
-          itemId: itemId,
-          service: service,
-          key: key,
-        ),
+        ApiKeyItemsCompanion.insert(itemId: itemId, service: service, key: key),
       );
     });
     return itemId;
@@ -110,14 +106,8 @@ class TestDataFactory {
     final apiKeyService = serviceFactory.createApiKeyService();
 
     final dto = CreateApiKeyDto(
-      item: VaultItemCreateDto(
-        name: name,
-        categoryId: categoryId,
-      ),
-      apiKey: ApiKeyDataDto(
-        service: service,
-        key: key,
-      ),
+      item: VaultItemCreateDto(name: name, categoryId: categoryId),
+      apiKey: ApiKeyDataDto(service: service, key: key),
       tagIds: tagIds,
     );
 
@@ -129,7 +119,9 @@ class TestDataFactory {
     ResultSetImplementation<T, Object?> table,
   ) async {
     final countExp = countAll();
-    final row = await (db.selectOnly(table)..addColumns([countExp])).getSingle();
+    final row = await (db.selectOnly(
+      table,
+    )..addColumns([countExp])).getSingle();
     return row.read(countExp) ?? 0;
   }
 }

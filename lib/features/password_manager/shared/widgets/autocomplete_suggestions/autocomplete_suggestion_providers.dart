@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 
 /// State for login and email autocomplete suggestions.
 class AutocompleteSuggestionsState {
@@ -136,7 +136,7 @@ class CurrentStoreAutocompleteSuggestionsNotifier
     return suggestions;
   }
 
-  Future<MainStore> _requireOpenStore() async {
+  Future<VaultDB> _requireOpenStore() async {
     await ref.read(mainStoreManagerStateProvider.future);
     final store = ref.read(mainStoreManagerStateProvider.notifier).currentStore;
 
@@ -152,7 +152,7 @@ class CurrentStoreAutocompleteSuggestionsNotifier
   }
 
   Future<List<String>> _selectSuggestions(
-    MainStore store,
+    VaultDB store,
     String sql,
     String query,
   ) async {

@@ -1,16 +1,16 @@
-# DB Migrations Guide (MainStore)
+# DB Migrations Guide (VaultDB)
 
 ## Назначение
 
 Этот гайд описывает, как добавлять **версионированные миграции** для Drift
-`MainStore` через каркас в `lib/db_core/migrations/`.
+`VaultDB` через каркас в `lib/db_core/migrations/`.
 
 Текущая архитектура:
 
 - раннер: `lib/db_core/migrations/main_store_migration_runner.dart`
 - runtime-контекст: `lib/db_core/migrations/main_store_migration_types.dart`
 - version-файлы: `lib/db_core/migrations/versions/migration_v{N}.dart`
-- вызов раннера: `MainStore.onUpgrade` в `lib/db_core/main_store.dart`
+- вызов раннера: `VaultDB.onUpgrade` в `lib/db_core/main_store.dart`
 
 ## Правила именования
 
@@ -38,7 +38,7 @@
 ```dart
 Future<void> migrateToV3(
   Migrator migrator,
-  MainStoreMigrationRuntime runtime,
+  VaultDBMigrationRuntime runtime,
 ) async {
   // migration steps
 }
@@ -51,7 +51,7 @@ Future<void> migrateToV3(
 - Добавить запись в `_mainStoreMigrationsByVersion`:
 
 ```dart
-final Map<int, MainStoreMigration> _mainStoreMigrationsByVersion = {
+final Map<int, VaultDBMigration> _mainStoreMigrationsByVersion = {
   2: migrateToV2,
   3: migrateToV3,
 };
@@ -59,9 +59,8 @@ final Map<int, MainStoreMigration> _mainStoreMigrationsByVersion = {
 
 1. Если в миграции нужны новые зависимости (таблицы/колонки/хуки).
 
-- Добавить поля в `MainStoreMigrationRuntime`
-  (`main_store_migration_types.dart`).
-- Прокинуть их при создании runtime в `MainStore.onUpgrade` (`main_store.dart`).
+- Добавить поля в `VaultDBMigrationRuntime` (`main_store_migration_types.dart`).
+- Прокинуть их при создании runtime в `VaultDB.onUpgrade` (`main_store.dart`).
 
 1. Реализовать миграционные шаги.
 
@@ -79,9 +78,9 @@ import 'package:hoplixi/db_core/migrations/main_store_migration_types.dart';
 
 Future<void> migrateToV3(
   Migrator migrator,
-  MainStoreMigrationRuntime runtime,
+  VaultDBMigrationRuntime runtime,
 ) async {
-  const logTag = 'MainStoreMigration';
+  const logTag = 'VaultDBMigration';
   logInfo('Running migration to schema version 3', tag: logTag);
 
   // Пример: добавить колонку
@@ -105,7 +104,7 @@ Future<void> migrateToV3(
 
 1. Не использовать fallback как рабочую миграцию.
 
-- В `MainStore.onUpgrade` есть dev-fallback с пересозданием схемы, потенциально
+- В `VaultDB.onUpgrade` есть dev-fallback с пересозданием схемы, потенциально
   деструктивный для данных.
 - Для production добавляйте явные migration-скрипты для каждой новой версии.
 
@@ -125,8 +124,7 @@ Future<void> migrateToV3(
 
 1. Миграция зарегистрирована в раннере.
 
-1. При необходимости расширен `MainStoreMigrationRuntime` и wiring в
-   `MainStore`.
+1. При необходимости расширен `VaultDBMigrationRuntime` и wiring в `VaultDB`.
 
 1. Выполнены проверки.
 

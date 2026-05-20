@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/main_db/core/errors/db_error.dart';
-import 'package:hoplixi/main_db/core/models/dto/dto.dart';
-import 'package:hoplixi/main_db/core/validators/api_key_validator.dart';
+import 'package:hoplixi/vault_db/core/errors/db_error.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/validators/api_key_validator.dart';
 
 void main() {
   group('ApiKeyValidator', () {

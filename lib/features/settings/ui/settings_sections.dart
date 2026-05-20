@@ -8,9 +8,9 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_section_card.dart';
 import 'package:hoplixi/features/settings/ui/widgets/settings_tile.dart';
-import 'package:hoplixi/main_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
+import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 import 'package:universal_platform/universal_platform.dart';
 
@@ -523,7 +523,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _runManualBackup(
     BuildContext context,
-    MainStoreBackupOrchestrator backupOrchestrator,
+    VaultDBBackupOrchestrator backupOrchestrator,
     BackupScope scope,
     String? backupPath,
     int backupMaxPerStore,
@@ -548,7 +548,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupScopeDialog(
     BuildContext context,
-    MainStoreBackupOrchestrator backupOrchestrator,
+    VaultDBBackupOrchestrator backupOrchestrator,
     BackupScope currentScope,
     bool autoBackupEnabled,
     int backupIntervalMinutes,
@@ -592,7 +592,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupIntervalDialog(
     BuildContext context,
-    MainStoreBackupOrchestrator backupOrchestrator,
+    VaultDBBackupOrchestrator backupOrchestrator,
     int currentIntervalMinutes,
     bool autoBackupEnabled,
     BackupScope backupScope,
@@ -638,7 +638,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupMaxCountDialog(
     BuildContext context,
-    MainStoreBackupOrchestrator backupOrchestrator,
+    VaultDBBackupOrchestrator backupOrchestrator,
     int currentMaxCount,
     bool autoBackupEnabled,
     int backupIntervalMinutes,
@@ -684,7 +684,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   Future<void> _showBackupPathDialog(
     BuildContext context,
-    MainStoreBackupOrchestrator backupOrchestrator,
+    VaultDBBackupOrchestrator backupOrchestrator,
     bool autoBackupEnabled,
     int backupIntervalMinutes,
     BackupScope backupScope,

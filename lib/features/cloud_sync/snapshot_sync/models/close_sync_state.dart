@@ -1,7 +1,7 @@
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 
-enum MainStoreCloseSyncPhase {
+enum VaultDBCloseSyncPhase {
   idle,
   checking,
   waitingForDecision,
@@ -11,7 +11,7 @@ enum MainStoreCloseSyncPhase {
   failed,
 }
 
-enum MainStoreCloseSyncOutcomeType {
+enum VaultDBCloseSyncOutcomeType {
   noLogicalChanges,
   noBinding,
   staleTokenBinding,
@@ -22,48 +22,48 @@ enum MainStoreCloseSyncOutcomeType {
   manualResolutionRequired,
 }
 
-class MainStoreCloseSyncOutcome {
-  const MainStoreCloseSyncOutcome(this.type, {this.resultType});
+class VaultDBCloseSyncOutcome {
+  const VaultDBCloseSyncOutcome(this.type, {this.resultType});
 
-  final MainStoreCloseSyncOutcomeType type;
+  final VaultDBCloseSyncOutcomeType type;
   final SnapshotSyncResultType? resultType;
 
-  bool get completedUpload => type == MainStoreCloseSyncOutcomeType.uploaded;
+  bool get completedUpload => type == VaultDBCloseSyncOutcomeType.uploaded;
 
   bool get clearsTracking =>
-      type == MainStoreCloseSyncOutcomeType.uploaded ||
-      type == MainStoreCloseSyncOutcomeType.alreadySynced;
+      type == VaultDBCloseSyncOutcomeType.uploaded ||
+      type == VaultDBCloseSyncOutcomeType.alreadySynced;
 }
 
-class MainStoreCloseSyncState {
-  const MainStoreCloseSyncState({
-    this.phase = MainStoreCloseSyncPhase.idle,
+class VaultDBCloseSyncState {
+  const VaultDBCloseSyncState({
+    this.phase = VaultDBCloseSyncPhase.idle,
     this.status,
     this.outcome,
     this.error,
   });
 
-  final MainStoreCloseSyncPhase phase;
+  final VaultDBCloseSyncPhase phase;
   final StoreSyncStatus? status;
-  final MainStoreCloseSyncOutcome? outcome;
+  final VaultDBCloseSyncOutcome? outcome;
   final AppError? error;
 
   bool get isActive =>
-      phase == MainStoreCloseSyncPhase.checking ||
-      phase == MainStoreCloseSyncPhase.waitingForDecision ||
-      phase == MainStoreCloseSyncPhase.syncing ||
-      phase == MainStoreCloseSyncPhase.completed;
+      phase == VaultDBCloseSyncPhase.checking ||
+      phase == VaultDBCloseSyncPhase.waitingForDecision ||
+      phase == VaultDBCloseSyncPhase.syncing ||
+      phase == VaultDBCloseSyncPhase.completed;
 
-  MainStoreCloseSyncState copyWith({
-    MainStoreCloseSyncPhase? phase,
+  VaultDBCloseSyncState copyWith({
+    VaultDBCloseSyncPhase? phase,
     StoreSyncStatus? status,
-    MainStoreCloseSyncOutcome? outcome,
+    VaultDBCloseSyncOutcome? outcome,
     AppError? error,
     bool clearStatus = false,
     bool clearOutcome = false,
     bool clearError = false,
   }) {
-    return MainStoreCloseSyncState(
+    return VaultDBCloseSyncState(
       phase: phase ?? this.phase,
       status: clearStatus ? null : status ?? this.status,
       outcome: clearOutcome ? null : outcome ?? this.outcome,

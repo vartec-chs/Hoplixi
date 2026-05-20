@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/main_db/core/errors/db_error.dart';
-import 'package:hoplixi/main_db/core/errors/db_exception_mapper.dart';
-import 'package:hoplixi/main_db/core/tables/api_key/api_key_items.dart';
+import 'package:hoplixi/vault_db/core/errors/db_error.dart';
+import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
+import 'package:hoplixi/vault_db/core/tables/api_key/api_key_items.dart';
 
 void main() {
   group('DbExceptionMapper', () {

@@ -13,9 +13,9 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/store_snapshot_manifest_builder.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/services/main_store_storage_service.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
+import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 
 enum SnapshotConflictResolution { uploadLocal, downloadRemote }
 
@@ -55,7 +55,7 @@ class SnapshotSyncService {
   final SnapshotSyncRepository _repository;
   final StoreSnapshotManifestBuilder _manifestBuilder;
   final SnapshotSyncHashService _hashService;
-  final MainStoreFileService _storageService = const MainStoreFileService();
+  final VaultDBFileService _storageService = const VaultDBFileService();
 
   Future<void> initializeRemoteLayout({
     required String tokenId,

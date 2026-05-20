@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
-import 'package:hoplixi/main_db/services/vault_key_file_service.dart';
+import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/features/password_generator/password_generator_widget.dart';

@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/services/history/vault_snapshot_writer.dart';
-import 'package:hoplixi/main_db/core/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:hoplixi/vault_db/core/services/history/vault_snapshot_writer.dart';
+import 'package:hoplixi/vault_db/core/tables/tables.dart';
 
 import '../../test_utils/test_data_factory.dart';
 import '../../test_utils/test_main_store.dart';
 import '../../test_utils/test_service_factory.dart';
 
 void main() {
-  late MainStore db;
+  late VaultDB db;
   late VaultSnapshotWriter service;
   late TestDataFactory dataFactory;
   late TestServiceFactory serviceFactory;

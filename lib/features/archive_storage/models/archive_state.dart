@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/core/errors/errors.dart';
-import 'package:hoplixi/main_db/models/store_folder_info.dart';
+import 'package:hoplixi/vault_db/models/store_folder_info.dart';
 
 
 part 'archive_state.freezed.dart';

@@ -19,7 +19,7 @@ import 'package:hoplixi/features/local_send/widgets/import_store_archive_dialog.
 import 'package:hoplixi/features/local_send/widgets/send_cloud_sync_tokens_dialog.dart';
 import 'package:hoplixi/features/local_send/widgets/send_store_dialog.dart';
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
-import 'package:hoplixi/main_db/services/archive_service/archive_service.dart';
+import 'package:hoplixi/vault_db/services/archive_service/archive_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:open_file/open_file.dart' as open_file;

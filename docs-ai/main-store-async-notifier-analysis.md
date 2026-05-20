@@ -1,6 +1,6 @@
-# MainStoreAsyncNotifier: связи, сервисы и матрица зависимостей
+# VaultDBAsyncNotifier: связи, сервисы и матрица зависимостей
 
-Документ описывает `MainStoreAsyncNotifier` из
+Документ описывает `VaultDBAsyncNotifier` из
 `lib/db_core/provider/main_store_provider.dart`:
 
 - какие зависимости он инжектит;
@@ -8,16 +8,16 @@
 - какие связи задействованы в каждом методе;
 - где у него внутренние (внутриклассовые) связи между методами.
 
-## 1. Роль MainStoreAsyncNotifier
+## 1. Роль VaultDBAsyncNotifier
 
-`MainStoreAsyncNotifier` — orchestration-слой сессии хранилища:
+`VaultDBAsyncNotifier` — orchestration-слой сессии хранилища:
 
 - держит `DatabaseState` и управляет переходами статусов
   (`idle/open/loading/closingSync/error/...`);
 - сериализует критичные операции через lock (`_operationLock`);
 - делегирует специализированную логику контроллерам (`backup`, `storage`,
   `close-sync`);
-- делегирует lifecycle БД в `MainStoreManager` через `MainStoreRuntime`.
+- делегирует lifecycle БД в `VaultDBManager` через `VaultDBRuntime`.
 
 Он не реализует низкоуровневую работу с файлами/БД/сетью сам, а координирует её.
 
@@ -25,17 +25,17 @@
 
 ## 2.1 Инициализируются в build()
 
-- `MainStoreRuntime _runtime`
+- `VaultDBRuntime _runtime`
   - из `mainStoreRuntimeProvider.future`.
   - содержит:
-    - `MainStoreManager manager`
-    - `MainStoreBackupService backupService`
-    - `MainStoreMaintenanceService maintenanceService`
-- `MainStoreBackupController _backupController`
+    - `VaultDBManager manager`
+    - `VaultDBBackupService backupService`
+    - `VaultDBMaintenanceService maintenanceService`
+- `VaultDBBackupController _backupController`
   - из `mainStoreBackupControllerProvider`.
-- `MainStoreStorageController _storageController`
+- `VaultDBStorageController _storageController`
   - из `mainStoreStorageControllerProvider`.
-- `MainStoreCloseSyncController _closeSyncController`
+- `VaultDBCloseSyncController _closeSyncController`
   - из `mainStoreCloseSyncControllerProvider`.
 
 ## 2.2 Локальные механизмы сессии
@@ -49,7 +49,7 @@
 
 ## 2.3 Сессионный bridge
 
-- `MainStoreSessionBridge get _sessionBridge`
+- `VaultDBSessionBridge get _sessionBridge`
   - адаптер с callbacks:
     - `readState`
     - `setState`
@@ -62,14 +62,14 @@
 В этом же файле определены смежные провайдеры:
 
 - `mainStoreProvider`:
-  `AsyncNotifierProvider<MainStoreAsyncNotifier, DatabaseState>`
+  `AsyncNotifierProvider<VaultDBAsyncNotifier, DatabaseState>`
   - главный entrypoint.
 - `mainStoreOpeningOverlayProvider`
   - UI-overlay во время открытия/миграции стора.
 - `mainStoreStateProvider`
   - `FutureProvider`, читает итоговое состояние из `mainStoreProvider.future`.
 - `mainStoreManagerProvider`
-  - отдаёт `MainStoreManager?`, если store реально открыт.
+  - отдаёт `VaultDBManager?`, если store реально открыт.
   - зависит от `mainStoreProvider.future` + `mainStoreRuntimeProvider.future`.
 - `dataUpdateStreamProvider`
   - при открытом store отдаёт `currentStore.watchDataChanged().skip(1)`.
@@ -85,9 +85,9 @@ UI close-store flow дергает:
 
 - `resolveCloseStoreUploadDecision(bool)`.
 
-## 4. Карта сервисов, которые реально используются MainStoreAsyncNotifier
+## 4. Карта сервисов, которые реально используются VaultDBAsyncNotifier
 
-## 4.1 Через \_runtime.manager (MainStoreManager)
+## 4.1 Через \_runtime.manager (VaultDBManager)
 
 - `createStore(dto)`
 - `openStore(dto, allowMigration?)`
@@ -103,7 +103,7 @@ UI close-store flow дергает:
 ## 4.2 Через \_runtime.backupService
 
 - `createBackup(...)` (прямо в `backupAndMigrateStore`, и косвенно в
-  `MainStoreBackupController`).
+  `VaultDBBackupController`).
 
 ## 4.3 Через \_runtime.maintenanceService
 
@@ -111,15 +111,15 @@ UI close-store flow дергает:
 - пути вложений/подпапки
 - startup cleanup
 
-(на уровне нотифаера чаще вызывается через `MainStoreStorageController`, а не
+(на уровне нотифаера чаще вызывается через `VaultDBStorageController`, а не
 напрямую).
 
-## 4.4 Через MainStoreBackupController
+## 4.4 Через VaultDBBackupController
 
 - one-shot backup
 - periodic backup timer orchestration
 
-## 4.5 Через MainStoreStorageController
+## 4.5 Через VaultDBStorageController
 
 - delete store / delete from disk
 - attachments/decrypted paths
@@ -127,7 +127,7 @@ UI close-store flow дергает:
 - startup cleanup
 - cleanup decrypted attachments on close/lock
 
-## 4.6 Через MainStoreCloseSyncController
+## 4.6 Через VaultDBCloseSyncController
 
 - pre-close snapshot sync
 - build/format close-sync errors
@@ -397,7 +397,7 @@ UI close-store flow дергает:
   - синхронизировать флаг необходимости close-upload prompt из external
     sync-status.
 
-### currentMainStoreManager (getter)
+### currentVaultDBManager (getter)
 
 - Зависимости:
   - `_runtime.manager`
@@ -411,7 +411,7 @@ UI close-store flow дергает:
   - `logError(...)`
   - `DatabaseError.unknown(...)`
 - Назначение:
-  - гарантированный доступ к открытому `MainStore` или исключение.
+  - гарантированный доступ к открытому `VaultDB` или исключение.
 
 ## 7. Матрица приватных методов и их зависимостей
 
@@ -519,7 +519,7 @@ UI close-store flow дергает:
 - Нужен для: prompt-потока по решению пользователя (сейчас напрямую не
   вызывается из этого файла).
 
-## 8. Внешние вызовы MainStoreAsyncNotifier (основные точки)
+## 8. Внешние вызовы VaultDBAsyncNotifier (основные точки)
 
 Основные модули, которые используют публичный API нотифаера:
 
@@ -545,34 +545,34 @@ UI close-store flow дергает:
 
 ## 9. Короткий итог по связности
 
-`MainStoreAsyncNotifier` — coordinator/facade:
+`VaultDBAsyncNotifier` — coordinator/facade:
 
 - lifecycle и бизнес-решения о state transition живут здесь;
 - filesystem/backup/close-sync вынесены в отдельные контроллеры;
-- доступ к БД lifecycle — через `MainStoreManager` внутри `MainStoreRuntime`;
-- sync-поведение на close изолировано в `MainStoreCloseSyncController` и связано
-  с cloud providers через отдельный слой.
+- доступ к БД lifecycle — через `VaultDBManager` внутри `VaultDBRuntime`;
+- sync-поведение на close изолировано в `VaultDBCloseSyncController` и связано с
+  cloud providers через отдельный слой.
 
 Такое разделение делает нотифаер центральной точкой оркестрации, но без смешения
 низкоуровневых реализаций в одном классе.
 
 ## 10. Методы, использующие одинаковые сервисы (быстрые пометки)
 
-Ниже группировка вида: сервис/зависимость -> какие методы MainStoreAsyncNotifier
+Ниже группировка вида: сервис/зависимость -> какие методы VaultDBAsyncNotifier
 её используют.
 
-MainStoreBackupService (через \_runtime.backupService):
+VaultDBBackupService (через \_runtime.backupService):
 
 - backupAndMigrateStore
 
-MainStoreBackupController:
+VaultDBBackupController:
 
 - createBackup
 - startPeriodicBackup
 - stopPeriodicBackup
 - isPeriodicBackupActive
 
-MainStoreManager (через \_runtime.manager):
+VaultDBManager (через \_runtime.manager):
 
 - createStore
 - openStore
@@ -585,9 +585,9 @@ MainStoreManager (через \_runtime.manager):
 - deleteStoreFromDisk
 - syncPendingSnapshotUploadPrompt
 - currentDatabase
-- currentMainStoreManager
+- currentVaultDBManager
 
-MainStoreStorageController:
+VaultDBStorageController:
 
 - closeStore
 - lockStore
@@ -598,7 +598,7 @@ MainStoreStorageController:
 - createSubfolder
 - \_runStartupCleanup
 
-MainStoreCloseSyncController:
+VaultDBCloseSyncController:
 
 - createStore
 - closeStore

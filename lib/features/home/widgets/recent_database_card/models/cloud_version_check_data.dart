@@ -1,6 +1,6 @@
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 
 class CloudVersionCheckData {
   const CloudVersionCheckData({

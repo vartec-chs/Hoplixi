@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_store_lock.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
-import 'package:hoplixi/main_db/models/db_state.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/models/db_state.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 class CloudStoreLockDialogHost extends ConsumerWidget {

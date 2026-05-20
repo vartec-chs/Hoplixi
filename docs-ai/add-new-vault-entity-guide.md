@@ -70,7 +70,7 @@
 
 ---
 
-## Этап 3. Подключить таблицы и DAO в MainStore
+## Этап 3. Подключить таблицы и DAO в VaultDB
 
 Файл: `lib/db_core/main_store.dart`
 
@@ -80,13 +80,13 @@
 4. Добавь/обнови индексы под типичные `WHERE`/`ORDER BY`, но SQL индексы храни в
    отдельном файле (рекомендуемо: `lib/db_core/indexes/index.dart`), а в
    `_installIndexes()` только разворачивай общий список (например
-   `for (final sql in allMainStoreIndexes)`).
+   `for (final sql in allVaultDBIndexes)`).
 
 > Рекомендация по структуре:
 >
 > - `lib/db_core/indexes/index.dart` — exports
 > - `lib/db_core/indexes/main_store_indexes.dart` —
->   `const List<String> allMainStoreIndexes`
+>   `const List<String> allVaultDBIndexes`
 > - `main_store.dart` — только выполнение SQL из списка
 
 Если это миграция существующей БД:
@@ -300,7 +300,7 @@
   - обязательно отдельно держи history-trigger файлы и timestamps-trigger файлы,
     и экспортируй оба набора
 
-3. Подключи в `MainStore._installHistoryTriggers()`:
+3. Подключи в `VaultDB._installHistoryTriggers()`:
 
 - drop + create в общие списки
 - убедись, что параллельно подключены списки timestamps-триггеров
@@ -362,7 +362,7 @@ dart run build_runner build --delete-conflicting-outputs
 - [ ] Обновлён `filter_modal.dart` и добавлена секция в `filter_sections.dart`
 - [ ] Обновлён `EntityTypeCompactDropdown`/`EntityTypeFullDropdown`
 - [ ] (Опционально, но желательно) history triggers + history dao
-- [ ] Подключены history + timestamps trigger наборы в MainStore
+- [ ] Подключены history + timestamps trigger наборы в VaultDB
 - [ ] `HistoryItemCard` информативно отображает изменения
 - [ ] Сгенерирован код `build_runner`
 - [ ] Пройдены smoke-проверки UI + фильтрации

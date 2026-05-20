@@ -1,7 +1,7 @@
 import 'package:drift/native.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-MainStore createTestStore() {
-  final db = MainStore(NativeDatabase.memory());
+VaultDB createTestStore() {
+  final db = VaultDB(NativeDatabase.memory());
   return db;
 }

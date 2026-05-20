@@ -10,7 +10,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/c
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/main_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 

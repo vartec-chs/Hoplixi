@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 import '../../providers/manager_refresh_trigger_provider.dart';

@@ -12,8 +12,8 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/m
 import 'package:hoplixi/main_db/core/old/daos/daos.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
 import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/main_db/providers/other/service_providers.dart';
-import 'package:hoplixi/main_db/services/other/document_storage_service.dart';
+import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/services/other/document_storage_service.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';

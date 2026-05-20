@@ -13,7 +13,7 @@ import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_resource_ref.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_repository.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:path/path.dart' as p;
 
 class SnapshotSyncRepository implements CloudStoreLockRemoteStore {

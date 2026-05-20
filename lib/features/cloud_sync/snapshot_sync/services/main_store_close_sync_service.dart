@@ -1,10 +1,10 @@
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
 import 'package:hoplixi/features/cloud_sync/http/models/cloud_sync_http_exception.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/close_sync_state.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
-import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/close_sync_state.dart';
 
 class CloseSyncService {
   const CloseSyncService();
@@ -81,13 +81,13 @@ class CloseSyncService {
     );
   }
 
-  MainStoreCloseSyncOutcome skipped(MainStoreCloseSyncOutcomeType type) {
-    return MainStoreCloseSyncOutcome(type);
+  VaultDBCloseSyncOutcome skipped(VaultDBCloseSyncOutcomeType type) {
+    return VaultDBCloseSyncOutcome(type);
   }
 
-  MainStoreCloseSyncOutcome uploaded(SnapshotSyncResultType resultType) {
-    return MainStoreCloseSyncOutcome(
-      MainStoreCloseSyncOutcomeType.uploaded,
+  VaultDBCloseSyncOutcome uploaded(SnapshotSyncResultType resultType) {
+    return VaultDBCloseSyncOutcome(
+      VaultDBCloseSyncOutcomeType.uploaded,
       resultType: resultType,
     );
   }
@@ -147,8 +147,7 @@ class CloseSyncService {
           'Хранилище закрыто, но не удалось отправить изменения в облако: требуется повторно подключить аккаунт синхронизации.',
         _ when message.trim().isNotEmpty =>
           'Хранилище закрыто, но не удалось отправить изменения в облако. $message',
-        _ =>
-          'Хранилище закрыто, но не удалось отправить изменения в облако.',
+        _ => 'Хранилище закрыто, но не удалось отправить изменения в облако.',
       };
     }
 
@@ -161,8 +160,7 @@ class CloseSyncService {
         CloudSyncHttpExceptionType.refreshFailed ||
         CloudSyncHttpExceptionType.unauthorized =>
           'Хранилище закрыто, но не удалось отправить изменения в облако: требуется повторно подключить аккаунт синхронизации.',
-        _ =>
-          'Хранилище закрыто, но не удалось отправить изменения в облако.',
+        _ => 'Хранилище закрыто, но не удалось отправить изменения в облако.',
       };
     }
 

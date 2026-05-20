@@ -13,8 +13,8 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/main_db/providers/decrypted_files_guard_provider.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/decrypted_files_guard_provider.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/setup/di_init.dart';

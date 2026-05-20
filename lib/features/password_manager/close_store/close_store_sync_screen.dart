@@ -7,7 +7,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
-import 'package:hoplixi/main_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
 class CloseStoreSyncScreen extends ConsumerStatefulWidget {
@@ -50,8 +50,8 @@ class _CloseStoreSyncDialogHostState
     super.dispose();
   }
 
-  void _syncCompletedCloseTimer(MainStoreCloseSyncState? closeSyncState) {
-    if (closeSyncState?.phase != MainStoreCloseSyncPhase.completed) {
+  void _syncCompletedCloseTimer(VaultDBCloseSyncState? closeSyncState) {
+    if (closeSyncState?.phase != VaultDBCloseSyncPhase.completed) {
       _completedCloseTimer?.cancel();
       _completedCloseTimer = null;
       return;
@@ -63,7 +63,7 @@ class _CloseStoreSyncDialogHostState
       }
 
       final currentPhase = ref.read(mainStoreCloseSyncProvider).value?.phase;
-      if (currentPhase != MainStoreCloseSyncPhase.completed) {
+      if (currentPhase != VaultDBCloseSyncPhase.completed) {
         return;
       }
 
@@ -232,9 +232,8 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
     final closeSyncState = ref.watch(mainStoreCloseSyncProvider).value;
     final closeSyncStatus = closeSyncState?.status;
     final isCompleted =
-        closeSyncState?.phase == MainStoreCloseSyncPhase.completed;
-    final isChecking =
-        closeSyncState?.phase == MainStoreCloseSyncPhase.checking;
+        closeSyncState?.phase == VaultDBCloseSyncPhase.completed;
+    final isChecking = closeSyncState?.phase == VaultDBCloseSyncPhase.checking;
     final syncStatus = isChecking
         ? null
         : closeSyncStatus ??

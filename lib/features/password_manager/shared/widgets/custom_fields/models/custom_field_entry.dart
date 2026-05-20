@@ -1,4 +1,4 @@
-import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/custom_field_dto.dart';
 import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 

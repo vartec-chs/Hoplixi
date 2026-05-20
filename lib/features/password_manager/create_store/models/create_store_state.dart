@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_db/core/models/db_ciphers.dart';
+import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
 
 part 'create_store_state.freezed.dart';
 

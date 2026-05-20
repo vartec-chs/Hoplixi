@@ -1,0 +1,60 @@
+import 'package:drift/drift.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+
+import '../../../tables/api_key/api_key_items.dart';
+
+part 'api_key_items_dao.g.dart';
+
+@DriftAccessor(tables: [ApiKeyItems])
+class ApiKeyItemsDao extends DatabaseAccessor<VaultDB>
+    with _$ApiKeyItemsDaoMixin {
+  ApiKeyItemsDao(super.db);
+
+  Future<void> insertApiKey(ApiKeyItemsCompanion companion) {
+    return into(apiKeyItems).insert(companion);
+  }
+
+  Future<void> upsertApiKeyItem(ApiKeyItemsCompanion companion) {
+    return into(apiKeyItems).insertOnConflictUpdate(companion);
+  }
+
+  Future<int> updateApiKeyByItemId(
+    String itemId,
+    ApiKeyItemsCompanion companion,
+  ) {
+    return (update(
+      apiKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
+  }
+
+  Future<ApiKeyItemsData?> getApiKeyByItemId(String itemId) {
+    return (select(
+      apiKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
+  }
+
+  Future<bool> existsApiKeyByItemId(String itemId) async {
+    final row =
+        await (selectOnly(apiKeyItems)
+              ..addColumns([apiKeyItems.itemId])
+              ..where(apiKeyItems.itemId.equals(itemId)))
+            .getSingleOrNull();
+
+    return row != null;
+  }
+
+  Future<int> deleteApiKeyByItemId(String itemId) {
+    return (delete(
+      apiKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
+  }
+
+  Future<String?> getApiKeySecretByItemId(String itemId) async {
+    final row =
+        await (selectOnly(apiKeyItems)
+              ..addColumns([apiKeyItems.key])
+              ..where(apiKeyItems.itemId.equals(itemId)))
+            .getSingleOrNull();
+    return row?.read(apiKeyItems.key);
+  }
+}

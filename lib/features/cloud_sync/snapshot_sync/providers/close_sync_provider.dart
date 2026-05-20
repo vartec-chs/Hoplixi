@@ -24,33 +24,32 @@ final closeSyncServiceProvider = Provider<CloseSyncService>(
 );
 
 final mainStoreCloseSyncProvider =
-    AsyncNotifierProvider<CloseSyncNotifier, MainStoreCloseSyncState>(
+    AsyncNotifierProvider<CloseSyncNotifier, VaultDBCloseSyncState>(
       CloseSyncNotifier.new,
     );
 
-class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
-  static const String _logTag = 'MainStoreCloseSyncNotifier';
+class CloseSyncNotifier extends AsyncNotifier<VaultDBCloseSyncState> {
+  static const String _logTag = 'VaultDBCloseSyncNotifier';
 
   Completer<bool>? _closeStoreUploadDecision;
 
-  MainStoreCloseSyncState get _current =>
-      state.value ?? const MainStoreCloseSyncState();
+  VaultDBCloseSyncState get _current =>
+      state.value ?? const VaultDBCloseSyncState();
 
   CloseSyncService get _service => ref.read(closeSyncServiceProvider);
 
   @override
-  Future<MainStoreCloseSyncState> build() async {
+  Future<VaultDBCloseSyncState> build() async {
     ref.onDispose(_completePendingDecisionAsSkipped);
-    return const MainStoreCloseSyncState();
+    return const VaultDBCloseSyncState();
   }
 
-  AsyncResultDart<MainStoreCloseSyncOutcome, AppError>
-  uploadSnapshotAfterClose({
+  AsyncResultDart<VaultDBCloseSyncOutcome, AppError> uploadSnapshotAfterClose({
     required StoreInfoDto storeInfo,
     required String currentStorePath,
   }) async {
-    const checkingState = MainStoreCloseSyncState(
-      phase: MainStoreCloseSyncPhase.checking,
+    const checkingState = VaultDBCloseSyncState(
+      phase: VaultDBCloseSyncPhase.checking,
     );
     _setState(checkingState);
 
@@ -67,7 +66,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
         currentModifiedAt: context.storeInfo.modifiedAt,
       )) {
         final outcome = _service.skipped(
-          MainStoreCloseSyncOutcomeType.noLogicalChanges,
+          VaultDBCloseSyncOutcomeType.noLogicalChanges,
         );
         _completeWithOutcome(
           outcome,
@@ -98,9 +97,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
               .read(storeSyncBindingServiceProvider)
               .getByStoreUuid(context.storeInfo.id);
       if (binding == null) {
-        final outcome = _service.skipped(
-          MainStoreCloseSyncOutcomeType.noBinding,
-        );
+        final outcome = _service.skipped(VaultDBCloseSyncOutcomeType.noBinding);
         _completeWithOutcome(outcome);
         return Success(outcome);
       }
@@ -120,7 +117,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
           },
         );
         final outcome = _service.skipped(
-          MainStoreCloseSyncOutcomeType.staleTokenBinding,
+          VaultDBCloseSyncOutcomeType.staleTokenBinding,
         );
         _completeWithOutcome(outcome);
         return Success(outcome);
@@ -137,7 +134,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
           },
         );
         final outcome = _service.skipped(
-          MainStoreCloseSyncOutcomeType.offlineAutoUpload,
+          VaultDBCloseSyncOutcomeType.offlineAutoUpload,
         );
         _completeWithOutcome(outcome);
         return Success(outcome);
@@ -160,7 +157,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
           autoUploadEnabled: autoUploadEnabled,
         ),
         StoreVersionCompareResult.same => _completeWithOutcome(
-          _service.skipped(MainStoreCloseSyncOutcomeType.alreadySynced),
+          _service.skipped(VaultDBCloseSyncOutcomeType.alreadySynced),
           logMessage:
               'Skipping snapshot upload after close because local and remote versions match.',
           logData: <String, dynamic>{'storeUuid': context.storeInfo.id},
@@ -169,7 +166,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
         StoreVersionCompareResult.conflict ||
         StoreVersionCompareResult.differentStore => _completeWithOutcome(
           _service.skipped(
-            MainStoreCloseSyncOutcomeType.manualResolutionRequired,
+            VaultDBCloseSyncOutcomeType.manualResolutionRequired,
           ),
           logMessage:
               'Skipping snapshot upload after close because manual resolution is required.',
@@ -198,7 +195,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
           );
       _setState(
         _current.copyWith(
-          phase: MainStoreCloseSyncPhase.failed,
+          phase: VaultDBCloseSyncPhase.failed,
           error: closeSyncError,
         ),
       );
@@ -280,7 +277,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
 
   void reset() {
     _completePendingDecisionAsSkipped();
-    _setState(const MainStoreCloseSyncState());
+    _setState(const VaultDBCloseSyncState());
   }
 
   void clearPublishedStatus() {
@@ -317,7 +314,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     );
   }
 
-  AsyncResultDart<MainStoreCloseSyncOutcome, AppError> _uploadIfAllowed({
+  AsyncResultDart<VaultDBCloseSyncOutcome, AppError> _uploadIfAllowed({
     required StoreSyncStatus status,
     required _CloseSyncContext context,
     required StoreSyncBinding binding,
@@ -343,7 +340,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
         data: <String, dynamic>{'storeUuid': context.storeInfo.id},
       );
       return _completeWithOutcome(
-        _service.skipped(MainStoreCloseSyncOutcomeType.skippedByUser),
+        _service.skipped(VaultDBCloseSyncOutcomeType.skippedByUser),
       );
     }
 
@@ -354,7 +351,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
       binding: binding,
       token: token,
     );
-    _publishStatus(baseStatus, phase: MainStoreCloseSyncPhase.syncing);
+    _publishStatus(baseStatus, phase: VaultDBCloseSyncPhase.syncing);
 
     try {
       final result = await _consumeProgressStream(
@@ -376,7 +373,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
           clearSyncProgress: true,
           isSyncInProgress: false,
         ),
-        phase: MainStoreCloseSyncPhase.syncing,
+        phase: VaultDBCloseSyncPhase.syncing,
       );
 
       logInfo(
@@ -424,7 +421,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     ref.read(closeSyncTrackingProvider.notifier).setPendingPrompt(true);
     _publishStatus(
       _service.closePromptStatus(status),
-      phase: MainStoreCloseSyncPhase.waitingForDecision,
+      phase: VaultDBCloseSyncPhase.waitingForDecision,
     );
 
     final completer = Completer<bool>();
@@ -448,7 +445,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
             syncProgress: event.progress,
             isSyncInProgress: true,
           ),
-          phase: MainStoreCloseSyncPhase.syncing,
+          phase: VaultDBCloseSyncPhase.syncing,
         );
         continue;
       }
@@ -463,8 +460,8 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     return result;
   }
 
-  ResultDart<MainStoreCloseSyncOutcome, AppError> _completeWithOutcome(
-    MainStoreCloseSyncOutcome outcome, {
+  ResultDart<VaultDBCloseSyncOutcome, AppError> _completeWithOutcome(
+    VaultDBCloseSyncOutcome outcome, {
     String? logMessage,
     Map<String, dynamic>? logData,
     bool warning = false,
@@ -484,8 +481,8 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     _setState(
       _current.copyWith(
         phase: outcome.completedUpload
-            ? MainStoreCloseSyncPhase.completed
-            : MainStoreCloseSyncPhase.skipped,
+            ? VaultDBCloseSyncPhase.completed
+            : VaultDBCloseSyncPhase.skipped,
         outcome: outcome,
         clearError: true,
       ),
@@ -495,7 +492,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
 
   void _publishStatus(
     StoreSyncStatus? status, {
-    required MainStoreCloseSyncPhase phase,
+    required VaultDBCloseSyncPhase phase,
   }) {
     _setState(
       _current.copyWith(
@@ -507,7 +504,7 @@ class CloseSyncNotifier extends AsyncNotifier<MainStoreCloseSyncState> {
     );
   }
 
-  void _setState(MainStoreCloseSyncState nextState) {
+  void _setState(VaultDBCloseSyncState nextState) {
     state = AsyncData(nextState);
   }
 

@@ -1,17 +1,20 @@
 # `current_store_sync_provider.dart`
 
-Документ описывает, за что отвечает `currentStoreSyncProvider`, какие публичные сценарии он покрывает и что именно выполняется под капотом на каждом этапе.
+Документ описывает, за что отвечает `currentStoreSyncProvider`, какие публичные
+сценарии он покрывает и что именно выполняется под капотом на каждом этапе.
 
 ## Назначение
 
-`currentStoreSyncProvider` это основной Riverpod-слой для snapshot sync текущего открытого хранилища.
+`currentStoreSyncProvider` это основной Riverpod-слой для snapshot sync текущего
+открытого хранилища.
 
 Он решает четыре задачи:
 
 1. Строит `StoreSyncStatus` для текущего store.
 2. Координирует connect / disconnect / sync / resolve conflict.
 3. Преобразует stream прогресса из `SnapshotSyncService` в UI-состояние.
-4. Поднимает app-level сигнал, если cloud sync больше не может работать с текущим токеном.
+4. Поднимает app-level сигнал, если cloud sync больше не может работать с
+   текущим токеном.
 
 Итоговый источник истины для UI:
 
@@ -47,7 +50,8 @@ final currentStoreSyncProvider =
 - cloud provider вернул `unauthorized`;
 - у store есть binding, но token с этим `tokenId` больше не найден локально.
 
-UI верхнего уровня может подписаться на этот provider и показать диалог ручной переавторизации.
+UI верхнего уровня может подписаться на этот provider и показать диалог ручной
+переавторизации.
 
 ### `StoreSyncStatus`
 
@@ -71,18 +75,17 @@ UI верхнего уровня может подписаться на этот
 
 `CurrentStoreSyncNotifier` опирается на несколько других слоёв:
 
-- `mainStoreProvider`
-  Даёт текущее состояние хранилища: открыто оно или нет, путь и имя.
-- `mainStoreManagerProvider`
-  Даёт доступ к `StoreInfoDto` и операциям над открытым store.
-- `snapshotSyncServiceProvider`
-  Выполняет основную sync-логику: build snapshot, compare, upload, download, resolve conflict.
-- `storeSyncBindingServiceProvider`
-  Читает и пишет binding `storeUuid -> tokenId/provider`.
-- `authTokensProvider`
-  Даёт доступ к сохранённым OAuth tokens.
-- `internetConnectionProvider`
-  Используется для soft-skip remote check, когда store открыт и нет интернета.
+- `mainStoreProvider` Даёт текущее состояние хранилища: открыто оно или нет,
+  путь и имя.
+- `mainStoreManagerProvider` Даёт доступ к `StoreInfoDto` и операциям над
+  открытым store.
+- `snapshotSyncServiceProvider` Выполняет основную sync-логику: build snapshot,
+  compare, upload, download, resolve conflict.
+- `storeSyncBindingServiceProvider` Читает и пишет binding
+  `storeUuid -> tokenId/provider`.
+- `authTokensProvider` Даёт доступ к сохранённым OAuth tokens.
+- `internetConnectionProvider` Используется для soft-skip remote check, когда
+  store открыт и нет интернета.
 
 ---
 
@@ -103,7 +106,8 @@ UI верхнего уровня может подписаться на этот
 
 При `build()` провайдер подписывается на зависимости реактивно.
 
-Это важно, чтобы при изменении store state или manager провайдер мог быть перестроен автоматически.
+Это важно, чтобы при изменении store state или manager провайдер мог быть
+перестроен автоматически.
 
 ---
 
@@ -121,7 +125,7 @@ UI верхнего уровня может подписаться на этот
 
 Никаких remote операций в этом случае не выполняется.
 
-### Шаг 2. Получение `MainStoreManager`
+### Шаг 2. Получение `VaultDBManager`
 
 Если store открыт, берётся `mainStoreManagerProvider`.
 
@@ -165,7 +169,8 @@ _loadToken(binding.tokenId)
 2. Binding удаляется через `deleteBinding(storeInfo.id)`.
 3. Локально `binding = null`.
 
-Это защищает систему от состояния "sync якобы настроен, но реального токена уже нет".
+Это защищает систему от состояния "sync якобы настроен, но реального токена уже
+нет".
 
 ### Шаг 7. Решение, делать ли remote check
 
@@ -206,7 +211,8 @@ _loadToken(binding.tokenId)
 
 Если во время чтения статуса произошла ошибка авторизации:
 
-1. `_reportManualReauthIfNeeded(...)` формирует `CurrentStoreSyncManualReauthIssue`;
+1. `_reportManualReauthIfNeeded(...)` формирует
+   `CurrentStoreSyncManualReauthIssue`;
 2. issue публикуется в `currentStoreSyncManualReauthIssueProvider`;
 3. ошибка пробрасывается дальше.
 
@@ -228,7 +234,8 @@ _loadToken(binding.tokenId)
 
 Если ошибка произошла:
 
-- при наличии старого `StoreSyncStatus` откатывается к предыдущему `AsyncData(previous)`;
+- при наличии старого `StoreSyncStatus` откатывается к предыдущему
+  `AsyncData(previous)`;
 - если предыдущего значения не было, публикует `AsyncError`.
 
 Если `rethrowOnError == true`, ошибка дополнительно пробрасывается выше.
@@ -262,12 +269,15 @@ _loadToken(binding.tokenId)
 Если после сохранения binding произошла ошибка:
 
 - если ошибка `network` или `timeout`, binding можно сохранить;
-- в этом случае UI получает состояние "binding уже есть, но remote manifest пока не прочитан";
-- если ошибка другая, провайдер восстанавливает старый binding либо удаляет новый.
+- в этом случае UI получает состояние "binding уже есть, но remote manifest пока
+  не прочитан";
+- если ошибка другая, провайдер восстанавливает старый binding либо удаляет
+  новый.
 
 ### Дополнительная обработка reauth
 
-Если ошибка выглядит как `unauthorized`, публикуется `CurrentStoreSyncManualReauthIssue`.
+Если ошибка выглядит как `unauthorized`, публикуется
+`CurrentStoreSyncManualReauthIssue`.
 
 ---
 
@@ -285,7 +295,8 @@ _loadToken(binding.tokenId)
    - token
    - remote manifest
    - pending conflict
-5. Запускает `loadStatus()`, чтобы привести итоговое состояние к реальному источнику истины.
+5. Запускает `loadStatus()`, чтобы привести итоговое состояние к реальному
+   источнику истины.
 
 ---
 
@@ -300,7 +311,7 @@ _loadToken(binding.tokenId)
 - `binding`
 - `token`
 - `storePath`
-- `MainStoreManager`
+- `VaultDBManager`
 
 Иначе выбрасывается `StateError`.
 
@@ -332,7 +343,8 @@ _loadToken(binding.tokenId)
 3. вызывается `lockStore(skipSnapshotSync: true)`;
 4. затем запускается `resolveConflictWithProgress(... downloadRemote ...)`;
 5. stream прогресса прокачивается в state;
-6. после успеха строится `StoreSyncStatus` через `_buildLockedDownloadedStatus(...)`.
+6. после успеха строится `StoreSyncStatus` через
+   `_buildLockedDownloadedStatus(...)`.
 
 Итог этого сценария:
 
@@ -371,7 +383,8 @@ UI может показать экран "remote snapshot применён, р�
 
 ### Зачем нужен отдельный метод
 
-Чтобы экран "закрываем и синхронизируем" мог получать подробный progress, не дожидаясь полного `loadStatus()`.
+Чтобы экран "закрываем и синхронизируем" мог получать подробный progress, не
+дожидаясь полного `loadStatus()`.
 
 ### Этапы
 
@@ -385,7 +398,8 @@ UI может показать экран "remote snapshot применён, р�
    - `lastResultType`
    - очищает progress-флаги
 
-Метод возвращает `SnapshotSyncResult`, чтобы вызывающий код мог решить, как завершать close flow.
+Метод возвращает `SnapshotSyncResult`, чтобы вызывающий код мог решить, как
+завершать close flow.
 
 ---
 
@@ -411,7 +425,8 @@ UI может показать экран "remote snapshot применён, р�
 1. Публикуется промежуточный progress state.
 2. Вызывается `lockStore(skipSnapshotSync: true)`.
 3. Запускается `snapshotSyncService.resolveConflictWithProgress(...)`.
-4. После успеха строится locked status через `_buildLockedDownloadedStatus(...)`.
+4. После успеха строится locked status через
+   `_buildLockedDownloadedStatus(...)`.
 
 ### Если выбран `uploadLocal`
 
@@ -437,13 +452,15 @@ UI может показать экран "remote snapshot применён, р�
 - `syncProgress = event.progress`
 - `isSyncInProgress = true`
 
-Когда приходит `SnapshotSyncProgressResult`, он запоминается как terminal result.
+Когда приходит `SnapshotSyncProgressResult`, он запоминается как terminal
+result.
 
 Если stream завершился без terminal result, выбрасывается `StateError`.
 
 ### Что делает `_runProgressStream(...)`
 
-Это обёртка над `_consumeProgressStream(...)`, которая ещё и обрабатывает `unauthorized`.
+Это обёртка над `_consumeProgressStream(...)`, которая ещё и обрабатывает
+`unauthorized`.
 
 Если во время sync/download/upload произошла auth-ошибка:
 
@@ -506,12 +523,14 @@ UI может показать экран "remote snapshot применён, р�
 
 Не переводят всё состояние в `AsyncLoading()`.
 
-Вместо этого провайдер старается сохранить `AsyncData(StoreSyncStatus)` и обновлять внутри него:
+Вместо этого провайдер старается сохранить `AsyncData(StoreSyncStatus)` и
+обновлять внутри него:
 
 - `syncProgress`
 - `isSyncInProgress`
 
-Это нужно, чтобы UI мог показывать живой прогресс, а не только глобальный спиннер.
+Это нужно, чтобы UI мог показывать живой прогресс, а не только глобальный
+спиннер.
 
 ---
 
@@ -538,9 +557,11 @@ lockStore(skipSnapshotSync: true)
 
 ### 4. После успешного sync статус перечитывается заново
 
-Провайдер не пытается вручную восстановить весь финальный state во всех сценариях.
+Провайдер не пытается вручную восстановить весь финальный state во всех
+сценариях.
 
-Обычно он перечитывает реальный статус через `_loadCurrentStatus(...)`, а локально дописывает только transient-результаты вроде `lastResultType`.
+Обычно он перечитывает реальный статус через `_loadCurrentStatus(...)`, а
+локально дописывает только transient-результаты вроде `lastResultType`.
 
 ---
 

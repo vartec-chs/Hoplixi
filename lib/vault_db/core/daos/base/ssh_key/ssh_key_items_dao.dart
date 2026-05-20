@@ -1,0 +1,60 @@
+import 'package:drift/drift.dart';
+
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../../tables/ssh_key/ssh_key_items.dart';
+
+part 'ssh_key_items_dao.g.dart';
+
+@DriftAccessor(tables: [SshKeyItems])
+class SshKeyItemsDao extends DatabaseAccessor<VaultDB>
+    with _$SshKeyItemsDaoMixin {
+  SshKeyItemsDao(super.db);
+
+  Future<void> insertSshKey(SshKeyItemsCompanion companion) {
+    return into(sshKeyItems).insert(companion);
+  }
+
+  Future<int> updateSshKeyByItemId(
+    String itemId,
+    SshKeyItemsCompanion companion,
+  ) {
+    return (update(
+      sshKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).write(companion);
+  }
+
+  Future<SshKeyItemsData?> getSshKeyByItemId(String itemId) {
+    return (select(
+      sshKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).getSingleOrNull();
+  }
+
+  Future<bool> existsSshKeyByItemId(String itemId) async {
+    final row =
+        await (selectOnly(sshKeyItems)
+              ..addColumns([sshKeyItems.itemId])
+              ..where(sshKeyItems.itemId.equals(itemId)))
+            .getSingleOrNull();
+
+    return row != null;
+  }
+
+  Future<int> deleteSshKeyByItemId(String itemId) {
+    return (delete(
+      sshKeyItems,
+    )..where((tbl) => tbl.itemId.equals(itemId))).go();
+  }
+
+  Future<String?> getPrivateKeyByItemId(String itemId) async {
+    final row =
+        await (selectOnly(sshKeyItems)
+              ..addColumns([sshKeyItems.privateKey])
+              ..where(sshKeyItems.itemId.equals(itemId)))
+            .getSingleOrNull();
+    return row?.read(sshKeyItems.privateKey);
+  }
+
+  Future<void> upsertSshKeyItem(SshKeyItemsCompanion companion) {
+    return into(sshKeyItems).insertOnConflictUpdate(companion);
+  }
+}

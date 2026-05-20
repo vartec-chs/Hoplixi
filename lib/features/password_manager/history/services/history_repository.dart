@@ -4,7 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/custom_field_dto.dart';
 import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
 
@@ -15,7 +15,7 @@ part 'history_repository_restore.dart';
 class HistoryRepository {
   const HistoryRepository(this.store);
 
-  final MainStore store;
+  final VaultDB store;
 
   Future<_HistoryLoadResult> loadHistory(HistoryQueryState query) async {
     final history = await _loadSnapshots(query.entityType, query.entityId);

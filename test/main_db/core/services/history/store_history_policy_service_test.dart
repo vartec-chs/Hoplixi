@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hoplixi/main_db/core/config/store_settings_keys.dart';
-import 'package:hoplixi/main_db/core/main_store.dart';
-import 'package:hoplixi/main_db/core/services/history/policy/store_history_policy_service.dart';
+import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:hoplixi/vault_db/core/services/history/policy/store_history_policy_service.dart';
 
 import '../../test_utils/test_main_store.dart';
 import '../../test_utils/test_service_factory.dart';
 
 void main() {
-  late MainStore db;
+  late VaultDB db;
   late StoreHistoryPolicyService service;
 
   setUp(() {

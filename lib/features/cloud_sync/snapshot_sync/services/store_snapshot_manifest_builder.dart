@@ -2,14 +2,13 @@ import 'dart:io';
 
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
-import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
-import 'package:hoplixi/main_db/services/main_store_storage_service.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/model/store_manifest.dart';
-import 'package:hoplixi/main_db/services/store_manifest_service/store_manifest_service.dart';
-
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/attachments_manifest.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/attachments_manifest_file_service.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_hash_service.dart';
+import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
+import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -41,7 +40,7 @@ class StoreSnapshotManifestBuilder {
   final Uuid _uuid;
   final Future<logger_models.DeviceInfo> Function() _deviceInfoLoader;
   final Future<PackageInfo> Function() _packageInfoLoader;
-  final MainStoreFileService _storageService = const MainStoreFileService();
+  final VaultDBFileService _storageService = const VaultDBFileService();
 
   Future<LocalStoreSnapshot> buildAndPersist({
     required String storePath,
