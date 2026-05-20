@@ -22,6 +22,20 @@ sealed class StoreMetaDto with _$StoreMetaDto {
       _$StoreMetaDtoFromJson(json);
 }
 
+@freezed
+sealed class CreateStoreMetaDto with _$CreateStoreMetaDto {
+  const factory CreateStoreMetaDto({
+    required String name,
+    String? description,
+    required String passwordHash,
+    required String attachmentKey,
+    String? id,
+  }) = _CreateStoreMetaDto;
+
+  factory CreateStoreMetaDto.fromJson(Map<String, dynamic> json) =>
+      _$CreateStoreMetaDtoFromJson(json);
+}
+
 /// DTO для просмотра базовой информации о хранилище
 @freezed
 sealed class StoreInfoDto with _$StoreInfoDto {

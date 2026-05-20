@@ -4,7 +4,9 @@ import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/errors/errors.dart';
+import 'package:hoplixi/core/errors/extensions/db_core_error_to_app_error.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/repositories.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
@@ -15,7 +17,7 @@ class VaultDBMetadataService {
 
   VaultDBMetadataService({Uuid? uuid}) : _uuid = uuid ?? const Uuid();
 
-  Future<String> createStoreMetadata({
+  AsyncResultDart<Unit, AppError> createStoreMetadata({
     required VaultDB database,
     required String name,
     required String password,
@@ -25,13 +27,21 @@ class VaultDBMetadataService {
     final passwordHash = _hashPassword(password, salt);
     final attachmentKey = _generateSecureKey();
 
-    return database.storeMetaDao.createStoreMeta(
+    final createDto = CreateStoreMetaDto(
       name: name,
       description: description,
       passwordHash: passwordHash,
-      salt: salt,
       attachmentKey: attachmentKey,
     );
+
+    return StoreMetaRepository(database).createStoreMeta(createDto).then((
+      result,
+    ) {
+      if (result.isError()) {
+        throw result.exceptionOrNull()!.toAppError();
+      }
+      return const Success(unit);
+    });
   }
 
   AsyncResultDart<StoreInfoDto, AppError> getStoreInfo(VaultDB database) async {
@@ -89,12 +99,12 @@ class VaultDBMetadataService {
       var updatedMeta = currentMeta.copyWith(modifiedAt: DateTime.now());
 
       if (dto.name.valueOrNull != null) {
-        updatedMeta = updatedMeta.copyWith(name: dto.name.valueOrNull);
+        updatedMeta = updatedMeta.copyWith(name: dto.name.valueOrNull!);
       }
 
       if (dto.description.valueOrNull != null) {
         updatedMeta = updatedMeta.copyWith(
-          description: Value(dto.description.valueOrNull),
+          description: dto.description.valueOrNull!,
         );
       }
 

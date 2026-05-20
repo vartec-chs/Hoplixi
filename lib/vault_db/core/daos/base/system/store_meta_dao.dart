@@ -64,6 +64,24 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
     );
   }
 
+  Future<void> createStoreMeta(CreateStoreMetaDto dto) {
+    final now = DateTime.now();
+
+    return into(storeMetaTable).insert(
+      StoreMetaTableCompanion.insert(
+        singletonId: const Value(1),
+        id: dto.id == null ? const Value.absent() : Value(dto.id!),
+        name: dto.name,
+        description: Value(dto.description),
+        passwordHash: dto.passwordHash,
+        attachmentKey: dto.attachmentKey,
+        createdAt: Value(now),
+        modifiedAt: Value(now),
+        lastOpenedAt: Value(now),
+      ),
+    );
+  }
+
   Future<void> insertStoreMeta(StoreMetaTableCompanion companion) {
     return into(storeMetaTable).insert(companion);
   }

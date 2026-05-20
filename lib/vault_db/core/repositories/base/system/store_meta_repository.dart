@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
 import '../../../models/dto/system/store_meta_dto.dart';
 
 class StoreMetaRepository {
@@ -31,6 +31,23 @@ class StoreMetaRepository {
           message: 'Ошибка при получении метаданных',
           cause: e,
           stackTrace: st,
+        ),
+      );
+    }
+  }
+
+  ///Создать метаданные хранилища (вызывается при создании нового хранилища).
+  Future<DbResult<Unit>> createStoreMeta(CreateStoreMetaDto dto) async {
+    try {
+      await db.storeMetaDao.createStoreMeta(dto);
+      return const Success(unit);
+    } catch (e) {
+      return Failure(
+        DBCoreError.conflict(
+          code: 'store_meta.create_failed',
+          message:
+              'Не удалось создать метаданные хранилища (возможно, уже существуют)',
+          data: {'error': e.toString()},
         ),
       );
     }
