@@ -48,10 +48,10 @@ Future<void> migrateToV3(
 
 - Открыть `lib/db_core/migrations/main_store_migration_runner.dart`.
 - Добавить импорт нового файла.
-- Добавить запись в `_mainStoreMigrationsByVersion`:
+- Добавить запись в `_vaultDBMigrationsByVersion`:
 
 ```dart
-final Map<int, VaultDBMigration> _mainStoreMigrationsByVersion = {
+final Map<int, VaultDBMigration> _vaultDBMigrationsByVersion = {
   2: migrateToV2,
   3: migrateToV3,
 };

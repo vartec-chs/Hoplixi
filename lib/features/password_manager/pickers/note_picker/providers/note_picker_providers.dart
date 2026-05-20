@@ -70,16 +70,16 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
   /// Загрузить первую страницу заметок
   Future<void> loadInitial(String? excludeNoteId) async {
     final filter = ref.read(notePickerFilterProvider);
-    final mainStoreAsync = ref.read(mainStoreProvider);
+    final vaultDBAsync = ref.read(vaultDBProvider);
 
-    final mainStore = mainStoreAsync.value;
-    if (mainStore == null || !mainStore.isOpen) {
+    final vaultDB = vaultDBAsync.value;
+    if (vaultDB == null || !vaultDB.isOpen) {
       Toaster.error(title: 'Ошибка', description: 'База данных не открыта');
       return;
     }
 
     try {
-      final manager = await ref.read(mainStoreManagerProvider.future);
+      final manager = await ref.read(vaultDBManagerProvider.future);
       if (manager.currentStore == null) {
         Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
         return;
@@ -111,10 +111,10 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
 
     state = state.copyWith(isLoadingMore: true);
 
-    final mainStoreAsync = ref.read(mainStoreProvider);
+    final vaultDBAsync = ref.read(vaultDBProvider);
 
-    final mainStore = mainStoreAsync.value;
-    if (mainStore == null || !mainStore.isOpen) {
+    final vaultDB = vaultDBAsync.value;
+    if (vaultDB == null || !vaultDB.isOpen) {
       state = state.copyWith(isLoadingMore: false);
       return;
     }
@@ -124,7 +124,7 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
       ref.read(notePickerFilterProvider.notifier).incrementOffset();
       final updatedFilter = ref.read(notePickerFilterProvider);
 
-      final manager = await ref.read(mainStoreManagerProvider.future);
+      final manager = await ref.read(vaultDBManagerProvider.future);
       if (manager.currentStore == null) {
         state = state.copyWith(isLoadingMore: false);
         return;

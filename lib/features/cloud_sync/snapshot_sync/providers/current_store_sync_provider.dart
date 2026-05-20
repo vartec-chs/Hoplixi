@@ -88,7 +88,7 @@ class CurrentStoreSyncManualReauthIssueNotifier
 class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
   @override
   Future<StoreSyncStatus> build() async {
-    final storeState = await ref.watch(mainStoreProvider.future);
+    final storeState = await ref.watch(vaultDBProvider.future);
     final status = await _loadCurrentStatus(storeState, useWatch: true);
     _publishCachedSyncStatus(status);
     _syncCloseStoreUploadPromptRequirement(status);
@@ -99,7 +99,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     final previous = state.value;
     state = const AsyncLoading();
     try {
-      final storeState = await ref.read(mainStoreProvider.future);
+      final storeState = await ref.read(vaultDBProvider.future);
       final next = await _loadCurrentStatus(storeState, useWatch: false);
       _setSyncState(next);
     } catch (error, stackTrace) {
@@ -142,9 +142,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       await loadStatus(rethrowOnError: true);
       if (state.value?.compareResult ==
           StoreVersionCompareResult.remoteMissing) {
-        ref
-            .read(mainStoreProvider.notifier)
-            .markSnapshotUploadOnCloseRequired();
+        ref.read(vaultDBProvider.notifier).markSnapshotUploadOnCloseRequired();
       }
       _syncCloseStoreUploadPromptRequirement(state.value);
     } catch (error, stackTrace) {
@@ -213,7 +211,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
 
   void _syncCloseStoreUploadPromptRequirement(StoreSyncStatus? status) {
     ref
-        .read(mainStoreProvider.notifier)
+        .read(vaultDBProvider.notifier)
         .syncPendingSnapshotUploadPrompt(
           storeUuid: status?.storeUuid,
           hasBinding: status?.binding != null,
@@ -240,7 +238,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       throw StateError('Cloud sync is not connected.');
     }
 
-    final manager = await ref.read(mainStoreManagerProvider.future);
+    final manager = await ref.read(vaultDBManagerProvider.future);
     final storeInfoResult = await manager.getStoreInfo();
     final storeInfo = storeInfoResult.fold(
       (info) => info,
@@ -282,7 +280,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       _setSyncState(downloadInProgressState);
       try {
         await ref
-            .read(mainStoreProvider.notifier)
+            .read(vaultDBProvider.notifier)
             .lockStore(skipSnapshotSync: true);
         final result = await _runProgressStream(
           baseState: downloadInProgressState,
@@ -429,7 +427,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       throw StateError('Cloud sync is not connected.');
     }
 
-    final manager = await ref.read(mainStoreManagerProvider.future);
+    final manager = await ref.read(vaultDBManagerProvider.future);
     final storeInfoResult = await manager.getStoreInfo();
     final storeInfo = storeInfoResult.fold(
       (info) => info,
@@ -464,7 +462,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     if (requiresUnlock) {
       try {
         await ref
-            .read(mainStoreProvider.notifier)
+            .read(vaultDBProvider.notifier)
             .lockStore(skipSnapshotSync: true);
       } catch (error, stackTrace) {
         _setSyncState(
@@ -577,7 +575,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     required SnapshotSyncResultType lastResultType,
     bool clearPendingConflict = false,
   }) async {
-    final storeState = await ref.read(mainStoreProvider.future);
+    final storeState = await ref.read(vaultDBProvider.future);
     final refreshed = await _loadCurrentStatus(storeState, useWatch: false);
     return refreshed.copyWith(
       lastResultType: lastResultType,
@@ -662,8 +660,8 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     final manager = useWatch
-        ? await ref.watch(mainStoreManagerProvider.future)
-        : await ref.read(mainStoreManagerProvider.future);
+        ? await ref.watch(vaultDBManagerProvider.future)
+        : await ref.read(vaultDBManagerProvider.future);
 
     final storeInfoResult = await manager.getStoreInfo();
     final storeInfo = storeInfoResult.fold(

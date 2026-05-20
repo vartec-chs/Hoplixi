@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/setup/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 
 /// Состояние автоблокировки
 /// Хранит оставшееся время в секундах или null, если таймер не активен
@@ -78,7 +78,7 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
     });
 
     // Слушаем изменения состояния БД
-    ref.listen(mainStoreProvider, (previous, next) {
+    ref.listen(vaultDBProvider, (previous, next) {
       next.whenData((dbState) {
         // Если БД закрылась или заблокировалась, останавливаем таймер
         if (!dbState.isOpen) {
@@ -96,7 +96,7 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
   }
 
   void _handleLifecycleChange(AppLifecycleState lifecycleState) {
-    final dbState = ref.read(mainStoreProvider).value;
+    final dbState = ref.read(vaultDBProvider).value;
     final isDbOpen = dbState?.isOpen ?? false;
 
     // Проверяем, что таймаут не равен 0 (отключено)
@@ -150,13 +150,13 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
 
   Future<void> _triggerLock() async {
     logInfo('Auto-lock triggered', tag: _tag);
-    await ref.read(mainStoreProvider.notifier).lockStore();
+    await ref.read(vaultDBProvider.notifier).lockStore();
   }
 
   Future<void> _triggerTrayLock() async {
     stopTimer();
     logInfo('Tray mode lock triggered', tag: _tag);
-    await ref.read(mainStoreProvider.notifier).lockStore();
+    await ref.read(vaultDBProvider.notifier).lockStore();
   }
 }
 

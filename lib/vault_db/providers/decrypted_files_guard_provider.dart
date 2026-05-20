@@ -45,13 +45,13 @@ class DecryptedFilesGuardNotifier extends Notifier<DecryptedFilesGuardState> {
   DecryptedFilesGuardState build() {
     ref.onDispose(_dispose);
 
-    ref.listen(mainStoreProvider, (previous, next) {
+    ref.listen(vaultDBManagerStateProvider, (previous, next) {
       next.whenData((dbState) {
         unawaited(_handleDatabaseStateChanged(previous?.value, dbState));
       });
     });
 
-    final currentDbState = ref.read(mainStoreProvider).value;
+    final currentDbState = ref.read(vaultDBManagerStateProvider).value;
     if (currentDbState?.isOpen ?? false) {
       unawaited(_initWhenOpened());
     }
@@ -90,7 +90,7 @@ class DecryptedFilesGuardNotifier extends Notifier<DecryptedFilesGuardState> {
 
   Future<void> _refreshDecryptedPath() async {
     final decryptedPath = await ref
-        .read(mainStoreProvider.notifier)
+        .read(vaultDBManagerStateProvider.notifier)
         .getDecryptedAttachmentsPath();
 
     if (decryptedPath != null && decryptedPath.isNotEmpty) {

@@ -6,11 +6,11 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/store_settings/index.dart';
 import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
-import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
@@ -98,7 +98,7 @@ final class _DashboardSliverAppBarState
     final currentType = widget.entityType;
     final hasActiveFilters = _hasActiveFilters(filters);
     final isStoreOpen = ref
-        .watch(mainStoreProvider)
+        .watch(vaultDBProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
 
     if (_searchController.text != filters.query) {
@@ -431,7 +431,7 @@ final class _DashboardSliverAppBarState
     final scope = _parseBackupScope(scopeRaw);
 
     final result = await ref
-        .read(mainStoreBackupOrchestratorProvider)
+        .read(vaultDBBackupOrchestratorProvider)
         .createBackup(
           scope: scope,
           outputDirPath: backupPath,

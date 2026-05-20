@@ -28,7 +28,7 @@ class VaultDBManager {
   final UpdateVaultDB _updateVaultDB;
   final VaultDBFileService _storageService;
 
-  VaultDB? _currentStore;
+  VaultDB? _currentDB;
   Session? _currentSession;
 
   VaultDBManager({
@@ -45,10 +45,10 @@ class VaultDBManager {
        _updateVaultDB = updateVaultDB ?? UpdateVaultDB(),
        _storageService = storageService ?? const VaultDBFileService();
 
-  bool get isStoreOpen => _currentStore != null && _currentSession != null;
+  bool get isStoreOpen => _currentDB != null && _currentSession != null;
 
-  VaultDB? get currentStore =>
-      _currentStore; // Предоставляет доступ к текущему открытому VaultDB, или null если БД не открыта
+  VaultDB? get currentDB =>
+      _currentDB; // Предоставляет доступ к текущему открытому VaultDB, или null если БД не открыта
 
   Session? get currentSession =>
       _currentSession; // Предоставляет доступ к текущей сессии, которая включает VaultDB, информацию о хранилище и путь к директории. Может быть null, если БД не открыта
@@ -72,7 +72,7 @@ class VaultDBManager {
   }
 
   void _setCurrentSession(Session session) {
-    _currentStore = session.store;
+    _currentDB = session.store;
     _currentSession = session;
   }
 
@@ -83,9 +83,9 @@ class VaultDBManager {
 
     final isSameStorePath =
         _currentSession!.storeDirectoryPath == session.storeDirectoryPath;
-    final isSameStoreInstance = identical(_currentStore, session.store);
+    final isSameStoreInstance = identical(_currentDB, session.store);
     if (isSameStorePath || isSameStoreInstance) {
-      _currentStore = null;
+      _currentDB = null;
       _currentSession = null;
     }
   }
@@ -442,7 +442,7 @@ class VaultDBManager {
 
   AsyncResultDart<StoreInfoDto, AppError> getStoreInfo() async {
     return _lock.synchronized(() async {
-      final currentStore = _currentStore;
+      final currentStore = _currentDB;
       if (currentStore == null) {
         return Failure(
           AppError.mainDatabase(

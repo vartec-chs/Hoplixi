@@ -402,7 +402,7 @@ class BackupSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final backupOrchestrator = ref.read(mainStoreBackupOrchestratorProvider);
+    final backupOrchestrator = ref.read(vaultDBBackupOrchestratorProvider);
 
     final autoBackupEnabled =
         ref.watch(autoBackupEnabledProvider).value ?? false;
@@ -496,7 +496,7 @@ class BackupSettingsSection extends ConsumerWidget {
         //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         //   onTap: () => _showBackupPathDialog(
         //     context,
-        //     mainStoreNotifier,
+        //     vaultDBNotifier,
         //     autoBackupEnabled,
         //     backupIntervalMinutes,
         //     backupScope,
@@ -511,7 +511,7 @@ class BackupSettingsSection extends ConsumerWidget {
         //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         //   onTap: () => _runManualBackup(
         //     context,
-        //     mainStoreNotifier,
+        //     vaultDBNotifier,
         //     backupScope,
         //     backupPath,
         //     backupMaxPerStore,

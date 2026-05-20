@@ -16,38 +16,38 @@ import '../../features/cloud_sync/snapshot_sync/providers/close_sync_tracking_pr
 import '../services/main_store_manager.dart';
 import 'db_history_provider.dart';
 
-final _mainStoreManagerProvider = FutureProvider<VaultDBManager>((ref) async {
+final _vaultDBManagerProvider = FutureProvider<VaultDBManager>((ref) async {
   final dbHistoryService = await ref.watch(dbHistoryProvider.future);
 
   return VaultDBManager(dbHistoryService: dbHistoryService);
 });
 
 // Получение текущего открытого хранилища. Провайдер зависит от состояния менеджера хранилища и возвращает текущее открытое хранилище, если оно есть, или null, если хранилище не открыто.
-final mainStoreSessionProvider = FutureProvider<Session>((ref) async {
-  await ref.watch(mainStoreManagerStateProvider.future);
+final vaultDBSessionProvider = FutureProvider<Session>((ref) async {
+  await ref.watch(vaultDBManagerStateProvider.future);
   final session = ref
-      .read(mainStoreManagerStateProvider.notifier)
+      .read(vaultDBManagerStateProvider.notifier)
       .currentSession;
   return session;
 });
 
-final mainStoreDBProvider = FutureProvider<VaultDB>((ref) async {
-  final session = await ref.read(mainStoreSessionProvider.future);
+final vaultDBProvider = FutureProvider<VaultDB>((ref) async {
+  final session = await ref.read(vaultDBSessionProvider.future);
   return session.store;
 });
 
 // Главный провайдер для управления состоянием базы данных и текущей сессией. Предоставляет методы для создания, открытия, закрытия и обновления хранилища, а также для получения текущего состояния базы данных и сессии. Состояние базы данных включает информацию о пути к хранилищу, информации о хранилище, статусе базы данных и возможных ошибках.
-final mainStoreManagerStateProvider =
+final vaultDBManagerStateProvider =
     AsyncNotifierProvider<VaultDBManagerNotifier, DatabaseState>(
       VaultDBManagerNotifier.new,
     );
 
-final mainStoreStateProvider = FutureProvider<DatabaseState>((ref) async {
-  return ref.watch(mainStoreManagerStateProvider.future);
+final vaultDBStateProvider = FutureProvider<DatabaseState>((ref) async {
+  return ref.watch(vaultDBManagerStateProvider.future);
 });
 
 final dataUpdateStreamProvider = Provider<Stream<void>>((ref) {
-  final state = ref.watch(mainStoreManagerStateProvider);
+  final state = ref.watch(vaultDBManagerStateProvider);
 
   return state.maybeWhen(
     data: (dbState) {
@@ -56,7 +56,7 @@ final dataUpdateStreamProvider = Provider<Stream<void>>((ref) {
       }
 
       final store = ref
-          .read(mainStoreManagerStateProvider.notifier)
+          .read(vaultDBManagerStateProvider.notifier)
           .requireDatabase;
       return store.watchDataChanged().skip(1);
     },
@@ -74,7 +74,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
       state.value ?? const DatabaseState(status: DatabaseStatus.closed);
 
   VaultDB get requireDatabase {
-    final db = _manager.currentStore;
+    final db = _manager.currentDB;
     if (db == null) {
       throw AppError.mainDatabase(
         code: MainDatabaseErrorCode.notInitialized,
@@ -100,7 +100,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
   @override
   Future<DatabaseState> build() async {
     _lock = Lock();
-    final manager = await ref.watch(_mainStoreManagerProvider.future);
+    final manager = await ref.watch(_vaultDBManagerProvider.future);
     _manager = manager;
 
     return _stateFromManager(manager) ??
@@ -259,7 +259,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
 
         final storeInfo = storeInfoResult.getOrThrow();
         ref
-            .read(mainStoreCloseSyncProvider.notifier)
+            .read(vaultDBCloseSyncProvider.notifier)
             .markCurrentStoreUploadRequiredIfLocalNewer(
               storeUuid: storeInfo.id,
               storePath: storePath,
@@ -284,7 +284,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
               error: error,
             ),
           );
-          ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
+          ref.read(vaultDBCloseSyncProvider.notifier).clearPublishedStatus();
           logError('Failed to close store: ${error.message}', tag: _logTag);
           return false;
         }
@@ -294,7 +294,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
 
         if (shouldSyncAfterClose) {
           final closeSyncNotifier = ref.read(
-            mainStoreCloseSyncProvider.notifier,
+            vaultDBCloseSyncProvider.notifier,
           );
           final syncResult = await closeSyncNotifier.uploadSnapshotAfterClose(
             storeInfo: storeInfo,
@@ -326,7 +326,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
         _finalizeClosedStoreAfterCloseSync();
         return true;
       } catch (error, stackTrace) {
-        ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
+        ref.read(vaultDBCloseSyncProvider.notifier).clearPublishedStatus();
         _setUnexpectedErrorState(
           error,
           stackTrace,
@@ -376,7 +376,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
         final storeInfo = storeInfoResult.getOrThrow();
         if (!skipSnapshotSync) {
           ref
-              .read(mainStoreCloseSyncProvider.notifier)
+              .read(vaultDBCloseSyncProvider.notifier)
               .markCurrentStoreUploadRequiredIfLocalNewer(
                 storeUuid: storeInfo.id,
                 storePath: storePath,
@@ -398,7 +398,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
           _setState(
             stateBeforeLock.copyWith(status: DatabaseStatus.open, error: error),
           );
-          ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
+          ref.read(vaultDBCloseSyncProvider.notifier).clearPublishedStatus();
           logError(
             'Failed to close store during lock: ${error.message}',
             tag: _logTag,
@@ -419,7 +419,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
 
         if (shouldSyncAfterLock) {
           final syncResult = await ref
-              .read(mainStoreCloseSyncProvider.notifier)
+              .read(vaultDBCloseSyncProvider.notifier)
               .uploadSnapshotAfterClose(
                 storeInfo: storeInfo,
                 currentStorePath: storePath,
@@ -443,7 +443,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
         _finalizeLockedStoreAfterCloseSync();
         logInfo('Store locked successfully', tag: _logTag);
       } catch (error, stackTrace) {
-        ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
+        ref.read(vaultDBCloseSyncProvider.notifier).clearPublishedStatus();
         _setUnexpectedErrorState(
           error,
           stackTrace,
@@ -683,13 +683,13 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   void resolveCloseStoreUploadDecision(bool shouldUpload) {
     ref
-        .read(mainStoreCloseSyncProvider.notifier)
+        .read(vaultDBCloseSyncProvider.notifier)
         .resolveCloseStoreUploadDecision(shouldUpload);
   }
 
   void markSnapshotUploadOnCloseRequired() {
     ref
-        .read(mainStoreCloseSyncProvider.notifier)
+        .read(vaultDBCloseSyncProvider.notifier)
         .markSnapshotUploadOnCloseRequired(
           storeUuid: _currentState.info?.id,
           storePath: _manager.currentStorePath ?? _currentState.path,
@@ -702,7 +702,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
     required StoreVersionCompareResult? compareResult,
   }) {
     ref
-        .read(mainStoreCloseSyncProvider.notifier)
+        .read(vaultDBCloseSyncProvider.notifier)
         .syncPendingSnapshotUploadPrompt(
           isStoreOpen: _currentState.isOpen,
           currentStorePath: _manager.currentStorePath,
@@ -737,17 +737,17 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
   void _finalizeClosedStoreAfterCloseSync() {
     _setState(const DatabaseState(status: DatabaseStatus.idle));
     ref.read(closeSyncTrackingProvider.notifier).closeSession();
-    ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
+    ref.read(vaultDBCloseSyncProvider.notifier).clearPublishedStatus();
   }
 
   void _finalizeLockedStoreAfterCloseSync() {
     ref.read(closeSyncTrackingProvider.notifier).closeSession();
-    ref.read(mainStoreCloseSyncProvider.notifier).clearPublishedStatus();
+    ref.read(vaultDBCloseSyncProvider.notifier).clearPublishedStatus();
   }
 
   void _finalizeDeletedCurrentStore() {
     ref.read(closeSyncTrackingProvider.notifier).reset();
-    ref.read(mainStoreCloseSyncProvider.notifier).reset();
+    ref.read(vaultDBCloseSyncProvider.notifier).reset();
     _setState(const DatabaseState(status: DatabaseStatus.idle));
   }
 

@@ -8,12 +8,12 @@ import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.da
 import 'package:hoplixi/features/local_send/providers/transfer_provider.dart';
 import 'package:hoplixi/features/setup/providers/setup_completed_provider.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router_refresh_provider.dart';
 import 'package:hoplixi/routing/routes.dart';
 import 'package:hoplixi/shared/widgets/desktop_shell.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -66,7 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutesPaths.cloudSyncAuthProgress;
       }
 
-      final dbStateAsync = ref.read(mainStoreProvider);
+      final dbStateAsync = ref.read(vaultDBProvider);
 
       // Редирект на dashboard если БД открыта и пользователь на пути создания/открытия БД
       if (dbStateAsync.hasValue) {

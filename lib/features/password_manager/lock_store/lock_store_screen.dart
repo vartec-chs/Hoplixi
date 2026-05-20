@@ -6,13 +6,13 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
+import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
-import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 
 class LockStoreScreen extends ConsumerStatefulWidget {
   const LockStoreScreen({super.key});
@@ -39,7 +39,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
   }
 
   Future<void> _checkSavedPassword() async {
-    final dbState = ref.read(mainStoreProvider).value;
+    final dbState = ref.read(vaultDBProvider).value;
     if (dbState?.path == null) return;
 
     final historyService = await ref.read(dbHistoryProvider.future);
@@ -80,28 +80,31 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
     });
 
     try {
-      final dbState = await ref.read(mainStoreProvider.future);
+      final dbState = await ref.read(vaultDBProvider.future);
       final storePath = dbState.path;
       VaultKeyFile? keyFile;
       if (storePath != null) {
         final manifest = await StoreManifestService.readFrom(storePath);
         if (manifest?.useKeyFile == true) {
-
-            final result = await const VaultKeyFileService().pickAndRead();
-            keyFile = result.fold((value) => value, (error) {
-              if (mounted) {
-                Toaster.error(title: 'Ошибка key file', description: error.message);
-              }
-              return null;
-            });
-                    if (keyFile == null) {
+          final result = await const VaultKeyFileService().pickAndRead();
+          keyFile = result.fold((value) => value, (error) {
+            if (mounted) {
+              Toaster.error(
+                title: 'Ошибка key file',
+                description: error.message,
+              );
+            }
+            return null;
+          });
+          if (keyFile == null) {
             return;
           }
           if (keyFile.id != manifest!.keyFileId) {
             if (mounted) {
               Toaster.error(
                 title: 'Неверный key file',
-                description: 'Выбранный JSON key file не подходит для хранилища',
+                description:
+                    'Выбранный JSON key file не подходит для хранилища',
               );
             }
             return;
@@ -109,7 +112,9 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
         }
       }
 
-      final success = await ref.read(mainStoreProvider.notifier).unlockStore(
+      final success = await ref
+          .read(vaultDBProvider.notifier)
+          .unlockStore(
             _passwordController.text,
             keyFileId: keyFile?.id,
             keyFileSecret: keyFile?.secret,
@@ -155,13 +160,13 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
       return;
     }
 
-    ref.read(mainStoreProvider.notifier).resetState();
+    ref.read(vaultDBProvider.notifier).resetState();
     context.go(AppRoutesPaths.home);
   }
 
   @override
   Widget build(BuildContext context) {
-    final dbState = ref.watch(mainStoreProvider).value;
+    final dbState = ref.watch(vaultDBProvider).value;
     final syncState = ref.watch(currentStoreSyncProvider);
     final syncStatus = syncState.value;
     final isSyncStatusLoading = syncState.isLoading && syncStatus == null;
@@ -210,11 +215,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    icon,
-                    size: 64,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(icon, size: 64, color: theme.colorScheme.primary),
                   const SizedBox(height: 24),
                   Text(
                     title,
@@ -354,13 +355,13 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
       StoreSyncActivity.preparingDownload =>
         'Подготавливаем загрузку snapshot из облака',
       StoreSyncActivity.downloading => 'Загружаем snapshot из облака',
-      StoreSyncActivity.checkingStatus =>
-        'Проверяем синхронизацию хранилища',
-      StoreSyncActivity.idle => isApplyingRemoteUpdate
-          ? 'Загружаем новую версию хранилища'
-          : requiresUnlockToApply
-          ? 'Новая версия уже применена'
-          : 'В целях безопасности база данных заблокирована',
+      StoreSyncActivity.checkingStatus => 'Проверяем синхронизацию хранилища',
+      StoreSyncActivity.idle =>
+        isApplyingRemoteUpdate
+            ? 'Загружаем новую версию хранилища'
+            : requiresUnlockToApply
+            ? 'Новая версия уже применена'
+            : 'В целях безопасности база данных заблокирована',
     };
   }
 
@@ -384,11 +385,12 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
         'Загружаем удалённую snapshot-версию. Дождитесь завершения операции.',
       StoreSyncActivity.checkingStatus =>
         'Проверяем локальную и облачную snapshot-версии. Дождитесь завершения проверки.',
-      StoreSyncActivity.idle => isApplyingRemoteUpdate
-          ? 'Найдена новая версия в облаке. Дождитесь завершения загрузки и применения изменений. Пока процесс не завершится, разблокировка и выход недоступны.'
-          : requiresUnlockToApply
-          ? 'Удалённый snapshot уже записан локально. Разблокируйте хранилище, чтобы открыть обновлённые данные.'
-          : 'Разблокируйте хранилище, чтобы продолжить работу.',
+      StoreSyncActivity.idle =>
+        isApplyingRemoteUpdate
+            ? 'Найдена новая версия в облаке. Дождитесь завершения загрузки и применения изменений. Пока процесс не завершится, разблокировка и выход недоступны.'
+            : requiresUnlockToApply
+            ? 'Удалённый snapshot уже записан локально. Разблокируйте хранилище, чтобы открыть обновлённые данные.'
+            : 'Разблокируйте хранилище, чтобы продолжить работу.',
     };
   }
 
@@ -407,11 +409,12 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
       StoreSyncActivity.preparingDownload ||
       StoreSyncActivity.downloading => Icons.cloud_download_outlined,
       StoreSyncActivity.checkingStatus => Icons.cloud_sync_outlined,
-      StoreSyncActivity.idle => isApplyingRemoteUpdate
-          ? Icons.cloud_download_outlined
-          : requiresUnlockToApply
-          ? Icons.cloud_done_outlined
-          : Icons.lock_outline,
+      StoreSyncActivity.idle =>
+        isApplyingRemoteUpdate
+            ? Icons.cloud_download_outlined
+            : requiresUnlockToApply
+            ? Icons.cloud_done_outlined
+            : Icons.lock_outline,
     };
   }
 }

@@ -9,11 +9,11 @@ import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
 final fileStorageServiceProvider = FutureProvider<FileStorageService>((
   ref,
 ) async {
-  final state = await ref.watch(mainStoreManagerStateProvider.future);
-  final manager = ref.read(mainStoreManagerStateProvider.notifier);
-  final store = manager.currentStore;
+  final state = await ref.watch(vaultDBManagerStateProvider.future);
+  final manager = ref.read(vaultDBManagerStateProvider.notifier);
+  final db = manager.requireDatabase;
   final storePath = state.path;
-  if (store == null || storePath == null || storePath.isEmpty) {
+  if (storePath == null || storePath.isEmpty) {
     throw AppError.mainDatabase(
       code: MainDatabaseErrorCode.notInitialized,
       message: 'Хранилище не открыто',
@@ -23,7 +23,7 @@ final fileStorageServiceProvider = FutureProvider<FileStorageService>((
 
   const storageService = VaultDBFileService();
   return FileStorageService(
-    store,
+    db,
     storageService.getAttachmentsPath(storePath),
     storageService.getDecryptedAttachmentsPath(storePath),
   );
@@ -32,19 +32,12 @@ final fileStorageServiceProvider = FutureProvider<FileStorageService>((
 final documentStorageServiceProvider = FutureProvider<DocumentStorageService>((
   ref,
 ) async {
-  await ref.watch(mainStoreManagerStateProvider.future);
-  final manager = ref.read(mainStoreManagerStateProvider.notifier);
-  final store = manager.currentStore;
-  if (store == null) {
-    throw AppError.mainDatabase(
-      code: MainDatabaseErrorCode.notInitialized,
-      message: 'Хранилище не открыто',
-      timestamp: DateTime.now(),
-    );
-  }
+  await ref.watch(vaultDBManagerStateProvider.future);
+  final manager = ref.read(vaultDBManagerStateProvider.notifier);
+  final db = manager.requireDatabase;
 
   final fileStorageService = await ref.watch(fileStorageServiceProvider.future);
-  return DocumentStorageService(store, fileStorageService);
+  return DocumentStorageService(db, fileStorageService);
 });
 
 final performStoreCleanupProvider =
@@ -53,11 +46,11 @@ final performStoreCleanupProvider =
         fileStorageServiceProvider.future,
       );
 
-      await ref.watch(mainStoreManagerStateProvider.future);
-      final manager = ref.read(mainStoreManagerStateProvider.notifier);
+      await ref.watch(vaultDBManagerStateProvider.future);
+      final manager = ref.read(vaultDBManagerStateProvider.notifier);
 
       return PerformStoreCleanup(
-        manager.currentDatabase.storeSettingsDao,
+        manager.requireDatabase.storeSettingsDao,
         fileStorageService,
       );
     });

@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/setup/setup_tray.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 
 class AppLifecycleNotifier extends Notifier<AppLifecycleState> {
   static const String _logTag = 'AppLifecycle';
@@ -49,10 +49,10 @@ class AppLifecycleNotifier extends Notifier<AppLifecycleState> {
   Future<AppExitResponse> onExitRequested() async {
     logInfo('App lifecycle: exit requested', tag: _logTag);
     // Закрываем базу данных, если она открыта
-    final dbState = await ref.read(mainStoreProvider.future);
+    final dbState = await ref.read(vaultDBProvider.future);
     if (dbState.isOpen) {
       logInfo('Closing database before app exit', tag: _logTag);
-      await ref.read(mainStoreProvider.notifier).closeStore();
+      await ref.read(vaultDBProvider.notifier).closeStore();
     }
 
     return AppExitResponse.exit;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 
 enum CloseDatabaseButtonType { icon, smooth }
 
@@ -24,7 +24,7 @@ class _CloseDatabaseButtonState extends ConsumerState<CloseDatabaseButton> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(mainStoreProvider);
+    final state = ref.watch(vaultDBProvider);
     final dbState = state.value;
     final isOpen = dbState?.isOpen ?? false;
     final isBusy = _isClosing;
@@ -69,13 +69,13 @@ class _CloseDatabaseButtonState extends ConsumerState<CloseDatabaseButton> {
     });
 
     try {
-      final success = await ref.read(mainStoreProvider.notifier).closeStore();
+      final success = await ref.read(vaultDBProvider.notifier).closeStore();
       if (!context.mounted || success) {
         return;
       }
 
       final errorMessage =
-          ref.read(mainStoreProvider).value?.error?.message ??
+          ref.read(vaultDBProvider).value?.error?.message ??
           'Не удалось закрыть хранилище.';
       Toaster.error(title: 'Закрытие хранилища', description: errorMessage);
     } finally {

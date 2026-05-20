@@ -4,15 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
+import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
+import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
-import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
-import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
-import 'package:hoplixi/setup/di_init.dart';
 import 'package:path/path.dart' as p;
 
 final openStoreFormProvider =
@@ -234,13 +234,15 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
       final dto = OpenStoreDto(
         path: selectedStorage.path,
         password: _currentState.password,
-        keyFileId: manifest?.useKeyFile == true ? _currentState.keyFileId : null,
+        keyFileId: manifest?.useKeyFile == true
+            ? _currentState.keyFileId
+            : null,
         keyFileSecret: manifest?.useKeyFile == true
             ? _currentState.keyFileSecret
             : null,
       );
 
-      final storeNotifier = ref.read(mainStoreProvider.notifier);
+      final storeNotifier = ref.read(vaultDBProvider.notifier);
       final success = await storeNotifier.openStore(dto);
       if (!_isMounted) {
         return false;
@@ -255,7 +257,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         return true;
       }
 
-      final storeState = await ref.read(mainStoreProvider.future);
+      final storeState = await ref.read(vaultDBProvider.future);
       if (!_isMounted) {
         return false;
       }
@@ -309,7 +311,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         return false;
       }
 
-      final storeNotifier = ref.read(mainStoreProvider.notifier);
+      final storeNotifier = ref.read(vaultDBProvider.notifier);
       final dir = Directory(path).parent;
       final success = await storeNotifier.deleteStoreFromDisk(dir.path);
       if (!_isMounted) {

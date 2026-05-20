@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
-import 'package:hoplixi/shared/ui/button.dart';
 
 bool isStoreMigrationRequiredError(AppError? error) {
-  return error?.codeString == MainDatabaseErrorCode.storeMigrationRequired.value;
+  return error?.codeString ==
+      MainDatabaseErrorCode.storeMigrationRequired.value;
 }
 
 Future<bool> promptStoreMigrationAndOpen({
@@ -17,7 +18,7 @@ Future<bool> promptStoreMigrationAndOpen({
   required OpenStoreDto dto,
   Future<void> Function()? onOpened,
 }) async {
-  final error = ref.read(mainStoreProvider).value?.error;
+  final error = ref.read(vaultDBProvider).value?.error;
   if (!isStoreMigrationRequiredError(error)) {
     return false;
   }
@@ -48,7 +49,7 @@ Future<bool> promptStoreMigrationAndOpen({
   }
 
   final success = await ref
-      .read(mainStoreBackupOrchestratorProvider)
+      .read(vaultDBBackupOrchestratorProvider)
       .backupAndMigrateStore(dto);
   if (!context.mounted) {
     return true;
@@ -64,7 +65,7 @@ Future<bool> promptStoreMigrationAndOpen({
     return true;
   }
 
-  final state = await ref.read(mainStoreProvider.future);
+  final state = await ref.read(vaultDBProvider.future);
   if (!context.mounted) {
     return true;
   }

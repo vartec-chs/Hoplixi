@@ -23,7 +23,7 @@ final closeSyncServiceProvider = Provider<CloseSyncService>(
   (ref) => const CloseSyncService(),
 );
 
-final mainStoreCloseSyncProvider =
+final vaultDBCloseSyncProvider =
     AsyncNotifierProvider<CloseSyncNotifier, VaultDBCloseSyncState>(
       CloseSyncNotifier.new,
     );

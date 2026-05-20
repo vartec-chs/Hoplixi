@@ -4,12 +4,12 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/setup/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
+import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 import 'package:window_manager/window_manager.dart';
@@ -62,7 +62,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
     final scope = _parseBackupScope(scopeRaw);
 
     final result = await ref
-        .read(mainStoreBackupOrchestratorProvider)
+        .read(vaultDBBackupOrchestratorProvider)
         .createBackup(
           scope: scope,
           outputDirPath: backupPath,
@@ -88,7 +88,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
     final theme = Theme.of(context);
     final titlebarState = ref.watch(titlebarStateProvider);
     final isStoreOpen = ref
-        .watch(mainStoreProvider)
+        .watch(vaultDBProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
     return DragToMoveArea(
       child: AnimatedContainer(
@@ -216,7 +216,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                         return;
                       }
                       if (widget.lockStoreOnClose) {
-                        await ref.read(mainStoreProvider.notifier).lockStore();
+                        await ref.read(vaultDBProvider.notifier).lockStore();
                       }
                       await ref.read(trayServiceProvider).hideToTray();
                     },

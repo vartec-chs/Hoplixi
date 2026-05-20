@@ -7,8 +7,8 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 
 class CloseStoreSyncScreen extends ConsumerStatefulWidget {
   const CloseStoreSyncScreen({super.key});
@@ -62,19 +62,19 @@ class _CloseStoreSyncDialogHostState
         return;
       }
 
-      final currentPhase = ref.read(mainStoreCloseSyncProvider).value?.phase;
+      final currentPhase = ref.read(vaultDBCloseSyncProvider).value?.phase;
       if (currentPhase != VaultDBCloseSyncPhase.completed) {
         return;
       }
 
-      ref.read(mainStoreCloseSyncProvider.notifier).reset();
+      ref.read(vaultDBCloseSyncProvider.notifier).reset();
       _completedCloseTimer = null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final closeSyncState = ref.watch(mainStoreCloseSyncProvider).value;
+    final closeSyncState = ref.watch(vaultDBCloseSyncProvider).value;
     _syncCompletedCloseTimer(closeSyncState);
     final isVisible = closeSyncState?.isActive == true;
 
@@ -222,14 +222,14 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
       _isResolvingDecision = true;
     });
     ref
-        .read(mainStoreProvider.notifier)
+        .read(vaultDBProvider.notifier)
         .resolveCloseStoreUploadDecision(shouldUpload);
   }
 
   @override
   Widget build(BuildContext context) {
-    final dbState = ref.watch(mainStoreProvider).value;
-    final closeSyncState = ref.watch(mainStoreCloseSyncProvider).value;
+    final dbState = ref.watch(vaultDBProvider).value;
+    final closeSyncState = ref.watch(vaultDBCloseSyncProvider).value;
     final closeSyncStatus = closeSyncState?.status;
     final isCompleted =
         closeSyncState?.phase == VaultDBCloseSyncPhase.completed;

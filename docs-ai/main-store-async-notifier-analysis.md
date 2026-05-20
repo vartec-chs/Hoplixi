@@ -26,17 +26,17 @@
 ## 2.1 Инициализируются в build()
 
 - `VaultDBRuntime _runtime`
-  - из `mainStoreRuntimeProvider.future`.
+  - из `vaultDBRuntimeProvider.future`.
   - содержит:
     - `VaultDBManager manager`
     - `VaultDBBackupService backupService`
     - `VaultDBMaintenanceService maintenanceService`
 - `VaultDBBackupController _backupController`
-  - из `mainStoreBackupControllerProvider`.
+  - из `vaultDBBackupControllerProvider`.
 - `VaultDBStorageController _storageController`
-  - из `mainStoreStorageControllerProvider`.
+  - из `vaultDBStorageControllerProvider`.
 - `VaultDBCloseSyncController _closeSyncController`
-  - из `mainStoreCloseSyncControllerProvider`.
+  - из `vaultDBCloseSyncControllerProvider`.
 
 ## 2.2 Локальные механизмы сессии
 
@@ -61,16 +61,16 @@
 
 В этом же файле определены смежные провайдеры:
 
-- `mainStoreProvider`:
+- `vaultDBProvider`:
   `AsyncNotifierProvider<VaultDBAsyncNotifier, DatabaseState>`
   - главный entrypoint.
-- `mainStoreOpeningOverlayProvider`
+- `vaultDBOpeningOverlayProvider`
   - UI-overlay во время открытия/миграции стора.
-- `mainStoreStateProvider`
-  - `FutureProvider`, читает итоговое состояние из `mainStoreProvider.future`.
-- `mainStoreManagerProvider`
+- `vaultDBStateProvider`
+  - `FutureProvider`, читает итоговое состояние из `vaultDBProvider.future`.
+- `vaultDBManagerProvider`
   - отдаёт `VaultDBManager?`, если store реально открыт.
-  - зависит от `mainStoreProvider.future` + `mainStoreRuntimeProvider.future`.
+  - зависит от `vaultDBProvider.future` + `vaultDBRuntimeProvider.future`.
 - `dataUpdateStreamProvider`
   - при открытом store отдаёт `currentStore.watchDataChanged().skip(1)`.
 
@@ -191,10 +191,10 @@ UI close-store flow дергает:
 ### build()
 
 - Зависимости:
-  - `mainStoreRuntimeProvider.future`
-  - `mainStoreBackupControllerProvider`
-  - `mainStoreStorageControllerProvider`
-  - `mainStoreCloseSyncControllerProvider`
+  - `vaultDBRuntimeProvider.future`
+  - `vaultDBBackupControllerProvider`
+  - `vaultDBStorageControllerProvider`
+  - `vaultDBCloseSyncControllerProvider`
   - `ref.onDispose`
 - Назначение:
   - wiring всех контроллеров и runtime;
@@ -244,7 +244,7 @@ UI close-store flow дергает:
 ### openStore(OpenStoreDto dto)
 
 - Зависимости:
-  - `mainStoreOpeningOverlayProvider.notifier.show/hide`
+  - `vaultDBOpeningOverlayProvider.notifier.show/hide`
   - `_acquireLock/_releaseLock`
   - `_runtime.manager.openStore(dto)`
   - `_handleOpenStoreSuccess/_handleOpenStoreFailure`
@@ -255,7 +255,7 @@ UI close-store flow дергает:
 ### backupAndMigrateStore(OpenStoreDto dto, ...)
 
 - Зависимости:
-  - `mainStoreOpeningOverlayProvider.notifier.show/hide`
+  - `vaultDBOpeningOverlayProvider.notifier.show/hide`
   - `_acquireLock/_releaseLock`
   - `_runtime.manager.resolveStoragePath(dto.path)`
   - `StoreManifestService.readFrom(...)`
@@ -619,7 +619,7 @@ StoreManifestService:
 
 - backupAndMigrateStore
 
-mainStoreOpeningOverlayProvider:
+vaultDBOpeningOverlayProvider:
 
 - openStore
 - backupAndMigrateStore

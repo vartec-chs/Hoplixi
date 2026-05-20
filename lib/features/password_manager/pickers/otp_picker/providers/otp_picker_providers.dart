@@ -70,16 +70,16 @@ class OtpPickerDataNotifier extends Notifier<OtpPickerData> {
   /// Загрузить первую страницу OTP
   Future<void> loadInitial(String? excludeOtpId) async {
     final filter = ref.read(otpPickerFilterProvider);
-    final mainStoreAsync = ref.read(mainStoreProvider);
+    final vaultDBAsync = ref.read(vaultDBProvider);
 
-    final mainStore = mainStoreAsync.value;
-    if (mainStore == null || !mainStore.isOpen) {
+    final vaultDB = vaultDBAsync.value;
+    if (vaultDB == null || !vaultDB.isOpen) {
       Toaster.error(title: 'Ошибка', description: 'База данных не открыта');
       return;
     }
 
     try {
-      final manager = await ref.read(mainStoreManagerProvider.future);
+      final manager = await ref.read(vaultDBManagerProvider.future);
       if (manager.currentStore == null) {
         Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
         return;
@@ -117,7 +117,7 @@ class OtpPickerDataNotifier extends Notifier<OtpPickerData> {
       ref.read(otpPickerFilterProvider.notifier).incrementOffset();
       final filter = ref.read(otpPickerFilterProvider);
 
-      final manager = await ref.read(mainStoreManagerProvider.future);
+      final manager = await ref.read(vaultDBManagerProvider.future);
       if (manager.currentStore == null) return;
 
       final dao = manager.currentStore!.otpFilterDao;

@@ -13,12 +13,12 @@ import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.da
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/store_settings_modal_provider.dart';
 import 'package:hoplixi/global_key.dart';
-import 'package:hoplixi/vault_db/providers/decrypted_files_guard_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/vault_db/providers/decrypted_files_guard_provider.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
 import 'app_bootstrap.dart';
@@ -223,7 +223,7 @@ class _AppRuntimeWrapperState extends ConsumerState<AppRuntimeWrapper> {
   @override
   Widget build(BuildContext context) {
     final isStoreOpeningOverlayVisible = ref.watch(
-      mainStoreProvider.select(
+      vaultDBProvider.select(
         (asyncState) => asyncState.value?.isOpening ?? false,
       ),
     );

@@ -15,15 +15,15 @@ import 'package:hoplixi/features/onboarding/presentation/showcase_help_button.da
 import 'package:hoplixi/features/onboarding/presentation/showcase_registration.dart';
 import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
-import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
-import 'package:hoplixi/vault_db/ui/store_open_migration_dialog.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/background/app_animated_background.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
+import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
+import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/ui/store_open_migration_dialog.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:path/path.dart' as p;
 import 'package:showcaseview/showcaseview.dart';
@@ -164,7 +164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           : null;
       if (savedPassword != null && savedPassword.isNotEmpty) {
         final opened = await ref
-            .read(mainStoreProvider.notifier)
+            .read(vaultDBProvider.notifier)
             .openStore(
               OpenStoreDto(path: normalizedPath, password: savedPassword),
             );
@@ -233,7 +233,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               });
 
               final opened = await ref
-                  .read(mainStoreProvider.notifier)
+                  .read(vaultDBProvider.notifier)
                   .openStore(OpenStoreDto(path: dbPath, password: password));
 
               if (!context.mounted) {
@@ -256,7 +256,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 return;
               }
 
-              final storeState = await ref.read(mainStoreProvider.future);
+              final storeState = await ref.read(vaultDBProvider.future);
               if (!context.mounted) {
                 return;
               }

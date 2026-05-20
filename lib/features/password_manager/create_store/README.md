@@ -75,7 +75,7 @@ lib/features/dashboard/create_store/
 Использует `VaultDBAsyncNotifier` для создания:
 
 ```dart
-final success = await ref.read(mainStoreProvider.notifier).createStore(dto);
+final success = await ref.read(vaultDBProvider.notifier).createStore(dto);
 ```
 
 Обрабатывает состояния:

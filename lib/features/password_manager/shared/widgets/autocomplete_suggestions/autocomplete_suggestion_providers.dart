@@ -52,7 +52,7 @@ class CurrentStoreAutocompleteSuggestionsNotifier
     extends AsyncNotifier<AutocompleteSuggestionsState> {
   @override
   Future<AutocompleteSuggestionsState> build() async {
-    ref.watch(mainStoreManagerStateProvider);
+    ref.watch(vaultDBManagerStateProvider);
     return const AutocompleteSuggestionsState();
   }
 
@@ -137,8 +137,8 @@ class CurrentStoreAutocompleteSuggestionsNotifier
   }
 
   Future<VaultDB> _requireOpenStore() async {
-    await ref.read(mainStoreManagerStateProvider.future);
-    final store = ref.read(mainStoreManagerStateProvider.notifier).currentStore;
+    await ref.read(vaultDBManagerStateProvider.future);
+    final store = ref.read(vaultDBManagerStateProvider.notifier).currentStore;
 
     if (store == null) {
       throw AppError.mainDatabase(

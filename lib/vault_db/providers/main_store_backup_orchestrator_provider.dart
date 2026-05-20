@@ -13,20 +13,20 @@ import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_
 
 export 'package:hoplixi/vault_db/models/main_store_backup_models.dart';
 
-final mainStoreBackupServiceProvider = Provider<VaultDBBackupService>(
+final vaultDBBackupServiceProvider = Provider<VaultDBBackupService>(
   (ref) => VaultDBBackupService(),
 );
 
-final mainStoreBackupOrchestratorProvider = Provider<VaultDBBackupOrchestrator>(
-  (ref) {
-    final orchestrator = VaultDBBackupOrchestrator(
-      ref: ref,
-      backupService: ref.read(mainStoreBackupServiceProvider),
-    );
-    ref.onDispose(orchestrator.dispose);
-    return orchestrator;
-  },
-);
+final vaultDBBackupOrchestratorProvider = Provider<VaultDBBackupOrchestrator>((
+  ref,
+) {
+  final orchestrator = VaultDBBackupOrchestrator(
+    ref: ref,
+    backupService: ref.read(vaultDBBackupServiceProvider),
+  );
+  ref.onDispose(orchestrator.dispose);
+  return orchestrator;
+});
 
 class VaultDBBackupOrchestrator {
   VaultDBBackupOrchestrator({
@@ -61,7 +61,7 @@ class VaultDBBackupOrchestrator {
         return null;
       }
 
-      final manager = await _ref.read(mainStoreManagerStateProvider.future);
+      final manager = await _ref.read(vaultDBManagerStateProvider.future);
       final storeDirPath = state.path ?? manager.path;
       if (storeDirPath == null || storeDirPath.isEmpty) {
         logError('Store path is null, backup aborted', tag: _logTag);
@@ -152,13 +152,15 @@ class VaultDBBackupOrchestrator {
     String? outputDirPath,
     int maxBackupsPerStore = 10,
   }) async {
-    _ref.read(mainStoreProvider.notifier).markOpeningStarted(path: dto.path);
+    _ref
+        .read(vaultDBManagerStateProvider.notifier)
+        .markOpeningStarted(path: dto.path);
 
     try {
       final actualStoragePath = await _storageService
           .resolveExistingStoragePath(dto.path);
       final manifest = await StoreManifestService.readFrom(actualStoragePath);
-      final state = await _ref.read(mainStoreProvider.future);
+      final state = await _ref.read(vaultDBManagerStateProvider.future);
       final storeName = manifest?.storeName.trim().isNotEmpty == true
           ? manifest!.storeName
           : state.name ?? 'store';
@@ -174,7 +176,9 @@ class VaultDBBackupOrchestrator {
         maxBackupsPerStore: maxBackupsPerStore,
       );
 
-      return _ref.read(mainStoreProvider.notifier).openStoreWithMigration(dto);
+      return _ref
+          .read(vaultDBManagerStateProvider.notifier)
+          .openStoreWithMigration(dto);
     } catch (error, stackTrace) {
       logError(
         'Failed to backup and migrate store: $error',
@@ -182,7 +186,7 @@ class VaultDBBackupOrchestrator {
         tag: _logTag,
       );
       _ref
-          .read(mainStoreProvider.notifier)
+          .read(vaultDBManagerStateProvider.notifier)
           .setOpenFailure(
             AppError.mainDatabase(
               code: MainDatabaseErrorCode.unknown,
@@ -202,7 +206,7 @@ class VaultDBBackupOrchestrator {
   }
 
   DatabaseState _readCurrentState() {
-    return _ref.read(mainStoreProvider).value ??
+    return _ref.read(vaultDBManagerStateProvider).value ??
         const DatabaseState(status: DatabaseStatus.idle);
   }
 

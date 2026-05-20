@@ -35,7 +35,7 @@ a full technical spec.
 - `dao/`: entity CRUD and query logic
 - `services/`: database-related business logic
 - `models/`: DB models, DTOs, and error types
-- `provider/`: DB state/providers (`mainStoreProvider`, DAO providers)
+- `provider/`: DB state/providers (`vaultDBProvider`, DAO providers)
 - `migrations/`: versioned migrations runner and migration files
 - `triggers/`: history and timestamp SQL triggers
 

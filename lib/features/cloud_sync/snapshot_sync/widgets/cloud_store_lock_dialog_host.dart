@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_store_lock.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
-import 'package:hoplixi/shared/ui/button.dart';
 
 class CloudStoreLockDialogHost extends ConsumerWidget {
   const CloudStoreLockDialogHost({required this.child, super.key});
@@ -14,7 +14,7 @@ class CloudStoreLockDialogHost extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lockState = ref.watch(currentStoreCloudLockProvider);
-    final storeState = ref.watch(mainStoreProvider).value;
+    final storeState = ref.watch(vaultDBProvider).value;
     _scheduleLockCheck(ref, lockState, storeState);
     final isStoreOpen = storeState?.isOpen ?? false;
     final visible = isStoreOpen && _shouldShow(lockState);
@@ -97,12 +97,11 @@ class _CloudStoreLockDialog extends ConsumerWidget {
                   CloudStoreLockPhase.lockedByAnotherDevice =>
                     _LockedByAnotherDeviceContent(state: state!),
                   CloudStoreLockPhase.error => _LockErrorContent(state: state!),
-                  CloudStoreLockPhase.releasing =>
-                    const _CheckingLockContent(
-                      title: 'Закрываем Cloud Lock',
-                      message:
-                          'Удаляем lock-файл в облаке. Действия с хранилищем временно недоступны.',
-                    ),
+                  CloudStoreLockPhase.releasing => const _CheckingLockContent(
+                    title: 'Закрываем Cloud Lock',
+                    message:
+                        'Удаляем lock-файл в облаке. Действия с хранилищем временно недоступны.',
+                  ),
                   _ => const _CheckingLockContent(),
                 },
               ),
@@ -141,19 +140,11 @@ class _CheckingLockContent extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: theme.textTheme.titleMedium,
-              ),
-            ),
+            Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
           ],
         ),
         const SizedBox(height: 12),
-        Text(
-          message,
-          style: theme.textTheme.bodyMedium,
-        ),
+        Text(message, style: theme.textTheme.bodyMedium),
       ],
     );
   }
@@ -219,7 +210,7 @@ class _LockedByAnotherDeviceContent extends ConsumerWidget {
             FilledButton(
               onPressed: () {
                 ref
-                    .read(mainStoreManagerStateProvider.notifier)
+                    .read(vaultDBManagerStateProvider.notifier)
                     .lockStore(skipSnapshotSync: true);
               },
               child: const Text('Выйти'),
@@ -274,7 +265,7 @@ class _LockErrorContent extends ConsumerWidget {
             SmoothButton.text(
               onPressed: () {
                 ref
-                    .read(mainStoreManagerStateProvider.notifier)
+                    .read(vaultDBManagerStateProvider.notifier)
                     .lockStore(skipSnapshotSync: true);
               },
               label: 'Выйти',

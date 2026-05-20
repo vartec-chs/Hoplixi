@@ -75,10 +75,10 @@ UI верхнего уровня может подписаться на этот
 
 `CurrentStoreSyncNotifier` опирается на несколько других слоёв:
 
-- `mainStoreProvider` Даёт текущее состояние хранилища: открыто оно или нет,
-  путь и имя.
-- `mainStoreManagerProvider` Даёт доступ к `StoreInfoDto` и операциям над
-  открытым store.
+- `vaultDBProvider` Даёт текущее состояние хранилища: открыто оно или нет, путь
+  и имя.
+- `vaultDBManagerProvider` Даёт доступ к `StoreInfoDto` и операциям над открытым
+  store.
 - `snapshotSyncServiceProvider` Выполняет основную sync-логику: build snapshot,
   compare, upload, download, resolve conflict.
 - `storeSyncBindingServiceProvider` Читает и пишет binding
@@ -97,7 +97,7 @@ UI верхнего уровня может подписаться на этот
 
 Под капотом:
 
-1. Ждёт `mainStoreProvider.future`.
+1. Ждёт `vaultDBProvider.future`.
 2. Получает текущее состояние БД.
 3. Вызывает `_loadCurrentStatus(storeState, useWatch: true)`.
 4. Возвращает собранный `StoreSyncStatus`.
@@ -127,7 +127,7 @@ UI верхнего уровня может подписаться на этот
 
 ### Шаг 2. Получение `VaultDBManager`
 
-Если store открыт, берётся `mainStoreManagerProvider`.
+Если store открыт, берётся `vaultDBManagerProvider`.
 
 Если manager недоступен, возвращается безопасный fallback:
 
@@ -367,7 +367,7 @@ UI может показать экран "remote snapshot применён, р�
 
 ### Что делает `_reloadStatusWithoutLoading`
 
-1. перечитывает store state из `mainStoreProvider`;
+1. перечитывает store state из `vaultDBProvider`;
 2. заново вызывает `_loadCurrentStatus(...)`;
 3. принудительно очищает transient поля:
    - `syncProgress`

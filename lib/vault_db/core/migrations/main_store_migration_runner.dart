@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/vault_db/core/migrations/main_store_migration_types.dart';
 
-final Map<int, VaultDBMigration> _mainStoreMigrationsByVersion = {};
+final Map<int, VaultDBMigration> _vaultDBMigrationsByVersion = {};
 
 /// Runs known, versioned migrations in ascending order.
 ///
@@ -19,7 +19,7 @@ Future<int> runVaultDBKnownMigrations({
 
   while (currentVersion < to) {
     final nextVersion = currentVersion + 1;
-    final migration = _mainStoreMigrationsByVersion[nextVersion];
+    final migration = _vaultDBMigrationsByVersion[nextVersion];
 
     if (migration == null) {
       logWarning(
