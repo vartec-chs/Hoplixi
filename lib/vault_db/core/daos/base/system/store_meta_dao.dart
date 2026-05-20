@@ -90,6 +90,12 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
     return update(storeMetaTable).write(companion);
   }
 
+  Future<void> updateLastOpenedAt() {
+    return update(storeMetaTable).write(
+      StoreMetaTableCompanion(lastOpenedAt: Value(DateTime.now())),
+    );
+  }
+
   Future<bool> hasStoreMeta() async {
     final result = await selectOnly(storeMetaTable).get();
     return result.isNotEmpty;

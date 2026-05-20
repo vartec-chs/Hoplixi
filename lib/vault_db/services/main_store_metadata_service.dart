@@ -96,31 +96,39 @@ class VaultDBMetadataService {
 
       final currentMeta = currentMetaResult.getOrThrow();
 
-      var updatedMeta = currentMeta.copyWith(modifiedAt: DateTime.now());
+      final now = DateTime.now();
 
-      if (dto.name.valueOrNull != null) {
-        updatedMeta = updatedMeta.copyWith(name: dto.name.valueOrNull!);
-      }
+      String? newPasswordHash;
+      String? newSalt;
 
-      if (dto.description.valueOrNull != null) {
-        updatedMeta = updatedMeta.copyWith(
-          description: dto.description.valueOrNull!,
-        );
-      }
-
-      if (dto.password.valueOrNull != null) {
-        final newSalt = _uuid.v4();
-        final newPasswordHash = _hashPassword(
-          dto.password.valueOrNull!,
+      if (dto.password is FieldUpdateSet<String>) {
+        newSalt = _uuid.v4();
+        newPasswordHash = _hashPassword(
+          (dto.password as FieldUpdateSet<String>).value!,
           newSalt,
         );
-        updatedMeta = updatedMeta.copyWith(
-          passwordHash: newPasswordHash,
-          salt: newSalt,
-        );
       }
 
-      await database.update(database.storeMetaTable).replace(updatedMeta);
+      final companion = StoreMetaTableCompanion(
+        name: dto.name.toRequiredValue(),
+        description: dto.description.toNullableValue(),
+        passwordHash:
+            newPasswordHash != null
+                ? Value(newPasswordHash)
+                : const Value.absent(),
+        modifiedAt: Value(now),
+      );
+
+      await database.storeMetaDao.updateStoreMeta(companion);
+
+      final updatedMeta = currentMeta.copyWith(
+        name: dto.name.valueOrNull ?? currentMeta.name,
+        description: dto.description.isSet
+            ? dto.description.valueOrNull
+            : currentMeta.description,
+        passwordHash: newPasswordHash ?? currentMeta.passwordHash,
+        modifiedAt: now,
+      );
 
       return Success(_toStoreInfoDto(updatedMeta));
     } catch (e, stackTrace) {
@@ -166,15 +174,25 @@ class VaultDBMetadataService {
     return database.storeMetaDao.updateLastOpenedAt();
   }
 
-  StoreInfoDto _toStoreInfoDto(StoreMeta meta) {
+  StoreInfoDto _toStoreInfoDto(dynamic meta) {
+    if (meta is StoreMetaDto) {
+      return StoreInfoDto(
+        id: meta.id,
+        name: meta.name,
+        description: meta.description,
+        createdAt: meta.createdAt,
+        modifiedAt: meta.modifiedAt,
+        lastOpenedAt: meta.lastOpenedAt,
+      );
+    }
+    // Fallback if needed, though getStoreMeta returns StoreMetaDto
     return StoreInfoDto(
-      id: meta.id,
-      name: meta.name,
-      description: meta.description,
-      createdAt: meta.createdAt,
-      modifiedAt: meta.modifiedAt,
-      lastOpenedAt: meta.lastOpenedAt,
-      version: meta.version,
+      id: meta.id as String,
+      name: meta.name as String,
+      description: meta.description as String?,
+      createdAt: meta.createdAt as DateTime,
+      modifiedAt: meta.modifiedAt as DateTime,
+      lastOpenedAt: meta.lastOpenedAt as DateTime,
     );
   }
 
