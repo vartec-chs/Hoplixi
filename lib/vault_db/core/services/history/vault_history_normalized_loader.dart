@@ -1,4 +1,5 @@
 import 'package:hoplixi/vault_db/core/services/history/history.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 import '../../daos/daos.dart';
 import '../../models/mappers/history/vault_item_base_history_payload_mapper.dart';
@@ -6,13 +7,15 @@ import '../../tables/vault_items/vault_items.dart';
 
 class VaultHistoryNormalizedLoader {
   VaultHistoryNormalizedLoader({
-    required this.snapshotsHistoryDao,
-    required this.vaultItemsDao,
+    required this.db,
     required this.restorePolicyService,
     required this.normalizerRegistry,
-    required this.customFieldsHistoryDao,
-    required this.customFieldsDao,
-  });
+  }) : snapshotsHistoryDao = db.vaultSnapshotsHistoryDao,
+       vaultItemsDao = db.vaultItemsDao,
+       customFieldsHistoryDao = db.vaultItemCustomFieldsHistoryDao,
+       customFieldsDao = db.vaultItemCustomFieldsDao;
+
+  final VaultDB db;
 
   final VaultSnapshotsHistoryDao snapshotsHistoryDao;
   final VaultItemsDao vaultItemsDao;

@@ -9,7 +9,10 @@ import 'package:result_dart/result_dart.dart';
 import '../vault_db.dart';
 
 class VaultEventHistoryRepository {
-  VaultEventHistoryRepository(this.eventsHistoryDao);
+  VaultEventHistoryRepository(this.db)
+    : eventsHistoryDao = VaultEventsHistoryDao(db);
+
+  VaultDB db;
 
   final VaultEventsHistoryDao eventsHistoryDao;
 

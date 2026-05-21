@@ -17,8 +17,8 @@ import 'package:hoplixi/vault_db/core/repositories/base/wifi_repository.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_event_history_repository.dart';
 import 'package:hoplixi/vault_db/core/services/history/history.dart';
 import 'package:hoplixi/vault_db/core/services/vault_typed_view_resolver.dart';
-
 import 'package:hoplixi/vault_db/core/vault_db.dart';
+
 import '../relations/snapshot_relations_service.dart';
 
 class VaultHistoryServiceAssembly {
@@ -212,17 +212,13 @@ class VaultHistoryServiceAssembly {
       VaultHistoryRestorePolicyService();
 
   late final VaultHistoryNormalizedLoader loader = VaultHistoryNormalizedLoader(
-    snapshotsHistoryDao: db.vaultSnapshotsHistoryDao,
-    vaultItemsDao: db.vaultItemsDao,
+    db: db,
     restorePolicyService: restorePolicy,
     normalizerRegistry: normalizerRegistry,
-    customFieldsHistoryDao: db.vaultItemCustomFieldsHistoryDao,
-    customFieldsDao: db.vaultItemCustomFieldsDao,
   );
 
   late final VaultHistoryReadService readService = VaultHistoryReadService(
-    snapshotFilterDao: db.vaultSnapshotHistoryFilterDao,
-    snapshotsHistoryDao: db.vaultSnapshotsHistoryDao,
+    db: db,
     readerRegistry: readerRegistry,
     genericReader: GenericHistoryCardReader(),
   );
@@ -250,7 +246,7 @@ class VaultHistoryServiceAssembly {
       StoreHistoryPolicyService(db.storeSettingsDao);
 
   late final VaultEventHistoryRepository eventHistoryRepository =
-      VaultEventHistoryRepository(db.vaultEventsHistoryDao);
+      VaultEventHistoryRepository(db);
 
   late final VaultHistoryService historyService = VaultHistoryService(
     policyService: policyService,
