@@ -17,6 +17,33 @@ import 'package:hoplixi/vault_db/usecases/update_main_store.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
 
+class VaultDBManagerFactory {
+  VaultDBManagerFactory({required this.dbHistoryService})
+    : createVaultDB = CreateVaultDB(),
+      openVaultDB = OpenVaultDB(),
+      closeVaultDB = CloseVaultDB(),
+      updateVaultDB = UpdateVaultDB(),
+      storageService = const VaultDBFileService();
+
+  final DatabaseHistoryService dbHistoryService;
+  final CreateVaultDB createVaultDB;
+  final OpenVaultDB openVaultDB;
+  final CloseVaultDB closeVaultDB;
+  final UpdateVaultDB updateVaultDB;
+  final VaultDBFileService storageService;
+
+  VaultDBManager create() {
+    return VaultDBManager(
+      dbHistoryService: dbHistoryService,
+      createVaultDB: createVaultDB,
+      openVaultDB: openVaultDB,
+      closeVaultDB: closeVaultDB,
+      updateVaultDB: updateVaultDB,
+      storageService: storageService,
+    );
+  }
+}
+
 class VaultDBManager {
   static const String _logTag = 'VaultDBManager';
 
@@ -33,17 +60,17 @@ class VaultDBManager {
 
   VaultDBManager({
     required DatabaseHistoryService dbHistoryService,
-    CreateVaultDB? createVaultDB,
-    OpenVaultDB? openVaultDB,
-    CloseVaultDB? closeVaultDB,
-    UpdateVaultDB? updateVaultDB,
-    VaultDBFileService? storageService,
+    required CreateVaultDB createVaultDB,
+    required OpenVaultDB openVaultDB,
+    required CloseVaultDB closeVaultDB,
+    required UpdateVaultDB updateVaultDB,
+    required VaultDBFileService storageService,
   }) : _dbHistoryService = dbHistoryService,
-       _createVaultDB = createVaultDB ?? CreateVaultDB(),
-       _openVaultDB = openVaultDB ?? OpenVaultDB(),
-       _closeVaultDB = closeVaultDB ?? CloseVaultDB(),
-       _updateVaultDB = updateVaultDB ?? UpdateVaultDB(),
-       _storageService = storageService ?? const VaultDBFileService();
+       _createVaultDB = createVaultDB,
+       _openVaultDB = openVaultDB,
+       _closeVaultDB = closeVaultDB,
+       _updateVaultDB = updateVaultDB,
+       _storageService = storageService;
 
   bool get isStoreOpen => _currentDB != null && _currentSession != null;
 

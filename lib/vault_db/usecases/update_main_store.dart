@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
 import 'package:hoplixi/vault_db/usecases/utils/error_handling.dart';
 import 'package:result_dart/result_dart.dart';
@@ -19,7 +19,7 @@ class UpdateVaultDB {
 
   AsyncResultDart<StoreInfoDto, AppError> call({
     required Session session,
-    required UpdateStoreDto dto,
+    required PatchStoreDto dto,
   }) async {
     try {
       logInfo(
@@ -41,17 +41,22 @@ class UpdateVaultDB {
 
       var updatedMeta = currentMeta.copyWith(modifiedAt: DateTime.now());
 
-      if (dto.name != null) {
-        updatedMeta = updatedMeta.copyWith(name: dto.name);
+      if (dto.name.valueOrNull != null) {
+        updatedMeta = updatedMeta.copyWith(name: dto.name.valueOrNull!);
       }
 
-      if (dto.description != null) {
-        updatedMeta = updatedMeta.copyWith(description: Value(dto.description));
+      if (dto.description.valueOrNull != null) {
+        updatedMeta = updatedMeta.copyWith(
+          description: Value(dto.description.valueOrNull!),
+        );
       }
 
-      if (dto.password != null) {
+      if (dto.password.valueOrNull != null) {
         final newSalt = _uuid.v4();
-        final newPasswordHash = _hashPassword(dto.password!, newSalt);
+        final newPasswordHash = _hashPassword(
+          dto.password!.valueOrNull!,
+          newSalt,
+        );
         updatedMeta = updatedMeta.copyWith(
           passwordHash: newPasswordHash,
           salt: newSalt,
@@ -70,7 +75,6 @@ class UpdateVaultDB {
           createdAt: updatedMeta.createdAt,
           modifiedAt: updatedMeta.modifiedAt,
           lastOpenedAt: updatedMeta.lastOpenedAt,
-          version: updatedMeta.version,
         ),
       );
     } catch (error, stackTrace) {

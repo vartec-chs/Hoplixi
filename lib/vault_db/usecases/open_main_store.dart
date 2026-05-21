@@ -2,9 +2,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
 import 'package:hoplixi/vault_db/models/store_key_config.dart';
@@ -207,7 +207,6 @@ class OpenVaultDB {
       createdAt: meta.createdAt,
       modifiedAt: meta.modifiedAt,
       lastOpenedAt: meta.lastOpenedAt,
-      version: meta.version,
     );
   }
 

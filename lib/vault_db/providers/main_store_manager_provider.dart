@@ -18,16 +18,16 @@ import 'db_history_provider.dart';
 
 final _vaultDBManagerProvider = FutureProvider<VaultDBManager>((ref) async {
   final dbHistoryService = await ref.watch(dbHistoryProvider.future);
-
-  return VaultDBManager(dbHistoryService: dbHistoryService);
+  final manager = VaultDBManagerFactory(
+    dbHistoryService: dbHistoryService,
+  ).create();
+  return manager;
 });
 
 // Получение текущего открытого хранилища. Провайдер зависит от состояния менеджера хранилища и возвращает текущее открытое хранилище, если оно есть, или null, если хранилище не открыто.
 final vaultDBSessionProvider = FutureProvider<Session>((ref) async {
   await ref.watch(vaultDBManagerStateProvider.future);
-  final session = ref
-      .read(vaultDBManagerStateProvider.notifier)
-      .currentSession;
+  final session = ref.read(vaultDBManagerStateProvider.notifier).currentSession;
   return session;
 });
 
@@ -293,9 +293,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
         logInfo('Store closed', tag: _logTag);
 
         if (shouldSyncAfterClose) {
-          final closeSyncNotifier = ref.read(
-            vaultDBCloseSyncProvider.notifier,
-          );
+          final closeSyncNotifier = ref.read(vaultDBCloseSyncProvider.notifier);
           final syncResult = await closeSyncNotifier.uploadSnapshotAfterClose(
             storeInfo: storeInfo,
             currentStorePath: storePath,
