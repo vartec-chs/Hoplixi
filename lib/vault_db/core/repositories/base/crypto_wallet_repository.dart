@@ -1,9 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/tables/crypto_wallet/crypto_wallet_items.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/crypto_wallet_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -13,160 +16,226 @@ class CryptoWalletRepository {
 
   CryptoWalletRepository(this.db);
 
-  Future<String> create(CreateCryptoWalletDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateCryptoWalletDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.cryptoWallet,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db.into(db.vaultItems).insert(
+          VaultItemsCompanion.insert(
+            id: Value(itemId),
+            type: VaultItemType.cryptoWallet,
+            name: dto.item.name,
+            description: Value(dto.item.description),
+            categoryId: Value(dto.item.categoryId),
+            iconRefId: Value(dto.item.iconRefId),
+            isFavorite: Value(dto.item.isFavorite),
+            isPinned: Value(dto.item.isPinned),
+            createdAt: Value(now),
+            modifiedAt: Value(now),
+          ),
+        );
+
+        await db.into(db.cryptoWalletItems).insert(
+          CryptoWalletItemsCompanion.insert(
+            itemId: itemId,
+            walletType: Value(dto.cryptoWallet.walletType),
+            walletTypeOther: Value(dto.cryptoWallet.walletTypeOther),
+            network: Value(dto.cryptoWallet.network),
+            networkOther: Value(dto.cryptoWallet.networkOther),
+            mnemonic: Value(dto.cryptoWallet.mnemonic),
+            privateKey: Value(dto.cryptoWallet.privateKey),
+            derivationPath: Value(dto.cryptoWallet.derivationPath),
+            derivationScheme: Value(dto.cryptoWallet.derivationScheme),
+            derivationSchemeOther: Value(
+              dto.cryptoWallet.derivationSchemeOther,
             ),
-          );
+            addresses: Value(dto.cryptoWallet.addresses),
+            xpub: Value(dto.cryptoWallet.xpub),
+            xprv: Value(dto.cryptoWallet.xprv),
+            hardwareDevice: Value(dto.cryptoWallet.hardwareDevice),
+            watchOnly: Value(dto.cryptoWallet.watchOnly),
+          ),
+        );
 
-      await db
-          .into(db.cryptoWalletItems)
-          .insert(
-            CryptoWalletItemsCompanion.insert(
-              itemId: itemId,
-              walletType: Value(dto.cryptoWallet.walletType),
-              walletTypeOther: Value(dto.cryptoWallet.walletTypeOther),
-              network: Value(dto.cryptoWallet.network),
-              networkOther: Value(dto.cryptoWallet.networkOther),
-              mnemonic: Value(dto.cryptoWallet.mnemonic),
-              privateKey: Value(dto.cryptoWallet.privateKey),
-              derivationPath: Value(dto.cryptoWallet.derivationPath),
-              derivationScheme: Value(dto.cryptoWallet.derivationScheme),
-              derivationSchemeOther: Value(
-                dto.cryptoWallet.derivationSchemeOther,
-              ),
-              addresses: Value(dto.cryptoWallet.addresses),
-              xpub: Value(dto.cryptoWallet.xpub),
-              xprv: Value(dto.cryptoWallet.xprv),
-              hardwareDevice: Value(dto.cryptoWallet.hardwareDevice),
-              watchOnly: Value(dto.cryptoWallet.watchOnly),
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании криптокошелька',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchCryptoWalletDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.cryptoWalletItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        CryptoWalletItemsCompanion(
-          walletType: dto.cryptoWallet.walletType.toNullableValue(),
-          walletTypeOther: dto.cryptoWallet.walletTypeOther.toNullableValue(),
-          network: dto.cryptoWallet.network.toNullableValue(),
-          networkOther: dto.cryptoWallet.networkOther.toNullableValue(),
-          mnemonic: dto.cryptoWallet.mnemonic.toNullableValue(),
-          privateKey: dto.cryptoWallet.privateKey.toNullableValue(),
-          derivationPath: dto.cryptoWallet.derivationPath.toNullableValue(),
-          derivationScheme: dto.cryptoWallet.derivationScheme.toNullableValue(),
-          derivationSchemeOther: dto.cryptoWallet.derivationSchemeOther
-              .toNullableValue(),
-          addresses: dto.cryptoWallet.addresses.toNullableValue(),
-          xpub: dto.cryptoWallet.xpub.toNullableValue(),
-          xprv: dto.cryptoWallet.xprv.toNullableValue(),
-          hardwareDevice: dto.cryptoWallet.hardwareDevice.toNullableValue(),
-          watchOnly: dto.cryptoWallet.watchOnly.toRequiredValue(),
-        ),
-      );
-
-      final tagsUpdate = dto.tags;
-      if (tagsUpdate is FieldUpdateSet<List<String>>) {
-        await db.itemTagsDao.removeAllTagsFromItem(itemId);
-        for (final tagId in tagsUpdate.value ?? []) {
-          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
-        }
-      }
-    });
-  }
-
-  Future<CryptoWalletViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.cryptoWalletItems,
-              db.cryptoWalletItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final cryptoWallet = row.readTable(db.cryptoWalletItems);
-
-    return CryptoWalletViewDto(
-      item: item.toVaultItemViewDto(),
-      cryptoWallet: cryptoWallet.toCryptoWalletDataDto(),
     );
   }
 
-  Future<CryptoWalletCardDto?> getCardById(String itemId) async {
-    final expr = _CryptoWalletCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet));
+  AsyncDbResult<Unit> update(PatchCryptoWalletDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated = await (db.update(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .write(
+          VaultItemsCompanion(
+            name: dto.item.name.toRequiredValue(),
+            description: dto.item.description.toNullableValue(),
+            categoryId: dto.item.categoryId.toNullableValue(),
+            iconRefId: dto.item.iconRefId.toNullableValue(),
+            isFavorite: dto.item.isFavorite.toRequiredValue(),
+            isPinned: dto.item.isPinned.toRequiredValue(),
+            modifiedAt: Value(now),
+          ),
+        );
 
-    return _mapRowToCardDto(row, expr);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(db.cryptoWalletItems)
+              ..where((tbl) => tbl.itemId.equals(itemId)))
+            .write(
+          CryptoWalletItemsCompanion(
+            walletType: dto.cryptoWallet.walletType.toNullableValue(),
+            walletTypeOther: dto.cryptoWallet.walletTypeOther.toNullableValue(),
+            network: dto.cryptoWallet.network.toNullableValue(),
+            networkOther: dto.cryptoWallet.networkOther.toNullableValue(),
+            mnemonic: dto.cryptoWallet.mnemonic.toNullableValue(),
+            privateKey: dto.cryptoWallet.privateKey.toNullableValue(),
+            derivationPath: dto.cryptoWallet.derivationPath.toNullableValue(),
+            derivationScheme: dto.cryptoWallet.derivationScheme.toNullableValue(),
+            derivationSchemeOther: dto.cryptoWallet.derivationSchemeOther
+                .toNullableValue(),
+            addresses: dto.cryptoWallet.addresses.toNullableValue(),
+            xpub: dto.cryptoWallet.xpub.toNullableValue(),
+            xprv: dto.cryptoWallet.xprv.toNullableValue(),
+            hardwareDevice: dto.cryptoWallet.hardwareDevice.toNullableValue(),
+            watchOnly: dto.cryptoWallet.watchOnly.toRequiredValue(),
+          ),
+        );
+
+        final tagsUpdate = dto.tags;
+        if (tagsUpdate is FieldUpdateSet<List<String>>) {
+          await db.itemTagsDao.removeAllTagsFromItem(itemId);
+          for (final tagId in tagsUpdate.value ?? []) {
+            await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+          }
+        }
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении криптокошелька',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<CryptoWalletCardDto>> getCards({
+  AsyncDbResult<Optional<CryptoWalletViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = db.select(db.vaultItems).join([
+          innerJoin(
+            db.cryptoWalletItems,
+            db.cryptoWalletItems.itemId.equalsExp(db.vaultItems.id),
+          ),
+        ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final cryptoWallet = row.readTable(db.cryptoWalletItems);
+
+        return Some(CryptoWalletViewDto(
+          item: item.toVaultItemViewDto(),
+          cryptoWallet: cryptoWallet.toCryptoWalletDataDto(),
+        ));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении криптокошелька',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Optional<CryptoWalletCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _CryptoWalletCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row, expr));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки криптокошелька',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<CryptoWalletCardDto>> getCards({
     int limit = 50,
     int offset = 0,
-  }) async {
-    final expr = _CryptoWalletCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _CryptoWalletCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
 
-    final rows = await query.get();
-    return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+        final rows = await query.get();
+        return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка криптокошельков',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении криптокошелька',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(

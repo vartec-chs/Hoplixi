@@ -1,8 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/password_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -12,131 +15,206 @@ class PasswordRepository {
 
   PasswordRepository(this.db);
 
-  Future<String> create(CreatePasswordDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreatePasswordDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.password,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.password,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
+
+        await db
+            .into(db.passwordItems)
+            .insert(
+              PasswordItemsCompanion.insert(
+                itemId: itemId,
+                login: Value(dto.password.login),
+                email: Value(dto.password.email),
+                password: dto.password.password,
+                url: Value(dto.password.url),
+                expiresAt: Value(dto.password.expiresAt),
+              ),
+            );
+
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании пароля',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      await db
-          .into(db.passwordItems)
-          .insert(
-            PasswordItemsCompanion.insert(
-              itemId: itemId,
-              login: Value(dto.password.login),
-              email: Value(dto.password.email),
-              password: dto.password.password,
-              url: Value(dto.password.url),
-              expiresAt: Value(dto.password.expiresAt),
-            ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchPasswordDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.passwordItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        PasswordItemsCompanion(
-          login: dto.password.login.toNullableValue(),
-          email: dto.password.email.toNullableValue(),
-          password: dto.password.password.toRequiredValue(),
-          url: dto.password.url.toNullableValue(),
-          expiresAt: dto.password.expiresAt.toNullableValue(),
-        ),
-      );
-    });
-  }
-
-  Future<PasswordViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.passwordItems,
-              db.passwordItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.password));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final password = row.readTable(db.passwordItems);
-
-    return PasswordViewDto(
-      item: item.toVaultItemViewDto(),
-      password: password.toPasswordDataDto(),
     );
   }
 
-  Future<PasswordCardDto?> getCardById(String itemId) async {
-    final expr = _PasswordCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.password));
+  AsyncDbResult<Unit> update(PatchPasswordDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
-    return _mapRowToCardDto(row, expr);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(
+          db.passwordItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
+          PasswordItemsCompanion(
+            login: dto.password.login.toNullableValue(),
+            email: dto.password.email.toNullableValue(),
+            password: dto.password.password.toRequiredValue(),
+            url: dto.password.url.toNullableValue(),
+            expiresAt: dto.password.expiresAt.toNullableValue(),
+          ),
+        );
+
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении пароля',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<PasswordCardDto>> getCards({
+  AsyncDbResult<Optional<PasswordViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.passwordItems,
+                  db.passwordItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.password));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final password = row.readTable(db.passwordItems);
+
+        return Some(
+          PasswordViewDto(
+            item: item.toVaultItemViewDto(),
+            password: password.toPasswordDataDto(),
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении пароля',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Optional<PasswordCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _PasswordCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.password));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row, expr));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки пароля',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<PasswordCardDto>> getCards({
     int limit = 50,
     int offset = 0,
-  }) async {
-    final expr = _PasswordCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.password))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _PasswordCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.password))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
 
-    final rows = await query.get();
-    return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+        final rows = await query.get();
+        return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка паролей',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении пароля',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(

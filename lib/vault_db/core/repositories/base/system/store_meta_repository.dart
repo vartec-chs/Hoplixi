@@ -12,210 +12,209 @@ class StoreMetaRepository {
   StoreMetaRepository(this.db);
 
   /// Получить метаданные хранилища.
-  Future<DbResult<StoreMetaDto>> getStoreMeta() async {
-    try {
-      final data = await db.storeMetaDao.getStoreMeta();
-      if (data == null) {
-        return const Failure(
-          DBCoreError.notFound(
+  AsyncDbResult<StoreMetaDto> getStoreMeta() {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final data = await db.storeMetaDao.getStoreMeta();
+        if (data == null) {
+          throw const DBCoreError.notFound(
             entity: 'store_meta',
             id: 'singleton',
             message: 'Метаданные хранилища не инициализированы',
-          ),
-        );
-      }
-      return Success(data);
-    } catch (e, st) {
-      return Failure(
-        DBCoreError.unknown(
-          message: 'Ошибка при получении метаданных',
-          cause: e,
-          stackTrace: st,
-        ),
-      );
-    }
+          );
+        }
+        return data;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении метаданных',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   ///Создать метаданные хранилища (вызывается при создании нового хранилища).
-  Future<DbResult<Unit>> createStoreMeta(CreateStoreMetaDto dto) async {
-    try {
-      await db.storeMetaDao.createStoreMeta(dto);
-      return const Success(unit);
-    } catch (e) {
-      return Failure(
-        DBCoreError.conflict(
-          code: 'store_meta.create_failed',
-          message:
-              'Не удалось создать метаданные хранилища (возможно, уже существуют)',
-          data: {'error': e.toString()},
-        ),
-      );
-    }
+  AsyncDbResult<Unit> createStoreMeta(CreateStoreMetaDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.storeMetaDao.createStoreMeta(dto);
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.conflict(
+              code: 'store_meta.create_failed',
+              message:
+                  'Не удалось создать метаданные хранилища (возможно, уже существуют)',
+              data: {'error': e.toString()},
+            ),
+    );
   }
 
   /// Проверить, создано ли хранилище.
-  Future<DbResult<bool>> hasStore() async {
-    try {
-      final exists = await db.storeMetaDao.hasStoreMeta();
-      return Success(exists);
-    } catch (e, st) {
-      return Failure(
-        DBCoreError.unknown(
-          message: 'Ошибка при проверке наличия хранилища',
-          cause: e,
-          stackTrace: st,
-        ),
-      );
-    }
+  AsyncDbResult<bool> hasStore() {
+    return ResultUtils.tryCatchAsync(
+      () => db.storeMetaDao.hasStoreMeta(),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при проверке наличия хранилища',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   /// Обновить информацию о хранилище (имя, описание).
-  Future<DbResult<Unit>> updateInfo({
+  AsyncDbResult<Unit> updateInfo({
     required String name,
     String? description,
-  }) async {
-    try {
-      final rows = await db.storeMetaDao.updateStoreMeta(
-        StoreMetaTableCompanion(
-          name: Value(name),
-          description: Value(description),
-          modifiedAt: Value(DateTime.now()),
-        ),
-      );
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await db.storeMetaDao.updateStoreMeta(
+          StoreMetaTableCompanion(
+            name: Value(name),
+            description: Value(description),
+            modifiedAt: Value(DateTime.now()),
+          ),
+        );
 
-      return rows > 0
-          ? const Success(unit)
-          : const Failure(
-              DBCoreError.notFound(entity: 'store_meta', id: 'singleton'),
-            );
-    } catch (e, st) {
-      return Failure(
-        DBCoreError.unknown(
-          message: 'Ошибка при обновлении информации о хранилище',
-          cause: e,
-          stackTrace: st,
-        ),
-      );
-    }
+        if (rows == 0) {
+          throw const DBCoreError.notFound(entity: 'store_meta', id: 'singleton');
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении информации о хранилище',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   /// Обновить время последнего открытия (вызывается при входе).
-  Future<DbResult<Unit>> updateLastOpened() async {
-    try {
-      await db.storeMetaDao.updateStoreMeta(
-        StoreMetaTableCompanion(lastOpenedAt: Value(DateTime.now())),
-      );
-      return const Success(unit);
-    } catch (e, st) {
-      return Failure(
-        DBCoreError.sqlite(message: e.toString(), cause: e, stackTrace: st),
-      );
-    }
+  AsyncDbResult<Unit> updateLastOpened() {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.storeMetaDao.updateStoreMeta(
+          StoreMetaTableCompanion(lastOpenedAt: Value(DateTime.now())),
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.sqlite(message: e.toString(), cause: e, stackTrace: st),
+    );
   }
 
   /// Полная инициализация метаданных (вызывается при создании нового хранилища).
-  Future<DbResult<Unit>> initStore(StoreMetaTableCompanion companion) async {
-    try {
-      // Гарантируем, что singletonId всегда 1
-      final finalCompanion = companion.copyWith(
-        singletonId: const Value(1),
-        createdAt: Value(DateTime.now()),
-        modifiedAt: Value(DateTime.now()),
-        lastOpenedAt: Value(DateTime.now()),
-      );
+  AsyncDbResult<Unit> initStore(StoreMetaTableCompanion companion) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        // Гарантируем, что singletonId всегда 1
+        final finalCompanion = companion.copyWith(
+          singletonId: const Value(1),
+          createdAt: Value(DateTime.now()),
+          modifiedAt: Value(DateTime.now()),
+          lastOpenedAt: Value(DateTime.now()),
+        );
 
-      await db.storeMetaDao.insertStoreMeta(finalCompanion);
-      return const Success(unit);
-    } catch (e) {
-      return Failure(
-        DBCoreError.conflict(
-          code: 'store.init_failed',
-          message:
-              'Не удалось инициализировать хранилище (возможно, уже существует)',
-          data: {'error': e.toString()},
-        ),
-      );
-    }
+        await db.storeMetaDao.insertStoreMeta(finalCompanion);
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.conflict(
+              code: 'store.init_failed',
+              message:
+                  'Не удалось инициализировать хранилище (возможно, уже существует)',
+              data: {'error': e.toString()},
+            ),
+    );
   }
 
   /// Получить краткую информацию о хранилище (без секретных данных).
-  Future<DbResult<StoreInfoDto>> getStoreInfo() async {
-    try {
-      final data = await db.storeMetaDao.getStoreInfo();
+  AsyncDbResult<StoreInfoDto> getStoreInfo() {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final data = await db.storeMetaDao.getStoreInfo();
 
-      if (data == null) {
-        return const Failure(
-          DBCoreError.notFound(
+        if (data == null) {
+          throw const DBCoreError.notFound(
             entity: 'store_meta',
             id: 'singleton',
             message: 'Информация о хранилище не найдена',
-          ),
-        );
-      }
+          );
+        }
 
-      return Success(data);
-    } catch (e, st) {
-      return Failure(
-        DBCoreError.unknown(
-          message: 'Ошибка при получении информации о хранилище',
-          cause: e,
-          stackTrace: st,
-        ),
-      );
-    }
+        return data;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении информации о хранилище',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   /// Получить ключ для вложений (encryption key).
-  Future<DbResult<String>> getAttachmentKey() async {
-    try {
-      final key = await db.storeMetaDao.getAttachmentKey();
+  AsyncDbResult<String> getAttachmentKey() {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final key = await db.storeMetaDao.getAttachmentKey();
 
-      if (key == null) {
-        return const Failure(
-          DBCoreError.notFound(
+        if (key == null) {
+          throw const DBCoreError.notFound(
             entity: 'store_meta',
             id: 'attachment_key',
             message: 'Attachment key не найден',
-          ),
-        );
-      }
+          );
+        }
 
-      return Success(key);
-    } catch (e, st) {
-      return Failure(
-        DBCoreError.unknown(
-          message: 'Ошибка при получении attachment key',
-          cause: e,
-          stackTrace: st,
-        ),
-      );
-    }
+        return key;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении attachment key',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   /// Получить хэш пароля хранилища.
-  Future<DbResult<String>> getPasswordHash() async {
-    try {
-      final hash = await db.storeMetaDao.getPasswordHash();
+  AsyncDbResult<String> getPasswordHash() {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final hash = await db.storeMetaDao.getPasswordHash();
 
-      if (hash == null) {
-        return const Failure(
-          DBCoreError.notFound(
+        if (hash == null) {
+          throw const DBCoreError.notFound(
             entity: 'store_meta',
             id: 'password_hash',
             message: 'Password hash не найден',
-          ),
-        );
-      }
+          );
+        }
 
-      return Success(hash);
-    } catch (e, st) {
-      return Failure(
-        DBCoreError.unknown(
-          message: 'Ошибка при получении password hash',
-          cause: e,
-          stackTrace: st,
-        ),
-      );
-    }
+        return hash;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении password hash',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 }
+
+

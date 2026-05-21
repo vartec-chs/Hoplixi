@@ -1,9 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/tables/otp/otp_items.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/otp_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -13,131 +16,199 @@ class OtpRepository {
 
   OtpRepository(this.db);
 
-  Future<String> create(CreateOtpDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateOtpDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.otp,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db.into(db.vaultItems).insert(
+          VaultItemsCompanion.insert(
+            id: Value(itemId),
+            type: VaultItemType.otp,
+            name: dto.item.name,
+            description: Value(dto.item.description),
+            categoryId: Value(dto.item.categoryId),
+            iconRefId: Value(dto.item.iconRefId),
+            isFavorite: Value(dto.item.isFavorite),
+            isPinned: Value(dto.item.isPinned),
+            createdAt: Value(now),
+            modifiedAt: Value(now),
+          ),
+        );
+
+        await db.into(db.otpItems).insert(
+          OtpItemsCompanion.insert(
+            itemId: itemId,
+            type: Value(dto.otp.type),
+            issuer: Value(dto.otp.issuer),
+            accountName: Value(dto.otp.accountName),
+            secret: dto.otp.secret,
+            algorithm: Value(dto.otp.algorithm),
+            digits: Value(dto.otp.digits),
+            period: Value(dto.otp.period),
+            counter: Value(dto.otp.counter),
+          ),
+        );
+
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании OTP',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      await db
-          .into(db.otpItems)
-          .insert(
-            OtpItemsCompanion.insert(
-              itemId: itemId,
-              type: Value(dto.otp.type),
-              issuer: Value(dto.otp.issuer),
-              accountName: Value(dto.otp.accountName),
-              secret: dto.otp.secret,
-              algorithm: Value(dto.otp.algorithm),
-              digits: Value(dto.otp.digits),
-              period: Value(dto.otp.period),
-              counter: Value(dto.otp.counter),
-            ),
-          );
-
-      return itemId;
-    });
+    );
   }
 
-  Future<void> update(PatchOtpDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
+  AsyncDbResult<Unit> update(PatchOtpDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
+        final itemUpdated = await (db.update(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .write(
+          VaultItemsCompanion(
+            name: dto.item.name.toRequiredValue(),
+            description: dto.item.description.toNullableValue(),
+            categoryId: dto.item.categoryId.toNullableValue(),
+            iconRefId: dto.item.iconRefId.toNullableValue(),
+            isFavorite: dto.item.isFavorite.toRequiredValue(),
+            isPinned: dto.item.isPinned.toRequiredValue(),
+            modifiedAt: Value(now),
+          ),
+        );
 
-      await (db.update(
-        db.otpItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        OtpItemsCompanion(
-          type: dto.otp.type.toRequiredValue(),
-          issuer: dto.otp.issuer.toNullableValue(),
-          accountName: dto.otp.accountName.toNullableValue(),
-          secret: dto.otp.secret.toRequiredValue(),
-          algorithm: dto.otp.algorithm.toRequiredValue(),
-          digits: dto.otp.digits.toRequiredValue(),
-          period: dto.otp.period.toNullableValue(),
-          counter: dto.otp.counter.toNullableValue(),
-        ),
-      );
-    });
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(db.otpItems)..where((tbl) => tbl.itemId.equals(itemId)))
+            .write(
+          OtpItemsCompanion(
+            type: dto.otp.type.toRequiredValue(),
+            issuer: dto.otp.issuer.toNullableValue(),
+            accountName: dto.otp.accountName.toNullableValue(),
+            secret: dto.otp.secret.toRequiredValue(),
+            algorithm: dto.otp.algorithm.toRequiredValue(),
+            digits: dto.otp.digits.toRequiredValue(),
+            period: dto.otp.period.toNullableValue(),
+            counter: dto.otp.counter.toNullableValue(),
+          ),
+        );
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении OTP',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<OtpViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.otpItems,
-              db.otpItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
+  AsyncDbResult<Optional<OtpViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = db.select(db.vaultItems).join([
+          innerJoin(
+            db.otpItems,
+            db.otpItems.itemId.equalsExp(db.vaultItems.id),
+          ),
+        ])
           ..where(db.vaultItems.id.equals(itemId))
           ..where(db.vaultItems.type.equalsValue(VaultItemType.otp));
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
 
-    final item = row.readTable(db.vaultItems);
-    final otp = row.readTable(db.otpItems);
+        final item = row.readTable(db.vaultItems);
+        final otp = row.readTable(db.otpItems);
 
-    return OtpViewDto(item: item.toVaultItemViewDto(), otp: otp.toOtpDataDto());
+        return Some(OtpViewDto(
+          item: item.toVaultItemViewDto(),
+          otp: otp.toOtpDataDto(),
+        ));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении OTP',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<OtpCardDto?> getCardById(String itemId) async {
-    final expr = _OtpCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.otp));
+  AsyncDbResult<Optional<OtpCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _OtpCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.otp));
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
 
-    return _mapRowToCardDto(row, expr);
+        return Some(_mapRowToCardDto(row, expr));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки OTP',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<OtpCardDto>> getCards({int limit = 50, int offset = 0}) async {
-    final expr = _OtpCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.otp))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  AsyncDbResult<List<OtpCardDto>> getCards({int limit = 50, int offset = 0}) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _OtpCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.otp))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
 
-    final rows = await query.get();
-    return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+        final rows = await query.get();
+        return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка OTP',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении OTP',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(

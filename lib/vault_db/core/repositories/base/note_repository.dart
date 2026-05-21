@@ -1,8 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/note_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -12,120 +15,185 @@ class NoteRepository {
 
   NoteRepository(this.db);
 
-  Future<String> create(CreateNoteDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateNoteDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.note,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db.into(db.vaultItems).insert(
+          VaultItemsCompanion.insert(
+            id: Value(itemId),
+            type: VaultItemType.note,
+            name: dto.item.name,
+            description: Value(dto.item.description),
+            categoryId: Value(dto.item.categoryId),
+            iconRefId: Value(dto.item.iconRefId),
+            isFavorite: Value(dto.item.isFavorite),
+            isPinned: Value(dto.item.isPinned),
+            createdAt: Value(now),
+            modifiedAt: Value(now),
+          ),
+        );
+
+        await db.into(db.noteItems).insert(
+          NoteItemsCompanion.insert(
+            itemId: itemId,
+            deltaJson: dto.note.deltaJson,
+            content: dto.note.content,
+          ),
+        );
+
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании заметки',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      await db
-          .into(db.noteItems)
-          .insert(
-            NoteItemsCompanion.insert(
-              itemId: itemId,
-              deltaJson: dto.note.deltaJson,
-              content: dto.note.content,
-            ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchNoteDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.noteItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        NoteItemsCompanion(
-          deltaJson: dto.note.deltaJson.toRequiredValue(),
-          content: dto.note.content.toRequiredValue(),
-        ),
-      );
-    });
-  }
-
-  Future<NoteViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.noteItems,
-              db.noteItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.note));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final note = row.readTable(db.noteItems);
-
-    return NoteViewDto(
-      item: item.toVaultItemViewDto(),
-      note: note.toNoteDataDto(),
     );
   }
 
-  Future<NoteCardDto?> getCardById(String itemId) async {
-    final query = _buildCardQuery()
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.note));
+  AsyncDbResult<Unit> update(PatchNoteDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated = await (db.update(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .write(
+          VaultItemsCompanion(
+            name: dto.item.name.toRequiredValue(),
+            description: dto.item.description.toNullableValue(),
+            categoryId: dto.item.categoryId.toNullableValue(),
+            iconRefId: dto.item.iconRefId.toNullableValue(),
+            isFavorite: dto.item.isFavorite.toRequiredValue(),
+            isPinned: dto.item.isPinned.toRequiredValue(),
+            modifiedAt: Value(now),
+          ),
+        );
 
-    return _mapRowToCardDto(row);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(db.noteItems)..where((tbl) => tbl.itemId.equals(itemId)))
+            .write(
+          NoteItemsCompanion(
+            deltaJson: dto.note.deltaJson.toRequiredValue(),
+            content: dto.note.content.toRequiredValue(),
+          ),
+        );
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении заметки',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<NoteCardDto>> getCards({int limit = 50, int offset = 0}) async {
-    final query = _buildCardQuery()
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.note))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  AsyncDbResult<Optional<NoteViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = db.select(db.vaultItems).join([
+          innerJoin(
+            db.noteItems,
+            db.noteItems.itemId.equalsExp(db.vaultItems.id),
+          ),
+        ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.note));
 
-    final rows = await query.get();
-    return rows.map(_mapRowToCardDto).toList();
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final note = row.readTable(db.noteItems);
+
+        return Some(NoteViewDto(
+          item: item.toVaultItemViewDto(),
+          note: note.toNoteDataDto(),
+        ));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении заметки',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Optional<NoteCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = _buildCardQuery()
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.note));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки заметки',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<NoteCardDto>> getCards({int limit = 50, int offset = 0}) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = _buildCardQuery()
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.note))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
+
+        final rows = await query.get();
+        return rows.map(_mapRowToCardDto).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка заметок',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении заметки',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
@@ -156,7 +224,7 @@ class NoteRepository {
     return NoteCardDto(
       item: VaultItemCardDto(
         itemId: row.read(db.vaultItems.id)!,
-        type: row.readWithConverter(db.vaultItems.type)!,
+        type: row.readWithConverter<VaultItemType, String>(db.vaultItems.type)!,
         name: row.read(db.vaultItems.name)!,
         description: row.read(db.vaultItems.description),
         categoryId: row.read(db.vaultItems.categoryId),
@@ -176,3 +244,4 @@ class NoteRepository {
     );
   }
 }
+

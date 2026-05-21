@@ -1,9 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/tables/certificate/certificate_items.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/certificate_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -13,165 +16,231 @@ class CertificateRepository {
 
   CertificateRepository(this.db);
 
-  Future<String> create(CreateCertificateDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateCertificateDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.certificate,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db.into(db.vaultItems).insert(
+          VaultItemsCompanion.insert(
+            id: Value(itemId),
+            type: VaultItemType.certificate,
+            name: dto.item.name,
+            description: Value(dto.item.description),
+            categoryId: Value(dto.item.categoryId),
+            iconRefId: Value(dto.item.iconRefId),
+            isFavorite: Value(dto.item.isFavorite),
+            isPinned: Value(dto.item.isPinned),
+            createdAt: Value(now),
+            modifiedAt: Value(now),
+          ),
+        );
+
+        await db.into(db.certificateItems).insert(
+          CertificateItemsCompanion.insert(
+            itemId: itemId,
+            certificateFormat: Value(dto.certificate.certificateFormat),
+            certificateFormatOther: Value(
+              dto.certificate.certificateFormatOther,
             ),
-          );
+            certificatePem: Value(dto.certificate.certificatePem),
+            certificateBlob: Value(dto.certificate.certificateBlob),
+            privateKey: Value(dto.certificate.privateKey),
+            privateKeyPassword: Value(dto.certificate.privateKeyPassword),
+            passwordForPfx: Value(dto.certificate.passwordForPfx),
+            keyAlgorithm: Value(dto.certificate.keyAlgorithm),
+            keyAlgorithmOther: Value(dto.certificate.keyAlgorithmOther),
+            keySize: Value(dto.certificate.keySize),
+            serialNumber: Value(dto.certificate.serialNumber),
+            issuer: Value(dto.certificate.issuer),
+            subject: Value(dto.certificate.subject),
+            validFrom: Value(dto.certificate.validFrom),
+            validTo: Value(dto.certificate.validTo),
+          ),
+        );
 
-      await db
-          .into(db.certificateItems)
-          .insert(
-            CertificateItemsCompanion.insert(
-              itemId: itemId,
-              certificateFormat: Value(dto.certificate.certificateFormat),
-              certificateFormatOther: Value(
-                dto.certificate.certificateFormatOther,
-              ),
-              certificatePem: Value(dto.certificate.certificatePem),
-              certificateBlob: Value(dto.certificate.certificateBlob),
-              privateKey: Value(dto.certificate.privateKey),
-              privateKeyPassword: Value(dto.certificate.privateKeyPassword),
-              passwordForPfx: Value(dto.certificate.passwordForPfx),
-              keyAlgorithm: Value(dto.certificate.keyAlgorithm),
-              keyAlgorithmOther: Value(dto.certificate.keyAlgorithmOther),
-              keySize: Value(dto.certificate.keySize),
-              serialNumber: Value(dto.certificate.serialNumber),
-              issuer: Value(dto.certificate.issuer),
-              subject: Value(dto.certificate.subject),
-              validFrom: Value(dto.certificate.validFrom),
-              validTo: Value(dto.certificate.validTo),
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании сертификата',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchCertificateDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.certificateItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        CertificateItemsCompanion(
-          certificateFormat: dto.certificate.certificateFormat
-              .toNullableValue(),
-          certificateFormatOther: dto.certificate.certificateFormatOther
-              .toNullableValue(),
-          certificatePem: dto.certificate.certificatePem.toNullableValue(),
-          certificateBlob: dto.certificate.certificateBlob.toNullableValue(),
-          privateKey: dto.certificate.privateKey.toNullableValue(),
-          privateKeyPassword: dto.certificate.privateKeyPassword
-              .toNullableValue(),
-          passwordForPfx: dto.certificate.passwordForPfx.toNullableValue(),
-          keyAlgorithm: dto.certificate.keyAlgorithm.toNullableValue(),
-          keyAlgorithmOther: dto.certificate.keyAlgorithmOther
-              .toNullableValue(),
-          keySize: dto.certificate.keySize.toNullableValue(),
-          serialNumber: dto.certificate.serialNumber.toNullableValue(),
-          issuer: dto.certificate.issuer.toNullableValue(),
-          subject: dto.certificate.subject.toNullableValue(),
-          validFrom: dto.certificate.validFrom.toNullableValue(),
-          validTo: dto.certificate.validTo.toNullableValue(),
-        ),
-      );
-
-      final tagsUpdate = dto.tags;
-      if (tagsUpdate is FieldUpdateSet<List<String>>) {
-        await db.itemTagsDao.removeAllTagsFromItem(itemId);
-        for (final tagId in tagsUpdate.value ?? []) {
-          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
-        }
-      }
-    });
-  }
-
-  Future<CertificateViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.certificateItems,
-              db.certificateItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final certificate = row.readTable(db.certificateItems);
-
-    return CertificateViewDto(
-      item: item.toVaultItemViewDto(),
-      certificate: certificate.toCertificateDataDto(),
     );
   }
 
-  Future<CertificateCardDto?> getCardById(String itemId) async {
-    final expr = _CertificateCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
+  AsyncDbResult<Unit> update(PatchCertificateDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated = await (db.update(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .write(
+          VaultItemsCompanion(
+            name: dto.item.name.toRequiredValue(),
+            description: dto.item.description.toNullableValue(),
+            categoryId: dto.item.categoryId.toNullableValue(),
+            iconRefId: dto.item.iconRefId.toNullableValue(),
+            isFavorite: dto.item.isFavorite.toRequiredValue(),
+            isPinned: dto.item.isPinned.toRequiredValue(),
+            modifiedAt: Value(now),
+          ),
+        );
 
-    return _mapRowToCardDto(row, expr);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(db.certificateItems)
+              ..where((tbl) => tbl.itemId.equals(itemId)))
+            .write(
+          CertificateItemsCompanion(
+            certificateFormat: dto.certificate.certificateFormat
+                .toNullableValue(),
+            certificateFormatOther: dto.certificate.certificateFormatOther
+                .toNullableValue(),
+            certificatePem: dto.certificate.certificatePem.toNullableValue(),
+            certificateBlob: dto.certificate.certificateBlob.toNullableValue(),
+            privateKey: dto.certificate.privateKey.toNullableValue(),
+            privateKeyPassword: dto.certificate.privateKeyPassword
+                .toNullableValue(),
+            passwordForPfx: dto.certificate.passwordForPfx.toNullableValue(),
+            keyAlgorithm: dto.certificate.keyAlgorithm.toNullableValue(),
+            keyAlgorithmOther: dto.certificate.keyAlgorithmOther
+                .toNullableValue(),
+            keySize: dto.certificate.keySize.toNullableValue(),
+            serialNumber: dto.certificate.serialNumber.toNullableValue(),
+            issuer: dto.certificate.issuer.toNullableValue(),
+            subject: dto.certificate.subject.toNullableValue(),
+            validFrom: dto.certificate.validFrom.toNullableValue(),
+            validTo: dto.certificate.validTo.toNullableValue(),
+          ),
+        );
+
+        final tagsUpdate = dto.tags;
+        if (tagsUpdate is FieldUpdateSet<List<String>>) {
+          await db.itemTagsDao.removeAllTagsFromItem(itemId);
+          for (final tagId in tagsUpdate.value ?? []) {
+            await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+          }
+        }
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении сертификата',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<CertificateCardDto>> getCards({
+  AsyncDbResult<Optional<CertificateViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = db.select(db.vaultItems).join([
+          innerJoin(
+            db.certificateItems,
+            db.certificateItems.itemId.equalsExp(db.vaultItems.id),
+          ),
+        ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final certificate = row.readTable(db.certificateItems);
+
+        return Some(CertificateViewDto(
+          item: item.toVaultItemViewDto(),
+          certificate: certificate.toCertificateDataDto(),
+        ));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении сертификата',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Optional<CertificateCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _CertificateCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row, expr));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки сертификата',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<CertificateCardDto>> getCards({
     int limit = 50,
     int offset = 0,
-  }) async {
-    final expr = _CertificateCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _CertificateCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
 
-    final rows = await query.get();
-    return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+        final rows = await query.get();
+        return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка сертификатов',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении сертификата',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(

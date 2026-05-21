@@ -1,9 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../models/mappers/wifi_mapper.dart';
 
@@ -12,132 +15,206 @@ class WifiRepository {
 
   WifiRepository(this.db);
 
-  Future<String> create(CreateWifiDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateWifiDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.wifi,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.wifi,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
+
+        await db
+            .into(db.wifiItems)
+            .insert(
+              WifiItemsCompanion.insert(
+                itemId: itemId,
+                ssid: dto.wifi.ssid,
+                password: Value(dto.wifi.password),
+                securityType: Value(dto.wifi.securityType),
+                securityTypeOther: Value(dto.wifi.securityTypeOther),
+                encryption: Value(dto.wifi.encryption),
+                encryptionOther: Value(dto.wifi.encryptionOther),
+                hiddenSsid: Value(dto.wifi.hiddenSsid),
+              ),
+            );
+
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании Wi-Fi',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      await db
-          .into(db.wifiItems)
-          .insert(
-            WifiItemsCompanion.insert(
-              itemId: itemId,
-              ssid: dto.wifi.ssid,
-              password: Value(dto.wifi.password),
-              securityType: Value(dto.wifi.securityType),
-              securityTypeOther: Value(dto.wifi.securityTypeOther),
-              encryption: Value(dto.wifi.encryption),
-              encryptionOther: Value(dto.wifi.encryptionOther),
-              hiddenSsid: Value(dto.wifi.hiddenSsid),
-            ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchWifiDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.wifiItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        WifiItemsCompanion(
-          ssid: dto.wifi.ssid.toRequiredValue(),
-          password: dto.wifi.password.toNullableValue(),
-          securityType: dto.wifi.securityType.toNullableValue(),
-          securityTypeOther: dto.wifi.securityTypeOther.toNullableValue(),
-          encryption: dto.wifi.encryption.toNullableValue(),
-          encryptionOther: dto.wifi.encryptionOther.toNullableValue(),
-          hiddenSsid: dto.wifi.hiddenSsid.toRequiredValue(),
-        ),
-      );
-    });
-  }
-
-  Future<WifiViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.wifiItems,
-              db.wifiItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final wifi = row.readTable(db.wifiItems);
-
-    return WifiViewDto(
-      item: item.toVaultItemViewDto(),
-      wifi: wifi.toWifiDataDto(),
     );
   }
 
-  Future<WifiCardDto?> getCardById(String itemId) async {
-    final expr = _WifiCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi));
+  AsyncDbResult<Unit> update(PatchWifiDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
-    return _mapRowToCardDto(row, expr);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(
+          db.wifiItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
+          WifiItemsCompanion(
+            ssid: dto.wifi.ssid.toRequiredValue(),
+            password: dto.wifi.password.toNullableValue(),
+            securityType: dto.wifi.securityType.toNullableValue(),
+            securityTypeOther: dto.wifi.securityTypeOther.toNullableValue(),
+            encryption: dto.wifi.encryption.toNullableValue(),
+            encryptionOther: dto.wifi.encryptionOther.toNullableValue(),
+            hiddenSsid: dto.wifi.hiddenSsid.toRequiredValue(),
+          ),
+        );
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении Wi-Fi',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<WifiCardDto>> getCards({int limit = 50, int offset = 0}) async {
-    final expr = _WifiCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  AsyncDbResult<Optional<WifiViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.wifiItems,
+                  db.wifiItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi));
 
-    final rows = await query.get();
-    return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final wifi = row.readTable(db.wifiItems);
+
+        return Some(
+          WifiViewDto(
+            item: item.toVaultItemViewDto(),
+            wifi: wifi.toWifiDataDto(),
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении Wi-Fi',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Optional<WifiCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _WifiCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row, expr));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки Wi-Fi',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<WifiCardDto>> getCards({int limit = 50, int offset = 0}) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _WifiCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.wifi))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
+
+        final rows = await query.get();
+        return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка Wi-Fi',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении Wi-Fi',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(

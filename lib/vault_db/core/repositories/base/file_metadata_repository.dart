@@ -1,7 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/file_mapper.dart';
 import '../../tables/file/file_metadata.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
@@ -11,101 +14,198 @@ class FileMetadataRepository {
 
   FileMetadataRepository(this.db);
 
-  Future<String> createMetadata(FileMetadataDataDto dto) async {
-    final id = const Uuid().v4();
-    await db.fileMetadataDao.insertFileMetadata(
-      FileMetadataCompanion.insert(
-        id: Value(id),
-        fileName: dto.fileName,
-        fileExtension: Value(dto.fileExtension),
-        filePath: Value(dto.filePath),
-        mimeType: dto.mimeType,
-        fileSize: dto.fileSize,
-        sha256: Value(dto.sha256),
-        availabilityStatus: Value(dto.availabilityStatus),
-        integrityStatus: Value(dto.integrityStatus),
-        missingDetectedAt: Value(dto.missingDetectedAt),
-        deletedAt: Value(dto.deletedAt),
-        lastIntegrityCheckAt: Value(dto.lastIntegrityCheckAt),
-      ),
-    );
-    return id;
-  }
-
-  Future<void> updateMetadata(PatchFileMetadataDto dto) async {
-    await db.fileMetadataDao.updateFileMetadataById(
-      dto.id,
-      FileMetadataCompanion(
-        fileName: dto.fileName.toRequiredValue(),
-        fileExtension: dto.fileExtension.toNullableValue(),
-        filePath: dto.filePath.toNullableValue(),
-        mimeType: dto.mimeType.toRequiredValue(),
-        fileSize: dto.fileSize.toRequiredValue(),
-        sha256: dto.sha256.toNullableValue(),
-        availabilityStatus: dto.availabilityStatus.toRequiredValue(),
-        integrityStatus: dto.integrityStatus.toRequiredValue(),
-        missingDetectedAt: dto.missingDetectedAt.toNullableValue(),
-        deletedAt: dto.deletedAt.toNullableValue(),
-        lastIntegrityCheckAt: dto.lastIntegrityCheckAt.toNullableValue(),
-      ),
+  AsyncDbResult<String> createMetadata(FileMetadataDataDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final id = const Uuid().v4();
+        await db.fileMetadataDao.insertFileMetadata(
+          FileMetadataCompanion.insert(
+            id: Value(id),
+            fileName: dto.fileName,
+            fileExtension: Value(dto.fileExtension),
+            filePath: Value(dto.filePath),
+            mimeType: dto.mimeType,
+            fileSize: dto.fileSize,
+            sha256: Value(dto.sha256),
+            availabilityStatus: Value(dto.availabilityStatus),
+            integrityStatus: Value(dto.integrityStatus),
+            missingDetectedAt: Value(dto.missingDetectedAt),
+            deletedAt: Value(dto.deletedAt),
+            lastIntegrityCheckAt: Value(dto.lastIntegrityCheckAt),
+          ),
+        );
+        return id;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании метаданных файла',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
-  Future<FileMetadataViewDto?> getMetadataById(String metadataId) async {
-    final data = await db.fileMetadataDao.getFileMetadataById(metadataId);
-    return data?.toFileMetadataViewDto();
+  AsyncDbResult<Unit> updateMetadata(PatchFileMetadataDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.fileMetadataDao.updateFileMetadataById(
+          dto.id,
+          FileMetadataCompanion(
+            fileName: dto.fileName.toRequiredValue(),
+            fileExtension: dto.fileExtension.toNullableValue(),
+            filePath: dto.filePath.toNullableValue(),
+            mimeType: dto.mimeType.toRequiredValue(),
+            fileSize: dto.fileSize.toRequiredValue(),
+            sha256: dto.sha256.toNullableValue(),
+            availabilityStatus: dto.availabilityStatus.toRequiredValue(),
+            integrityStatus: dto.integrityStatus.toRequiredValue(),
+            missingDetectedAt: dto.missingDetectedAt.toNullableValue(),
+            deletedAt: dto.deletedAt.toNullableValue(),
+            lastIntegrityCheckAt: dto.lastIntegrityCheckAt.toNullableValue(),
+          ),
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении метаданных файла',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> markMissing({
+  AsyncDbResult<Optional<FileMetadataViewDto>> getMetadataById(
+    String metadataId,
+  ) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final data = await db.fileMetadataDao.getFileMetadataById(metadataId);
+        return Optional.fromNullable(data?.toFileMetadataViewDto());
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении метаданных файла',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Unit> markMissing({
     required String metadataId,
     required DateTime detectedAt,
-  }) async {
-    await db.fileMetadataDao.updateAvailabilityStatus(
-      id: metadataId,
-      availabilityStatus: FileAvailabilityStatus.missing,
-      missingDetectedAt: detectedAt,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.fileMetadataDao.updateAvailabilityStatus(
+          id: metadataId,
+          availabilityStatus: FileAvailabilityStatus.missing,
+          missingDetectedAt: detectedAt,
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при пометке файла как отсутствующего',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
-  Future<void> markDeleted({
+  AsyncDbResult<Unit> markDeleted({
     required String metadataId,
     required DateTime deletedAt,
-  }) async {
-    await db.fileMetadataDao.updateAvailabilityStatus(
-      id: metadataId,
-      availabilityStatus: FileAvailabilityStatus.deleted,
-      deletedAt: deletedAt,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.fileMetadataDao.updateAvailabilityStatus(
+          id: metadataId,
+          availabilityStatus: FileAvailabilityStatus.deleted,
+          deletedAt: deletedAt,
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при пометке файла как удаленного',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
-  Future<void> markAvailable({required String metadataId}) async {
-    await db.fileMetadataDao.updateAvailabilityStatus(
-      id: metadataId,
-      availabilityStatus: FileAvailabilityStatus.available,
+  AsyncDbResult<Unit> markAvailable({required String metadataId}) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.fileMetadataDao.updateAvailabilityStatus(
+          id: metadataId,
+          availabilityStatus: FileAvailabilityStatus.available,
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при пометке файла как доступного',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
-  Future<void> updateIntegrityStatus({
+  AsyncDbResult<Unit> updateIntegrityStatus({
     required String metadataId,
     required FileIntegrityStatus status,
     required DateTime checkedAt,
-  }) async {
-    await db.fileMetadataDao.updateIntegrityStatus(
-      id: metadataId,
-      integrityStatus: status,
-      lastIntegrityCheckAt: checkedAt,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.fileMetadataDao.updateIntegrityStatus(
+          id: metadataId,
+          integrityStatus: status,
+          lastIntegrityCheckAt: checkedAt,
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении статуса целостности файла',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
-  Future<void> updateSha256({
+  AsyncDbResult<Unit> updateSha256({
     required String metadataId,
     required String? sha256,
     required DateTime checkedAt,
-  }) async {
-    await db.fileMetadataDao.updateSha256(
-      id: metadataId,
-      sha256: sha256,
-      lastIntegrityCheckAt: checkedAt,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.fileMetadataDao.updateSha256(
+          id: metadataId,
+          sha256: sha256,
+          lastIntegrityCheckAt: checkedAt,
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении SHA256 файла',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 }
+

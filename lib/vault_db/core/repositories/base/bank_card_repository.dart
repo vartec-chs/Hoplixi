@@ -1,6 +1,9 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/vault_db/core/errors/db_error.dart';
+import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/tables/bank_card/bank_card_items.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
@@ -13,153 +16,219 @@ class BankCardRepository {
 
   BankCardRepository(this.db);
 
-  Future<String> create(CreateBankCardDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateBankCardDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.bankCard,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db.into(db.vaultItems).insert(
+          VaultItemsCompanion.insert(
+            id: Value(itemId),
+            type: VaultItemType.bankCard,
+            name: dto.item.name,
+            description: Value(dto.item.description),
+            categoryId: Value(dto.item.categoryId),
+            iconRefId: Value(dto.item.iconRefId),
+            isFavorite: Value(dto.item.isFavorite),
+            isPinned: Value(dto.item.isPinned),
+            createdAt: Value(now),
+            modifiedAt: Value(now),
+          ),
+        );
+
+        await db.into(db.bankCardItems).insert(
+          BankCardItemsCompanion.insert(
+            itemId: itemId,
+            cardholderName: Value(dto.bankCard.cardholderName),
+            cardNumber: dto.bankCard.cardNumber,
+            cardType: Value(dto.bankCard.cardType),
+            cardTypeOther: Value(dto.bankCard.cardTypeOther),
+            cardNetwork: Value(dto.bankCard.cardNetwork),
+            cardNetworkOther: Value(dto.bankCard.cardNetworkOther),
+            expiryMonth: Value(dto.bankCard.expiryMonth),
+            expiryYear: Value(dto.bankCard.expiryYear),
+            cvv: Value(dto.bankCard.cvv),
+            bankName: Value(dto.bankCard.bankName),
+            accountNumber: Value(dto.bankCard.accountNumber),
+            routingNumber: Value(dto.bankCard.routingNumber),
+          ),
+        );
+
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании банковской карты',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      await db
-          .into(db.bankCardItems)
-          .insert(
-            BankCardItemsCompanion.insert(
-              itemId: itemId,
-              cardholderName: Value(dto.bankCard.cardholderName),
-              cardNumber: dto.bankCard.cardNumber,
-              cardType: Value(dto.bankCard.cardType),
-              cardTypeOther: Value(dto.bankCard.cardTypeOther),
-              cardNetwork: Value(dto.bankCard.cardNetwork),
-              cardNetworkOther: Value(dto.bankCard.cardNetworkOther),
-              expiryMonth: Value(dto.bankCard.expiryMonth),
-              expiryYear: Value(dto.bankCard.expiryYear),
-              cvv: Value(dto.bankCard.cvv),
-              bankName: Value(dto.bankCard.bankName),
-              accountNumber: Value(dto.bankCard.accountNumber),
-              routingNumber: Value(dto.bankCard.routingNumber),
-            ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchBankCardDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.bankCardItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        BankCardItemsCompanion(
-          cardholderName: dto.bankCard.cardholderName.toNullableValue(),
-          cardNumber: dto.bankCard.cardNumber.toRequiredValue(),
-          cardType: dto.bankCard.cardType.toNullableValue(),
-          cardTypeOther: dto.bankCard.cardTypeOther.toNullableValue(),
-          cardNetwork: dto.bankCard.cardNetwork.toNullableValue(),
-          cardNetworkOther: dto.bankCard.cardNetworkOther.toNullableValue(),
-          expiryMonth: dto.bankCard.expiryMonth.toNullableValue(),
-          expiryYear: dto.bankCard.expiryYear.toNullableValue(),
-          cvv: dto.bankCard.cvv.toNullableValue(),
-          bankName: dto.bankCard.bankName.toNullableValue(),
-          accountNumber: dto.bankCard.accountNumber.toNullableValue(),
-          routingNumber: dto.bankCard.routingNumber.toNullableValue(),
-        ),
-      );
-
-      final tagsUpdate = dto.tags;
-      if (tagsUpdate is FieldUpdateSet<List<String>>) {
-        await db.itemTagsDao.removeAllTagsFromItem(itemId);
-        for (final tagId in tagsUpdate.value ?? []) {
-          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
-        }
-      }
-    });
-  }
-
-  Future<BankCardViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.bankCardItems,
-              db.bankCardItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final bankCard = row.readTable(db.bankCardItems);
-
-    return BankCardViewDto(
-      item: item.toVaultItemViewDto(),
-      bankCard: bankCard.toBankCardDataDto(),
     );
   }
 
-  Future<BankCardCardDto?> getCardById(String itemId) async {
-    final expr = _BankCardCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard));
+  AsyncDbResult<Unit> update(PatchBankCardDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated = await (db.update(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .write(
+          VaultItemsCompanion(
+            name: dto.item.name.toRequiredValue(),
+            description: dto.item.description.toNullableValue(),
+            categoryId: dto.item.categoryId.toNullableValue(),
+            iconRefId: dto.item.iconRefId.toNullableValue(),
+            isFavorite: dto.item.isFavorite.toRequiredValue(),
+            isPinned: dto.item.isPinned.toRequiredValue(),
+            modifiedAt: Value(now),
+          ),
+        );
 
-    return _mapRowToCardDto(row, expr);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(
+          db.bankCardItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
+          BankCardItemsCompanion(
+            cardholderName: dto.bankCard.cardholderName.toNullableValue(),
+            cardNumber: dto.bankCard.cardNumber.toRequiredValue(),
+            cardType: dto.bankCard.cardType.toNullableValue(),
+            cardTypeOther: dto.bankCard.cardTypeOther.toNullableValue(),
+            cardNetwork: dto.bankCard.cardNetwork.toNullableValue(),
+            cardNetworkOther: dto.bankCard.cardNetworkOther.toNullableValue(),
+            expiryMonth: dto.bankCard.expiryMonth.toNullableValue(),
+            expiryYear: dto.bankCard.expiryYear.toNullableValue(),
+            cvv: dto.bankCard.cvv.toNullableValue(),
+            bankName: dto.bankCard.bankName.toNullableValue(),
+            accountNumber: dto.bankCard.accountNumber.toNullableValue(),
+            routingNumber: dto.bankCard.routingNumber.toNullableValue(),
+          ),
+        );
+
+        final tagsUpdate = dto.tags;
+        if (tagsUpdate is FieldUpdateSet<List<String>>) {
+          await db.itemTagsDao.removeAllTagsFromItem(itemId);
+          for (final tagId in tagsUpdate.value ?? []) {
+            await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+          }
+        }
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении банковской карты',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<BankCardCardDto>> getCards({
+  AsyncDbResult<Optional<BankCardViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = db.select(db.vaultItems).join([
+          innerJoin(
+            db.bankCardItems,
+            db.bankCardItems.itemId.equalsExp(db.vaultItems.id),
+          ),
+        ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final bankCard = row.readTable(db.bankCardItems);
+
+        return Some(BankCardViewDto(
+          item: item.toVaultItemViewDto(),
+          bankCard: bankCard.toBankCardDataDto(),
+        ));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении банковской карты по ID',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Optional<BankCardCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _BankCardCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row, expr));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки банковской карты',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<BankCardCardDto>> getCards({
     int limit = 50,
     int offset = 0,
-  }) async {
-    final expr = _BankCardCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _BankCardCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
 
-    final rows = await query.get();
-    return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+        final rows = await query.get();
+        return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка банковских карт',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final count = await (db.delete(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .go();
+        if (count == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при окончательном удалении банковской карты',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(

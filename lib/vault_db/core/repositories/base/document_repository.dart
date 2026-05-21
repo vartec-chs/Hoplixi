@@ -2,9 +2,12 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/vault_item_base_dto.dart';
 import 'package:hoplixi/vault_db/core/models/field_update.dart';
 import 'package:hoplixi/vault_db/core/tables/tables.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/dto/document_dto.dart';
 import '../../models/mappers/document_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
@@ -14,129 +17,195 @@ class DocumentRepository {
 
   DocumentRepository(this.db);
 
-  Future<String> create(CreateDocumentDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateDocumentDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.document,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db.into(db.vaultItems).insert(
+          VaultItemsCompanion.insert(
+            id: Value(itemId),
+            type: VaultItemType.document,
+            name: dto.item.name,
+            description: Value(dto.item.description),
+            categoryId: Value(dto.item.categoryId),
+            iconRefId: Value(dto.item.iconRefId),
+            isFavorite: Value(dto.item.isFavorite),
+            isPinned: Value(dto.item.isPinned),
+            createdAt: Value(now),
+            modifiedAt: Value(now),
+          ),
+        );
+
+        await db.into(db.documentItems).insert(
+          DocumentItemsCompanion.insert(
+            itemId: itemId,
+            currentVersionId: Value(dto.document.currentVersionId),
+          ),
+        );
+
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании документа',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      await db
-          .into(db.documentItems)
-          .insert(
-            DocumentItemsCompanion.insert(
-              itemId: itemId,
-              currentVersionId: Value(dto.document.currentVersionId),
-            ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchDocumentDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.documentItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        DocumentItemsCompanion(
-          currentVersionId: dto.document.currentVersionId.toNullableValue(),
-        ),
-      );
-
-      final tagsUpdate = dto.tags;
-      if (tagsUpdate is FieldUpdateSet<List<String>>) {
-        await db.itemTagsDao.removeAllTagsFromItem(itemId);
-        for (final tagId in tagsUpdate.value ?? []) {
-          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
-        }
-      }
-    });
-  }
-
-  Future<DocumentViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.documentItems,
-              db.documentItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.document));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final document = row.readTable(db.documentItems);
-
-    return DocumentViewDto(
-      item: item.toVaultItemViewDto(),
-      document: document.toDocumentDataDto(),
     );
   }
 
-  Future<DocumentCardDto?> getCardById(String itemId) async {
-    final query = _buildCardQuery()
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.document));
+  AsyncDbResult<Unit> update(PatchDocumentDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated = await (db.update(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .write(
+          VaultItemsCompanion(
+            name: dto.item.name.toRequiredValue(),
+            description: dto.item.description.toNullableValue(),
+            categoryId: dto.item.categoryId.toNullableValue(),
+            iconRefId: dto.item.iconRefId.toNullableValue(),
+            isFavorite: dto.item.isFavorite.toRequiredValue(),
+            isPinned: dto.item.isPinned.toRequiredValue(),
+            modifiedAt: Value(now),
+          ),
+        );
 
-    return _mapRowToCardDto(row);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(db.documentItems)
+              ..where((tbl) => tbl.itemId.equals(itemId)))
+            .write(
+          DocumentItemsCompanion(
+            currentVersionId: dto.document.currentVersionId.toNullableValue(),
+          ),
+        );
+
+        final tagsUpdate = dto.tags;
+        if (tagsUpdate is FieldUpdateSet<List<String>>) {
+          await db.itemTagsDao.removeAllTagsFromItem(itemId);
+          for (final tagId in tagsUpdate.value ?? []) {
+            await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+          }
+        }
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении документа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<DocumentCardDto>> getCards({
+  AsyncDbResult<Optional<DocumentViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = db.select(db.vaultItems).join([
+          innerJoin(
+            db.documentItems,
+            db.documentItems.itemId.equalsExp(db.vaultItems.id),
+          ),
+        ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.document));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final document = row.readTable(db.documentItems);
+
+        return Some(DocumentViewDto(
+          item: item.toVaultItemViewDto(),
+          document: document.toDocumentDataDto(),
+        ));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении документа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Optional<DocumentCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = _buildCardQuery()
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.document));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки документа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<DocumentCardDto>> getCards({
     int limit = 50,
     int offset = 0,
-  }) async {
-    final query = _buildCardQuery()
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.document))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = _buildCardQuery()
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.document))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
 
-    final rows = await query.get();
-    return rows.map(_mapRowToCardDto).toList();
+        final rows = await query.get();
+        return rows.map(_mapRowToCardDto).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка документов',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении документа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {
@@ -216,3 +285,6 @@ class DocumentRepository {
     );
   }
 }
+
+
+  

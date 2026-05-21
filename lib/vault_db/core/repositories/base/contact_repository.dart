@@ -1,8 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/contact_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -12,149 +15,224 @@ class ContactRepository {
 
   ContactRepository(this.db);
 
-  Future<String> create(CreateContactDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateContactDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.contact,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.contact,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
+
+        await db
+            .into(db.contactItems)
+            .insert(
+              ContactItemsCompanion.insert(
+                itemId: itemId,
+                firstName: dto.contact.firstName,
+                middleName: Value(dto.contact.middleName),
+                lastName: Value(dto.contact.lastName),
+                company: Value(dto.contact.company),
+                jobTitle: Value(dto.contact.jobTitle),
+                email: Value(dto.contact.email),
+                phone: Value(dto.contact.phone),
+                address: Value(dto.contact.address),
+                website: Value(dto.contact.website),
+                birthday: Value(dto.contact.birthday),
+                isEmergencyContact: Value(dto.contact.isEmergencyContact),
+              ),
+            );
+
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании контакта',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      await db
-          .into(db.contactItems)
-          .insert(
-            ContactItemsCompanion.insert(
-              itemId: itemId,
-              firstName: dto.contact.firstName,
-              middleName: Value(dto.contact.middleName),
-              lastName: Value(dto.contact.lastName),
-              company: Value(dto.contact.company),
-              jobTitle: Value(dto.contact.jobTitle),
-              email: Value(dto.contact.email),
-              phone: Value(dto.contact.phone),
-              address: Value(dto.contact.address),
-              website: Value(dto.contact.website),
-              birthday: Value(dto.contact.birthday),
-              isEmergencyContact: Value(dto.contact.isEmergencyContact),
-            ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchContactDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.contactItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        ContactItemsCompanion(
-          firstName: dto.contact.firstName.toRequiredValue(),
-          middleName: dto.contact.middleName.toNullableValue(),
-          lastName: dto.contact.lastName.toNullableValue(),
-          company: dto.contact.company.toNullableValue(),
-          jobTitle: dto.contact.jobTitle.toNullableValue(),
-          email: dto.contact.email.toNullableValue(),
-          phone: dto.contact.phone.toNullableValue(),
-          address: dto.contact.address.toNullableValue(),
-          website: dto.contact.website.toNullableValue(),
-          birthday: dto.contact.birthday.toNullableValue(),
-          isEmergencyContact: dto.contact.isEmergencyContact.toRequiredValue(),
-        ),
-      );
-
-      final tagsUpdate = dto.tags;
-      if (tagsUpdate is FieldUpdateSet<List<String>>) {
-        await db.itemTagsDao.removeAllTagsFromItem(itemId);
-        for (final tagId in tagsUpdate.value ?? []) {
-          await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
-        }
-      }
-    });
-  }
-
-  Future<ContactViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.contactItems,
-              db.contactItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final contact = row.readTable(db.contactItems);
-
-    return ContactViewDto(
-      item: item.toVaultItemViewDto(),
-      contact: contact.toContactDataDto(),
     );
   }
 
-  Future<ContactCardDto?> getCardById(String itemId) async {
-    final query = _buildCardQuery()
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
+  AsyncDbResult<Unit> update(PatchContactDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
-    return _mapRowToCardDto(row);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(
+          db.contactItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
+          ContactItemsCompanion(
+            firstName: dto.contact.firstName.toRequiredValue(),
+            middleName: dto.contact.middleName.toNullableValue(),
+            lastName: dto.contact.lastName.toNullableValue(),
+            company: dto.contact.company.toNullableValue(),
+            jobTitle: dto.contact.jobTitle.toNullableValue(),
+            email: dto.contact.email.toNullableValue(),
+            phone: dto.contact.phone.toNullableValue(),
+            address: dto.contact.address.toNullableValue(),
+            website: dto.contact.website.toNullableValue(),
+            birthday: dto.contact.birthday.toNullableValue(),
+            isEmergencyContact: dto.contact.isEmergencyContact
+                .toRequiredValue(),
+          ),
+        );
+
+        final tagsUpdate = dto.tags;
+        if (tagsUpdate is FieldUpdateSet<List<String>>) {
+          await db.itemTagsDao.removeAllTagsFromItem(itemId);
+          for (final tagId in tagsUpdate.value ?? []) {
+            await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+          }
+        }
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении контакта',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<ContactCardDto>> getCards({
+  AsyncDbResult<Optional<ContactViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.contactItems,
+                  db.contactItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final contact = row.readTable(db.contactItems);
+
+        return Some(
+          ContactViewDto(
+            item: item.toVaultItemViewDto(),
+            contact: contact.toContactDataDto(),
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении контакта',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Optional<ContactCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = _buildCardQuery()
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.contact));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки контакта',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<ContactCardDto>> getCards({
     int limit = 50,
     int offset = 0,
-  }) async {
-    final query = _buildCardQuery()
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.contact))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = _buildCardQuery()
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.contact))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
 
-    final rows = await query.get();
-    return rows.map(_mapRowToCardDto).toList();
+        final rows = await query.get();
+        return rows.map(_mapRowToCardDto).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка контактов',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении контакта',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery() {

@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/daos/base/vault_items/vault_events_history_dao.dart';
-import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
+import 'package:hoplixi/vault_db/core/errors/db_error.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/vault_db/core/tables/vault_items/vault_items.dart';
@@ -16,7 +16,7 @@ class VaultEventHistoryRepository {
 
   final VaultEventsHistoryDao eventsHistoryDao;
 
-  Future<DbResult<Unit>> writeEvent({
+  AsyncDbResult<Unit> writeEvent({
     required String itemId,
     required VaultItemType type,
     required VaultEventHistoryAction action,
@@ -24,23 +24,31 @@ class VaultEventHistoryRepository {
     String? description,
     String? snapshotHistoryId,
     VaultHistoryActorType actorType = VaultHistoryActorType.user,
-  }) async {
-    try {
-      await eventsHistoryDao.insertVaultEvent(
-        VaultEventsHistoryCompanion.insert(
-          itemId: itemId,
-          type: type,
-          action: action,
-          name: Value(name),
-          description: Value(description),
-          snapshotHistoryId: Value(snapshotHistoryId),
-          actorType: Value(actorType),
-          eventCreatedAt: Value(DateTime.now()),
-        ),
-      );
-      return const Success(unit);
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await eventsHistoryDao.insertVaultEvent(
+          VaultEventsHistoryCompanion.insert(
+            itemId: itemId,
+            type: type,
+            action: action,
+            name: Value(name),
+            description: Value(description),
+            snapshotHistoryId: Value(snapshotHistoryId),
+            actorType: Value(actorType),
+            eventCreatedAt: Value(DateTime.now()),
+          ),
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи события истории',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 }
+

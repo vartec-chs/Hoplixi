@@ -1,9 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/tables/ssh_key/ssh_key_items.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:hoplixi/vault_db/core/vault_db.dart';
+import '../../errors/db_error.dart';
+import '../../errors/db_result.dart';
 import '../../models/mappers/ssh_key_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
 import '../../tables/vault_items/vault_items.dart';
@@ -13,128 +16,194 @@ class SshKeyRepository {
 
   SshKeyRepository(this.db);
 
-  Future<String> create(CreateSshKeyDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = const Uuid().v4();
+  AsyncDbResult<String> create(CreateSshKeyDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = const Uuid().v4();
 
-      await db
-          .into(db.vaultItems)
-          .insert(
-            VaultItemsCompanion.insert(
-              id: Value(itemId),
-              type: VaultItemType.sshKey,
-              name: dto.item.name,
-              description: Value(dto.item.description),
-              categoryId: Value(dto.item.categoryId),
-              iconRefId: Value(dto.item.iconRefId),
-              isFavorite: Value(dto.item.isFavorite),
-              isPinned: Value(dto.item.isPinned),
-              createdAt: Value(now),
-              modifiedAt: Value(now),
+        await db.into(db.vaultItems).insert(
+          VaultItemsCompanion.insert(
+            id: Value(itemId),
+            type: VaultItemType.sshKey,
+            name: dto.item.name,
+            description: Value(dto.item.description),
+            categoryId: Value(dto.item.categoryId),
+            iconRefId: Value(dto.item.iconRefId),
+            isFavorite: Value(dto.item.isFavorite),
+            isPinned: Value(dto.item.isPinned),
+            createdAt: Value(now),
+            modifiedAt: Value(now),
+          ),
+        );
+
+        await db.into(db.sshKeyItems).insert(
+          SshKeyItemsCompanion.insert(
+            itemId: itemId,
+            publicKey: Value(dto.sshKey.publicKey),
+            privateKey: Value(dto.sshKey.privateKey),
+            keyType: Value(dto.sshKey.keyType),
+            keyTypeOther: Value(dto.sshKey.keyTypeOther),
+            keySize: Value(dto.sshKey.keySize),
+          ),
+        );
+
+        return itemId;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при создании SSH ключа',
+              cause: e,
+              stackTrace: st,
             ),
-          );
-
-      await db
-          .into(db.sshKeyItems)
-          .insert(
-            SshKeyItemsCompanion.insert(
-              itemId: itemId,
-              publicKey: Value(dto.sshKey.publicKey),
-              privateKey: Value(dto.sshKey.privateKey),
-              keyType: Value(dto.sshKey.keyType),
-              keyTypeOther: Value(dto.sshKey.keyTypeOther),
-              keySize: Value(dto.sshKey.keySize),
-            ),
-          );
-
-      return itemId;
-    });
-  }
-
-  Future<void> update(PatchSshKeyDto dto) {
-    return db.transaction(() async {
-      final now = DateTime.now();
-      final itemId = dto.item.itemId;
-
-      await (db.update(
-        db.vaultItems,
-      )..where((tbl) => tbl.id.equals(itemId))).write(
-        VaultItemsCompanion(
-          name: dto.item.name.toRequiredValue(),
-          description: dto.item.description.toNullableValue(),
-          categoryId: dto.item.categoryId.toNullableValue(),
-          iconRefId: dto.item.iconRefId.toNullableValue(),
-          isFavorite: dto.item.isFavorite.toRequiredValue(),
-          isPinned: dto.item.isPinned.toRequiredValue(),
-          modifiedAt: Value(now),
-        ),
-      );
-
-      await (db.update(
-        db.sshKeyItems,
-      )..where((tbl) => tbl.itemId.equals(itemId))).write(
-        SshKeyItemsCompanion(
-          publicKey: dto.sshKey.publicKey.toNullableValue(),
-          privateKey: dto.sshKey.privateKey.toNullableValue(),
-          keyType: dto.sshKey.keyType.toNullableValue(),
-          keyTypeOther: dto.sshKey.keyTypeOther.toNullableValue(),
-          keySize: dto.sshKey.keySize.toNullableValue(),
-        ),
-      );
-    });
-  }
-
-  Future<SshKeyViewDto?> getViewById(String itemId) async {
-    final query =
-        db.select(db.vaultItems).join([
-            innerJoin(
-              db.sshKeyItems,
-              db.sshKeyItems.itemId.equalsExp(db.vaultItems.id),
-            ),
-          ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey));
-
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
-
-    final item = row.readTable(db.vaultItems);
-    final sshKey = row.readTable(db.sshKeyItems);
-
-    return SshKeyViewDto(
-      item: item.toVaultItemViewDto(),
-      sshKey: sshKey.toSshKeyDataDto(),
     );
   }
 
-  Future<SshKeyCardDto?> getCardById(String itemId) async {
-    final expr = _SshKeyCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.id.equals(itemId))
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey));
+  AsyncDbResult<Unit> update(PatchSshKeyDto dto) {
+    return ResultUtils.tryCatchAsync(
+      () => db.transaction(() async {
+        final now = DateTime.now();
+        final itemId = dto.item.itemId;
 
-    final row = await query.getSingleOrNull();
-    if (row == null) return null;
+        final itemUpdated = await (db.update(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .write(
+          VaultItemsCompanion(
+            name: dto.item.name.toRequiredValue(),
+            description: dto.item.description.toNullableValue(),
+            categoryId: dto.item.categoryId.toNullableValue(),
+            iconRefId: dto.item.iconRefId.toNullableValue(),
+            isFavorite: dto.item.isFavorite.toRequiredValue(),
+            isPinned: dto.item.isPinned.toRequiredValue(),
+            modifiedAt: Value(now),
+          ),
+        );
 
-    return _mapRowToCardDto(row, expr);
+        if (itemUpdated == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+
+        await (db.update(db.sshKeyItems)
+              ..where((tbl) => tbl.itemId.equals(itemId)))
+            .write(
+          SshKeyItemsCompanion(
+            publicKey: dto.sshKey.publicKey.toNullableValue(),
+            privateKey: dto.sshKey.privateKey.toNullableValue(),
+            keyType: dto.sshKey.keyType.toNullableValue(),
+            keyTypeOther: dto.sshKey.keyTypeOther.toNullableValue(),
+            keySize: dto.sshKey.keySize.toNullableValue(),
+          ),
+        );
+        return unit;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении SSH ключа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<List<SshKeyCardDto>> getCards({int limit = 50, int offset = 0}) async {
-    final expr = _SshKeyCardExpressions(db);
-    final query = _buildCardQuery(expr)
-      ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey))
-      ..where(db.vaultItems.isDeleted.equals(false))
-      ..limit(limit, offset: offset);
+  AsyncDbResult<Optional<SshKeyViewDto>> getViewById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final query = db.select(db.vaultItems).join([
+          innerJoin(
+            db.sshKeyItems,
+            db.sshKeyItems.itemId.equalsExp(db.vaultItems.id),
+          ),
+        ])
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey));
 
-    final rows = await query.get();
-    return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        final item = row.readTable(db.vaultItems);
+        final sshKey = row.readTable(db.sshKeyItems);
+
+        return Some(SshKeyViewDto(
+          item: item.toVaultItemViewDto(),
+          sshKey: sshKey.toSshKeyDataDto(),
+        ));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении SSH ключа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<void> deletePermanently(String itemId) {
-    return (db.delete(
-      db.vaultItems,
-    )..where((tbl) => tbl.id.equals(itemId))).go();
+  AsyncDbResult<Optional<SshKeyCardDto>> getCardById(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _SshKeyCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.id.equals(itemId))
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey));
+
+        final row = await query.getSingleOrNull();
+        if (row == null) return const None();
+
+        return Some(_mapRowToCardDto(row, expr));
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки SSH ключа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<List<SshKeyCardDto>> getCards({int limit = 50, int offset = 0}) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final expr = _SshKeyCardExpressions(db);
+        final query = _buildCardQuery(expr)
+          ..where(db.vaultItems.type.equalsValue(VaultItemType.sshKey))
+          ..where(db.vaultItems.isDeleted.equals(false))
+          ..limit(limit, offset: offset);
+
+        final rows = await query.get();
+        return rows.map((row) => _mapRowToCardDto(row, expr)).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении списка SSH ключей',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDbResult<Unit> deletePermanently(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await (db.delete(db.vaultItems)
+              ..where((tbl) => tbl.id.equals(itemId)))
+            .go();
+        if (rows == 0) {
+          throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
+        }
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении SSH ключа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   JoinedSelectStatement<HasResultSet, dynamic> _buildCardQuery(

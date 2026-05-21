@@ -19,7 +19,7 @@ class ApiKeyService extends BaseVaultEntityService<ApiKeyRepository> {
     try {
       return await db.transaction(() async {
         // 1. Создаем запись в репозитории
-        final itemId = await repository.create(dto);
+        final itemId = (await repository.create(dto)).getOrThrow();
 
         // 2. Привязываем теги
         if (dto.tagIds.isNotEmpty) {
@@ -31,14 +31,15 @@ class ApiKeyService extends BaseVaultEntityService<ApiKeyRepository> {
         }
 
         // 3. Получаем созданное состояние для snapshot
-        final createdView = await repository.getViewById(itemId);
-        if (createdView == null) {
-          throw DBCoreError.notFound(
+        final createdViewResult = await repository.getViewById(itemId);
+        final createdView = createdViewResult.getOrThrow().fold(
+          (view) => view,
+          () => throw DBCoreError.notFound(
             entity: 'apiKey',
             id: itemId,
             message: 'Failed to retrieve created ApiKey: $itemId',
-          );
-        }
+          ),
+        );
 
         // 4. Пишем snapshot created (After create)
         final snapshotRes = await historyService.snapshotAfterCreate(
@@ -77,7 +78,7 @@ class ApiKeyService extends BaseVaultEntityService<ApiKeyRepository> {
         final itemId = dto.item.itemId;
 
         // 1. Получаем старое состояние для snapshot
-        final oldView = await repository.getViewById(itemId);
+        final oldView = (await repository.getViewById(itemId)).getOrThrow().getOrNull();
         if (oldView == null) {
           throw DBCoreError.notFound(
             entity: 'apiKey',
@@ -96,7 +97,7 @@ class ApiKeyService extends BaseVaultEntityService<ApiKeyRepository> {
         }
 
         // 3. Обновляем данные в репозитории
-        await repository.update(dto);
+        (await repository.update(dto)).getOrThrow();
 
         // 4. Обновляем теги если переданы
         final tagsUpdate = dto.tags;
