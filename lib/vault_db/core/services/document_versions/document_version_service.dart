@@ -15,15 +15,14 @@ import 'document_version_hash_service.dart';
 import 'document_version_policy_service.dart';
 
 class DocumentVersionService {
-  DocumentVersionService({
-    required this.db,
-    required this.hashService,
-    required this.policyService,
-  }) : documentItemsDao = db.documentItemsDao,
-       documentPagesDao = db.documentPagesDao,
-       documentVersionsDao = db.documentVersionsDao,
-       documentVersionPagesDao = db.documentVersionPagesDao,
-       vaultItemsDao = db.vaultItemsDao;
+  DocumentVersionService({required this.db})
+    : documentItemsDao = db.documentItemsDao,
+      documentPagesDao = db.documentPagesDao,
+      documentVersionsDao = db.documentVersionsDao,
+      documentVersionPagesDao = db.documentVersionPagesDao,
+      vaultItemsDao = db.vaultItemsDao,
+      hashService = const DocumentVersionHashService(),
+      policyService = const DocumentVersionPolicyService();
 
   final VaultDB db;
   final DocumentItemsDao documentItemsDao;

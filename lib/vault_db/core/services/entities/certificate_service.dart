@@ -3,30 +3,14 @@ import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/repositories/base/certificate_repository.dart';
-import 'package:hoplixi/vault_db/core/services/history/facades/vault_history_service.dart';
-import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
-import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
+import 'package:hoplixi/vault_db/core/services/entities/base_vault_entity_service.dart';
 import 'package:hoplixi/vault_db/core/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/vault_db/core/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/vault_db/core/validators/certificate_validator.dart';
 import 'package:result_dart/result_dart.dart';
 
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-
-class CertificateService {
-  CertificateService({
-    required this.db,
-    required this.repository,
-    required this.relationsService,
-    required this.historyService,
-    required this.vaultItemsStateService,
-  });
-
-  final VaultDB db;
-  final CertificateRepository repository;
-  final VaultItemRelationsService relationsService;
-  final VaultHistoryService historyService;
-  final VaultItemsStateService vaultItemsStateService;
+class CertificateService extends BaseVaultEntityService<CertificateRepository> {
+  CertificateService({required super.deps, required super.repository});
 
   Future<DbResult<String>> create(CreateCertificateDto dto) async {
     final validationError = validateCreateCertificate(dto);
