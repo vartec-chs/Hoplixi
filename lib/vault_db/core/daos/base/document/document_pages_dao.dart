@@ -66,4 +66,8 @@ class DocumentPagesDao extends DatabaseAccessor<VaultDB>
       documentPages,
     )..where((t) => t.documentId.equals(documentId))).go();
   }
+
+  Future<int> deletePageById(String id) {
+    return (delete(documentPages)..where((t) => t.id.equals(id))).go();
+  }
 }

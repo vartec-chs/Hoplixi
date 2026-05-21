@@ -15,6 +15,8 @@ class VaultRepositories {
   late final contact = ContactRepository(db);
   late final cryptoWallet = CryptoWalletRepository(db);
   late final document = DocumentRepository(db);
+  late final documentVersion = DocumentVersionRepository(db);
+  late final documentPage = DocumentPageRepository(db);
   late final file = FileRepository(db);
   late final fileMetadata = FileMetadataRepository(db);
   late final identity = IdentityRepository(db);
@@ -30,8 +32,11 @@ class VaultRepositories {
   late final tag = TagRepository(db);
   late final icon = IconRepository(db);
   late final storeMeta = StoreMetaRepository(db);
+  late final storeSettings = StoreSettingsRepository(db);
   late final snapshotRelations = SnapshotRelationsRepository(db);
   late final vaultItemRelations = VaultItemRelationsRepository(db);
 
+  late final vaultItem = VaultItemRepository(db);
+  late final vaultItemCustomFields = VaultItemCustomFieldsRepository(db);
   late final vaultEventHistory = VaultEventHistoryRepository(db);
 }
