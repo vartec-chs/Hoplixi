@@ -18,8 +18,10 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
 
     try {
       return await db.transaction(() async {
-        final itemId = await repository.create(dto);
+        // 1. Создаем запись в репозитории
+        final itemId = (await repository.create(dto)).getOrThrow();
 
+        // 2. Привязываем теги
         if (dto.tagIds.isNotEmpty) {
           final res = await relationsService.replaceTags(
             itemId: itemId,
@@ -28,11 +30,18 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
           if (res.isError()) throw res.exceptionOrNull()!;
         }
 
-        final createdView = await repository.getViewById(itemId);
-        if (createdView == null) {
-          throw DBCoreError.notFound(entity: 'bankCard', id: itemId);
-        }
+        // 3. Получаем созданное состояние для snapshot
+        final createdViewResult = await repository.getViewById(itemId);
+        final createdView = createdViewResult.getOrThrow().fold(
+          (view) => view,
+          () => throw DBCoreError.notFound(
+            entity: 'bankCard',
+            id: itemId,
+            message: 'Failed to retrieve created BankCard: $itemId',
+          ),
+        );
 
+        // 4. Пишем snapshot created (After create)
         final snapshotRes = await historyService.snapshotAfterCreate(
           createdView: createdView,
           action: VaultEventHistoryAction.created,
@@ -41,6 +50,7 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
           throw snapshotRes.exceptionOrNull()!;
         }
 
+        // 5. Пишем event created
         final eventRes = await historyService.writeEvent(
           itemId: itemId,
           type: VaultItemType.bankCard,
@@ -67,11 +77,17 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
       return await db.transaction(() async {
         final itemId = dto.item.itemId;
 
-        final oldView = await repository.getViewById(itemId);
+        // 1. Получаем старое состояние для snapshot
+        final oldView = (await repository.getViewById(itemId)).getOrThrow().getOrNull();
         if (oldView == null) {
-          throw DBCoreError.notFound(entity: 'bankCard', id: itemId);
+          throw DBCoreError.notFound(
+            entity: 'bankCard',
+            id: itemId,
+            message: 'BankCard not found for update: $itemId',
+          );
         }
 
+        // 2. Пишем snapshot before update
         final snapshotRes = await historyService.snapshotBeforeUpdate(
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
@@ -80,8 +96,10 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
           throw snapshotRes.exceptionOrNull()!;
         }
 
-        await repository.update(dto);
+        // 3. Обновляем данные в репозитории
+        (await repository.update(dto)).getOrThrow();
 
+        // 4. Обновляем теги если переданы
         final tagsUpdate = dto.tags;
         if (tagsUpdate is FieldUpdateSet<List<String>>) {
           final res = await relationsService.replaceTags(
@@ -91,6 +109,7 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
           if (res.isError()) throw res.exceptionOrNull()!;
         }
 
+        // 5. Пишем event updated
         final eventRes = await historyService.writeEvent(
           itemId: itemId,
           type: VaultItemType.bankCard,

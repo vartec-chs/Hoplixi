@@ -11,23 +11,32 @@ class DocumentSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.document;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! DocumentViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for Document snapshot',
-          entity: 'document',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! DocumentViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for Document snapshot',
+            entity: 'document',
+          );
+        }
 
-    // Base snapshot already written by VaultSnapshotWriter.
-    // Document versions are managed by the document versioning subsystem.
-    return const Success(unit);
+        // Base snapshot already written by VaultSnapshotWriter.
+        // Document versions are managed by the document versioning subsystem.
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка документа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 }

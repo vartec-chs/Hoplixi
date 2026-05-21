@@ -18,42 +18,51 @@ class ApiKeySnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.apiKey;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! ApiKeyViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for ApiKey snapshot',
-          entity: 'apiKey',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! ApiKeyViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for ApiKey snapshot',
+            entity: 'apiKey',
+          );
+        }
 
-    final apiKey = view.apiKey;
+        final apiKey = view.apiKey;
 
-    await apiKeyHistoryDao.insertApiKeyHistory(
-      ApiKeyHistoryCompanion.insert(
-        historyId: historyId,
-        service: apiKey.service,
-        key: Value(includeSecrets ? apiKey.key : null),
-        tokenType: Value(apiKey.tokenType),
-        tokenTypeOther: Value(apiKey.tokenTypeOther),
-        environment: Value(apiKey.environment),
-        environmentOther: Value(apiKey.environmentOther),
-        expiresAt: Value(apiKey.expiresAt),
-        revokedAt: Value(apiKey.revokedAt),
-        rotationPeriodDays: Value(apiKey.rotationPeriodDays),
-        lastRotatedAt: Value(apiKey.lastRotatedAt),
-        owner: Value(apiKey.owner),
-        baseUrl: Value(apiKey.baseUrl),
-        scopesText: Value(apiKey.scopesText),
-      ),
+        await apiKeyHistoryDao.insertApiKeyHistory(
+          ApiKeyHistoryCompanion.insert(
+            historyId: historyId,
+            service: apiKey.service,
+            key: Value(includeSecrets ? apiKey.key : null),
+            tokenType: Value(apiKey.tokenType),
+            tokenTypeOther: Value(apiKey.tokenTypeOther),
+            environment: Value(apiKey.environment),
+            environmentOther: Value(apiKey.environmentOther),
+            expiresAt: Value(apiKey.expiresAt),
+            revokedAt: Value(apiKey.revokedAt),
+            rotationPeriodDays: Value(apiKey.rotationPeriodDays),
+            lastRotatedAt: Value(apiKey.lastRotatedAt),
+            owner: Value(apiKey.owner),
+            baseUrl: Value(apiKey.baseUrl),
+            scopesText: Value(apiKey.scopesText),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка API ключа',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

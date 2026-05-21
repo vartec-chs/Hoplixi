@@ -19,8 +19,10 @@ class CryptoWalletService
 
     try {
       return await db.transaction(() async {
-        final itemId = await repository.create(dto);
+        // 1. Создаем запись в репозитории
+        final itemId = (await repository.create(dto)).getOrThrow();
 
+        // 2. Привязываем теги
         if (dto.tagIds.isNotEmpty) {
           final res = await relationsService.replaceTags(
             itemId: itemId,
@@ -29,15 +31,18 @@ class CryptoWalletService
           if (res.isError()) throw res.exceptionOrNull()!;
         }
 
-        final createdView = await repository.getViewById(itemId);
-        if (createdView == null) {
-          throw DBCoreError.notFound(
+        // 3. Получаем созданное состояние для snapshot
+        final createdViewResult = await repository.getViewById(itemId);
+        final createdView = createdViewResult.getOrThrow().fold(
+          (view) => view,
+          () => throw DBCoreError.notFound(
             entity: 'cryptoWallet',
             id: itemId,
             message: 'Failed to retrieve created CryptoWallet: $itemId',
-          );
-        }
+          ),
+        );
 
+        // 4. Пишем snapshot created (After create)
         final snapshotRes = await historyService.snapshotAfterCreate(
           createdView: createdView,
           action: VaultEventHistoryAction.created,
@@ -46,6 +51,7 @@ class CryptoWalletService
           throw snapshotRes.exceptionOrNull()!;
         }
 
+        // 5. Пишем event created
         final eventRes = await historyService.writeEvent(
           itemId: itemId,
           type: VaultItemType.cryptoWallet,
@@ -72,7 +78,8 @@ class CryptoWalletService
       return await db.transaction(() async {
         final itemId = dto.item.itemId;
 
-        final oldView = await repository.getViewById(itemId);
+        // 1. Получаем старое состояние для snapshot
+        final oldView = (await repository.getViewById(itemId)).getOrThrow().getOrNull();
         if (oldView == null) {
           throw DBCoreError.notFound(
             entity: 'cryptoWallet',
@@ -81,6 +88,7 @@ class CryptoWalletService
           );
         }
 
+        // 2. Пишем snapshot before update
         final snapshotRes = await historyService.snapshotBeforeUpdate(
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
@@ -89,8 +97,10 @@ class CryptoWalletService
           throw snapshotRes.exceptionOrNull()!;
         }
 
-        await repository.update(dto);
+        // 3. Обновляем данные в репозитории
+        (await repository.update(dto)).getOrThrow();
 
+        // 4. Обновляем теги если переданы
         final tagsUpdate = dto.tags;
         if (tagsUpdate is FieldUpdateSet<List<String>>) {
           final res = await relationsService.replaceTags(
@@ -100,6 +110,7 @@ class CryptoWalletService
           if (res.isError()) throw res.exceptionOrNull()!;
         }
 
+        // 5. Пишем event updated
         final eventRes = await historyService.writeEvent(
           itemId: itemId,
           type: VaultItemType.cryptoWallet,

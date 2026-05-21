@@ -18,40 +18,49 @@ class ContactSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.contact;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! ContactViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for Contact snapshot',
-          entity: 'contact',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! ContactViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for Contact snapshot',
+            entity: 'contact',
+          );
+        }
 
-    final contact = view.contact;
+        final contact = view.contact;
 
-    await contactHistoryDao.insertContactHistory(
-      ContactHistoryCompanion.insert(
-        historyId: historyId,
-        firstName: contact.firstName,
-        middleName: Value(contact.middleName),
-        lastName: Value(contact.lastName),
-        phone: Value(contact.phone),
-        email: Value(contact.email),
-        company: Value(contact.company),
-        jobTitle: Value(contact.jobTitle),
-        address: Value(contact.address),
-        website: Value(contact.website),
-        birthday: Value(contact.birthday),
-        isEmergencyContact: Value(contact.isEmergencyContact),
-      ),
+        await contactHistoryDao.insertContactHistory(
+          ContactHistoryCompanion.insert(
+            historyId: historyId,
+            firstName: contact.firstName,
+            middleName: Value(contact.middleName),
+            lastName: Value(contact.lastName),
+            phone: Value(contact.phone),
+            email: Value(contact.email),
+            company: Value(contact.company),
+            jobTitle: Value(contact.jobTitle),
+            address: Value(contact.address),
+            website: Value(contact.website),
+            birthday: Value(contact.birthday),
+            isEmergencyContact: Value(contact.isEmergencyContact),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка контакта',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

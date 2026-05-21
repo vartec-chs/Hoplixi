@@ -10,17 +10,22 @@ class VaultHistoryDeleteService {
 
   final VaultDB db;
 
-  Future<DbResult<Unit>> deleteRevision(String historyId) async {
-    try {
-      await db.transaction(() async {
-        await _deleteRevisionUnsafe(historyId);
-      });
-      return const Success(unit);
-    } catch (e, s) {
-      return Failure(
-        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
-      );
-    }
+  AsyncDbResult<Unit> deleteRevision(String historyId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.transaction(() async {
+          await _deleteRevisionUnsafe(historyId);
+        });
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при удалении ревизии истории',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   Future<void> _deleteRevisionUnsafe(String historyId) async {
@@ -28,7 +33,7 @@ class VaultHistoryDeleteService {
       historyId,
     );
     if (snapshot == null) {
-      throw Exception('History snapshot not found: $historyId');
+      throw DBCoreError.notFound(entity: 'HistorySnapshot', id: historyId);
     }
 
     // 1. Clear event snapshot reference (audit log stays)
@@ -118,27 +123,31 @@ class VaultHistoryDeleteService {
     await db.vaultSnapshotsHistoryDao.deleteSnapshotById(historyId);
   }
 
-  Future<DbResult<Unit>> clearItemHistory({
+  AsyncDbResult<Unit> clearItemHistory({
     required String itemId,
     required VaultItemType type,
-  }) async {
-    try {
-      await db.transaction(() async {
-        final ids = await db.vaultSnapshotsHistoryDao.getSnapshotIdsForItem(
-          itemId: itemId,
-          type: type,
-        );
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        await db.transaction(() async {
+          final ids = await db.vaultSnapshotsHistoryDao.getSnapshotIdsForItem(
+            itemId: itemId,
+            type: type,
+          );
 
-        for (final id in ids) {
-          await _deleteRevisionUnsafe(id);
-        }
-      });
-
-      return const Success(unit);
-    } catch (e, s) {
-      return Failure(
-        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
-      );
-    }
+          for (final id in ids) {
+            await _deleteRevisionUnsafe(id);
+          }
+        });
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при очистке истории элемента',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 }

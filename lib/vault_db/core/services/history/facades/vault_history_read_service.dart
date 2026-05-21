@@ -24,43 +24,51 @@ class VaultHistoryReadService {
   final VaultHistoryCardReaderRegistry readerRegistry;
   final GenericHistoryCardReader genericReader;
 
-  Future<DbResult<List<VaultHistoryCardDto>>> getFilteredCards(
+  AsyncDbResult<List<VaultHistoryCardDto>> getFilteredCards(
     VaultSnapshotHistoryFilter filter,
-  ) async {
-    try {
-      final snapshots = await snapshotFilterDao.getFiltered(filter);
-      if (snapshots.isEmpty) return const Success([]);
-      final cards = await _assembleCards(snapshots);
-      return Success(cards);
-    } catch (e, s) {
-      return Failure(
-        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
-      );
-    }
+  ) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final snapshots = await snapshotFilterDao.getFiltered(filter);
+        if (snapshots.isEmpty) return const [];
+        return await _assembleCards(snapshots);
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении отфильтрованных карточек истории',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
-  Future<DbResult<VaultHistoryCardDto>> getCardByHistoryId(
+  AsyncDbResult<Optional<VaultHistoryCardDto>> getCardByHistoryId(
     String historyId,
-  ) async {
-    try {
-      final snapshot = await snapshotsHistoryDao.getSnapshotById(historyId);
-      if (snapshot == null) {
-        return Failure(
-          DBCoreError.notFound(entity: 'HistorySnapshot', id: historyId),
-        );
-      }
-      final cards = await _assembleCards([snapshot]);
-      if (cards.isEmpty) {
-        return Failure(
-          DBCoreError.notFound(entity: 'HistorySnapshotData', id: historyId),
-        );
-      }
-      return Success(cards.first);
-    } catch (e, s) {
-      return Failure(
-        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
-      );
-    }
+  ) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final snapshot = await snapshotsHistoryDao.getSnapshotById(historyId);
+        if (snapshot == null) return const None();
+
+        final cards = await _assembleCards([snapshot]);
+        if (cards.isEmpty) {
+          throw DBCoreError.notFound(
+            entity: 'HistorySnapshotData',
+            id: historyId,
+            message: 'Failed to assemble card data for snapshot: $historyId',
+          );
+        }
+        return Some(cards.first);
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении карточки истории по ID',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   Future<List<VaultHistoryCardDto>> _assembleCards(

@@ -1,3 +1,6 @@
+import 'package:result_dart/result_dart.dart';
+
+import '../../../errors/db_result.dart';
 import '../../../tables/vault_items/vault_items.dart';
 import '../models/history_payload.dart';
 import '../payloads/document_history_payload.dart';
@@ -8,12 +11,16 @@ class DocumentHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.document;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
-    return const DocumentHistoryPayload();
+  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+    required String historyId,
+  }) async {
+    return const Success(Some(DocumentHistoryPayload()));
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
-    return const DocumentHistoryPayload();
+  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+    required String itemId,
+  }) async {
+    return const Success(Some(DocumentHistoryPayload()));
   }
 }

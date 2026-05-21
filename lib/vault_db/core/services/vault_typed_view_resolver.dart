@@ -57,7 +57,7 @@ class VaultTypedViewResolver {
     required String itemId,
     required VaultItemType type,
   }) async {
-    return switch (type) {
+    final result = await switch (type) {
       VaultItemType.apiKey => apiKeyRepository.getViewById(itemId),
       VaultItemType.password => passwordRepository.getViewById(itemId),
       VaultItemType.bankCard => bankCardRepository.getViewById(itemId),
@@ -77,5 +77,7 @@ class VaultTypedViewResolver {
       ),
       VaultItemType.loyaltyCard => loyaltyCardRepository.getViewById(itemId),
     };
+
+    return result.getOrThrow().getOrNull();
   }
 }

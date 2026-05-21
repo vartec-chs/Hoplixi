@@ -18,36 +18,45 @@ class WifiSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.wifi;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! WifiViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for Wifi snapshot',
-          entity: 'wifi',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! WifiViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for Wifi snapshot',
+            entity: 'wifi',
+          );
+        }
 
-    final wifi = view.wifi;
+        final wifi = view.wifi;
 
-    await wifiHistoryDao.insertWifiHistory(
-      WifiHistoryCompanion.insert(
-        historyId: historyId,
-        ssid: wifi.ssid,
-        password: Value(includeSecrets ? wifi.password : null),
-        securityType: Value(wifi.securityType),
-        securityTypeOther: Value(wifi.securityTypeOther),
-        encryption: Value(wifi.encryption),
-        encryptionOther: Value(wifi.encryptionOther),
-        hiddenSsid: Value(wifi.hiddenSsid),
-      ),
+        await wifiHistoryDao.insertWifiHistory(
+          WifiHistoryCompanion.insert(
+            historyId: historyId,
+            ssid: wifi.ssid,
+            password: Value(includeSecrets ? wifi.password : null),
+            securityType: Value(wifi.securityType),
+            securityTypeOther: Value(wifi.securityTypeOther),
+            encryption: Value(wifi.encryption),
+            encryptionOther: Value(wifi.encryptionOther),
+            hiddenSsid: Value(wifi.hiddenSsid),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка Wi-Fi',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

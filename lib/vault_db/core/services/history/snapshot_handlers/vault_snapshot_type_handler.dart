@@ -7,7 +7,7 @@ import '../../../tables/vault_items/vault_items.dart';
 abstract interface class VaultSnapshotTypeHandler {
   VaultItemType get type;
 
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

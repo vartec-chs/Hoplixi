@@ -18,47 +18,56 @@ class IdentitySnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.identity;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! IdentityViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for Identity snapshot',
-          entity: 'identity',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! IdentityViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for Identity snapshot',
+            entity: 'identity',
+          );
+        }
 
-    final identity = view.identity;
+        final identity = view.identity;
 
-    await identityHistoryDao.insertIdentityHistory(
-      IdentityHistoryCompanion.insert(
-        historyId: historyId,
-        firstName: Value(identity.firstName),
-        middleName: Value(identity.middleName),
-        lastName: Value(identity.lastName),
-        displayName: Value(identity.displayName),
-        username: Value(identity.username),
-        email: Value(identity.email),
-        phone: Value(identity.phone),
-        address: Value(identity.address),
-        birthday: Value(identity.birthday),
-        company: Value(identity.company),
-        jobTitle: Value(identity.jobTitle),
-        website: Value(identity.website),
-        taxId: Value(includeSecrets ? identity.taxId : null),
-        nationalId: Value(includeSecrets ? identity.nationalId : null),
-        passportNumber: Value(includeSecrets ? identity.passportNumber : null),
-        driverLicenseNumber: Value(
-          includeSecrets ? identity.driverLicenseNumber : null,
-        ),
-      ),
+        await identityHistoryDao.insertIdentityHistory(
+          IdentityHistoryCompanion.insert(
+            historyId: historyId,
+            firstName: Value(identity.firstName),
+            middleName: Value(identity.middleName),
+            lastName: Value(identity.lastName),
+            displayName: Value(identity.displayName),
+            username: Value(identity.username),
+            email: Value(identity.email),
+            phone: Value(identity.phone),
+            address: Value(identity.address),
+            birthday: Value(identity.birthday),
+            company: Value(identity.company),
+            jobTitle: Value(identity.jobTitle),
+            website: Value(identity.website),
+            taxId: Value(includeSecrets ? identity.taxId : null),
+            nationalId: Value(includeSecrets ? identity.nationalId : null),
+            passportNumber: Value(includeSecrets ? identity.passportNumber : null),
+            driverLicenseNumber: Value(
+              includeSecrets ? identity.driverLicenseNumber : null,
+            ),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка идентификатора',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

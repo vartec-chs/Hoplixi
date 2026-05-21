@@ -18,8 +18,10 @@ class LicenseKeyService extends BaseVaultEntityService<LicenseKeyRepository> {
 
     try {
       return await db.transaction(() async {
-        final itemId = await repository.create(dto);
+        // 1. Создаем запись в репозитории
+        final itemId = (await repository.create(dto)).getOrThrow();
 
+        // 2. Привязываем теги
         if (dto.tagIds.isNotEmpty) {
           final res = await relationsService.replaceTags(
             itemId: itemId,
@@ -28,15 +30,18 @@ class LicenseKeyService extends BaseVaultEntityService<LicenseKeyRepository> {
           if (res.isError()) throw res.exceptionOrNull()!;
         }
 
-        final createdView = await repository.getViewById(itemId);
-        if (createdView == null) {
-          throw DBCoreError.notFound(
+        // 3. Получаем созданное состояние для snapshot
+        final createdViewResult = await repository.getViewById(itemId);
+        final createdView = createdViewResult.getOrThrow().fold(
+          (view) => view,
+          () => throw DBCoreError.notFound(
             entity: 'licenseKey',
             id: itemId,
             message: 'Failed to retrieve created LicenseKey: $itemId',
-          );
-        }
+          ),
+        );
 
+        // 4. Пишем snapshot created (After create)
         final snapshotRes = await historyService.snapshotAfterCreate(
           createdView: createdView,
           action: VaultEventHistoryAction.created,
@@ -45,6 +50,7 @@ class LicenseKeyService extends BaseVaultEntityService<LicenseKeyRepository> {
           throw snapshotRes.exceptionOrNull()!;
         }
 
+        // 5. Пишем event created
         final eventRes = await historyService.writeEvent(
           itemId: itemId,
           type: VaultItemType.licenseKey,
@@ -71,7 +77,8 @@ class LicenseKeyService extends BaseVaultEntityService<LicenseKeyRepository> {
       return await db.transaction(() async {
         final itemId = dto.item.itemId;
 
-        final oldView = await repository.getViewById(itemId);
+        // 1. Получаем старое состояние для snapshot
+        final oldView = (await repository.getViewById(itemId)).getOrThrow().getOrNull();
         if (oldView == null) {
           throw DBCoreError.notFound(
             entity: 'licenseKey',
@@ -80,6 +87,7 @@ class LicenseKeyService extends BaseVaultEntityService<LicenseKeyRepository> {
           );
         }
 
+        // 2. Пишем snapshot before update
         final snapshotRes = await historyService.snapshotBeforeUpdate(
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
@@ -88,8 +96,10 @@ class LicenseKeyService extends BaseVaultEntityService<LicenseKeyRepository> {
           throw snapshotRes.exceptionOrNull()!;
         }
 
-        await repository.update(dto);
+        // 3. Обновляем данные в репозитории
+        (await repository.update(dto)).getOrThrow();
 
+        // 4. Обновляем теги если переданы
         final tagsUpdate = dto.tags;
         if (tagsUpdate is FieldUpdateSet<List<String>>) {
           final res = await relationsService.replaceTags(
@@ -99,6 +109,7 @@ class LicenseKeyService extends BaseVaultEntityService<LicenseKeyRepository> {
           if (res.isError()) throw res.exceptionOrNull()!;
         }
 
+        // 5. Пишем event updated
         final eventRes = await historyService.writeEvent(
           itemId: itemId,
           type: VaultItemType.licenseKey,

@@ -1,3 +1,5 @@
+import 'package:hoplixi/vault_db/core/errors/db_error.dart';
+import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/services/history/history.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
@@ -24,62 +26,100 @@ class VaultHistoryNormalizedLoader {
   final VaultItemCustomFieldsHistoryDao customFieldsHistoryDao;
   final VaultItemCustomFieldsDao customFieldsDao;
 
-  Future<AnyNormalizedHistorySnapshot?> loadHistorySnapshot(
+  AsyncDbResult<Optional<AnyNormalizedHistorySnapshot>> loadHistorySnapshot(
     String historyId,
-  ) async {
-    final snapshotData = await snapshotsHistoryDao.getSnapshotById(historyId);
-    if (snapshotData == null) return null;
+  ) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final snapshotData = await snapshotsHistoryDao.getSnapshotById(
+          historyId,
+        );
+        if (snapshotData == null) return const None();
 
-    final base = snapshotData.toVaultItemBaseHistoryPayload();
+        final base = snapshotData.toVaultItemBaseHistoryPayload();
 
-    final normalizer = normalizerRegistry.get(base.type);
-    HistoryPayload? payload = await normalizer?.normalizeHistory(
-      historyId: historyId,
-    );
+        final normalizer = normalizerRegistry.get(base.type);
+        HistoryPayload? payload;
 
-    payload ??= EmptyHistoryPayload(base.type);
+        if (normalizer != null) {
+          final payloadResult = await normalizer.normalizeHistory(
+            historyId: historyId,
+          );
+          payload = payloadResult.getOrThrow().getOrNull();
+        }
 
-    final customFields = await _loadHistoryCustomFields(historyId);
+        payload ??= EmptyHistoryPayload(base.type);
 
-    final normalized = NormalizedHistorySnapshot(
-      base: base,
-      payload: payload,
-      customFields: customFields,
-      restoreWarnings: const [],
-    );
+        final customFields = await _loadHistoryCustomFields(historyId);
 
-    return normalized.copyWith(
-      restoreWarnings: restorePolicyService.restoreWarnings(normalized),
+        final normalized = NormalizedHistorySnapshot(
+          base: base,
+          payload: payload,
+          customFields: customFields,
+          restoreWarnings: const [],
+        );
+
+        return Some(
+          normalized.copyWith(
+            restoreWarnings: restorePolicyService.restoreWarnings(normalized),
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при загрузке снимка истории',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
-  Future<AnyNormalizedHistorySnapshot?> loadCurrentSnapshot({
+  AsyncDbResult<Optional<AnyNormalizedHistorySnapshot>> loadCurrentSnapshot({
     required String itemId,
     required VaultItemType type,
-  }) async {
-    final itemData = await vaultItemsDao.getVaultItemById(itemId);
-    if (itemData == null) return null;
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final itemData = await vaultItemsDao.getVaultItemById(itemId);
+        if (itemData == null) return const None();
 
-    final base = itemData.toCurrentVaultItemBaseHistoryPayload();
+        final base = itemData.toCurrentVaultItemBaseHistoryPayload();
 
-    final normalizer = normalizerRegistry.get(base.type);
-    HistoryPayload? payload = await normalizer?.normalizeCurrent(
-      itemId: itemId,
-    );
+        final normalizer = normalizerRegistry.get(base.type);
+        HistoryPayload? payload;
 
-    payload ??= EmptyHistoryPayload(base.type);
+        if (normalizer != null) {
+          final payloadResult = await normalizer.normalizeCurrent(
+            itemId: itemId,
+          );
+          payload = payloadResult.getOrThrow().getOrNull();
+        }
 
-    final customFields = await _loadCurrentCustomFields(itemId);
+        payload ??= EmptyHistoryPayload(base.type);
 
-    final normalized = NormalizedHistorySnapshot(
-      base: base,
-      payload: payload,
-      customFields: customFields,
-      restoreWarnings: const [],
-    );
+        final customFields = await _loadCurrentCustomFields(itemId);
 
-    return normalized.copyWith(
-      restoreWarnings: restorePolicyService.restoreWarnings(normalized),
+        final normalized = NormalizedHistorySnapshot(
+          base: base,
+          payload: payload,
+          customFields: customFields,
+          restoreWarnings: const [],
+        );
+
+        return Some(
+          normalized.copyWith(
+            restoreWarnings: restorePolicyService.restoreWarnings(normalized),
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при загрузке текущего состояния элемента',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 

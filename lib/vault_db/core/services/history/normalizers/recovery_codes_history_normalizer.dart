@@ -1,6 +1,8 @@
 import 'package:hoplixi/vault_db/core/repositories/base/recovery_codes_repository.dart';
 
 import '../../../daos/daos.dart';
+import '../../../errors/db_error.dart';
+import '../../../errors/db_result.dart';
 import '../../../tables/vault_items/vault_items.dart';
 import '../models/history_payload.dart';
 import '../payloads/recovery_codes_history_payload.dart';
@@ -21,43 +23,77 @@ class RecoveryCodesHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.recoveryCodes;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
-    final rows = await recoveryCodesHistoryDao
-        .getRecoveryCodesHistoryByHistoryIds([historyId]);
-    if (rows.isEmpty) return null;
+  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+    required String historyId,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await recoveryCodesHistoryDao
+            .getRecoveryCodesHistoryByHistoryIds([historyId]);
+        if (rows.isEmpty) return const None();
 
-    final item = rows.first;
+        final item = rows.first;
 
-    final values = await recoveryCodeValuesHistoryDao
-        .getRecoveryCodeValuesByHistoryId(historyId);
+        final values = await recoveryCodeValuesHistoryDao
+            .getRecoveryCodeValuesByHistoryId(historyId);
 
-    return RecoveryCodesHistoryPayload(
-      codesCount: item.codesCount,
-      usedCount: item.usedCount,
-      generatedAt: item.generatedAt,
-      oneTime: item.oneTime,
-      valuesCount: values.length,
-      missingValuesCount: values.where((v) => v.code == null).length,
-      usedValuesCount: values.where((v) => v.used).length,
+        return Some(
+          RecoveryCodesHistoryPayload(
+            codesCount: item.codesCount,
+            usedCount: item.usedCount,
+            generatedAt: item.generatedAt,
+            oneTime: item.oneTime,
+            valuesCount: values.length,
+            missingValuesCount: values.where((v) => v.code == null).length,
+            usedValuesCount: values.where((v) => v.used).length,
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при нормализации истории кодов восстановления',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
-    final view = await recoveryCodesRepository.getViewById(itemId);
-    if (view == null) return null;
+  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+    required String itemId,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final viewOpt = (await recoveryCodesRepository.getViewById(itemId))
+            .getOrThrow();
+        return viewOpt.fold(
+          (view) {
+            final item = view.recoveryCodes;
+            final codes = view.codes;
 
-    final item = view.recoveryCodes;
-    final codes = view.codes;
-
-    return RecoveryCodesHistoryPayload(
-      codesCount: codes.length,
-      usedCount: codes.where((c) => c.used).length,
-      generatedAt: item.generatedAt,
-      oneTime: item.oneTime,
-      valuesCount: codes.length,
-      missingValuesCount: 0,
-      usedValuesCount: codes.where((c) => c.used).length,
+            return Some(
+              RecoveryCodesHistoryPayload(
+                codesCount: codes.length,
+                usedCount: codes.where((c) => c.used).length,
+                generatedAt: item.generatedAt,
+                oneTime: item.oneTime,
+                valuesCount: codes.length,
+                missingValuesCount: 0,
+                usedValuesCount: codes.where((c) => c.used).length,
+              ),
+            );
+          },
+          () => const None(),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при нормализации текущего состояния кодов восстановления',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 }

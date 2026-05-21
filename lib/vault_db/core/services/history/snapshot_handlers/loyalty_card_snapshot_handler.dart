@@ -18,41 +18,50 @@ class LoyaltyCardSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.loyaltyCard;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! LoyaltyCardViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for LoyaltyCard snapshot',
-          entity: 'loyaltyCard',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! LoyaltyCardViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for LoyaltyCard snapshot',
+            entity: 'loyaltyCard',
+          );
+        }
 
-    final card = view.loyaltyCard;
+        final card = view.loyaltyCard;
 
-    await loyaltyCardHistoryDao.insertLoyaltyCardHistory(
-      LoyaltyCardHistoryCompanion.insert(
-        historyId: historyId,
-        programName: card.programName,
-        cardNumber: Value(includeSecrets ? card.cardNumber : null),
-        barcodeValue: Value(includeSecrets ? card.barcodeValue : null),
-        password: Value(includeSecrets ? card.password : null),
-        barcodeType: Value(card.barcodeType),
-        barcodeTypeOther: Value(card.barcodeTypeOther),
-        issuer: Value(card.issuer),
-        website: Value(card.website),
-        phone: Value(card.phone),
-        email: Value(card.email),
-        validFrom: Value(card.validFrom),
-        validTo: Value(card.validTo),
-      ),
+        await loyaltyCardHistoryDao.insertLoyaltyCardHistory(
+          LoyaltyCardHistoryCompanion.insert(
+            historyId: historyId,
+            programName: card.programName,
+            cardNumber: Value(includeSecrets ? card.cardNumber : null),
+            barcodeValue: Value(includeSecrets ? card.barcodeValue : null),
+            password: Value(includeSecrets ? card.password : null),
+            barcodeType: Value(card.barcodeType),
+            barcodeTypeOther: Value(card.barcodeTypeOther),
+            issuer: Value(card.issuer),
+            website: Value(card.website),
+            phone: Value(card.phone),
+            email: Value(card.email),
+            validFrom: Value(card.validFrom),
+            validTo: Value(card.validTo),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка карты лояльности',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

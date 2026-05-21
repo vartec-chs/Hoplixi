@@ -129,9 +129,20 @@ class VaultItemRelationsService {
     }
   }
 
-  Future<List<String>> getTagIdsForItem(String itemId) async {
-    final tags = await itemTagsDao.getTagsForItem(itemId);
-    return tags.map((t) => t.tagId).toList();
+  AsyncDbResult<List<String>> getTagIdsForItem(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final tags = await itemTagsDao.getTagsForItem(itemId);
+        return tags.map((t) => t.tagId).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении ID тегов элемента',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   // --- Category ---
@@ -169,9 +180,20 @@ class VaultItemRelationsService {
     }
   }
 
-  Future<String?> getCategoryIdForItem(String itemId) async {
-    final item = await vaultItemsDao.getVaultItemById(itemId);
-    return item?.categoryId;
+  AsyncDbResult<Optional<String>> getCategoryIdForItem(String itemId) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final item = await vaultItemsDao.getVaultItemById(itemId);
+        return Optional.fromNullable(item?.categoryId);
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении ID категории элемента',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   // --- Item Links ---

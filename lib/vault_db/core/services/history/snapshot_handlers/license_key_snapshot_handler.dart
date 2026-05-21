@@ -18,47 +18,56 @@ class LicenseKeySnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.licenseKey;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! LicenseKeyViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for LicenseKey snapshot',
-          entity: 'licenseKey',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! LicenseKeyViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for LicenseKey snapshot',
+            entity: 'licenseKey',
+          );
+        }
 
-    final lk = view.licenseKey;
+        final lk = view.licenseKey;
 
-    await licenseKeyHistoryDao.insertLicenseKeyHistory(
-      LicenseKeyHistoryCompanion.insert(
-        historyId: historyId,
-        productName: lk.productName,
-        vendor: Value(lk.vendor),
-        licenseKey: Value(includeSecrets ? lk.licenseKey : null),
-        licenseType: Value(lk.licenseType),
-        licenseTypeOther: Value(lk.licenseTypeOther),
-        accountEmail: Value(lk.accountEmail),
-        accountUsername: Value(lk.accountUsername),
-        purchaseEmail: Value(lk.purchaseEmail),
-        orderNumber: Value(lk.orderNumber),
-        purchaseDate: Value(lk.purchaseDate),
-        purchasePrice: Value(lk.purchasePrice),
-        currency: Value(lk.currency),
-        validFrom: Value(lk.validFrom),
-        validTo: Value(lk.validTo),
-        renewalDate: Value(lk.renewalDate),
-        seats: Value(lk.seats),
-        activationLimit: Value(lk.activationLimit),
-        activationsUsed: Value(lk.activationsUsed),
-      ),
+        await licenseKeyHistoryDao.insertLicenseKeyHistory(
+          LicenseKeyHistoryCompanion.insert(
+            historyId: historyId,
+            productName: lk.productName,
+            vendor: Value(lk.vendor),
+            licenseKey: Value(includeSecrets ? lk.licenseKey : null),
+            licenseType: Value(lk.licenseType),
+            licenseTypeOther: Value(lk.licenseTypeOther),
+            accountEmail: Value(lk.accountEmail),
+            accountUsername: Value(lk.accountUsername),
+            purchaseEmail: Value(lk.purchaseEmail),
+            orderNumber: Value(lk.orderNumber),
+            purchaseDate: Value(lk.purchaseDate),
+            purchasePrice: Value(lk.purchasePrice),
+            currency: Value(lk.currency),
+            validFrom: Value(lk.validFrom),
+            validTo: Value(lk.validTo),
+            renewalDate: Value(lk.renewalDate),
+            seats: Value(lk.seats),
+            activationLimit: Value(lk.activationLimit),
+            activationsUsed: Value(lk.activationsUsed),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка лицензионного ключа',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

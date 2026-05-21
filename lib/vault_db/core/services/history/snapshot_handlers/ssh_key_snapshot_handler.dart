@@ -18,34 +18,44 @@ class SshKeySnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.sshKey;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! SshKeyViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for SshKey snapshot',
-          entity: 'sshKey',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! SshKeyViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for SshKey snapshot',
+            entity: 'sshKey',
+          );
+        }
 
-    final sk = view.sshKey;
+        final sshKey = view.sshKey;
 
-    await sshKeyHistoryDao.insertSshKeyHistory(
-      SshKeyHistoryCompanion.insert(
-        historyId: historyId,
-        publicKey: Value(sk.publicKey),
-        privateKey: Value(includeSecrets ? sk.privateKey : null),
-        keyType: Value(sk.keyType),
-        keyTypeOther: Value(sk.keyTypeOther),
-        keySize: Value(sk.keySize),
-      ),
+        await sshKeyHistoryDao.insertSshKeyHistory(
+          SshKeyHistoryCompanion.insert(
+            historyId: historyId,
+            publicKey: Value(sshKey.publicKey),
+            privateKey: Value(includeSecrets ? sshKey.privateKey : null),
+            keyType: Value(sshKey.keyType),
+            keyTypeOther: Value(sshKey.keyTypeOther),
+            keySize: Value(sshKey.keySize),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка SSH ключа',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }
+

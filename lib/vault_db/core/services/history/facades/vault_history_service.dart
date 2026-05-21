@@ -1,3 +1,4 @@
+import 'package:hoplixi/vault_db/core/errors/db_error.dart';
 import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_event_history_repository.dart';
@@ -20,51 +21,55 @@ class VaultHistoryService {
   final VaultSnapshotWriter snapshotWriter;
   final VaultEventHistoryRepository eventHistoryRepository;
 
-  Future<DbResult<String>?> snapshotAfterCreate({
+  AsyncDbResult<Optional<String>> snapshotAfterCreate({
     required VaultEntityViewDto createdView,
     required VaultEventHistoryAction action,
     bool includeSecrets = true,
     bool includeRelations = true,
-  }) async {
-    try {
-      if (!await policyService.isHistoryEnabled()) {
-        return null;
-      }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (!await policyService.isHistoryEnabled()) {
+          return const None();
+        }
 
-      return await snapshotWriter.writeSnapshot(
-        view: createdView,
-        action: action,
-        includeSecrets: includeSecrets,
-        includeRelations: includeRelations,
-      );
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+        final result = await snapshotWriter.writeSnapshot(
+          view: createdView,
+          action: action,
+          includeSecrets: includeSecrets,
+          includeRelations: includeRelations,
+        );
+        return Some(result.getOrThrow());
+      },
+      (e, st) => e is DBCoreError ? e : mapDbException(e, st),
+    );
   }
 
-  Future<DbResult<String>?> snapshotBeforeUpdate({
+  AsyncDbResult<Optional<String>> snapshotBeforeUpdate({
     required VaultEntityViewDto oldView,
     required VaultEventHistoryAction action,
     bool includeSecrets = true,
     bool includeRelations = true,
-  }) async {
-    try {
-      if (!await policyService.isHistoryEnabled()) {
-        return null;
-      }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (!await policyService.isHistoryEnabled()) {
+          return const None();
+        }
 
-      return await snapshotWriter.writeSnapshot(
-        view: oldView,
-        action: action,
-        includeSecrets: includeSecrets,
-        includeRelations: includeRelations,
-      );
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+        final result = await snapshotWriter.writeSnapshot(
+          view: oldView,
+          action: action,
+          includeSecrets: includeSecrets,
+          includeRelations: includeRelations,
+        );
+        return Some(result.getOrThrow());
+      },
+      (e, st) => e is DBCoreError ? e : mapDbException(e, st),
+    );
   }
 
-  Future<DbResult<Unit>> writeEvent({
+  AsyncDbResult<Unit> writeEvent({
     required String itemId,
     required VaultItemType type,
     required VaultEventHistoryAction action,
@@ -72,21 +77,22 @@ class VaultHistoryService {
     String? description,
     String? snapshotHistoryId,
     VaultHistoryActorType actorType = VaultHistoryActorType.user,
-  }) async {
-    try {
-      // Согласно рекомендации: event пишем всегда, snapshot только если включен.
-      await eventHistoryRepository.writeEvent(
-        itemId: itemId,
-        type: type,
-        action: action,
-        name: name,
-        description: description,
-        snapshotHistoryId: snapshotHistoryId,
-        actorType: actorType,
-      );
-      return const Success(unit);
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        // Согласно рекомендации: event пишем всегда, snapshot только если включен.
+        (await eventHistoryRepository.writeEvent(
+          itemId: itemId,
+          type: type,
+          action: action,
+          name: name,
+          description: description,
+          snapshotHistoryId: snapshotHistoryId,
+          actorType: actorType,
+        )).getOrThrow();
+        return unit;
+      },
+      (e, st) => e is DBCoreError ? e : mapDbException(e, st),
+    );
   }
 }

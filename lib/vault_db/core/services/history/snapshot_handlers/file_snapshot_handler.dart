@@ -23,54 +23,63 @@ class FileSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.file;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! FileViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for File snapshot',
-          entity: 'file',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! FileViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for File snapshot',
+            entity: 'file',
+          );
+        }
 
-    String? metadataHistoryId;
-    if (view.metadata != null) {
-      final m = view.metadata!;
-      metadataHistoryId = const Uuid().v4();
-      await fileMetadataHistoryDao.insertFileMetadataHistory(
-        FileMetadataHistoryCompanion.insert(
-          id: Value(metadataHistoryId),
-          historyId: Value(historyId),
-          ownerKind: const Value(FileMetadataHistoryOwnerKind.fileItemHistory),
-          ownerId: Value(historyId),
-          metadataId: Value(m.id),
-          fileName: m.fileName,
-          fileExtension: Value(m.fileExtension),
-          filePath: Value(includeSecrets ? m.filePath : null),
-          mimeType: m.mimeType,
-          fileSize: m.fileSize,
-          sha256: Value(m.sha256),
-          availabilityStatus: Value(m.availabilityStatus),
-          integrityStatus: Value(m.integrityStatus),
-          missingDetectedAt: Value(m.missingDetectedAt),
-          deletedAt: Value(m.deletedAt),
-          lastIntegrityCheckAt: Value(m.lastIntegrityCheckAt),
-        ),
-      );
-    }
+        String? metadataHistoryId;
+        if (view.metadata != null) {
+          final m = view.metadata!;
+          metadataHistoryId = const Uuid().v4();
+          await fileMetadataHistoryDao.insertFileMetadataHistory(
+            FileMetadataHistoryCompanion.insert(
+              id: Value(metadataHistoryId),
+              historyId: Value(historyId),
+              ownerKind: const Value(FileMetadataHistoryOwnerKind.fileItemHistory),
+              ownerId: Value(historyId),
+              metadataId: Value(m.id),
+              fileName: m.fileName,
+              fileExtension: Value(m.fileExtension),
+              filePath: Value(includeSecrets ? m.filePath : null),
+              mimeType: m.mimeType,
+              fileSize: m.fileSize,
+              sha256: Value(m.sha256),
+              availabilityStatus: Value(m.availabilityStatus),
+              integrityStatus: Value(m.integrityStatus),
+              missingDetectedAt: Value(m.missingDetectedAt),
+              deletedAt: Value(m.deletedAt),
+              lastIntegrityCheckAt: Value(m.lastIntegrityCheckAt),
+            ),
+          );
+        }
 
-    await fileHistoryDao.insertFileHistory(
-      FileHistoryCompanion.insert(
-        historyId: historyId,
-        metadataHistoryId: Value(metadataHistoryId),
-      ),
+        await fileHistoryDao.insertFileHistory(
+          FileHistoryCompanion.insert(
+            historyId: historyId,
+            metadataHistoryId: Value(metadataHistoryId),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка файла',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

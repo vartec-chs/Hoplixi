@@ -1,6 +1,8 @@
 import 'package:hoplixi/vault_db/core/repositories/base/bank_card_repository.dart';
 
 import '../../../daos/daos.dart';
+import '../../../errors/db_error.dart';
+import '../../../errors/db_result.dart';
 import '../../../tables/vault_items/vault_items.dart';
 import '../models/history_payload.dart';
 import '../payloads/bank_card_history_payload.dart';
@@ -19,50 +21,82 @@ class BankCardHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.bankCard;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
-    final rows = await bankCardHistoryDao.getBankCardHistoryByHistoryIds([
-      historyId,
-    ]);
-    if (rows.isEmpty) return null;
+  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+    required String historyId,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await bankCardHistoryDao.getBankCardHistoryByHistoryIds([
+          historyId,
+        ]);
+        if (rows.isEmpty) return const None();
 
-    final item = rows.first;
+        final item = rows.first;
 
-    return BankCardHistoryPayload(
-      cardholderName: item.cardholderName,
-      cardNumber: item.cardNumber,
-      cardType: item.cardType,
-      cardTypeOther: item.cardTypeOther,
-      cardNetwork: item.cardNetwork,
-      cardNetworkOther: item.cardNetworkOther,
-      expiryMonth: item.expiryMonth,
-      expiryYear: item.expiryYear,
-      cvv: item.cvv,
-      bankName: item.bankName,
-      accountNumber: item.accountNumber,
-      routingNumber: item.routingNumber,
+        return Some(
+          BankCardHistoryPayload(
+            cardholderName: item.cardholderName,
+            cardNumber: item.cardNumber,
+            cardType: item.cardType,
+            cardTypeOther: item.cardTypeOther,
+            cardNetwork: item.cardNetwork,
+            cardNetworkOther: item.cardNetworkOther,
+            expiryMonth: item.expiryMonth,
+            expiryYear: item.expiryYear,
+            cvv: item.cvv,
+            bankName: item.bankName,
+            accountNumber: item.accountNumber,
+            routingNumber: item.routingNumber,
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при нормализации истории банковской карты',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
-    final view = await bankCardRepository.getViewById(itemId);
-    if (view == null) return null;
-
-    final item = view.bankCard;
-
-    return BankCardHistoryPayload(
-      cardholderName: item.cardholderName,
-      cardNumber: item.cardNumber,
-      cardType: item.cardType,
-      cardTypeOther: item.cardTypeOther,
-      cardNetwork: item.cardNetwork,
-      cardNetworkOther: item.cardNetworkOther,
-      expiryMonth: item.expiryMonth,
-      expiryYear: item.expiryYear,
-      cvv: item.cvv,
-      bankName: item.bankName,
-      accountNumber: item.accountNumber,
-      routingNumber: item.routingNumber,
+  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+    required String itemId,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final viewOpt = (await bankCardRepository.getViewById(itemId)).getOrThrow();
+        return viewOpt.fold(
+          (view) {
+            final item = view.bankCard;
+            return Some(
+              BankCardHistoryPayload(
+                cardholderName: item.cardholderName,
+                cardNumber: item.cardNumber,
+                cardType: item.cardType,
+                cardTypeOther: item.cardTypeOther,
+                cardNetwork: item.cardNetwork,
+                cardNetworkOther: item.cardNetworkOther,
+                expiryMonth: item.expiryMonth,
+                expiryYear: item.expiryYear,
+                cvv: item.cvv,
+                bankName: item.bankName,
+                accountNumber: item.accountNumber,
+                routingNumber: item.routingNumber,
+              ),
+            );
+          },
+          () => const None(),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при нормализации текущего состояния банковской карты',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 }

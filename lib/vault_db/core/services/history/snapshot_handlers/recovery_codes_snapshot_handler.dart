@@ -22,51 +22,59 @@ class RecoveryCodesSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.recoveryCodes;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! RecoveryCodesViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for RecoveryCodes snapshot',
-          entity: 'recoveryCodes',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! RecoveryCodesViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for RecoveryCodes snapshot',
+            entity: 'recoveryCodes',
+          );
+        }
 
-    final rc = view.recoveryCodes;
+        final rc = view.recoveryCodes;
 
-    await recoveryCodesHistoryDao.insertRecoveryCodesHistory(
-      RecoveryCodesHistoryCompanion.insert(
-        historyId: historyId,
-        codesCount: Value(rc.codesCount),
-        usedCount: Value(rc.usedCount),
-        generatedAt: Value(rc.generatedAt),
-        oneTime: Value(rc.oneTime),
-      ),
-    );
+        await recoveryCodesHistoryDao.insertRecoveryCodesHistory(
+          RecoveryCodesHistoryCompanion.insert(
+            historyId: historyId,
+            codesCount: Value(rc.codesCount),
+            usedCount: Value(rc.usedCount),
+            generatedAt: Value(rc.generatedAt),
+            oneTime: Value(rc.oneTime),
+          ),
+        );
 
-    if (view.codes.isNotEmpty) {
-      final codeCompanions = view.codes
-          .map(
-            (c) => RecoveryCodeValuesHistoryCompanion.insert(
-              historyId: historyId,
-              originalCodeId: Value(c.id),
-              code: Value(includeSecrets ? c.code : null),
-              used: Value(c.used),
-              usedAt: Value(c.usedAt),
-              position: Value(c.position),
+        if (view.codes.isNotEmpty) {
+          final codeCompanions = view.codes
+              .map(
+                (c) => RecoveryCodeValuesHistoryCompanion.insert(
+                  historyId: historyId,
+                  originalCodeId: Value(c.id),
+                  code: Value(includeSecrets ? c.code : null),
+                  used: Value(c.used),
+                  usedAt: Value(c.usedAt),
+                  position: Value(c.position),
+                ),
+              )
+              .toList();
+          await recoveryCodeValuesHistoryDao
+              .insertRecoveryCodeValuesHistoryBatch(codeCompanions);
+        }
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка кодов восстановления',
+              cause: e,
+              stackTrace: st,
             ),
-          )
-          .toList();
-      await recoveryCodeValuesHistoryDao.insertRecoveryCodeValuesHistoryBatch(
-        codeCompanions,
-      );
-    }
-
-    return const Success(unit);
+    );
   }
 }

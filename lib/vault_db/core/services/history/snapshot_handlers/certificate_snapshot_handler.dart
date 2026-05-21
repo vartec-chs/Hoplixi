@@ -18,46 +18,55 @@ class CertificateSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.certificate;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! CertificateViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for Certificate snapshot',
-          entity: 'certificate',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! CertificateViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for Certificate snapshot',
+            entity: 'certificate',
+          );
+        }
 
-    final cert = view.certificate;
+        final cert = view.certificate;
 
-    await certificateHistoryDao.insertCertificateHistory(
-      CertificateHistoryCompanion.insert(
-        historyId: historyId,
-        certificateFormat: Value(cert.certificateFormat),
-        certificateFormatOther: Value(cert.certificateFormatOther),
-        certificatePem: Value(cert.certificatePem),
-        certificateBlob: Value(cert.certificateBlob),
-        privateKey: Value(includeSecrets ? cert.privateKey : null),
-        privateKeyPassword: Value(
-          includeSecrets ? cert.privateKeyPassword : null,
-        ),
-        passwordForPfx: Value(includeSecrets ? cert.passwordForPfx : null),
-        keyAlgorithm: Value(cert.keyAlgorithm),
-        keyAlgorithmOther: Value(cert.keyAlgorithmOther),
-        keySize: Value(cert.keySize),
-        serialNumber: Value(cert.serialNumber),
-        issuer: Value(cert.issuer),
-        subject: Value(cert.subject),
-        validFrom: Value(cert.validFrom),
-        validTo: Value(cert.validTo),
-      ),
+        await certificateHistoryDao.insertCertificateHistory(
+          CertificateHistoryCompanion.insert(
+            historyId: historyId,
+            certificateFormat: Value(cert.certificateFormat),
+            certificateFormatOther: Value(cert.certificateFormatOther),
+            certificatePem: Value(cert.certificatePem),
+            certificateBlob: Value(cert.certificateBlob),
+            privateKey: Value(includeSecrets ? cert.privateKey : null),
+            privateKeyPassword: Value(
+              includeSecrets ? cert.privateKeyPassword : null,
+            ),
+            passwordForPfx: Value(includeSecrets ? cert.passwordForPfx : null),
+            keyAlgorithm: Value(cert.keyAlgorithm),
+            keyAlgorithmOther: Value(cert.keyAlgorithmOther),
+            keySize: Value(cert.keySize),
+            serialNumber: Value(cert.serialNumber),
+            issuer: Value(cert.issuer),
+            subject: Value(cert.subject),
+            validFrom: Value(cert.validFrom),
+            validTo: Value(cert.validTo),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка сертификата',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

@@ -18,34 +18,44 @@ class PasswordSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.password;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! PasswordViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for Password snapshot',
-          entity: 'password',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! PasswordViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for Password snapshot',
+            entity: 'password',
+          );
+        }
 
-    final password = view.password;
+        final pw = view.password;
 
-    await passwordHistoryDao.insertPasswordHistory(
-      PasswordHistoryCompanion.insert(
-        historyId: historyId,
-        login: Value(password.login),
-        email: Value(password.email),
-        password: Value(includeSecrets ? password.password : null),
-        url: Value(password.url),
-        expiresAt: Value(password.expiresAt),
-      ),
+        await passwordHistoryDao.insertPasswordHistory(
+          PasswordHistoryCompanion.insert(
+            historyId: historyId,
+            login: Value(pw.login),
+            email: Value(pw.email),
+            password: Value(includeSecrets ? pw.password : null),
+            url: Value(pw.url),
+            expiresAt: Value(pw.expiresAt),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка пароля',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }
+

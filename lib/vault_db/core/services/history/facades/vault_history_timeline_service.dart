@@ -1,5 +1,4 @@
-import 'package:result_dart/result_dart.dart';
-
+import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
 import '../../../models/dto_history/cards/cards_exports.dart';
 import '../../../models/filters/history/vault_snapshot_history_filter.dart';
@@ -35,25 +34,31 @@ class VaultHistoryTimelineService {
   final VaultHistoryDetailService detailService;
   final VaultHistoryRestorePolicyService restorePolicyService;
 
-  Future<DbResult<List<VaultHistoryTimelineItemDto>>> getTimeline(
+  AsyncDbResult<List<VaultHistoryTimelineItemDto>> getTimeline(
     VaultSnapshotHistoryFilter filter, {
     VaultHistoryTimelineDiffMode diffMode =
         VaultHistoryTimelineDiffMode.lightweight,
-  }) async {
-    final cardsRes = await readService.getFilteredCards(filter);
-    if (cardsRes.isError()) {
-      return Failure(cardsRes.exceptionOrNull()!);
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final cards = (await readService.getFilteredCards(filter)).getOrThrow();
 
-    final cards = cardsRes.getOrNull() ?? [];
+        final timelineItems = <VaultHistoryTimelineItemDto>[];
+        for (final card in cards) {
+          final item = await _buildTimelineItem(card, diffMode: diffMode);
+          timelineItems.add(item);
+        }
 
-    final timelineItems = <VaultHistoryTimelineItemDto>[];
-    for (final card in cards) {
-      final item = await _buildTimelineItem(card, diffMode: diffMode);
-      timelineItems.add(item);
-    }
-
-    return Success(timelineItems);
+        return timelineItems;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении таймлайна истории',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 
   Future<VaultHistoryTimelineItemDto> _buildTimelineItem(
@@ -113,24 +118,20 @@ class VaultHistoryTimelineService {
       historyId: card.snapshot.historyId,
     );
 
-    if (detailRes.isError()) {
-      return _buildLightweightDiffSummary(card);
-    }
+    return detailRes.fold(
+      (detail) {
+        final diffs = [...detail.fieldDiffs, ...detail.customFieldDiffs];
 
-    final detail = detailRes.getOrNull();
-    if (detail == null) {
-      return _buildLightweightDiffSummary(card);
-    }
-
-    final diffs = [...detail.fieldDiffs, ...detail.customFieldDiffs];
-
-    return _TimelineDiffSummary(
-      changedFieldsCount: diffs.length,
-      changedFieldLabels: diffs
-          .map((d) => d.label)
-          .where((label) => label.trim().isNotEmpty)
-          .take(3)
-          .toList(),
+        return _TimelineDiffSummary(
+          changedFieldsCount: diffs.length,
+          changedFieldLabels: diffs
+              .map((d) => d.label)
+              .where((label) => label.trim().isNotEmpty)
+              .take(3)
+              .toList(),
+        );
+      },
+      (error) => _buildLightweightDiffSummary(card),
     );
   }
 

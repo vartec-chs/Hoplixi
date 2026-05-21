@@ -20,44 +20,49 @@ class VaultHistoryDetailService {
   final VaultHistoryDiffService diffService;
   final VaultHistoryRestorePolicyService restorePolicy;
 
-  Future<DbResult<VaultHistoryRevisionDetailDto>> getRevisionDetail({
+  AsyncDbResult<VaultHistoryRevisionDetailDto> getRevisionDetail({
     required String historyId,
-  }) async {
-    try {
-      final selected = await loader.loadHistorySnapshot(historyId);
-      if (selected == null) {
-        return Failure(
-          DBCoreError.notFound(entity: 'HistorySnapshot', id: historyId),
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final selectedOpt = (await loader.loadHistorySnapshot(historyId))
+            .getOrThrow();
+        final selected = selectedOpt.fold(
+          (s) => s,
+          () => throw DBCoreError.notFound(
+            entity: 'HistorySnapshot',
+            id: historyId,
+          ),
         );
-      }
 
-      // Load compare target (newer revision or current live)
-      final current = await loader.loadCurrentSnapshot(
-        itemId: selected.base.itemId,
-        type: selected.base.type,
-      );
+        // Load compare target (newer revision or current live)
+        final currentOpt = (await loader.loadCurrentSnapshot(
+          itemId: selected.base.itemId,
+          type: selected.base.type,
+        )).getOrThrow();
 
-      final AnyNormalizedHistorySnapshot compareTarget =
-          current ??
-          NormalizedHistorySnapshot(
-            base: selected.base,
-            payload: EmptyHistoryPayload(selected.base.type),
-            customFields: const [],
-            restoreWarnings: const [],
-          );
+        final current = currentOpt.getOrNull();
 
-      final fieldDiffs = diffService.buildFieldDiffs(
-        current: compareTarget,
-        replacement: selected,
-      );
+        final AnyNormalizedHistorySnapshot compareTarget =
+            current ??
+            NormalizedHistorySnapshot(
+              base: selected.base,
+              payload: EmptyHistoryPayload(selected.base.type),
+              customFields: const [],
+              restoreWarnings: const [],
+            );
 
-      final customFieldDiffs = diffService.buildCustomFieldDiffs(
-        current: compareTarget,
-        replacement: selected,
-      );
+        final fieldDiffs = diffService.buildFieldDiffs(
+          current: compareTarget,
+          replacement: selected,
+        );
 
-      return Success(
-        VaultHistoryRevisionDetailDto(
+        final customFieldDiffs = diffService.buildCustomFieldDiffs(
+          current: compareTarget,
+          replacement: selected,
+        );
+
+        return VaultHistoryRevisionDetailDto(
           selected: selected.base.toVaultSnapshotCardDto(),
           compareTargetKind: current != null
               ? HistoryCompareTargetKind.currentLive
@@ -66,12 +71,15 @@ class VaultHistoryDetailService {
           customFieldDiffs: customFieldDiffs,
           isRestorable: restorePolicy.isRestorable(selected),
           restoreWarnings: restorePolicy.restoreWarnings(selected),
-        ),
-      );
-    } catch (e, s) {
-      return Failure(
-        DBCoreError.unknown(message: e.toString(), cause: e, stackTrace: s),
-      );
-    }
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении деталей ревизии истории',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
   }
 }

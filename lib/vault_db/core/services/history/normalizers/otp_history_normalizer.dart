@@ -1,6 +1,8 @@
 import 'package:hoplixi/vault_db/core/repositories/base/otp_repository.dart';
 
 import '../../../daos/daos.dart';
+import '../../../errors/db_error.dart';
+import '../../../errors/db_result.dart';
 import '../../../tables/vault_items/vault_items.dart';
 import '../models/history_payload.dart';
 import '../payloads/otp_history_payload.dart';
@@ -19,40 +21,72 @@ class OtpHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.otp;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
-    final rows = await otpHistoryDao.getOtpHistoryByHistoryIds([historyId]);
-    if (rows.isEmpty) return null;
+  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+    required String historyId,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await otpHistoryDao.getOtpHistoryByHistoryIds([historyId]);
+        if (rows.isEmpty) return const None();
 
-    final item = rows.first;
+        final item = rows.first;
 
-    return OtpHistoryPayload(
-      otpType: item.type,
-      issuer: item.issuer,
-      accountName: item.accountName,
-      secret: item.secret,
-      algorithm: item.algorithm,
-      digits: item.digits,
-      period: item.period,
-      counter: item.counter,
+        return Some(
+          OtpHistoryPayload(
+            otpType: item.type,
+            issuer: item.issuer,
+            accountName: item.accountName,
+            secret: item.secret,
+            algorithm: item.algorithm,
+            digits: item.digits,
+            period: item.period,
+            counter: item.counter,
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при нормализации истории OTP',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
-    final view = await otpRepository.getViewById(itemId);
-    if (view == null) return null;
-
-    final item = view.otp;
-
-    return OtpHistoryPayload(
-      otpType: item.type,
-      issuer: item.issuer,
-      accountName: item.accountName,
-      secret: item.secret,
-      algorithm: item.algorithm,
-      digits: item.digits,
-      period: item.period,
-      counter: item.counter,
+  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+    required String itemId,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final viewOpt = (await otpRepository.getViewById(itemId)).getOrThrow();
+        return viewOpt.fold(
+          (view) {
+            final item = view.otp;
+            return Some(
+              OtpHistoryPayload(
+                otpType: item.type,
+                issuer: item.issuer,
+                accountName: item.accountName,
+                secret: item.secret,
+                algorithm: item.algorithm,
+                digits: item.digits,
+                period: item.period,
+                counter: item.counter,
+              ),
+            );
+          },
+          () => const None(),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при нормализации текущего состояния OTP',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 }

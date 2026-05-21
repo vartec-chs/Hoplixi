@@ -18,37 +18,46 @@ class OtpSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.otp;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! OtpViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for Otp snapshot',
-          entity: 'otp',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! OtpViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for Otp snapshot',
+            entity: 'otp',
+          );
+        }
 
-    final otp = view.otp;
+        final otp = view.otp;
 
-    await otpHistoryDao.insertOtpHistory(
-      OtpHistoryCompanion.insert(
-        historyId: historyId,
-        type: Value(otp.type),
-        issuer: Value(otp.issuer),
-        accountName: Value(otp.accountName),
-        secret: Value(includeSecrets ? otp.secret : null),
-        algorithm: Value(otp.algorithm),
-        digits: Value(otp.digits),
-        period: Value(otp.period),
-        counter: Value(otp.counter),
-      ),
+        await otpHistoryDao.insertOtpHistory(
+          OtpHistoryCompanion.insert(
+            historyId: historyId,
+            type: Value(otp.type),
+            issuer: Value(otp.issuer),
+            accountName: Value(otp.accountName),
+            secret: Value(includeSecrets ? otp.secret : null),
+            algorithm: Value(otp.algorithm),
+            digits: Value(otp.digits),
+            period: Value(otp.period),
+            counter: Value(otp.counter),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка OTP',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

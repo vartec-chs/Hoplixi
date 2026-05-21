@@ -18,31 +18,40 @@ class NoteSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.note;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! NoteViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for Note snapshot',
-          entity: 'note',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! NoteViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for Note snapshot',
+            entity: 'note',
+          );
+        }
 
-    final note = view.note;
+        final note = view.note;
 
-    await noteHistoryDao.insertNoteHistory(
-      NoteHistoryCompanion.insert(
-        historyId: historyId,
-        deltaJson: Value(includeSecrets ? note.deltaJson : null),
-        content: Value(includeSecrets ? note.content : null),
-      ),
+        await noteHistoryDao.insertNoteHistory(
+          NoteHistoryCompanion.insert(
+            historyId: historyId,
+            deltaJson: Value(includeSecrets ? note.deltaJson : null),
+            content: Value(includeSecrets ? note.content : null),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка заметки',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

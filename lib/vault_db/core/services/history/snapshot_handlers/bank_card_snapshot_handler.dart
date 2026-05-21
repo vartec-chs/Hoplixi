@@ -18,41 +18,50 @@ class BankCardSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.bankCard;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! BankCardViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for BankCard snapshot',
-          entity: 'bankCard',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! BankCardViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for BankCard snapshot',
+            entity: 'bankCard',
+          );
+        }
 
-    final bankCard = view.bankCard;
+        final bankCard = view.bankCard;
 
-    await bankCardHistoryDao.insertBankCardHistory(
-      BankCardHistoryCompanion.insert(
-        historyId: historyId,
-        cardholderName: Value(bankCard.cardholderName),
-        cardNumber: Value(includeSecrets ? bankCard.cardNumber : null),
-        cardType: Value(bankCard.cardType),
-        cardTypeOther: Value(bankCard.cardTypeOther),
-        cardNetwork: Value(bankCard.cardNetwork),
-        cardNetworkOther: Value(bankCard.cardNetworkOther),
-        expiryMonth: Value(bankCard.expiryMonth),
-        expiryYear: Value(bankCard.expiryYear),
-        cvv: Value(includeSecrets ? bankCard.cvv : null),
-        bankName: Value(bankCard.bankName),
-        accountNumber: Value(includeSecrets ? bankCard.accountNumber : null),
-        routingNumber: Value(includeSecrets ? bankCard.routingNumber : null),
-      ),
+        await bankCardHistoryDao.insertBankCardHistory(
+          BankCardHistoryCompanion.insert(
+            historyId: historyId,
+            cardholderName: Value(bankCard.cardholderName),
+            cardNumber: Value(includeSecrets ? bankCard.cardNumber : null),
+            cardType: Value(bankCard.cardType),
+            cardTypeOther: Value(bankCard.cardTypeOther),
+            cardNetwork: Value(bankCard.cardNetwork),
+            cardNetworkOther: Value(bankCard.cardNetworkOther),
+            expiryMonth: Value(bankCard.expiryMonth),
+            expiryYear: Value(bankCard.expiryYear),
+            cvv: Value(includeSecrets ? bankCard.cvv : null),
+            bankName: Value(bankCard.bankName),
+            accountNumber: Value(includeSecrets ? bankCard.accountNumber : null),
+            routingNumber: Value(includeSecrets ? bankCard.routingNumber : null),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка банковской карты',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

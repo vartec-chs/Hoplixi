@@ -1,6 +1,8 @@
 import 'package:hoplixi/vault_db/core/repositories/base/contact_repository.dart';
 
 import '../../../daos/daos.dart';
+import '../../../errors/db_error.dart';
+import '../../../errors/db_result.dart';
 import '../../../tables/vault_items/vault_items.dart';
 import '../models/history_payload.dart';
 import '../payloads/contact_history_payload.dart';
@@ -19,48 +21,81 @@ class ContactHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.contact;
 
   @override
-  Future<HistoryPayload?> normalizeHistory({required String historyId}) async {
-    final rows = await contactHistoryDao.getContactHistoryByHistoryIds([
-      historyId,
-    ]);
-    if (rows.isEmpty) return null;
+  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+    required String historyId,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final rows = await contactHistoryDao.getContactHistoryByHistoryIds([
+          historyId,
+        ]);
+        if (rows.isEmpty) return const None();
 
-    final item = rows.first;
+        final item = rows.first;
 
-    return ContactHistoryPayload(
-      firstName: item.firstName,
-      middleName: item.middleName,
-      lastName: item.lastName,
-      phone: item.phone,
-      email: item.email,
-      company: item.company,
-      jobTitle: item.jobTitle,
-      address: item.address,
-      website: item.website,
-      birthday: item.birthday,
-      isEmergencyContact: item.isEmergencyContact,
+        return Some(
+          ContactHistoryPayload(
+            firstName: item.firstName,
+            middleName: item.middleName,
+            lastName: item.lastName,
+            phone: item.phone,
+            email: item.email,
+            company: item.company,
+            jobTitle: item.jobTitle,
+            address: item.address,
+            website: item.website,
+            birthday: item.birthday,
+            isEmergencyContact: item.isEmergencyContact,
+          ),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при нормализации истории контакта',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 
   @override
-  Future<HistoryPayload?> normalizeCurrent({required String itemId}) async {
-    final view = await contactRepository.getViewById(itemId);
-    if (view == null) return null;
-
-    final item = view.contact;
-
-    return ContactHistoryPayload(
-      firstName: item.firstName,
-      middleName: item.middleName,
-      lastName: item.lastName,
-      phone: item.phone,
-      email: item.email,
-      company: item.company,
-      jobTitle: item.jobTitle,
-      address: item.address,
-      website: item.website,
-      birthday: item.birthday,
-      isEmergencyContact: item.isEmergencyContact,
+  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+    required String itemId,
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final viewOpt = (await contactRepository.getViewById(itemId))
+            .getOrThrow();
+        return viewOpt.fold(
+          (view) {
+            final item = view.contact;
+            return Some(
+              ContactHistoryPayload(
+                firstName: item.firstName,
+                middleName: item.middleName,
+                lastName: item.lastName,
+                phone: item.phone,
+                email: item.email,
+                company: item.company,
+                jobTitle: item.jobTitle,
+                address: item.address,
+                website: item.website,
+                birthday: item.birthday,
+                isEmergencyContact: item.isEmergencyContact,
+              ),
+            );
+          },
+          () => const None(),
+        );
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при нормализации текущего состояния контакта',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 }

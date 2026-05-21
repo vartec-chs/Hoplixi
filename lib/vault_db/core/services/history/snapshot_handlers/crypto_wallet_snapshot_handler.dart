@@ -18,43 +18,52 @@ class CryptoWalletSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.cryptoWallet;
 
   @override
-  Future<DbResult<Unit>> writeTypeSnapshot({
+  AsyncDbResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,
-  }) async {
-    if (view is! CryptoWalletViewDto) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.snapshot.invalid_view_type',
-          message: 'Invalid view type for CryptoWallet snapshot',
-          entity: 'cryptoWallet',
-        ),
-      );
-    }
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        if (view is! CryptoWalletViewDto) {
+          throw const DBCoreError.conflict(
+            code: 'history.snapshot.invalid_view_type',
+            message: 'Invalid view type for CryptoWallet snapshot',
+            entity: 'cryptoWallet',
+          );
+        }
 
-    final wallet = view.cryptoWallet;
+        final wallet = view.cryptoWallet;
 
-    await cryptoWalletHistoryDao.insertCryptoWalletHistory(
-      CryptoWalletHistoryCompanion.insert(
-        historyId: historyId,
-        walletType: Value(wallet.walletType),
-        walletTypeOther: Value(wallet.walletTypeOther),
-        network: Value(wallet.network),
-        networkOther: Value(wallet.networkOther),
-        mnemonic: Value(includeSecrets ? wallet.mnemonic : null),
-        privateKey: Value(includeSecrets ? wallet.privateKey : null),
-        derivationPath: Value(wallet.derivationPath),
-        derivationScheme: Value(wallet.derivationScheme),
-        derivationSchemeOther: Value(wallet.derivationSchemeOther),
-        addresses: Value(wallet.addresses),
-        xpub: Value(wallet.xpub),
-        xprv: Value(includeSecrets ? wallet.xprv : null),
-        hardwareDevice: Value(wallet.hardwareDevice),
-        watchOnly: Value(wallet.watchOnly),
-      ),
+        await cryptoWalletHistoryDao.insertCryptoWalletHistory(
+          CryptoWalletHistoryCompanion.insert(
+            historyId: historyId,
+            walletType: Value(wallet.walletType),
+            walletTypeOther: Value(wallet.walletTypeOther),
+            network: Value(wallet.network),
+            networkOther: Value(wallet.networkOther),
+            mnemonic: Value(includeSecrets ? wallet.mnemonic : null),
+            privateKey: Value(includeSecrets ? wallet.privateKey : null),
+            derivationPath: Value(wallet.derivationPath),
+            derivationScheme: Value(wallet.derivationScheme),
+            derivationSchemeOther: Value(wallet.derivationSchemeOther),
+            addresses: Value(wallet.addresses),
+            xpub: Value(wallet.xpub),
+            xprv: Value(includeSecrets ? wallet.xprv : null),
+            hardwareDevice: Value(wallet.hardwareDevice),
+            watchOnly: Value(wallet.watchOnly),
+          ),
+        );
+
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при записи снимка криптокошелька',
+              cause: e,
+              stackTrace: st,
+            ),
     );
-
-    return const Success(unit);
   }
 }

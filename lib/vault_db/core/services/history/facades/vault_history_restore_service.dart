@@ -45,161 +45,128 @@ class VaultHistoryRestoreService {
   final VaultSnapshotWriter snapshotWriter;
   final VaultEventHistoryRepository eventHistoryRepository;
 
-  Future<DbResult<Unit>> restoreRevision({
+  AsyncDbResult<Unit> restoreRevision({
     required String historyId,
     bool recreate = false,
-  }) async {
-    try {
-      final selected = await loader.loadHistorySnapshot(historyId);
-      if (selected == null) {
-        return Failure(
-          DBCoreError.notFound(entity: 'HistorySnapshot', id: historyId),
-        );
-      }
-
-      if (!policy.isRestorable(selected)) {
-        return const Failure(
-          DBCoreError.validation(
-            code: 'history.restore.not_restorable',
-            message: 'Эта ревизия не может быть восстановлена',
+  }) {
+    return ResultUtils.tryCatchAsync(
+      () async {
+        final selectedOpt = (await loader.loadHistorySnapshot(historyId))
+            .getOrThrow();
+        final selected = selectedOpt.fold(
+          (s) => s,
+          () => throw DBCoreError.notFound(
+            entity: 'HistorySnapshot',
+            id: historyId,
           ),
         );
-      }
 
-      final handler = restoreHandlerRegistry.get(selected.base.type);
-      if (handler == null) {
-        return Failure(
-          DBCoreError.validation(
+        if (!policy.isRestorable(selected)) {
+          throw const DBCoreError.validation(
+            code: 'history.restore.not_restorable',
+            message: 'Эта ревизия не может быть восстановлена',
+          );
+        }
+
+        final handler = restoreHandlerRegistry.get(selected.base.type);
+        if (handler == null) {
+          throw DBCoreError.validation(
             code: 'history.restore.unsupported_type',
             message:
                 'Восстановление для типа ${selected.base.type.name} не поддерживается',
-          ),
-        );
-      }
+          );
+        }
 
-      return await db.transaction(() async {
-        String? beforeRestoreSnapshotId;
+        return await db.transaction(() async {
+          String? beforeRestoreSnapshotId;
 
-        final currentView = await viewResolver.getView(
-          itemId: selected.base.itemId,
-          type: selected.base.type,
-        );
+          final currentView = await viewResolver.getView(
+            itemId: selected.base.itemId,
+            type: selected.base.type,
+          );
 
-        if (currentView == null && !recreate) {
-          return Failure(
-            DBCoreError.notFound(
+          if (currentView == null && !recreate) {
+            throw DBCoreError.notFound(
               entity: selected.base.type.name,
               id: selected.base.itemId,
               message:
                   'Live item not found. Use recreate=true to restore deleted physical item.',
-            ),
-          );
-        }
+            );
+          }
 
-        if (currentView != null) {
-          if (currentView is! VaultEntityViewDto) {
-            throw _InternalRestoreFailure(
-              DBCoreError.conflict(
+          if (currentView != null) {
+            if (currentView is! VaultEntityViewDto) {
+              throw DBCoreError.conflict(
                 code: 'history.restore.invalid_current_view',
                 message: 'Current view does not implement VaultEntityViewDto',
                 entity: selected.base.type.name,
-              ),
+              );
+            }
+
+            final snapshotRes = await snapshotWriter.writeSnapshot(
+              view: currentView,
+              action: VaultEventHistoryAction.restored,
+              includeSecrets: true,
+              includeRelations: true,
             );
+
+            beforeRestoreSnapshotId = snapshotRes.getOrThrow();
           }
 
-          final snapshotRes = await snapshotWriter.writeSnapshot(
-            view: currentView,
-            action: VaultEventHistoryAction.restored,
-            includeSecrets: true,
-            includeRelations: true,
+          await vaultItemsDao.upsertVaultItem(
+            VaultItemsCompanion(
+              id: Value(selected.base.itemId),
+              type: Value(selected.base.type),
+              name: Value(selected.base.name),
+              description: Value(selected.base.description),
+              categoryId: Value(selected.base.categoryId),
+              iconRefId: Value(selected.base.iconRefId),
+              usedCount: Value(selected.base.usedCount),
+              isFavorite: Value(selected.base.isFavorite),
+              isArchived: Value(selected.base.isArchived),
+              isPinned: Value(selected.base.isPinned),
+              isDeleted: const Value(false), // Always restore as active
+              createdAt: Value(selected.base.createdAt),
+              modifiedAt: Value(DateTime.now()), // Updated modification time
+              lastUsedAt: Value(selected.base.lastUsedAt),
+              archivedAt: Value(selected.base.archivedAt),
+              deletedAt: const Value(null),
+              recentScore: Value(selected.base.recentScore),
+            ),
           );
 
-          if (snapshotRes.isError()) {
-            throw _InternalRestoreFailure(snapshotRes.exceptionOrNull()!);
-          }
+          (await handler.restoreTypeSpecific(
+            base: selected.base,
+            payload: selected.payload,
+          )).getOrThrow();
 
-          beforeRestoreSnapshotId = snapshotRes.getOrThrow();
-        }
+          (await customFieldsRestoreService.restoreCustomFieldsForSnapshot(
+            itemId: selected.base.itemId,
+            snapshotHistoryId: selected.base.historyId,
+          )).getOrThrow();
 
-        await vaultItemsDao.upsertVaultItem(
-          VaultItemsCompanion(
-            id: Value(selected.base.itemId),
-            type: Value(selected.base.type),
-            name: Value(selected.base.name),
-            description: Value(selected.base.description),
-            categoryId: Value(selected.base.categoryId),
-            iconRefId: Value(selected.base.iconRefId),
-            usedCount: Value(selected.base.usedCount),
-            isFavorite: Value(selected.base.isFavorite),
-            isArchived: Value(selected.base.isArchived),
-            isPinned: Value(selected.base.isPinned),
-            isDeleted: const Value(false), // Always restore as active
-            createdAt: Value(selected.base.createdAt),
-            modifiedAt: Value(DateTime.now()), // Updated modification time
-            lastUsedAt: Value(selected.base.lastUsedAt),
-            archivedAt: Value(selected.base.archivedAt),
-            deletedAt: const Value(null),
-            recentScore: Value(selected.base.recentScore),
-          ),
-        );
+          (await tagsRestoreService.restoreTagsForSnapshot(
+            itemId: selected.base.itemId,
+            snapshotHistoryId: selected.base.historyId,
+          )).getOrThrow();
 
-        final typeRes = await handler.restoreTypeSpecific(
-          base: selected.base,
-          payload: selected.payload,
-        );
+          (await itemLinksRestoreService.restoreLinksForSnapshot(
+            itemId: selected.base.itemId,
+            snapshotHistoryId: selected.base.historyId,
+          )).getOrThrow();
 
-        if (typeRes.isError()) {
-          throw _InternalRestoreFailure(typeRes.exceptionOrNull()!);
-        }
+          (await eventHistoryRepository.writeEvent(
+            itemId: selected.base.itemId,
+            type: selected.base.type,
+            action: VaultEventHistoryAction.restored,
+            name: selected.base.name,
+            snapshotHistoryId: beforeRestoreSnapshotId,
+          )).getOrThrow();
 
-        final customFieldsRes = await customFieldsRestoreService
-            .restoreCustomFieldsForSnapshot(
-              itemId: selected.base.itemId,
-              snapshotHistoryId: selected.base.historyId,
-            );
-        if (customFieldsRes.isError()) {
-          throw _InternalRestoreFailure(customFieldsRes.exceptionOrNull()!);
-        }
-
-        final tagsRes = await tagsRestoreService.restoreTagsForSnapshot(
-          itemId: selected.base.itemId,
-          snapshotHistoryId: selected.base.historyId,
-        );
-        if (tagsRes.isError()) {
-          throw _InternalRestoreFailure(tagsRes.exceptionOrNull()!);
-        }
-
-        final linksRes = await itemLinksRestoreService.restoreLinksForSnapshot(
-          itemId: selected.base.itemId,
-          snapshotHistoryId: selected.base.historyId,
-        );
-        if (linksRes.isError()) {
-          throw _InternalRestoreFailure(linksRes.exceptionOrNull()!);
-        }
-
-        final eventRes = await eventHistoryRepository.writeEvent(
-          itemId: selected.base.itemId,
-          type: selected.base.type,
-          action: VaultEventHistoryAction.restored,
-          name: selected.base.name,
-          snapshotHistoryId: beforeRestoreSnapshotId,
-        );
-
-        if (eventRes.isError()) {
-          throw _InternalRestoreFailure(eventRes.exceptionOrNull()!);
-        }
-
-        return const Success(unit);
-      });
-    } on _InternalRestoreFailure catch (e) {
-      return Failure(e.error);
-    } catch (e, st) {
-      return Failure(mapDbException(e, st));
-    }
+          return unit;
+        });
+      },
+      (e, st) => e is DBCoreError ? e : mapDbException(e, st),
+    );
   }
-}
-
-class _InternalRestoreFailure implements Exception {
-  _InternalRestoreFailure(this.error);
-  final DBCoreError error;
 }
