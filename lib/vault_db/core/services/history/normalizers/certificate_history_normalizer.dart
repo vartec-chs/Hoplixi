@@ -68,33 +68,31 @@ class CertificateHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await certificateRepository.getViewById(itemId))
-            .getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.certificate;
-            return Some(
-              CertificateHistoryPayload(
-                certificateFormat: item.certificateFormat,
-                certificateFormatOther: item.certificateFormatOther,
-                certificatePem: item.certificatePem,
-                certificateBlob: item.certificateBlob,
-                privateKey: item.privateKey,
-                privateKeyPassword: item.privateKeyPassword,
-                passwordForPfx: item.passwordForPfx,
-                keyAlgorithm: item.keyAlgorithm,
-                keyAlgorithmOther: item.keyAlgorithmOther,
-                keySize: item.keySize,
-                serialNumber: item.serialNumber,
-                issuer: item.issuer,
-                subject: item.subject,
-                validFrom: item.validFrom,
-                validTo: item.validTo,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await certificateRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.certificate;
+          return Some(
+            CertificateHistoryPayload(
+              certificateFormat: item.certificateFormat,
+              certificateFormatOther: item.certificateFormatOther,
+              certificatePem: item.certificatePem,
+              certificateBlob: item.certificateBlob,
+              privateKey: item.privateKey,
+              privateKeyPassword: item.privateKeyPassword,
+              passwordForPfx: item.passwordForPfx,
+              keyAlgorithm: item.keyAlgorithm,
+              keyAlgorithmOther: item.keyAlgorithmOther,
+              keySize: item.keySize,
+              serialNumber: item.serialNumber,
+              issuer: item.issuer,
+              subject: item.subject,
+              validFrom: item.validFrom,
+              validTo: item.validTo,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

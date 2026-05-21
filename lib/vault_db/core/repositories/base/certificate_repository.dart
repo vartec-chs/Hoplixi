@@ -22,43 +22,47 @@ class CertificateRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.certificate,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.certificate,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.certificateItems).insert(
-          CertificateItemsCompanion.insert(
-            itemId: itemId,
-            certificateFormat: Value(dto.certificate.certificateFormat),
-            certificateFormatOther: Value(
-              dto.certificate.certificateFormatOther,
-            ),
-            certificatePem: Value(dto.certificate.certificatePem),
-            certificateBlob: Value(dto.certificate.certificateBlob),
-            privateKey: Value(dto.certificate.privateKey),
-            privateKeyPassword: Value(dto.certificate.privateKeyPassword),
-            passwordForPfx: Value(dto.certificate.passwordForPfx),
-            keyAlgorithm: Value(dto.certificate.keyAlgorithm),
-            keyAlgorithmOther: Value(dto.certificate.keyAlgorithmOther),
-            keySize: Value(dto.certificate.keySize),
-            serialNumber: Value(dto.certificate.serialNumber),
-            issuer: Value(dto.certificate.issuer),
-            subject: Value(dto.certificate.subject),
-            validFrom: Value(dto.certificate.validFrom),
-            validTo: Value(dto.certificate.validTo),
-          ),
-        );
+        await db
+            .into(db.certificateItems)
+            .insert(
+              CertificateItemsCompanion.insert(
+                itemId: itemId,
+                certificateFormat: Value(dto.certificate.certificateFormat),
+                certificateFormatOther: Value(
+                  dto.certificate.certificateFormatOther,
+                ),
+                certificatePem: Value(dto.certificate.certificatePem),
+                certificateBlob: Value(dto.certificate.certificateBlob),
+                privateKey: Value(dto.certificate.privateKey),
+                privateKeyPassword: Value(dto.certificate.privateKeyPassword),
+                passwordForPfx: Value(dto.certificate.passwordForPfx),
+                keyAlgorithm: Value(dto.certificate.keyAlgorithm),
+                keyAlgorithmOther: Value(dto.certificate.keyAlgorithmOther),
+                keySize: Value(dto.certificate.keySize),
+                serialNumber: Value(dto.certificate.serialNumber),
+                issuer: Value(dto.certificate.issuer),
+                subject: Value(dto.certificate.subject),
+                validFrom: Value(dto.certificate.validFrom),
+                validTo: Value(dto.certificate.validTo),
+              ),
+            );
 
         return itemId;
       }),
@@ -78,27 +82,28 @@ class CertificateRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
 
-        await (db.update(db.certificateItems)
-              ..where((tbl) => tbl.itemId.equals(itemId)))
-            .write(
+        await (db.update(
+          db.certificateItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
           CertificateItemsCompanion(
             certificateFormat: dto.certificate.certificateFormat
                 .toNullableValue(),
@@ -144,14 +149,17 @@ class CertificateRepository {
   AsyncDbResult<Optional<CertificateViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.certificateItems,
-            db.certificateItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.certificate));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.certificateItems,
+                  db.certificateItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(
+                db.vaultItems.type.equalsValue(VaultItemType.certificate),
+              );
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -159,10 +167,12 @@ class CertificateRepository {
         final item = row.readTable(db.vaultItems);
         final certificate = row.readTable(db.certificateItems);
 
-        return Some(CertificateViewDto(
-          item: item.toVaultItemViewDto(),
-          certificate: certificate.toCertificateDataDto(),
-        ));
+        return Some(
+          CertificateViewDto(
+            item: item.toVaultItemViewDto(),
+            certificate: certificate.toCertificateDataDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -225,9 +235,9 @@ class CertificateRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }

@@ -30,7 +30,8 @@ class DocumentVersionPolicyService {
     }
 
     if (dto.documentType == DocumentType.other &&
-        (dto.documentTypeOther == null || dto.documentTypeOther!.trim().isEmpty)) {
+        (dto.documentTypeOther == null ||
+            dto.documentTypeOther!.trim().isEmpty)) {
       return const Failure(
         DBCoreError.validation(
           code: 'document.version.create.type_other_empty',
@@ -40,7 +41,8 @@ class DocumentVersionPolicyService {
       );
     }
 
-    if (dto.documentType != DocumentType.other && dto.documentTypeOther != null) {
+    if (dto.documentType != DocumentType.other &&
+        dto.documentTypeOther != null) {
       return const Failure(
         DBCoreError.validation(
           code: 'document.version.create.type_other_not_null',
@@ -50,7 +52,8 @@ class DocumentVersionPolicyService {
       );
     }
 
-    if (dto.aggregateSha256Hash != null && dto.aggregateSha256Hash!.trim().isEmpty) {
+    if (dto.aggregateSha256Hash != null &&
+        dto.aggregateSha256Hash!.trim().isEmpty) {
       return const Failure(
         DBCoreError.validation(
           code: 'document.version.create.aggregate_hash_empty',

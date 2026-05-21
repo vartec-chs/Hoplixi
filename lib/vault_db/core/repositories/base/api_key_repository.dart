@@ -22,40 +22,44 @@ class ApiKeyRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.apiKey,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.apiKey,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.apiKeyItems).insert(
-          ApiKeyItemsCompanion.insert(
-            itemId: itemId,
-            service: dto.apiKey.service,
-            key: dto.apiKey.key,
-            tokenType: Value(dto.apiKey.tokenType),
-            tokenTypeOther: Value(dto.apiKey.tokenTypeOther),
-            environment: Value(dto.apiKey.environment),
-            environmentOther: Value(dto.apiKey.environmentOther),
-            expiresAt: Value(dto.apiKey.expiresAt),
-            revoked: Value(dto.apiKey.revokedAt != null),
-            revokedAt: Value(dto.apiKey.revokedAt),
-            rotationPeriodDays: Value(dto.apiKey.rotationPeriodDays),
-            lastRotatedAt: Value(dto.apiKey.lastRotatedAt),
-            owner: Value(dto.apiKey.owner),
-            baseUrl: Value(dto.apiKey.baseUrl),
-            scopesText: Value(dto.apiKey.scopesText),
-          ),
-        );
+        await db
+            .into(db.apiKeyItems)
+            .insert(
+              ApiKeyItemsCompanion.insert(
+                itemId: itemId,
+                service: dto.apiKey.service,
+                key: dto.apiKey.key,
+                tokenType: Value(dto.apiKey.tokenType),
+                tokenTypeOther: Value(dto.apiKey.tokenTypeOther),
+                environment: Value(dto.apiKey.environment),
+                environmentOther: Value(dto.apiKey.environmentOther),
+                expiresAt: Value(dto.apiKey.expiresAt),
+                revoked: Value(dto.apiKey.revokedAt != null),
+                revokedAt: Value(dto.apiKey.revokedAt),
+                rotationPeriodDays: Value(dto.apiKey.rotationPeriodDays),
+                lastRotatedAt: Value(dto.apiKey.lastRotatedAt),
+                owner: Value(dto.apiKey.owner),
+                baseUrl: Value(dto.apiKey.baseUrl),
+                scopesText: Value(dto.apiKey.scopesText),
+              ),
+            );
 
         return itemId;
       }),
@@ -75,19 +79,20 @@ class ApiKeyRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
@@ -142,14 +147,15 @@ class ApiKeyRepository {
   AsyncDbResult<Optional<ApiKeyViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.apiKeyItems,
-            db.apiKeyItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.apiKey));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.apiKeyItems,
+                  db.apiKeyItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.apiKey));
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -157,10 +163,12 @@ class ApiKeyRepository {
         final item = row.readTable(db.vaultItems);
         final apiKey = row.readTable(db.apiKeyItems);
 
-        return Some(ApiKeyViewDto(
-          item: item.toVaultItemViewDto(),
-          apiKey: apiKey.toApiKeyDataDto(),
-        ));
+        return Some(
+          ApiKeyViewDto(
+            item: item.toVaultItemViewDto(),
+            apiKey: apiKey.toApiKeyDataDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -195,7 +203,10 @@ class ApiKeyRepository {
     );
   }
 
-  AsyncDbResult<List<ApiKeyCardDto>> getCards({int limit = 50, int offset = 0}) {
+  AsyncDbResult<List<ApiKeyCardDto>> getCards({
+    int limit = 50,
+    int offset = 0,
+  }) {
     return ResultUtils.tryCatchAsync(
       () async {
         final expr = _ApiKeyCardExpressions(db);
@@ -220,9 +231,9 @@ class ApiKeyRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }

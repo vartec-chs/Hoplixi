@@ -23,27 +23,31 @@ class DocumentRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.document,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.document,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.documentItems).insert(
-          DocumentItemsCompanion.insert(
-            itemId: itemId,
-            currentVersionId: Value(dto.document.currentVersionId),
-          ),
-        );
+        await db
+            .into(db.documentItems)
+            .insert(
+              DocumentItemsCompanion.insert(
+                itemId: itemId,
+                currentVersionId: Value(dto.document.currentVersionId),
+              ),
+            );
 
         return itemId;
       }),
@@ -63,27 +67,28 @@ class DocumentRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
 
-        await (db.update(db.documentItems)
-              ..where((tbl) => tbl.itemId.equals(itemId)))
-            .write(
+        await (db.update(
+          db.documentItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
           DocumentItemsCompanion(
             currentVersionId: dto.document.currentVersionId.toNullableValue(),
           ),
@@ -111,14 +116,15 @@ class DocumentRepository {
   AsyncDbResult<Optional<DocumentViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.documentItems,
-            db.documentItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.document));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.documentItems,
+                  db.documentItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.document));
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -126,10 +132,12 @@ class DocumentRepository {
         final item = row.readTable(db.vaultItems);
         final document = row.readTable(db.documentItems);
 
-        return Some(DocumentViewDto(
-          item: item.toVaultItemViewDto(),
-          document: document.toDocumentDataDto(),
-        ));
+        return Some(
+          DocumentViewDto(
+            item: item.toVaultItemViewDto(),
+            document: document.toDocumentDataDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -190,9 +198,9 @@ class DocumentRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
@@ -285,6 +293,3 @@ class DocumentRepository {
     );
   }
 }
-
-
-  

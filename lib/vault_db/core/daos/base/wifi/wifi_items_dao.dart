@@ -6,8 +6,7 @@ import '../../../tables/wifi/wifi_items.dart';
 part 'wifi_items_dao.g.dart';
 
 @DriftAccessor(tables: [WifiItems])
-class WifiItemsDao extends DatabaseAccessor<VaultDB>
-    with _$WifiItemsDaoMixin {
+class WifiItemsDao extends DatabaseAccessor<VaultDB> with _$WifiItemsDaoMixin {
   WifiItemsDao(super.db);
 
   Future<void> insertWifi(WifiItemsCompanion companion) {

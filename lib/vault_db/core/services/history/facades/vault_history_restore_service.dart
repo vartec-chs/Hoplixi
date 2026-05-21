@@ -49,124 +49,122 @@ class VaultHistoryRestoreService {
     required String historyId,
     bool recreate = false,
   }) {
-    return ResultUtils.tryCatchAsync(
-      () async {
-        final selectedOpt = (await loader.loadHistorySnapshot(historyId))
-            .getOrThrow();
-        final selected = selectedOpt.fold(
-          (s) => s,
-          () => throw DBCoreError.notFound(
-            entity: 'HistorySnapshot',
-            id: historyId,
+    return ResultUtils.tryCatchAsync(() async {
+      final selectedOpt = (await loader.loadHistorySnapshot(
+        historyId,
+      )).getOrThrow();
+      final selected = selectedOpt.fold(
+        (s) => s,
+        () => throw DBCoreError.notFound(
+          entity: 'HistorySnapshot',
+          id: historyId,
+        ),
+      );
+
+      if (!policy.isRestorable(selected)) {
+        throw const DBCoreError.validation(
+          code: 'history.restore.not_restorable',
+          message: 'Эта ревизия не может быть восстановлена',
+        );
+      }
+
+      final handler = restoreHandlerRegistry.get(selected.base.type);
+      if (handler == null) {
+        throw DBCoreError.validation(
+          code: 'history.restore.unsupported_type',
+          message:
+              'Восстановление для типа ${selected.base.type.name} не поддерживается',
+        );
+      }
+
+      return await db.transaction(() async {
+        String? beforeRestoreSnapshotId;
+
+        final currentView = await viewResolver.getView(
+          itemId: selected.base.itemId,
+          type: selected.base.type,
+        );
+
+        if (currentView == null && !recreate) {
+          throw DBCoreError.notFound(
+            entity: selected.base.type.name,
+            id: selected.base.itemId,
+            message:
+                'Live item not found. Use recreate=true to restore deleted physical item.',
+          );
+        }
+
+        if (currentView != null) {
+          if (currentView is! VaultEntityViewDto) {
+            throw DBCoreError.conflict(
+              code: 'history.restore.invalid_current_view',
+              message: 'Current view does not implement VaultEntityViewDto',
+              entity: selected.base.type.name,
+            );
+          }
+
+          final snapshotRes = await snapshotWriter.writeSnapshot(
+            view: currentView,
+            action: VaultEventHistoryAction.restored,
+            includeSecrets: true,
+            includeRelations: true,
+          );
+
+          beforeRestoreSnapshotId = snapshotRes.getOrThrow();
+        }
+
+        await vaultItemsDao.upsertVaultItem(
+          VaultItemsCompanion(
+            id: Value(selected.base.itemId),
+            type: Value(selected.base.type),
+            name: Value(selected.base.name),
+            description: Value(selected.base.description),
+            categoryId: Value(selected.base.categoryId),
+            iconRefId: Value(selected.base.iconRefId),
+            usedCount: Value(selected.base.usedCount),
+            isFavorite: Value(selected.base.isFavorite),
+            isArchived: Value(selected.base.isArchived),
+            isPinned: Value(selected.base.isPinned),
+            isDeleted: const Value(false), // Always restore as active
+            createdAt: Value(selected.base.createdAt),
+            modifiedAt: Value(DateTime.now()), // Updated modification time
+            lastUsedAt: Value(selected.base.lastUsedAt),
+            archivedAt: Value(selected.base.archivedAt),
+            deletedAt: const Value(null),
+            recentScore: Value(selected.base.recentScore),
           ),
         );
 
-        if (!policy.isRestorable(selected)) {
-          throw const DBCoreError.validation(
-            code: 'history.restore.not_restorable',
-            message: 'Эта ревизия не может быть восстановлена',
-          );
-        }
+        (await handler.restoreTypeSpecific(
+          base: selected.base,
+          payload: selected.payload,
+        )).getOrThrow();
 
-        final handler = restoreHandlerRegistry.get(selected.base.type);
-        if (handler == null) {
-          throw DBCoreError.validation(
-            code: 'history.restore.unsupported_type',
-            message:
-                'Восстановление для типа ${selected.base.type.name} не поддерживается',
-          );
-        }
+        (await customFieldsRestoreService.restoreCustomFieldsForSnapshot(
+          itemId: selected.base.itemId,
+          snapshotHistoryId: selected.base.historyId,
+        )).getOrThrow();
 
-        return await db.transaction(() async {
-          String? beforeRestoreSnapshotId;
+        (await tagsRestoreService.restoreTagsForSnapshot(
+          itemId: selected.base.itemId,
+          snapshotHistoryId: selected.base.historyId,
+        )).getOrThrow();
 
-          final currentView = await viewResolver.getView(
-            itemId: selected.base.itemId,
-            type: selected.base.type,
-          );
+        (await itemLinksRestoreService.restoreLinksForSnapshot(
+          itemId: selected.base.itemId,
+          snapshotHistoryId: selected.base.historyId,
+        )).getOrThrow();
 
-          if (currentView == null && !recreate) {
-            throw DBCoreError.notFound(
-              entity: selected.base.type.name,
-              id: selected.base.itemId,
-              message:
-                  'Live item not found. Use recreate=true to restore deleted physical item.',
-            );
-          }
+        (await eventHistoryRepository.writeEvent(
+          itemId: selected.base.itemId,
+          type: selected.base.type,
+          action: VaultEventHistoryAction.restored,
+          name: selected.base.name,
+          snapshotHistoryId: beforeRestoreSnapshotId,
+        )).getOrThrow();
 
-          if (currentView != null) {
-            if (currentView is! VaultEntityViewDto) {
-              throw DBCoreError.conflict(
-                code: 'history.restore.invalid_current_view',
-                message: 'Current view does not implement VaultEntityViewDto',
-                entity: selected.base.type.name,
-              );
-            }
-
-            final snapshotRes = await snapshotWriter.writeSnapshot(
-              view: currentView,
-              action: VaultEventHistoryAction.restored,
-              includeSecrets: true,
-              includeRelations: true,
-            );
-
-            beforeRestoreSnapshotId = snapshotRes.getOrThrow();
-          }
-
-          await vaultItemsDao.upsertVaultItem(
-            VaultItemsCompanion(
-              id: Value(selected.base.itemId),
-              type: Value(selected.base.type),
-              name: Value(selected.base.name),
-              description: Value(selected.base.description),
-              categoryId: Value(selected.base.categoryId),
-              iconRefId: Value(selected.base.iconRefId),
-              usedCount: Value(selected.base.usedCount),
-              isFavorite: Value(selected.base.isFavorite),
-              isArchived: Value(selected.base.isArchived),
-              isPinned: Value(selected.base.isPinned),
-              isDeleted: const Value(false), // Always restore as active
-              createdAt: Value(selected.base.createdAt),
-              modifiedAt: Value(DateTime.now()), // Updated modification time
-              lastUsedAt: Value(selected.base.lastUsedAt),
-              archivedAt: Value(selected.base.archivedAt),
-              deletedAt: const Value(null),
-              recentScore: Value(selected.base.recentScore),
-            ),
-          );
-
-          (await handler.restoreTypeSpecific(
-            base: selected.base,
-            payload: selected.payload,
-          )).getOrThrow();
-
-          (await customFieldsRestoreService.restoreCustomFieldsForSnapshot(
-            itemId: selected.base.itemId,
-            snapshotHistoryId: selected.base.historyId,
-          )).getOrThrow();
-
-          (await tagsRestoreService.restoreTagsForSnapshot(
-            itemId: selected.base.itemId,
-            snapshotHistoryId: selected.base.historyId,
-          )).getOrThrow();
-
-          (await itemLinksRestoreService.restoreLinksForSnapshot(
-            itemId: selected.base.itemId,
-            snapshotHistoryId: selected.base.historyId,
-          )).getOrThrow();
-
-          (await eventHistoryRepository.writeEvent(
-            itemId: selected.base.itemId,
-            type: selected.base.type,
-            action: VaultEventHistoryAction.restored,
-            name: selected.base.name,
-            snapshotHistoryId: beforeRestoreSnapshotId,
-          )).getOrThrow();
-
-          return unit;
-        });
-      },
-      (e, st) => e is DBCoreError ? e : mapDbException(e, st),
-    );
+        return unit;
+      });
+    }, (e, st) => e is DBCoreError ? e : mapDbException(e, st));
   }
 }

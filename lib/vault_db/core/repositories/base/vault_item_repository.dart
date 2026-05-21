@@ -46,7 +46,8 @@ class VaultItemRepository {
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при проверке существования элемента заданного типа',
+              message:
+                  'Ошибка при проверке существования элемента заданного типа',
               cause: e,
               stackTrace: st,
             ),
@@ -197,4 +198,3 @@ class VaultItemRepository {
     );
   }
 }
-

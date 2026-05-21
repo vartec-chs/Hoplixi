@@ -65,32 +65,31 @@ class RecoveryCodesHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await recoveryCodesRepository.getViewById(itemId))
-            .getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.recoveryCodes;
-            final codes = view.codes;
+        final viewOpt = (await recoveryCodesRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.recoveryCodes;
+          final codes = view.codes;
 
-            return Some(
-              RecoveryCodesHistoryPayload(
-                codesCount: codes.length,
-                usedCount: codes.where((c) => c.used).length,
-                generatedAt: item.generatedAt,
-                oneTime: item.oneTime,
-                valuesCount: codes.length,
-                missingValuesCount: 0,
-                usedValuesCount: codes.where((c) => c.used).length,
-              ),
-            );
-          },
-          () => const None(),
-        );
+          return Some(
+            RecoveryCodesHistoryPayload(
+              codesCount: codes.length,
+              usedCount: codes.where((c) => c.used).length,
+              generatedAt: item.generatedAt,
+              oneTime: item.oneTime,
+              valuesCount: codes.length,
+              missingValuesCount: 0,
+              usedValuesCount: codes.where((c) => c.used).length,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при нормализации текущего состояния кодов восстановления',
+              message:
+                  'Ошибка при нормализации текущего состояния кодов восстановления',
               cause: e,
               stackTrace: st,
             ),

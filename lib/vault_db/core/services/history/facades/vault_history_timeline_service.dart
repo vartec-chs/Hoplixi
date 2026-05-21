@@ -118,21 +118,18 @@ class VaultHistoryTimelineService {
       historyId: card.snapshot.historyId,
     );
 
-    return detailRes.fold(
-      (detail) {
-        final diffs = [...detail.fieldDiffs, ...detail.customFieldDiffs];
+    return detailRes.fold((detail) {
+      final diffs = [...detail.fieldDiffs, ...detail.customFieldDiffs];
 
-        return _TimelineDiffSummary(
-          changedFieldsCount: diffs.length,
-          changedFieldLabels: diffs
-              .map((d) => d.label)
-              .where((label) => label.trim().isNotEmpty)
-              .take(3)
-              .toList(),
-        );
-      },
-      (error) => _buildLightweightDiffSummary(card),
-    );
+      return _TimelineDiffSummary(
+        changedFieldsCount: diffs.length,
+        changedFieldLabels: diffs
+            .map((d) => d.label)
+            .where((label) => label.trim().isNotEmpty)
+            .take(3)
+            .toList(),
+      );
+    }, (error) => _buildLightweightDiffSummary(card));
   }
 
   List<String> _actionLabels(VaultEventHistoryAction action) {

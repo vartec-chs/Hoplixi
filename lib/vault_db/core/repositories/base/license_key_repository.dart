@@ -22,44 +22,48 @@ class LicenseKeyRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.licenseKey,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.licenseKey,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.licenseKeyItems).insert(
-          LicenseKeyItemsCompanion.insert(
-            itemId: itemId,
-            productName: dto.licenseKey.productName,
-            vendor: Value(dto.licenseKey.vendor),
-            licenseKey: dto.licenseKey.licenseKey,
-            licenseType: Value(dto.licenseKey.licenseType),
-            licenseTypeOther: Value(dto.licenseKey.licenseTypeOther),
-            accountEmail: Value(dto.licenseKey.accountEmail),
-            accountUsername: Value(dto.licenseKey.accountUsername),
-            purchaseEmail: Value(dto.licenseKey.purchaseEmail),
-            orderNumber: Value(dto.licenseKey.orderNumber),
-            purchaseDate: Value(dto.licenseKey.purchaseDate),
-            purchasePrice: Value(dto.licenseKey.purchasePrice),
-            currency: Value(dto.licenseKey.currency),
-            validFrom: Value(dto.licenseKey.validFrom),
-            validTo: Value(dto.licenseKey.validTo),
-            renewalDate: Value(dto.licenseKey.renewalDate),
-            seats: Value(dto.licenseKey.seats),
-            activationLimit: Value(dto.licenseKey.activationLimit),
-            activationsUsed: Value(dto.licenseKey.activationsUsed),
-          ),
-        );
+        await db
+            .into(db.licenseKeyItems)
+            .insert(
+              LicenseKeyItemsCompanion.insert(
+                itemId: itemId,
+                productName: dto.licenseKey.productName,
+                vendor: Value(dto.licenseKey.vendor),
+                licenseKey: dto.licenseKey.licenseKey,
+                licenseType: Value(dto.licenseKey.licenseType),
+                licenseTypeOther: Value(dto.licenseKey.licenseTypeOther),
+                accountEmail: Value(dto.licenseKey.accountEmail),
+                accountUsername: Value(dto.licenseKey.accountUsername),
+                purchaseEmail: Value(dto.licenseKey.purchaseEmail),
+                orderNumber: Value(dto.licenseKey.orderNumber),
+                purchaseDate: Value(dto.licenseKey.purchaseDate),
+                purchasePrice: Value(dto.licenseKey.purchasePrice),
+                currency: Value(dto.licenseKey.currency),
+                validFrom: Value(dto.licenseKey.validFrom),
+                validTo: Value(dto.licenseKey.validTo),
+                renewalDate: Value(dto.licenseKey.renewalDate),
+                seats: Value(dto.licenseKey.seats),
+                activationLimit: Value(dto.licenseKey.activationLimit),
+                activationsUsed: Value(dto.licenseKey.activationsUsed),
+              ),
+            );
 
         return itemId;
       }),
@@ -79,27 +83,28 @@ class LicenseKeyRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
 
-        await (db.update(db.licenseKeyItems)
-              ..where((tbl) => tbl.itemId.equals(itemId)))
-            .write(
+        await (db.update(
+          db.licenseKeyItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
           LicenseKeyItemsCompanion(
             productName: dto.licenseKey.productName.toRequiredValue(),
             vendor: dto.licenseKey.vendor.toNullableValue(),
@@ -144,14 +149,15 @@ class LicenseKeyRepository {
   AsyncDbResult<Optional<LicenseKeyViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.licenseKeyItems,
-            db.licenseKeyItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.licenseKey));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.licenseKeyItems,
+                  db.licenseKeyItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.licenseKey));
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -159,10 +165,12 @@ class LicenseKeyRepository {
         final item = row.readTable(db.vaultItems);
         final licenseKey = row.readTable(db.licenseKeyItems);
 
-        return Some(LicenseKeyViewDto(
-          item: item.toVaultItemViewDto(),
-          licenseKey: licenseKey.toLicenseKeyDataDto(),
-        ));
+        return Some(
+          LicenseKeyViewDto(
+            item: item.toVaultItemViewDto(),
+            licenseKey: licenseKey.toLicenseKeyDataDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -225,9 +233,9 @@ class LicenseKeyRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }

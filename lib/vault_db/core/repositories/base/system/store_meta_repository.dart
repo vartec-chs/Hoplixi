@@ -68,10 +68,7 @@ class StoreMetaRepository {
   }
 
   /// Обновить информацию о хранилище (имя, описание).
-  AsyncDbResult<Unit> updateInfo({
-    required String name,
-    String? description,
-  }) {
+  AsyncDbResult<Unit> updateInfo({required String name, String? description}) {
     return ResultUtils.tryCatchAsync(
       () async {
         final rows = await db.storeMetaDao.updateStoreMeta(
@@ -83,7 +80,10 @@ class StoreMetaRepository {
         );
 
         if (rows == 0) {
-          throw const DBCoreError.notFound(entity: 'store_meta', id: 'singleton');
+          throw const DBCoreError.notFound(
+            entity: 'store_meta',
+            id: 'singleton',
+          );
         }
         return unit;
       },
@@ -216,5 +216,3 @@ class StoreMetaRepository {
     );
   }
 }
-
-

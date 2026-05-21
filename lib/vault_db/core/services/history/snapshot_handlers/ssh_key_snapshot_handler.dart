@@ -58,4 +58,3 @@ class SshKeySnapshotHandler implements VaultSnapshotTypeHandler {
     );
   }
 }
-

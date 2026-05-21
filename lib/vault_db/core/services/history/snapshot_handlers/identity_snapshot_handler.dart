@@ -52,7 +52,9 @@ class IdentitySnapshotHandler implements VaultSnapshotTypeHandler {
             website: Value(identity.website),
             taxId: Value(includeSecrets ? identity.taxId : null),
             nationalId: Value(includeSecrets ? identity.nationalId : null),
-            passportNumber: Value(includeSecrets ? identity.passportNumber : null),
+            passportNumber: Value(
+              includeSecrets ? identity.passportNumber : null,
+            ),
             driverLicenseNumber: Value(
               includeSecrets ? identity.driverLicenseNumber : null,
             ),

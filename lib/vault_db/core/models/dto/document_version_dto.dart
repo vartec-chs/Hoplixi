@@ -1,6 +1,5 @@
 import 'package:hoplixi/vault_db/core/tables/tables.dart';
 
-
 class CreateDocumentVersionPageDto {
   const CreateDocumentVersionPageDto({
     this.pageId,

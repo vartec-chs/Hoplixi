@@ -48,8 +48,12 @@ class BankCardSnapshotHandler implements VaultSnapshotTypeHandler {
             expiryYear: Value(bankCard.expiryYear),
             cvv: Value(includeSecrets ? bankCard.cvv : null),
             bankName: Value(bankCard.bankName),
-            accountNumber: Value(includeSecrets ? bankCard.accountNumber : null),
-            routingNumber: Value(includeSecrets ? bankCard.routingNumber : null),
+            accountNumber: Value(
+              includeSecrets ? bankCard.accountNumber : null,
+            ),
+            routingNumber: Value(
+              includeSecrets ? bankCard.routingNumber : null,
+            ),
           ),
         );
 

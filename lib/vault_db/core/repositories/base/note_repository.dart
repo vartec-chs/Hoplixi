@@ -21,28 +21,32 @@ class NoteRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.note,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.note,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.noteItems).insert(
-          NoteItemsCompanion.insert(
-            itemId: itemId,
-            deltaJson: dto.note.deltaJson,
-            content: dto.note.content,
-          ),
-        );
+        await db
+            .into(db.noteItems)
+            .insert(
+              NoteItemsCompanion.insert(
+                itemId: itemId,
+                deltaJson: dto.note.deltaJson,
+                content: dto.note.content,
+              ),
+            );
 
         return itemId;
       }),
@@ -62,26 +66,28 @@ class NoteRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
 
-        await (db.update(db.noteItems)..where((tbl) => tbl.itemId.equals(itemId)))
-            .write(
+        await (db.update(
+          db.noteItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
           NoteItemsCompanion(
             deltaJson: dto.note.deltaJson.toRequiredValue(),
             content: dto.note.content.toRequiredValue(),
@@ -102,14 +108,15 @@ class NoteRepository {
   AsyncDbResult<Optional<NoteViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.noteItems,
-            db.noteItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.note));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.noteItems,
+                  db.noteItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.note));
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -117,10 +124,12 @@ class NoteRepository {
         final item = row.readTable(db.vaultItems);
         final note = row.readTable(db.noteItems);
 
-        return Some(NoteViewDto(
-          item: item.toVaultItemViewDto(),
-          note: note.toNoteDataDto(),
-        ));
+        return Some(
+          NoteViewDto(
+            item: item.toVaultItemViewDto(),
+            note: note.toNoteDataDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -178,9 +187,9 @@ class NoteRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
@@ -244,4 +253,3 @@ class NoteRepository {
     );
   }
 }
-

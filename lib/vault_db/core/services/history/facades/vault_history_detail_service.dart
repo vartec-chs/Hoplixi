@@ -25,8 +25,9 @@ class VaultHistoryDetailService {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final selectedOpt = (await loader.loadHistorySnapshot(historyId))
-            .getOrThrow();
+        final selectedOpt = (await loader.loadHistorySnapshot(
+          historyId,
+        )).getOrThrow();
         final selected = selectedOpt.fold(
           (s) => s,
           () => throw DBCoreError.notFound(

@@ -27,22 +27,19 @@ class VaultHistoryService {
     bool includeSecrets = true,
     bool includeRelations = true,
   }) {
-    return ResultUtils.tryCatchAsync(
-      () async {
-        if (!await policyService.isHistoryEnabled()) {
-          return const None();
-        }
+    return ResultUtils.tryCatchAsync(() async {
+      if (!await policyService.isHistoryEnabled()) {
+        return const None();
+      }
 
-        final result = await snapshotWriter.writeSnapshot(
-          view: createdView,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        );
-        return Some(result.getOrThrow());
-      },
-      (e, st) => e is DBCoreError ? e : mapDbException(e, st),
-    );
+      final result = await snapshotWriter.writeSnapshot(
+        view: createdView,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      );
+      return Some(result.getOrThrow());
+    }, (e, st) => e is DBCoreError ? e : mapDbException(e, st));
   }
 
   AsyncDbResult<Optional<String>> snapshotBeforeUpdate({
@@ -51,22 +48,19 @@ class VaultHistoryService {
     bool includeSecrets = true,
     bool includeRelations = true,
   }) {
-    return ResultUtils.tryCatchAsync(
-      () async {
-        if (!await policyService.isHistoryEnabled()) {
-          return const None();
-        }
+    return ResultUtils.tryCatchAsync(() async {
+      if (!await policyService.isHistoryEnabled()) {
+        return const None();
+      }
 
-        final result = await snapshotWriter.writeSnapshot(
-          view: oldView,
-          action: action,
-          includeSecrets: includeSecrets,
-          includeRelations: includeRelations,
-        );
-        return Some(result.getOrThrow());
-      },
-      (e, st) => e is DBCoreError ? e : mapDbException(e, st),
-    );
+      final result = await snapshotWriter.writeSnapshot(
+        view: oldView,
+        action: action,
+        includeSecrets: includeSecrets,
+        includeRelations: includeRelations,
+      );
+      return Some(result.getOrThrow());
+    }, (e, st) => e is DBCoreError ? e : mapDbException(e, st));
   }
 
   AsyncDbResult<Unit> writeEvent({
@@ -78,21 +72,18 @@ class VaultHistoryService {
     String? snapshotHistoryId,
     VaultHistoryActorType actorType = VaultHistoryActorType.user,
   }) {
-    return ResultUtils.tryCatchAsync(
-      () async {
-        // Согласно рекомендации: event пишем всегда, snapshot только если включен.
-        (await eventHistoryRepository.writeEvent(
-          itemId: itemId,
-          type: type,
-          action: action,
-          name: name,
-          description: description,
-          snapshotHistoryId: snapshotHistoryId,
-          actorType: actorType,
-        )).getOrThrow();
-        return unit;
-      },
-      (e, st) => e is DBCoreError ? e : mapDbException(e, st),
-    );
+    return ResultUtils.tryCatchAsync(() async {
+      // Согласно рекомендации: event пишем всегда, snapshot только если включен.
+      (await eventHistoryRepository.writeEvent(
+        itemId: itemId,
+        type: type,
+        action: action,
+        name: name,
+        description: description,
+        snapshotHistoryId: snapshotHistoryId,
+        actorType: actorType,
+      )).getOrThrow();
+      return unit;
+    }, (e, st) => e is DBCoreError ? e : mapDbException(e, st));
   }
 }

@@ -71,41 +71,40 @@ class LicenseKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await licenseKeyRepository.getViewById(itemId))
-            .getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.licenseKey;
-            return Some(
-              LicenseKeyHistoryPayload(
-                productName: item.productName,
-                vendor: item.vendor,
-                licenseKey: item.licenseKey,
-                licenseType: item.licenseType,
-                licenseTypeOther: item.licenseTypeOther,
-                accountEmail: item.accountEmail,
-                accountUsername: item.accountUsername,
-                purchaseEmail: item.purchaseEmail,
-                orderNumber: item.orderNumber,
-                purchaseDate: item.purchaseDate,
-                purchasePrice: item.purchasePrice,
-                currency: item.currency,
-                validFrom: item.validFrom,
-                validTo: item.validTo,
-                renewalDate: item.renewalDate,
-                seats: item.seats,
-                activationLimit: item.activationLimit,
-                activationsUsed: item.activationsUsed,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await licenseKeyRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.licenseKey;
+          return Some(
+            LicenseKeyHistoryPayload(
+              productName: item.productName,
+              vendor: item.vendor,
+              licenseKey: item.licenseKey,
+              licenseType: item.licenseType,
+              licenseTypeOther: item.licenseTypeOther,
+              accountEmail: item.accountEmail,
+              accountUsername: item.accountUsername,
+              purchaseEmail: item.purchaseEmail,
+              orderNumber: item.orderNumber,
+              purchaseDate: item.purchaseDate,
+              purchasePrice: item.purchasePrice,
+              currency: item.currency,
+              validFrom: item.validFrom,
+              validTo: item.validTo,
+              renewalDate: item.renewalDate,
+              seats: item.seats,
+              activationLimit: item.activationLimit,
+              activationsUsed: item.activationsUsed,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при нормализации текущего состояния лицензионного ключа',
+              message:
+                  'Ошибка при нормализации текущего состояния лицензионного ключа',
               cause: e,
               stackTrace: st,
             ),

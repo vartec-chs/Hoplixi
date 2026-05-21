@@ -66,8 +66,9 @@ class DocumentVersionRepository {
   AsyncDbResult<Optional<int>> getMaxVersionNumber(String documentId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final data =
-            await db.documentVersionsDao.getMaxVersionNumber(documentId);
+        final data = await db.documentVersionsDao.getMaxVersionNumber(
+          documentId,
+        );
         return Optional.fromNullable(data);
       },
       (e, st) => e is DBCoreError
@@ -146,4 +147,3 @@ class DocumentVersionRepository {
     );
   }
 }
-

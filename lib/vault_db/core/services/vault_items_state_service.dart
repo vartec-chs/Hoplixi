@@ -130,13 +130,10 @@ class VaultItemsStateService {
 
         final VaultEntityViewDto oldView = untypedOldView as VaultEntityViewDto;
 
-        final snapshotRes = await historyService.snapshotBeforeUpdate(
+        final snapshotRes = (await historyService.snapshotBeforeUpdate(
           oldView: oldView,
           action: action,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) {
-          throw snapshotRes.exceptionOrNull()!;
-        }
+        )).getOrThrow();
 
         final now = DateTime.now();
         await mutate(now);
@@ -146,7 +143,7 @@ class VaultItemsStateService {
           type: type,
           action: action,
           name: oldView.item.name,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
+          snapshotHistoryId: snapshotRes.getOrNull(),
         );
         if (eventRes.isError()) {
           throw eventRes.exceptionOrNull()!;

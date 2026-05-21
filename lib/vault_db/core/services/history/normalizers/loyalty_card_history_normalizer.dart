@@ -65,35 +65,34 @@ class LoyaltyCardHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await loyaltyCardRepository.getViewById(itemId))
-            .getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.loyaltyCard;
-            return Some(
-              LoyaltyCardHistoryPayload(
-                programName: item.programName,
-                cardNumber: item.cardNumber,
-                barcodeValue: item.barcodeValue,
-                password: item.password,
-                barcodeType: item.barcodeType,
-                barcodeTypeOther: item.barcodeTypeOther,
-                issuer: item.issuer,
-                website: item.website,
-                phone: item.phone,
-                email: item.email,
-                validFrom: item.validFrom,
-                validTo: item.validTo,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await loyaltyCardRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.loyaltyCard;
+          return Some(
+            LoyaltyCardHistoryPayload(
+              programName: item.programName,
+              cardNumber: item.cardNumber,
+              barcodeValue: item.barcodeValue,
+              password: item.password,
+              barcodeType: item.barcodeType,
+              barcodeTypeOther: item.barcodeTypeOther,
+              issuer: item.issuer,
+              website: item.website,
+              phone: item.phone,
+              email: item.email,
+              validFrom: item.validFrom,
+              validTo: item.validTo,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при нормализации текущего состояния карты лояльности',
+              message:
+                  'Ошибка при нормализации текущего состояния карты лояльности',
               cause: e,
               stackTrace: st,
             ),

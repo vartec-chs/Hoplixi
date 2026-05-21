@@ -70,39 +70,38 @@ class IdentityHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await identityRepository.getViewById(itemId))
-            .getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.identity;
-            return Some(
-              IdentityHistoryPayload(
-                firstName: item.firstName,
-                middleName: item.middleName,
-                lastName: item.lastName,
-                displayName: item.displayName,
-                username: item.username,
-                email: item.email,
-                phone: item.phone,
-                address: item.address,
-                birthday: item.birthday,
-                company: item.company,
-                jobTitle: item.jobTitle,
-                website: item.website,
-                taxId: item.taxId,
-                nationalId: item.nationalId,
-                passportNumber: item.passportNumber,
-                driverLicenseNumber: item.driverLicenseNumber,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await identityRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.identity;
+          return Some(
+            IdentityHistoryPayload(
+              firstName: item.firstName,
+              middleName: item.middleName,
+              lastName: item.lastName,
+              displayName: item.displayName,
+              username: item.username,
+              email: item.email,
+              phone: item.phone,
+              address: item.address,
+              birthday: item.birthday,
+              company: item.company,
+              jobTitle: item.jobTitle,
+              website: item.website,
+              taxId: item.taxId,
+              nationalId: item.nationalId,
+              passportNumber: item.passportNumber,
+              driverLicenseNumber: item.driverLicenseNumber,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при нормализации текущего состояния идентификатора',
+              message:
+                  'Ошибка при нормализации текущего состояния идентификатора',
               cause: e,
               stackTrace: st,
             ),

@@ -62,23 +62,20 @@ class WifiHistoryNormalizer implements VaultHistoryTypeNormalizer {
     return ResultUtils.tryCatchAsync(
       () async {
         final viewOpt = (await wifiRepository.getViewById(itemId)).getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.wifi;
-            return Some(
-              WifiHistoryPayload(
-                ssid: item.ssid,
-                password: item.password,
-                securityType: item.securityType,
-                securityTypeOther: item.securityTypeOther,
-                encryption: item.encryption,
-                encryptionOther: item.encryptionOther,
-                hiddenSsid: item.hiddenSsid,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        return viewOpt.fold((view) {
+          final item = view.wifi;
+          return Some(
+            WifiHistoryPayload(
+              ssid: item.ssid,
+              password: item.password,
+              securityType: item.securityType,
+              securityTypeOther: item.securityTypeOther,
+              encryption: item.encryption,
+              encryptionOther: item.encryptionOther,
+              hiddenSsid: item.hiddenSsid,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

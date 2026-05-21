@@ -42,13 +42,10 @@ class WifiService extends BaseVaultEntityService<WifiRepository> {
         );
 
         // 4. Пишем snapshot created (After create)
-        final snapshotRes = await historyService.snapshotAfterCreate(
+        final snapshotRes = (await historyService.snapshotAfterCreate(
           createdView: createdView,
           action: VaultEventHistoryAction.created,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) {
-          throw snapshotRes.exceptionOrNull()!;
-        }
+        )).getOrThrow();
 
         // 5. Пишем event created
         final eventRes = await historyService.writeEvent(
@@ -56,7 +53,7 @@ class WifiService extends BaseVaultEntityService<WifiRepository> {
           type: VaultItemType.wifi,
           action: VaultEventHistoryAction.created,
           name: createdView.item.name,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
+          snapshotHistoryId: snapshotRes.getOrNull(),
         );
         if (eventRes.isError()) {
           throw eventRes.exceptionOrNull()!;
@@ -80,7 +77,9 @@ class WifiService extends BaseVaultEntityService<WifiRepository> {
         final itemId = dto.item.itemId;
 
         // 1. Получаем старое состояние для snapshot
-        final oldView = (await repository.getViewById(itemId)).getOrThrow().getOrNull();
+        final oldView = (await repository.getViewById(
+          itemId,
+        )).getOrThrow().getOrNull();
         if (oldView == null) {
           throw DBCoreError.notFound(
             entity: 'wifi',
@@ -90,13 +89,10 @@ class WifiService extends BaseVaultEntityService<WifiRepository> {
         }
 
         // 2. Пишем snapshot before update
-        final snapshotRes = await historyService.snapshotBeforeUpdate(
+        final snapshotRes = (await historyService.snapshotBeforeUpdate(
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) {
-          throw snapshotRes.exceptionOrNull()!;
-        }
+        )).getOrThrow();
 
         // 3. Обновляем данные в репозитории
         (await repository.update(dto)).getOrThrow();
@@ -117,7 +113,7 @@ class WifiService extends BaseVaultEntityService<WifiRepository> {
           type: VaultItemType.wifi,
           action: VaultEventHistoryAction.updated,
           name: dto.item.name.valueOrNull ?? oldView.item.name,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
+          snapshotHistoryId: snapshotRes.getOrNull(),
         );
         if (eventRes.isError()) {
           throw eventRes.exceptionOrNull()!;

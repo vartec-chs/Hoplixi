@@ -59,23 +59,21 @@ class PasswordHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await passwordRepository.getViewById(itemId))
-            .getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.password;
-            return Some(
-              PasswordHistoryPayload(
-                login: item.login,
-                email: item.email,
-                password: item.password,
-                url: item.url,
-                expiresAt: item.expiresAt,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await passwordRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.password;
+          return Some(
+            PasswordHistoryPayload(
+              login: item.login,
+              email: item.email,
+              password: item.password,
+              url: item.url,
+              expiresAt: item.expiresAt,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

@@ -22,38 +22,42 @@ class BankCardRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.bankCard,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.bankCard,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.bankCardItems).insert(
-          BankCardItemsCompanion.insert(
-            itemId: itemId,
-            cardholderName: Value(dto.bankCard.cardholderName),
-            cardNumber: dto.bankCard.cardNumber,
-            cardType: Value(dto.bankCard.cardType),
-            cardTypeOther: Value(dto.bankCard.cardTypeOther),
-            cardNetwork: Value(dto.bankCard.cardNetwork),
-            cardNetworkOther: Value(dto.bankCard.cardNetworkOther),
-            expiryMonth: Value(dto.bankCard.expiryMonth),
-            expiryYear: Value(dto.bankCard.expiryYear),
-            cvv: Value(dto.bankCard.cvv),
-            bankName: Value(dto.bankCard.bankName),
-            accountNumber: Value(dto.bankCard.accountNumber),
-            routingNumber: Value(dto.bankCard.routingNumber),
-          ),
-        );
+        await db
+            .into(db.bankCardItems)
+            .insert(
+              BankCardItemsCompanion.insert(
+                itemId: itemId,
+                cardholderName: Value(dto.bankCard.cardholderName),
+                cardNumber: dto.bankCard.cardNumber,
+                cardType: Value(dto.bankCard.cardType),
+                cardTypeOther: Value(dto.bankCard.cardTypeOther),
+                cardNetwork: Value(dto.bankCard.cardNetwork),
+                cardNetworkOther: Value(dto.bankCard.cardNetworkOther),
+                expiryMonth: Value(dto.bankCard.expiryMonth),
+                expiryYear: Value(dto.bankCard.expiryYear),
+                cvv: Value(dto.bankCard.cvv),
+                bankName: Value(dto.bankCard.bankName),
+                accountNumber: Value(dto.bankCard.accountNumber),
+                routingNumber: Value(dto.bankCard.routingNumber),
+              ),
+            );
 
         return itemId;
       }),
@@ -73,19 +77,20 @@ class BankCardRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
@@ -132,14 +137,15 @@ class BankCardRepository {
   AsyncDbResult<Optional<BankCardViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.bankCardItems,
-            db.bankCardItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.bankCardItems,
+                  db.bankCardItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.bankCard));
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -147,10 +153,12 @@ class BankCardRepository {
         final item = row.readTable(db.vaultItems);
         final bankCard = row.readTable(db.bankCardItems);
 
-        return Some(BankCardViewDto(
-          item: item.toVaultItemViewDto(),
-          bankCard: bankCard.toBankCardDataDto(),
-        ));
+        return Some(
+          BankCardViewDto(
+            item: item.toVaultItemViewDto(),
+            bankCard: bankCard.toBankCardDataDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -213,9 +221,9 @@ class BankCardRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final count = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final count = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (count == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }

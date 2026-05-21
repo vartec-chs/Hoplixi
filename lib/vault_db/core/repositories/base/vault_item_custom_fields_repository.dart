@@ -24,7 +24,10 @@ class VaultItemCustomFieldsRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(String id, VaultItemCustomFieldsCompanion companion) {
+  AsyncDbResult<Unit> update(
+    String id,
+    VaultItemCustomFieldsCompanion companion,
+  ) {
     return ResultUtils.tryCatchAsync(
       () async {
         await db.vaultItemCustomFieldsDao.updateCustomFieldById(id, companion);
@@ -69,7 +72,9 @@ class VaultItemCustomFieldsRepository {
     );
   }
 
-  AsyncDbResult<List<VaultItemCustomFieldsData>> getByItemIds(List<String> itemIds) {
+  AsyncDbResult<List<VaultItemCustomFieldsData>> getByItemIds(
+    List<String> itemIds,
+  ) {
     return ResultUtils.tryCatchAsync(
       () => db.vaultItemCustomFieldsDao.getCustomFieldsByItemIds(itemIds),
       (e, st) => e is DBCoreError
@@ -136,4 +141,3 @@ class VaultItemCustomFieldsRepository {
     );
   }
 }
-

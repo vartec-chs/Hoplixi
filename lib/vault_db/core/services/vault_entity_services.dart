@@ -30,12 +30,12 @@ class VaultEntityServices {
     required VaultHistoryService historyService,
     required VaultItemsStateService vaultItemsStateService,
   }) : _deps = VaultEntityServiceDeps(
-          db: db,
-          repositories: repositories,
-          relationsService: relationsService,
-          historyService: historyService,
-          vaultItemsStateService: vaultItemsStateService,
-        );
+         db: db,
+         repositories: repositories,
+         relationsService: relationsService,
+         historyService: historyService,
+         vaultItemsStateService: vaultItemsStateService,
+       );
 
   final VaultEntityServiceDeps _deps;
 
@@ -94,10 +94,7 @@ class VaultEntityServices {
     repository: _deps.repositories.note,
   );
 
-  late final otp = OtpService(
-    deps: _deps,
-    repository: _deps.repositories.otp,
-  );
+  late final otp = OtpService(deps: _deps, repository: _deps.repositories.otp);
 
   late final password = PasswordService(
     deps: _deps,

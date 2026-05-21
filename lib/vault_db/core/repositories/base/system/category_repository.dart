@@ -91,7 +91,9 @@ class CategoryRepository {
               );
             }
 
-            final parentExists = await db.categoriesDao.existsCategory(parentId);
+            final parentExists = await db.categoriesDao.existsCategory(
+              parentId,
+            );
             if (!parentExists) {
               throw DBCoreError.notFound(
                 entity: 'categories',
@@ -241,4 +243,3 @@ class CategoryRepository {
     );
   }
 }
-

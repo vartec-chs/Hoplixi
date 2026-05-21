@@ -65,29 +65,27 @@ class ContactHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await contactRepository.getViewById(itemId))
-            .getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.contact;
-            return Some(
-              ContactHistoryPayload(
-                firstName: item.firstName,
-                middleName: item.middleName,
-                lastName: item.lastName,
-                phone: item.phone,
-                email: item.email,
-                company: item.company,
-                jobTitle: item.jobTitle,
-                address: item.address,
-                website: item.website,
-                birthday: item.birthday,
-                isEmergencyContact: item.isEmergencyContact,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await contactRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.contact;
+          return Some(
+            ContactHistoryPayload(
+              firstName: item.firstName,
+              middleName: item.middleName,
+              lastName: item.lastName,
+              phone: item.phone,
+              email: item.email,
+              company: item.company,
+              jobTitle: item.jobTitle,
+              address: item.address,
+              website: item.website,
+              birthday: item.birthday,
+              isEmergencyContact: item.isEmergencyContact,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

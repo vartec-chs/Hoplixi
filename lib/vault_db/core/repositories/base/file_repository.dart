@@ -47,20 +47,22 @@ class FileRepository {
           );
         }
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.file,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.file,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
         await db.fileItemsDao.insertFileItem(
           FileItemsCompanion.insert(
@@ -87,19 +89,20 @@ class FileRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
@@ -145,7 +148,8 @@ class FileRepository {
               availabilityStatus: metadataDto.availabilityStatus
                   .toRequiredValue(),
               integrityStatus: metadataDto.integrityStatus.toRequiredValue(),
-              missingDetectedAt: metadataDto.missingDetectedAt.toNullableValue(),
+              missingDetectedAt: metadataDto.missingDetectedAt
+                  .toNullableValue(),
               deletedAt: metadataDto.deletedAt.toNullableValue(),
               lastIntegrityCheckAt: metadataDto.lastIntegrityCheckAt
                   .toNullableValue(),
@@ -167,18 +171,19 @@ class FileRepository {
   AsyncDbResult<Optional<FileViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.fileItems,
-            db.fileItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-          leftOuterJoin(
-            db.fileMetadata,
-            db.fileMetadata.id.equalsExp(db.fileItems.metadataId),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.file));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.fileItems,
+                  db.fileItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+                leftOuterJoin(
+                  db.fileMetadata,
+                  db.fileMetadata.id.equalsExp(db.fileItems.metadataId),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.file));
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -187,11 +192,13 @@ class FileRepository {
         final fileItem = row.readTable(db.fileItems);
         final metadata = row.readTableOrNull(db.fileMetadata);
 
-        return Some(FileViewDto(
-          item: item.toVaultItemViewDto(),
-          file: fileItem.toFileDataDto(),
-          metadata: metadata?.toFileMetadataViewDto(),
-        ));
+        return Some(
+          FileViewDto(
+            item: item.toVaultItemViewDto(),
+            file: fileItem.toFileDataDto(),
+            metadata: metadata?.toFileMetadataViewDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -251,9 +258,9 @@ class FileRepository {
       () async {
         // Note: file_items will be deleted by cascade.
         // metadata is NOT deleted automatically as it might be shared.
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }

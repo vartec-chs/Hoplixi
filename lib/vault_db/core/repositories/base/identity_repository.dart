@@ -21,42 +21,46 @@ class IdentityRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.identity,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.identity,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.identityItems).insert(
-          IdentityItemsCompanion.insert(
-            itemId: itemId,
-            firstName: Value(dto.identity.firstName),
-            middleName: Value(dto.identity.middleName),
-            lastName: Value(dto.identity.lastName),
-            displayName: Value(dto.identity.displayName),
-            username: Value(dto.identity.username),
-            email: Value(dto.identity.email),
-            phone: Value(dto.identity.phone),
-            address: Value(dto.identity.address),
-            birthday: Value(dto.identity.birthday),
-            company: Value(dto.identity.company),
-            jobTitle: Value(dto.identity.jobTitle),
-            website: Value(dto.identity.website),
-            taxId: Value(dto.identity.taxId),
-            nationalId: Value(dto.identity.nationalId),
-            passportNumber: Value(dto.identity.passportNumber),
-            driverLicenseNumber: Value(dto.identity.driverLicenseNumber),
-          ),
-        );
+        await db
+            .into(db.identityItems)
+            .insert(
+              IdentityItemsCompanion.insert(
+                itemId: itemId,
+                firstName: Value(dto.identity.firstName),
+                middleName: Value(dto.identity.middleName),
+                lastName: Value(dto.identity.lastName),
+                displayName: Value(dto.identity.displayName),
+                username: Value(dto.identity.username),
+                email: Value(dto.identity.email),
+                phone: Value(dto.identity.phone),
+                address: Value(dto.identity.address),
+                birthday: Value(dto.identity.birthday),
+                company: Value(dto.identity.company),
+                jobTitle: Value(dto.identity.jobTitle),
+                website: Value(dto.identity.website),
+                taxId: Value(dto.identity.taxId),
+                nationalId: Value(dto.identity.nationalId),
+                passportNumber: Value(dto.identity.passportNumber),
+                driverLicenseNumber: Value(dto.identity.driverLicenseNumber),
+              ),
+            );
 
         return itemId;
       }),
@@ -76,27 +80,28 @@ class IdentityRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
 
-        await (db.update(db.identityItems)
-              ..where((tbl) => tbl.itemId.equals(itemId)))
-            .write(
+        await (db.update(
+          db.identityItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
           IdentityItemsCompanion(
             firstName: dto.identity.firstName.toNullableValue(),
             middleName: dto.identity.middleName.toNullableValue(),
@@ -132,14 +137,15 @@ class IdentityRepository {
   AsyncDbResult<Optional<IdentityViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.identityItems,
-            db.identityItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.identity));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.identityItems,
+                  db.identityItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.identity));
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -147,10 +153,12 @@ class IdentityRepository {
         final item = row.readTable(db.vaultItems);
         final identity = row.readTable(db.identityItems);
 
-        return Some(IdentityViewDto(
-          item: item.toVaultItemViewDto(),
-          identity: identity.toIdentityDataDto(),
-        ));
+        return Some(
+          IdentityViewDto(
+            item: item.toVaultItemViewDto(),
+            identity: identity.toIdentityDataDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -211,9 +219,9 @@ class IdentityRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
@@ -290,5 +298,3 @@ class IdentityRepository {
     );
   }
 }
-
-

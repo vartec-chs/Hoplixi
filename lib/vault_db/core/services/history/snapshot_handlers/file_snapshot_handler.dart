@@ -46,7 +46,9 @@ class FileSnapshotHandler implements VaultSnapshotTypeHandler {
             FileMetadataHistoryCompanion.insert(
               id: Value(metadataHistoryId),
               historyId: Value(historyId),
-              ownerKind: const Value(FileMetadataHistoryOwnerKind.fileItemHistory),
+              ownerKind: const Value(
+                FileMetadataHistoryOwnerKind.fileItemHistory,
+              ),
               ownerId: Value(historyId),
               metadataId: Value(m.id),
               fileName: m.fileName,

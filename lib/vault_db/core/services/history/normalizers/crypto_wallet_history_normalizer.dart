@@ -67,37 +67,36 @@ class CryptoWalletHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await cryptoWalletRepository.getViewById(itemId))
-            .getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.cryptoWallet;
-            return Some(
-              CryptoWalletHistoryPayload(
-                walletType: item.walletType,
-                walletTypeOther: item.walletTypeOther,
-                network: item.network,
-                networkOther: item.networkOther,
-                mnemonic: item.mnemonic,
-                privateKey: item.privateKey,
-                derivationPath: item.derivationPath,
-                derivationScheme: item.derivationScheme,
-                derivationSchemeOther: item.derivationSchemeOther,
-                addresses: item.addresses,
-                xpub: item.xpub,
-                xprv: item.xprv,
-                hardwareDevice: item.hardwareDevice,
-                watchOnly: item.watchOnly,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await cryptoWalletRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.cryptoWallet;
+          return Some(
+            CryptoWalletHistoryPayload(
+              walletType: item.walletType,
+              walletTypeOther: item.walletTypeOther,
+              network: item.network,
+              networkOther: item.networkOther,
+              mnemonic: item.mnemonic,
+              privateKey: item.privateKey,
+              derivationPath: item.derivationPath,
+              derivationScheme: item.derivationScheme,
+              derivationSchemeOther: item.derivationSchemeOther,
+              addresses: item.addresses,
+              xpub: item.xpub,
+              xprv: item.xprv,
+              hardwareDevice: item.hardwareDevice,
+              watchOnly: item.watchOnly,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при нормализации текущего состояния криптокошелька',
+              message:
+                  'Ошибка при нормализации текущего состояния криптокошелька',
               cause: e,
               stackTrace: st,
             ),

@@ -58,6 +58,4 @@ sealed class PatchStoreDto with _$PatchStoreDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> password,
     @Default(FieldUpdate.keep()) FieldUpdate<bool> saveMasterPassword,
   }) = _PatchStoreDto;
-
 }
-

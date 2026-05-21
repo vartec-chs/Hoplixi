@@ -66,34 +66,34 @@ class BankCardHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await bankCardRepository.getViewById(itemId)).getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.bankCard;
-            return Some(
-              BankCardHistoryPayload(
-                cardholderName: item.cardholderName,
-                cardNumber: item.cardNumber,
-                cardType: item.cardType,
-                cardTypeOther: item.cardTypeOther,
-                cardNetwork: item.cardNetwork,
-                cardNetworkOther: item.cardNetworkOther,
-                expiryMonth: item.expiryMonth,
-                expiryYear: item.expiryYear,
-                cvv: item.cvv,
-                bankName: item.bankName,
-                accountNumber: item.accountNumber,
-                routingNumber: item.routingNumber,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await bankCardRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.bankCard;
+          return Some(
+            BankCardHistoryPayload(
+              cardholderName: item.cardholderName,
+              cardNumber: item.cardNumber,
+              cardType: item.cardType,
+              cardTypeOther: item.cardTypeOther,
+              cardNetwork: item.cardNetwork,
+              cardNetworkOther: item.cardNetworkOther,
+              expiryMonth: item.expiryMonth,
+              expiryYear: item.expiryYear,
+              cvv: item.cvv,
+              bankName: item.bankName,
+              accountNumber: item.accountNumber,
+              routingNumber: item.routingNumber,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при нормализации текущего состояния банковской карты',
+              message:
+                  'Ошибка при нормализации текущего состояния банковской карты',
               cause: e,
               stackTrace: st,
             ),

@@ -61,24 +61,21 @@ class OtpHistoryNormalizer implements VaultHistoryTypeNormalizer {
     return ResultUtils.tryCatchAsync(
       () async {
         final viewOpt = (await otpRepository.getViewById(itemId)).getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.otp;
-            return Some(
-              OtpHistoryPayload(
-                otpType: item.type,
-                issuer: item.issuer,
-                accountName: item.accountName,
-                secret: item.secret,
-                algorithm: item.algorithm,
-                digits: item.digits,
-                period: item.period,
-                counter: item.counter,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        return viewOpt.fold((view) {
+          final item = view.otp;
+          return Some(
+            OtpHistoryPayload(
+              otpType: item.type,
+              issuer: item.issuer,
+              accountName: item.accountName,
+              secret: item.secret,
+              algorithm: item.algorithm,
+              digits: item.digits,
+              period: item.period,
+              counter: item.counter,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

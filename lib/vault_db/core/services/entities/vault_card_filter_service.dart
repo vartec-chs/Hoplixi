@@ -241,7 +241,8 @@ class VaultCardFilterService {
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при получении отфильтрованных лицензионных ключей',
+              message:
+                  'Ошибка при получении отфильтрованных лицензионных ключей',
               cause: e,
               stackTrace: st,
             ),
@@ -379,7 +380,8 @@ class VaultCardFilterService {
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при получении отфильтрованных кодов восстановления',
+              message:
+                  'Ошибка при получении отфильтрованных кодов восстановления',
               cause: e,
               stackTrace: st,
             ),
@@ -455,4 +457,3 @@ class VaultCardFilterService {
     );
   }
 }
-

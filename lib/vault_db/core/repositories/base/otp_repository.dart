@@ -22,34 +22,38 @@ class OtpRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.otp,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.otp,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.otpItems).insert(
-          OtpItemsCompanion.insert(
-            itemId: itemId,
-            type: Value(dto.otp.type),
-            issuer: Value(dto.otp.issuer),
-            accountName: Value(dto.otp.accountName),
-            secret: dto.otp.secret,
-            algorithm: Value(dto.otp.algorithm),
-            digits: Value(dto.otp.digits),
-            period: Value(dto.otp.period),
-            counter: Value(dto.otp.counter),
-          ),
-        );
+        await db
+            .into(db.otpItems)
+            .insert(
+              OtpItemsCompanion.insert(
+                itemId: itemId,
+                type: Value(dto.otp.type),
+                issuer: Value(dto.otp.issuer),
+                accountName: Value(dto.otp.accountName),
+                secret: dto.otp.secret,
+                algorithm: Value(dto.otp.algorithm),
+                digits: Value(dto.otp.digits),
+                period: Value(dto.otp.period),
+                counter: Value(dto.otp.counter),
+              ),
+            );
 
         return itemId;
       }),
@@ -69,26 +73,28 @@ class OtpRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
 
-        await (db.update(db.otpItems)..where((tbl) => tbl.itemId.equals(itemId)))
-            .write(
+        await (db.update(
+          db.otpItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
           OtpItemsCompanion(
             type: dto.otp.type.toRequiredValue(),
             issuer: dto.otp.issuer.toNullableValue(),
@@ -115,14 +121,15 @@ class OtpRepository {
   AsyncDbResult<Optional<OtpViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.otpItems,
-            db.otpItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.otp));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.otpItems,
+                  db.otpItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.otp));
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -130,10 +137,9 @@ class OtpRepository {
         final item = row.readTable(db.vaultItems);
         final otp = row.readTable(db.otpItems);
 
-        return Some(OtpViewDto(
-          item: item.toVaultItemViewDto(),
-          otp: otp.toOtpDataDto(),
-        ));
+        return Some(
+          OtpViewDto(item: item.toVaultItemViewDto(), otp: otp.toOtpDataDto()),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -193,9 +199,9 @@ class OtpRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }

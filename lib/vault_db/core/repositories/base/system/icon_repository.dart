@@ -89,7 +89,9 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<Optional<CustomIconViewDto>> getCustomIcon(String customIconId) {
+  AsyncDbResult<Optional<CustomIconViewDto>> getCustomIcon(
+    String customIconId,
+  ) {
     return ResultUtils.tryCatchAsync(
       () async {
         final row = await db.customIconsDao.getCustomIconById(customIconId);
@@ -232,4 +234,3 @@ class IconRepository {
     );
   }
 }
-

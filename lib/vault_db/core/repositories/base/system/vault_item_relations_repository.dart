@@ -244,7 +244,10 @@ class VaultItemRelationsRepository {
           modifiedAt: drift.Value(DateTime.now()),
         );
 
-        final count = await db.itemLinksDao.updateItemLinkById(dto.id, companion);
+        final count = await db.itemLinksDao.updateItemLinkById(
+          dto.id,
+          companion,
+        );
         if (count == 0) {
           throw DBCoreError.notFound(entity: 'item_links', id: dto.id);
         }
@@ -324,4 +327,3 @@ class VaultItemRelationsRepository {
     );
   }
 }
-

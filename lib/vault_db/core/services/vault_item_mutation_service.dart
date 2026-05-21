@@ -2,7 +2,7 @@ import 'package:hoplixi/vault_db/core/errors/db_error.dart';
 import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-  import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/core/services/history/history.dart';
 import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
 import 'package:hoplixi/vault_db/core/services/vault_typed_view_resolver.dart';
@@ -46,13 +46,10 @@ class VaultItemMutationService {
         final VaultEntityViewDto oldView = untypedOldView as VaultEntityViewDto;
 
         // 2. Пишем snapshot before update
-        final snapshotRes = await historyService.snapshotBeforeUpdate(
+        final snapshotRes = (await historyService.snapshotBeforeUpdate(
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) {
-          throw snapshotRes.exceptionOrNull()!;
-        }
+        )).getOrThrow();
 
         // 3. Заменяем теги
         final res = await relationsService.replaceTags(
@@ -66,7 +63,7 @@ class VaultItemMutationService {
           itemId: itemId,
           type: type,
           action: VaultEventHistoryAction.updated,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
+          snapshotHistoryId: snapshotRes.getOrNull(),
         );
         if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
       });
@@ -101,13 +98,10 @@ class VaultItemMutationService {
         final VaultEntityViewDto oldView = untypedOldView as VaultEntityViewDto;
 
         // 2. Пишем snapshot before update
-        final snapshotRes = await historyService.snapshotBeforeUpdate(
+        final snapshotRes = (await historyService.snapshotBeforeUpdate(
           oldView: oldView,
           action: VaultEventHistoryAction.updated,
-        );
-        if (snapshotRes != null && snapshotRes.isError()) {
-          throw snapshotRes.exceptionOrNull()!;
-        }
+        )).getOrThrow();
 
         // 3. Меняем категорию
         final res = await relationsService.changeCategory(
@@ -121,7 +115,7 @@ class VaultItemMutationService {
           itemId: itemId,
           type: type,
           action: VaultEventHistoryAction.updated,
-          snapshotHistoryId: snapshotRes?.getOrNull(),
+          snapshotHistoryId: snapshotRes.getOrNull(),
         );
         if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
       });

@@ -27,9 +27,9 @@ class VaultHistoryRetentionService {
 
         final intervalDays =
             await settingsDao.getInt(
-                  StoreSettingsKey.historyCleanupIntervalDays,
-                ) ??
-                7;
+              StoreSettingsKey.historyCleanupIntervalDays,
+            ) ??
+            7;
         final lastCleanupStr = await settingsDao.getString(
           StoreSettingsKey.historyLastCleanupTimestamp,
         );

@@ -82,28 +82,25 @@ class FileHistoryNormalizer implements VaultHistoryTypeNormalizer {
     return ResultUtils.tryCatchAsync(
       () async {
         final viewOpt = (await fileRepository.getViewById(itemId)).getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final metadata = view.metadata;
-            return Some(
-              FileHistoryPayload(
-                metadataId: metadata?.id,
-                fileName: metadata?.fileName,
-                fileExtension: metadata?.fileExtension,
-                filePath: metadata?.filePath,
-                mimeType: metadata?.mimeType,
-                fileSize: metadata?.fileSize,
-                sha256: metadata?.sha256,
-                availabilityStatus: metadata?.availabilityStatus,
-                integrityStatus: metadata?.integrityStatus,
-                missingDetectedAt: metadata?.missingDetectedAt,
-                deletedAt: metadata?.deletedAt,
-                lastIntegrityCheckAt: metadata?.lastIntegrityCheckAt,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        return viewOpt.fold((view) {
+          final metadata = view.metadata;
+          return Some(
+            FileHistoryPayload(
+              metadataId: metadata?.id,
+              fileName: metadata?.fileName,
+              fileExtension: metadata?.fileExtension,
+              filePath: metadata?.filePath,
+              mimeType: metadata?.mimeType,
+              fileSize: metadata?.fileSize,
+              sha256: metadata?.sha256,
+              availabilityStatus: metadata?.availabilityStatus,
+              integrityStatus: metadata?.integrityStatus,
+              missingDetectedAt: metadata?.missingDetectedAt,
+              deletedAt: metadata?.deletedAt,
+              lastIntegrityCheckAt: metadata?.lastIntegrityCheckAt,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

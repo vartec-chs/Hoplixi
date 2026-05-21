@@ -59,22 +59,21 @@ class SshKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await sshKeyRepository.getViewById(itemId)).getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.sshKey;
-            return Some(
-              SshKeyHistoryPayload(
-                publicKey: item.publicKey,
-                privateKey: item.privateKey,
-                keyType: item.keyType,
-                keyTypeOther: item.keyTypeOther,
-                keySize: item.keySize,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await sshKeyRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.sshKey;
+          return Some(
+            SshKeyHistoryPayload(
+              publicKey: item.publicKey,
+              privateKey: item.privateKey,
+              keyType: item.keyType,
+              keyTypeOther: item.keyTypeOther,
+              keySize: item.keySize,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

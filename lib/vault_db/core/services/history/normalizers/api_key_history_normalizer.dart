@@ -67,30 +67,29 @@ class ApiKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final viewOpt = (await apiKeyRepository.getViewById(itemId)).getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.apiKey;
-            return Some(
-              ApiKeyHistoryPayload(
-                service: item.service,
-                key: item.key,
-                tokenType: item.tokenType,
-                tokenTypeOther: item.tokenTypeOther,
-                environment: item.environment,
-                environmentOther: item.environmentOther,
-                expiresAt: item.expiresAt,
-                revokedAt: item.revokedAt,
-                rotationPeriodDays: item.rotationPeriodDays,
-                lastRotatedAt: item.lastRotatedAt,
-                owner: item.owner,
-                baseUrl: item.baseUrl,
-                scopesText: item.scopesText,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        final viewOpt = (await apiKeyRepository.getViewById(
+          itemId,
+        )).getOrThrow();
+        return viewOpt.fold((view) {
+          final item = view.apiKey;
+          return Some(
+            ApiKeyHistoryPayload(
+              service: item.service,
+              key: item.key,
+              tokenType: item.tokenType,
+              tokenTypeOther: item.tokenTypeOther,
+              environment: item.environment,
+              environmentOther: item.environmentOther,
+              expiresAt: item.expiresAt,
+              revokedAt: item.revokedAt,
+              rotationPeriodDays: item.rotationPeriodDays,
+              lastRotatedAt: item.lastRotatedAt,
+              owner: item.owner,
+              baseUrl: item.baseUrl,
+              scopesText: item.scopesText,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

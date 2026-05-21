@@ -54,18 +54,15 @@ class NoteHistoryNormalizer implements VaultHistoryTypeNormalizer {
     return ResultUtils.tryCatchAsync(
       () async {
         final viewOpt = (await noteRepository.getViewById(itemId)).getOrThrow();
-        return viewOpt.fold(
-          (view) {
-            final item = view.note;
-            return Some(
-              NoteHistoryPayload(
-                deltaJson: item.deltaJson,
-                content: item.content,
-              ),
-            );
-          },
-          () => const None(),
-        );
+        return viewOpt.fold((view) {
+          final item = view.note;
+          return Some(
+            NoteHistoryPayload(
+              deltaJson: item.deltaJson,
+              content: item.content,
+            ),
+          );
+        }, () => const None());
       },
       (e, st) => e is DBCoreError
           ? e

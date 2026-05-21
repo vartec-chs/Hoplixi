@@ -22,42 +22,46 @@ class CryptoWalletRepository {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
 
-        await db.into(db.vaultItems).insert(
-          VaultItemsCompanion.insert(
-            id: Value(itemId),
-            type: VaultItemType.cryptoWallet,
-            name: dto.item.name,
-            description: Value(dto.item.description),
-            categoryId: Value(dto.item.categoryId),
-            iconRefId: Value(dto.item.iconRefId),
-            isFavorite: Value(dto.item.isFavorite),
-            isPinned: Value(dto.item.isPinned),
-            createdAt: Value(now),
-            modifiedAt: Value(now),
-          ),
-        );
+        await db
+            .into(db.vaultItems)
+            .insert(
+              VaultItemsCompanion.insert(
+                id: Value(itemId),
+                type: VaultItemType.cryptoWallet,
+                name: dto.item.name,
+                description: Value(dto.item.description),
+                categoryId: Value(dto.item.categoryId),
+                iconRefId: Value(dto.item.iconRefId),
+                isFavorite: Value(dto.item.isFavorite),
+                isPinned: Value(dto.item.isPinned),
+                createdAt: Value(now),
+                modifiedAt: Value(now),
+              ),
+            );
 
-        await db.into(db.cryptoWalletItems).insert(
-          CryptoWalletItemsCompanion.insert(
-            itemId: itemId,
-            walletType: Value(dto.cryptoWallet.walletType),
-            walletTypeOther: Value(dto.cryptoWallet.walletTypeOther),
-            network: Value(dto.cryptoWallet.network),
-            networkOther: Value(dto.cryptoWallet.networkOther),
-            mnemonic: Value(dto.cryptoWallet.mnemonic),
-            privateKey: Value(dto.cryptoWallet.privateKey),
-            derivationPath: Value(dto.cryptoWallet.derivationPath),
-            derivationScheme: Value(dto.cryptoWallet.derivationScheme),
-            derivationSchemeOther: Value(
-              dto.cryptoWallet.derivationSchemeOther,
-            ),
-            addresses: Value(dto.cryptoWallet.addresses),
-            xpub: Value(dto.cryptoWallet.xpub),
-            xprv: Value(dto.cryptoWallet.xprv),
-            hardwareDevice: Value(dto.cryptoWallet.hardwareDevice),
-            watchOnly: Value(dto.cryptoWallet.watchOnly),
-          ),
-        );
+        await db
+            .into(db.cryptoWalletItems)
+            .insert(
+              CryptoWalletItemsCompanion.insert(
+                itemId: itemId,
+                walletType: Value(dto.cryptoWallet.walletType),
+                walletTypeOther: Value(dto.cryptoWallet.walletTypeOther),
+                network: Value(dto.cryptoWallet.network),
+                networkOther: Value(dto.cryptoWallet.networkOther),
+                mnemonic: Value(dto.cryptoWallet.mnemonic),
+                privateKey: Value(dto.cryptoWallet.privateKey),
+                derivationPath: Value(dto.cryptoWallet.derivationPath),
+                derivationScheme: Value(dto.cryptoWallet.derivationScheme),
+                derivationSchemeOther: Value(
+                  dto.cryptoWallet.derivationSchemeOther,
+                ),
+                addresses: Value(dto.cryptoWallet.addresses),
+                xpub: Value(dto.cryptoWallet.xpub),
+                xprv: Value(dto.cryptoWallet.xprv),
+                hardwareDevice: Value(dto.cryptoWallet.hardwareDevice),
+                watchOnly: Value(dto.cryptoWallet.watchOnly),
+              ),
+            );
 
         return itemId;
       }),
@@ -77,27 +81,28 @@ class CryptoWalletRepository {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
 
-        final itemUpdated = await (db.update(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .write(
-          VaultItemsCompanion(
-            name: dto.item.name.toRequiredValue(),
-            description: dto.item.description.toNullableValue(),
-            categoryId: dto.item.categoryId.toNullableValue(),
-            iconRefId: dto.item.iconRefId.toNullableValue(),
-            isFavorite: dto.item.isFavorite.toRequiredValue(),
-            isPinned: dto.item.isPinned.toRequiredValue(),
-            modifiedAt: Value(now),
-          ),
-        );
+        final itemUpdated =
+            await (db.update(
+              db.vaultItems,
+            )..where((tbl) => tbl.id.equals(itemId))).write(
+              VaultItemsCompanion(
+                name: dto.item.name.toRequiredValue(),
+                description: dto.item.description.toNullableValue(),
+                categoryId: dto.item.categoryId.toNullableValue(),
+                iconRefId: dto.item.iconRefId.toNullableValue(),
+                isFavorite: dto.item.isFavorite.toRequiredValue(),
+                isPinned: dto.item.isPinned.toRequiredValue(),
+                modifiedAt: Value(now),
+              ),
+            );
 
         if (itemUpdated == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }
 
-        await (db.update(db.cryptoWalletItems)
-              ..where((tbl) => tbl.itemId.equals(itemId)))
-            .write(
+        await (db.update(
+          db.cryptoWalletItems,
+        )..where((tbl) => tbl.itemId.equals(itemId))).write(
           CryptoWalletItemsCompanion(
             walletType: dto.cryptoWallet.walletType.toNullableValue(),
             walletTypeOther: dto.cryptoWallet.walletTypeOther.toNullableValue(),
@@ -106,7 +111,8 @@ class CryptoWalletRepository {
             mnemonic: dto.cryptoWallet.mnemonic.toNullableValue(),
             privateKey: dto.cryptoWallet.privateKey.toNullableValue(),
             derivationPath: dto.cryptoWallet.derivationPath.toNullableValue(),
-            derivationScheme: dto.cryptoWallet.derivationScheme.toNullableValue(),
+            derivationScheme: dto.cryptoWallet.derivationScheme
+                .toNullableValue(),
             derivationSchemeOther: dto.cryptoWallet.derivationSchemeOther
                 .toNullableValue(),
             addresses: dto.cryptoWallet.addresses.toNullableValue(),
@@ -139,14 +145,17 @@ class CryptoWalletRepository {
   AsyncDbResult<Optional<CryptoWalletViewDto>> getViewById(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final query = db.select(db.vaultItems).join([
-          innerJoin(
-            db.cryptoWalletItems,
-            db.cryptoWalletItems.itemId.equalsExp(db.vaultItems.id),
-          ),
-        ])
-          ..where(db.vaultItems.id.equals(itemId))
-          ..where(db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet));
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.cryptoWalletItems,
+                  db.cryptoWalletItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.id.equals(itemId))
+              ..where(
+                db.vaultItems.type.equalsValue(VaultItemType.cryptoWallet),
+              );
 
         final row = await query.getSingleOrNull();
         if (row == null) return const None();
@@ -154,10 +163,12 @@ class CryptoWalletRepository {
         final item = row.readTable(db.vaultItems);
         final cryptoWallet = row.readTable(db.cryptoWalletItems);
 
-        return Some(CryptoWalletViewDto(
-          item: item.toVaultItemViewDto(),
-          cryptoWallet: cryptoWallet.toCryptoWalletDataDto(),
-        ));
+        return Some(
+          CryptoWalletViewDto(
+            item: item.toVaultItemViewDto(),
+            cryptoWallet: cryptoWallet.toCryptoWalletDataDto(),
+          ),
+        );
       },
       (e, st) => e is DBCoreError
           ? e
@@ -220,9 +231,9 @@ class CryptoWalletRepository {
   AsyncDbResult<Unit> deletePermanently(String itemId) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final rows = await (db.delete(db.vaultItems)
-              ..where((tbl) => tbl.id.equals(itemId)))
-            .go();
+        final rows = await (db.delete(
+          db.vaultItems,
+        )..where((tbl) => tbl.id.equals(itemId))).go();
         if (rows == 0) {
           throw DBCoreError.notFound(entity: 'vault_items', id: itemId);
         }

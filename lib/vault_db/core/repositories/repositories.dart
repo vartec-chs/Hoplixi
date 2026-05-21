@@ -29,5 +29,3 @@ export 'base/vault_item_custom_fields_repository.dart';
 export 'base/vault_item_repository.dart';
 export 'base/wifi_repository.dart';
 export 'vault_event_history_repository.dart';
-
-
