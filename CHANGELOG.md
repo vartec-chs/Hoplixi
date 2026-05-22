@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-05-22
+
+### vault_db
+
+- Переписан `DocumentStorageService` в [lib/vault_db/services/other/document_storage_service.dart](lib/vault_db/services/other/document_storage_service.dart) под новое Drift-ядро версионирования.
+- Метод `createDocumentWithPages` теперь предварительно генерирует UUID страниц версий (`versionPageId`), чтобы решить проблему циклической зависимости в `file_metadata_history` (требование `owner_id`).
+- Реализован совместимый с UI класс `DocumentPageCompat` для плавного перехода без необходимости модификации UI-слоя.
+- Полностью отрефакторен и переписан сервис `FileStorageService` в [lib/vault_db/services/other/file_storage_service.dart](lib/vault_db/services/other/file_storage_service.dart) под новое Drift-ядро версионирования БД.
+- Конструктор `FileStorageService` переведен на внедрение `FileService`, `FileRepository` и `FileMetadataRepository` через сборку `VaultEntityServiceDeps`.
+- Все методы работы с файлами (`importFile`, `decryptFile`, `updateFileContent`) переведены на использование соответствующих репозиториев, сервисов сущностей и типизированных DTO (`CreateFileDto`, `PatchFileDto`, `FileViewDto`).
+- Служебные операции страниц документов (`importPageFile`, `decryptPageFile`, `updatePageFile`, `deletePageFile`) переведены на прямое взаимодействие с `_fileMetadataRepository` и DTO `FileMetadataDataDto`, `PatchFileMetadataDto`.
+- Разработан и внедрен безопасный алгоритм очистки неиспользуемых файлов `cleanupOrphanedFiles` с учетом версионирования. Физические зашифрованные файлы теперь удаляются с диска только в том случае, если они не упоминаются ни в `file_metadata`, ни в истории `file_metadata_history`.
+- Устранено дублирование DTO для версионирования документов: удалены неиспользуемые и конфликтующие Freezed-модели версий и страниц версий из [lib/vault_db/core/models/dto/document_dto.dart](lib/vault_db/core/models/dto/document_dto.dart).
+- Удалены неиспользуемые мапперы версий из [lib/vault_db/core/models/mappers/document_mapper.dart](lib/vault_db/core/models/mappers/document_mapper.dart) во избежание мертвого кода и ошибок типизации.
+- Единым источником правды для версионирования документов оставлены Plain Dart (PODO) DTO из [lib/vault_db/core/models/dto/document_version_dto.dart](lib/vault_db/core/models/dto/document_version_dto.dart).
+
 ## 2026-05-18
 
 ### docs

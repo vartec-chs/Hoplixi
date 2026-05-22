@@ -2,12 +2,17 @@ import 'package:hoplixi/vault_db/core/tables/tables.dart';
 
 class CreateDocumentVersionPageDto {
   const CreateDocumentVersionPageDto({
+    this.id,
     this.pageId,
     this.metadataHistoryId,
     required this.pageNumber,
     this.pageSha256Hash,
     this.isPrimary = false,
   });
+
+  /// ID for DocumentVersionPages.
+  /// If null, service generates a new UUID.
+  final String? id;
 
   /// Stable document_pages.id.
   /// If null, service creates new document_pages row.
@@ -118,3 +123,4 @@ class DocumentVersionCardDto {
   final DateTime modifiedAt;
   final bool isCurrent;
 }
+

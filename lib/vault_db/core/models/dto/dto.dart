@@ -22,3 +22,4 @@ export 'ssh_key_dto.dart';
 export 'system/system.dart';
 export 'vault_item_base_dto.dart';
 export 'wifi_dto.dart';
+export 'document_version_dto.dart';

@@ -107,7 +107,7 @@ class DocumentVersionService {
               ? true
               : pageDto.isPrimary;
 
-          final versionPageId = const Uuid().v4();
+          final versionPageId = pageDto.id ?? const Uuid().v4();
           final companion = DocumentVersionPagesCompanion.insert(
             id: Value(versionPageId),
             versionId: versionId,

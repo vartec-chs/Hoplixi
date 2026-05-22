@@ -4,10 +4,17 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
 import 'package:hoplixi/rust/api/crypt_api.dart' as crypt;
 import 'package:hoplixi/rust/api/crypt_api/types.dart' as crypt_types;
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/repositories.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
+import 'package:hoplixi/vault_db/core/services/entities/file_service.dart';
+import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
+import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
+import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
+import 'package:hoplixi/vault_db/core/services/entities/base_vault_entity_service.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
@@ -19,11 +26,38 @@ class FileStorageService {
   final String _attachmentsPath;
   final String _decryptedAttachmentsPath;
 
+  late final FileService _fileService;
+  late final FileRepository _fileRepository;
+  late final FileMetadataRepository _fileMetadataRepository;
+
   FileStorageService(
     this._db,
     this._attachmentsPath,
     this._decryptedAttachmentsPath,
-  );
+  ) {
+    _fileRepository = FileRepository(_db);
+    final relationsService = VaultItemRelationsService(db: _db);
+    final historyAssembly = VaultHistoryServiceAssembly(_db);
+    final historyService = historyAssembly.historyService;
+    final viewResolver = historyAssembly.viewResolver;
+
+    final vaultItemsStateService = VaultItemsStateService(
+      db: _db,
+      viewResolver: viewResolver,
+      historyService: historyService,
+    );
+
+    final deps = VaultEntityServiceDeps(
+      db: _db,
+      repositories: VaultRepositories(_db),
+      relationsService: relationsService,
+      historyService: historyService,
+      vaultItemsStateService: vaultItemsStateService,
+    );
+
+    _fileService = FileService(deps: deps, repository: _fileRepository);
+    _fileMetadataRepository = deps.repositories.fileMetadata;
+  }
 
   /// Получить ключ шифрования из метаданных хранилища.
   Future<String> _getAttachmentKey() async {
@@ -116,7 +150,7 @@ class FileStorageService {
     }
 
     if (resultPath == null) {
-      throw Exception('Расшифровка завершилась без результата');
+      throw Exception('Расшифровка завершилось без результата');
     }
 
     return resultPath;
@@ -157,20 +191,25 @@ class FileStorageService {
         lookupMimeType(sourceFile.path) ?? 'application/octet-stream';
 
     final dto = CreateFileDto(
-      name: name,
-      fileName: fileName,
-      fileExtension: extension,
-      filePath: encryptedFileName,
-      mimeType: mimeType,
-      fileSize: fileSize,
-      fileHash: fileHash,
-      description: description,
-      categoryId: categoryId,
-      noteId: noteId,
-      tagsIds: tagsIds,
+      item: VaultItemCreateDto(
+        name: name,
+        description: description,
+        categoryId: categoryId,
+      ),
+      file: const FileDataDto(),
+      metadata: FileMetadataDataDto(
+        fileName: fileName,
+        fileExtension: extension,
+        filePath: encryptedFileName,
+        mimeType: mimeType,
+        fileSize: fileSize,
+        sha256: fileHash,
+      ),
+      tagIds: tagsIds,
     );
 
-    return _db.fileDao.createFile(dto);
+    final result = await _fileService.create(dto);
+    return result.getOrThrow();
   }
 
   /// Расшифровать файл в директорию для расшифрованных вложений.
@@ -178,19 +217,12 @@ class FileStorageService {
     required String fileId,
     void Function(double percentage)? onProgress,
   }) async {
-    final record = await _db.fileDao.getById(fileId);
-    if (record == null) {
+    final viewResult = await _fileRepository.getViewById(fileId);
+    final view = viewResult.getOrThrow().getOrNull();
+    if (view == null) {
       throw Exception('File not found in database');
     }
-    final (_, fileItem) = record;
-
-    if (fileItem.metadataId == null) {
-      throw Exception('File has no metadata');
-    }
-
-    final metadata = await (_db.select(
-      _db.fileMetadata,
-    )..where((m) => m.id.equals(fileItem.metadataId!))).getSingleOrNull();
+    final metadata = view.metadata;
 
     if (metadata == null) {
       throw Exception('File metadata not found');
@@ -198,7 +230,7 @@ class FileStorageService {
 
     final key = await _getAttachmentKey();
     final attachmentsPath = await _getAttachmentsPath();
-    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath);
+    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath ?? '');
 
     logDebug('Decrypting file: $encryptedFilePath');
 
@@ -247,18 +279,12 @@ class FileStorageService {
     required File newFile,
     void Function(double percentage)? onProgress,
   }) async {
-    final record = await _db.fileDao.getById(fileId);
-    if (record == null) throw Exception('File not found');
-    final (_, currentFileItem) = record;
-
-    if (currentFileItem.metadataId == null) {
-      throw Exception('File has no metadata');
+    final viewResult = await _fileRepository.getViewById(fileId);
+    final view = viewResult.getOrThrow().getOrNull();
+    if (view == null) {
+      throw Exception('File not found');
     }
-
-    final currentMetadata =
-        await (_db.select(_db.fileMetadata)
-              ..where((m) => m.id.equals(currentFileItem.metadataId!)))
-            .getSingleOrNull();
+    final currentMetadata = view.metadata;
 
     if (currentMetadata == null) {
       throw Exception('File metadata not found');
@@ -293,29 +319,36 @@ class FileStorageService {
     final newMimeType =
         lookupMimeType(newFile.path) ?? 'application/octet-stream';
 
-    final newMetadataId = const Uuid().v4();
-    await _db
-        .into(_db.fileMetadata)
-        .insert(
-          FileMetadataCompanion.insert(
-            id: Value(newMetadataId),
-            fileName: newFileName,
-            fileExtension: newFileExtension,
-            filePath: Value(newEncryptedFileName),
-            mimeType: newMimeType,
-            fileSize: newFileSize,
-            fileHash: Value(newFileHash),
-          ),
-        );
+    // Вставляем новую запись в file_metadata через репозиторий
+    final metadataDto = FileMetadataDataDto(
+      fileName: newFileName,
+      fileExtension: newFileExtension,
+      filePath: newEncryptedFileName,
+      mimeType: newMimeType,
+      fileSize: newFileSize,
+      sha256: newFileHash,
+    );
 
-    // Триггер file_content_update_history сработает и запишет историю.
-    await (_db.update(_db.fileItems)..where((f) => f.itemId.equals(fileId)))
-        .write(FileItemsCompanion(metadataId: Value(newMetadataId)));
+    final newMetadataId = (await _fileMetadataRepository.createMetadata(
+      metadataDto,
+    )).getOrThrow();
+
+    // Обновляем file item с новым metadataId через _fileService.update
+    final patchDto = PatchFileDto(
+      item: VaultItemPatchDto(
+        itemId: fileId,
+        name: FieldUpdate.set(view.item.name),
+      ),
+      file: PatchFileDataDto(metadataId: FieldUpdate.set(newMetadataId)),
+    );
+
+    final updateRes = await _fileService.update(patchDto);
+    updateRes.getOrThrow();
 
     if (!isHistoryEnabled) {
       final oldEncryptedFilePath = p.join(
         attachmentsPath,
-        currentMetadata.filePath,
+        currentMetadata.filePath ?? '',
       );
       final oldFile = File(oldEncryptedFilePath);
       if (await oldFile.exists()) {
@@ -324,7 +357,7 @@ class FileStorageService {
 
       await (_db.delete(
         _db.fileMetadata,
-      )..where((m) => m.id.equals(currentFileItem.metadataId!))).go();
+      )..where((m) => m.id.equals(currentMetadata.id))).go();
     }
   }
 
@@ -357,21 +390,18 @@ class FileStorageService {
     final mimeType =
         lookupMimeType(sourceFile.path) ?? 'application/octet-stream';
 
-    final metadataId = const Uuid().v4();
-    await _db
-        .into(_db.fileMetadata)
-        .insert(
-          FileMetadataCompanion.insert(
-            id: Value(metadataId),
-            fileName: fileName,
-            fileExtension: extension,
-            filePath: Value(encryptedFileName),
-            mimeType: mimeType,
-            fileSize: fileSize,
-            fileHash: Value(fileHash),
-          ),
-        );
+    final metadataDto = FileMetadataDataDto(
+      fileName: fileName,
+      fileExtension: extension,
+      filePath: encryptedFileName,
+      mimeType: mimeType,
+      fileSize: fileSize,
+      sha256: fileHash,
+    );
 
+    final metadataId = (await _fileMetadataRepository.createMetadata(
+      metadataDto,
+    )).getOrThrow();
     return metadataId;
   }
 
@@ -380,17 +410,17 @@ class FileStorageService {
     required String metadataId,
     void Function(double percentage)? onProgress,
   }) async {
-    final metadata = await (_db.select(
-      _db.fileMetadata,
-    )..where((m) => m.id.equals(metadataId))).getSingleOrNull();
-
+    final metadataResult = await _fileMetadataRepository.getMetadataById(
+      metadataId,
+    );
+    final metadata = metadataResult.getOrThrow().getOrNull();
     if (metadata == null) {
       throw Exception('File metadata not found');
     }
 
     final key = await _getAttachmentKey();
     final attachmentsPath = await _getAttachmentsPath();
-    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath);
+    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath ?? '');
 
     logDebug('Decrypting page file: $encryptedFilePath');
 
@@ -437,14 +467,19 @@ class FileStorageService {
     required File newFile,
     void Function(double percentage)? onProgress,
   }) async {
-    final metadata = await (_db.select(
-      _db.fileMetadata,
-    )..where((m) => m.id.equals(metadataId))).getSingleOrNull();
-
-    if (metadata == null) throw Exception('File metadata not found');
+    final metadataResult = await _fileMetadataRepository.getMetadataById(
+      metadataId,
+    );
+    final metadata = metadataResult.getOrThrow().getOrNull();
+    if (metadata == null) {
+      throw Exception('File metadata not found');
+    }
 
     final attachmentsPath = await _getAttachmentsPath();
-    final oldEncryptedFilePath = p.join(attachmentsPath, metadata.filePath);
+    final oldEncryptedFilePath = p.join(
+      attachmentsPath,
+      metadata.filePath ?? '',
+    );
     final oldFile = File(oldEncryptedFilePath);
     if (await oldFile.exists()) {
       await oldFile.delete();
@@ -469,30 +504,30 @@ class FileStorageService {
     final newMimeType =
         lookupMimeType(newFile.path) ?? 'application/octet-stream';
 
-    await (_db.update(
-      _db.fileMetadata,
-    )..where((m) => m.id.equals(metadataId))).write(
-      FileMetadataCompanion(
-        fileName: Value(newFileName),
-        fileExtension: Value(newFileExtension),
-        filePath: Value(newEncryptedFileName),
-        mimeType: Value(newMimeType),
-        fileSize: Value(newFileSize),
-        fileHash: Value(newFileHash),
-      ),
+    final patchDto = PatchFileMetadataDto(
+      id: metadataId,
+      fileName: FieldUpdate.set(newFileName),
+      fileExtension: FieldUpdate.set(newFileExtension),
+      filePath: FieldUpdate.set(newEncryptedFileName),
+      mimeType: FieldUpdate.set(newMimeType),
+      fileSize: FieldUpdate.set(newFileSize),
+      sha256: FieldUpdate.set(newFileHash),
     );
+
+    final updateRes = await _fileMetadataRepository.updateMetadata(patchDto);
+    updateRes.getOrThrow();
   }
 
   /// Удалить файл страницы с диска по metadataId и удалить запись из БД.
   Future<bool> deletePageFile(String metadataId) async {
-    final metadata = await (_db.select(
-      _db.fileMetadata,
-    )..where((m) => m.id.equals(metadataId))).getSingleOrNull();
-
+    final metadataResult = await _fileMetadataRepository.getMetadataById(
+      metadataId,
+    );
+    final metadata = metadataResult.getOrThrow().getOrNull();
     if (metadata == null) return false;
 
     final attachmentsPath = await _getAttachmentsPath();
-    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath);
+    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath ?? '');
     final file = File(encryptedFilePath);
 
     if (await file.exists()) {
@@ -508,20 +543,15 @@ class FileStorageService {
 
   /// Удалить файл с диска (используется при удалении записи из БД).
   Future<bool> deleteFileFromDisk(String fileId) async {
-    final record = await _db.fileDao.getById(fileId);
-    if (record == null) return false;
-    final (_, fileItem) = record;
-
-    if (fileItem.metadataId == null) return false;
-
-    final metadata = await (_db.select(
-      _db.fileMetadata,
-    )..where((m) => m.id.equals(fileItem.metadataId!))).getSingleOrNull();
+    final viewResult = await _fileRepository.getViewById(fileId);
+    final view = viewResult.getOrThrow().getOrNull();
+    if (view == null) return false;
+    final metadata = view.metadata;
 
     if (metadata == null) return false;
 
     final attachmentsPath = await _getAttachmentsPath();
-    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath);
+    final encryptedFilePath = p.join(attachmentsPath, metadata.filePath ?? '');
     final file = File(encryptedFilePath);
 
     if (await file.exists()) {
@@ -550,12 +580,11 @@ class FileStorageService {
   Future<int> cleanupOrphanedFiles() async {
     int deletedCount = 0;
     try {
+      // 1. Ищем осиротевшие метаданные, на которые нет ссылок из file_items
       const String sql = '''
         SELECT id, file_path 
         FROM file_metadata 
         WHERE id NOT IN (SELECT metadata_id FROM file_items WHERE metadata_id IS NOT NULL)
-          AND id NOT IN (SELECT metadata_id FROM file_history WHERE metadata_id IS NOT NULL)
-          AND id NOT IN (SELECT metadata_id FROM document_pages WHERE metadata_id IS NOT NULL)
       ''';
 
       final rows = await _db.customSelect(sql).get();
@@ -563,13 +592,24 @@ class FileStorageService {
 
       for (final row in rows) {
         final String id = row.read<String>('id');
-        final String filePath = row.read<String>('file_path');
+        final String? filePath = row.readNullable<String>('file_path');
 
-        final encryptedFilePath = p.join(attachmentsPath, filePath);
-        final file = File(encryptedFilePath);
+        if (filePath != null) {
+          // Проверяем, не используется ли этот же физический файл в истории (в file_metadata_history)
+          final historyRows = await _db
+              .customSelect(
+                'SELECT 1 FROM file_metadata_history WHERE file_path = ? LIMIT 1',
+                variables: [Variable<String>(filePath)],
+              )
+              .get();
 
-        if (await file.exists()) {
-          await file.delete();
+          if (historyRows.isEmpty) {
+            final encryptedFilePath = p.join(attachmentsPath, filePath);
+            final file = File(encryptedFilePath);
+            if (await file.exists()) {
+              await file.delete();
+            }
+          }
         }
 
         await (_db.delete(
@@ -578,19 +618,32 @@ class FileStorageService {
         deletedCount++;
       }
 
-      // Ищем файлы на диске, которых нет в таблице file_metadata (рассинхронизация).
+      // 2. Ищем файлы на диске, которых нет ни в таблице file_metadata, ни в file_metadata_history (рассинхронизация).
       final dir = Directory(attachmentsPath);
       if (await dir.exists()) {
         final entities = dir.listSync();
         for (final entity in entities) {
           if (entity is File) {
             final fileName = p.basename(entity.path);
-            final exists = await (_db.select(
+
+            // Проверяем, есть ли файл в live-метаданных
+            final liveExists = await (_db.select(
               _db.fileMetadata,
             )..where((m) => m.filePath.equals(fileName))).getSingleOrNull();
-            if (exists == null) {
-              await entity.delete();
-              deletedCount++;
+
+            if (liveExists == null) {
+              // Проверяем, есть ли файл в исторических метаданных
+              final historyExistsRows = await _db
+                  .customSelect(
+                    'SELECT 1 FROM file_metadata_history WHERE file_path = ? LIMIT 1',
+                    variables: [Variable<String>(fileName)],
+                  )
+                  .get();
+
+              if (historyExistsRows.isEmpty) {
+                await entity.delete();
+                deletedCount++;
+              }
             }
           }
         }
