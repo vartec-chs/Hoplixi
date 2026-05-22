@@ -50,7 +50,7 @@ final performStoreCleanupProvider =
       final manager = ref.read(vaultDBManagerStateProvider.notifier);
 
       return PerformStoreCleanup(
-        manager.requireDatabase.storeSettingsDao,
-        fileStorageService,
+        settingsDao: manager.requireDatabase.storeSettingsDao,
+        fileStorageService: fileStorageService,
       );
     });

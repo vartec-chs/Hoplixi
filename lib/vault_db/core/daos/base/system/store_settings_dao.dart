@@ -79,4 +79,49 @@ class StoreSettingsDao extends DatabaseAccessor<VaultDB>
       valueType: StoreSettingValueType.string,
     );
   }
+
+  Future<String?> getSetting(String key) => getRawValue(key);
+
+  Future<void> setSetting(String key, String value) =>
+      setRawValue(key: key, value: value);
+
+  Future<void> cleanupHistory({
+    required int? maxAgeDays,
+    required int? maxRecordsPerItem,
+  }) async {
+    // 1. Очистка по возрасту (age-based)
+    if (maxAgeDays != null && maxAgeDays >= 0) {
+      final cutOffDate = DateTime.now().subtract(Duration(days: maxAgeDays));
+
+      // Удаляем старые снапшоты (связанные данные удалятся каскадно через FK)
+      await (delete(db.vaultSnapshotsHistory)
+            ..where((t) => t.historyCreatedAt.isSmallerThanValue(cutOffDate)))
+          .go();
+
+      // Удаляем старые события
+      await (delete(db.vaultEventsHistory)
+            ..where((t) => t.eventCreatedAt.isSmallerThanValue(cutOffDate)))
+          .go();
+    }
+
+    // 2. Очистка по количеству (count-based)
+    if (maxRecordsPerItem != null) {
+      if (maxRecordsPerItem == 0) {
+        // Полная очистка всей истории
+        await delete(db.vaultSnapshotsHistory).go();
+        await delete(db.vaultEventsHistory).go();
+      } else if (maxRecordsPerItem > 0) {
+        // Оставляем последние N записей для каждого элемента (item_id)
+        await customStatement('''
+          DELETE FROM vault_snapshots_history 
+          WHERE id IN (
+            SELECT id FROM (
+              SELECT id, ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY history_created_at DESC) as rn
+              FROM vault_snapshots_history
+            ) WHERE rn > ?
+          )
+        ''', [maxRecordsPerItem]);
+      }
+    }
+  }
 }

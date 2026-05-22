@@ -114,4 +114,22 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
     )..addColumns([storeMetaTable.passwordHash])).getSingleOrNull();
     return row?.passwordHash;
   }
-}
+
+  Future<void> patchStoreMeta({
+    String? name,
+    Value<String?> description = const Value.absent(),
+    String? passwordHash,
+    DateTime? modifiedAt,
+  }) {
+    return (update(storeMetaTable))
+        .write(StoreMetaTableCompanion(
+          name: name == null ? const Value.absent() : Value(name),
+          description: description,
+          passwordHash: passwordHash == null
+              ? const Value.absent()
+              : Value(passwordHash),
+          modifiedAt: modifiedAt == null ? const Value.absent() : Value(modifiedAt),
+        ));
+  }
+  }
+

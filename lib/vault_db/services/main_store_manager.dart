@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
-import 'package:hoplixi/vault_db/core/daos/daos.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
@@ -536,8 +535,8 @@ class VaultDBManager {
         decryptedAttachmentsPath,
       );
       final cleanup = PerformStoreCleanup(
-        StoreSettingsDao(session.store),
-        fileStorageService,
+        settingsDao: _currentDB!.storeSettingsDao,
+        fileStorageService: fileStorageService,
       );
       final result = await cleanup();
       if (result.isSuccess) {

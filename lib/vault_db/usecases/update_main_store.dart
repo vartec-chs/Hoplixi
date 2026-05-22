@@ -8,14 +8,11 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
 import 'package:hoplixi/vault_db/usecases/utils/error_handling.dart';
 import 'package:result_dart/result_dart.dart';
-import 'package:uuid/uuid.dart';
 
 class UpdateVaultDB {
   static const String _logTag = 'UpdateVaultDB';
 
-  final Uuid _uuid;
-
-  UpdateVaultDB({Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  UpdateVaultDB();
 
   AsyncResultDart<StoreInfoDto, AppError> call({
     required Session session,
@@ -39,42 +36,40 @@ class UpdateVaultDB {
         );
       }
 
-      var updatedMeta = currentMeta.copyWith(modifiedAt: DateTime.now());
+      String? name;
+      Value<String?> description = const Value.absent();
+      String? passwordHash;
+      final now = DateTime.now();
 
-      if (dto.name.valueOrNull != null) {
-        updatedMeta = updatedMeta.copyWith(name: dto.name.valueOrNull!);
+      if (dto.name.isSet) {
+        name = dto.name.requireValue();
       }
 
-      if (dto.description.valueOrNull != null) {
-        updatedMeta = updatedMeta.copyWith(
-          description: Value(dto.description.valueOrNull!),
-        );
+      if (dto.description.isSet) {
+        description = Value(dto.description.requireValue());
       }
 
-      if (dto.password.valueOrNull != null) {
-        final newSalt = _uuid.v4();
-        final newPasswordHash = _hashPassword(
-          dto.password!.valueOrNull!,
-          newSalt,
-        );
-        updatedMeta = updatedMeta.copyWith(
-          passwordHash: newPasswordHash,
-          salt: newSalt,
-        );
+      if (dto.password.isSet) {
+        passwordHash = _hashPassword(dto.password.requireValue()!);
       }
 
-      await session.store
-          .update(session.store.storeMetaTable)
-          .replace(updatedMeta);
+      await session.store.storeMetaDao.patchStoreMeta(
+        name: name,
+        description: description,
+        passwordHash: passwordHash,
+        modifiedAt: now,
+      );
 
       return Success(
         StoreInfoDto(
-          id: updatedMeta.id,
-          name: updatedMeta.name,
-          description: updatedMeta.description,
-          createdAt: updatedMeta.createdAt,
-          modifiedAt: updatedMeta.modifiedAt,
-          lastOpenedAt: updatedMeta.lastOpenedAt,
+          id: currentMeta.id,
+          name: name ?? currentMeta.name,
+          description: dto.description.isSet
+              ? dto.description.requireValue()
+              : currentMeta.description,
+          createdAt: currentMeta.createdAt,
+          modifiedAt: now,
+          lastOpenedAt: currentMeta.lastOpenedAt,
         ),
       );
     } catch (error, stackTrace) {
@@ -87,8 +82,8 @@ class UpdateVaultDB {
     }
   }
 
-  String _hashPassword(String password, String salt) {
-    final bytes = utf8.encode(password + salt);
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
     return sha512.convert(bytes).toString();
   }
 }

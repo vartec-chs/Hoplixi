@@ -56,14 +56,10 @@ class CreateVaultDB {
   final DbKeyDerivationService _keyService;
   final VaultDBFileService _storageService;
 
-  CreateVaultDB({
-    VaultDBConnectionService? connectionService,
-    DbKeyDerivationService? keyService,
-    VaultDBFileService? storageService,
-  }) : _connectionService = connectionService ?? VaultDBConnectionService(),
-       _keyService =
-           keyService ?? DbKeyDerivationService(getIt<FlutterSecureStorage>()),
-       _storageService = storageService ?? const VaultDBFileService();
+  CreateVaultDB()
+    : _connectionService = VaultDBConnectionService(),
+      _keyService = DbKeyDerivationService(getIt<FlutterSecureStorage>()),
+      _storageService = const VaultDBFileService();
 
   AsyncResultDart<Session, AppError> call({
     required CreateStoreDto dto,
@@ -223,13 +219,14 @@ class CreateVaultDB {
     final passwordHash = _hashPassword(masterPassword, passwordSalt);
     final attachmentKey = _generateSecureToken();
 
-    await store.storeMetaDao.createStoreMeta(
+    final createMetaDto = CreateStoreMetaDto(
       name: dto.name,
       description: dto.description,
       passwordHash: passwordHash,
-      salt: passwordSalt,
       attachmentKey: attachmentKey,
     );
+
+    await store.storeMetaDao.createStoreMeta(createMetaDto);
 
     final meta = await store.storeMetaDao.getStoreMeta();
     if (meta == null) {
