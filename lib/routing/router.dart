@@ -66,7 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutesPaths.cloudSyncAuthProgress;
       }
 
-      final dbStateAsync = ref.read(vaultDBProvider);
+      final dbStateAsync = ref.read(vaultDBStateProvider);
 
       // Редирект на dashboard если БД открыта и пользователь на пути создания/открытия БД
       if (dbStateAsync.hasValue) {
