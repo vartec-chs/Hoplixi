@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/crypto_wallet/crypto_wallet_items.dart';
+import '../../scheme/tables/crypto_wallet/crypto_wallet_items.dart';
 import 'vault_snapshot_base_dto.dart';
 
 part 'crypto_wallet_history_dto.freezed.dart';

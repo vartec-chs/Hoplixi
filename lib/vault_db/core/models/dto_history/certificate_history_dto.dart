@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/certificate/certificate_items.dart';
+import '../../scheme/tables/certificate/certificate_items.dart';
 import '../dto/converters.dart';
 import 'vault_snapshot_base_dto.dart';
 

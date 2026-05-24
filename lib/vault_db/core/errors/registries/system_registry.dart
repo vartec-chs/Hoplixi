@@ -1,7 +1,7 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/system/categories.dart';
-import '../../tables/system/tags.dart';
-import '../../tables/system/item_link/item_links.dart';
+import '../../scheme/tables/system/categories.dart';
+import '../../scheme/tables/system/tags.dart';
+import '../../scheme/tables/system/item_link/item_links.dart';
 
 final Map<String, DbConstraintDescriptor> systemRegistry = {
   // --- Categories ---

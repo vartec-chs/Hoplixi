@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/file/file_metadata.dart';
-import '../../tables/file/file_metadata_history.dart';
+import '../../scheme/tables/file/file_metadata.dart';
+import '../../scheme/tables/file/file_metadata_history.dart';
 import 'vault_snapshot_base_dto.dart';
 
 part 'file_history_dto.freezed.dart';

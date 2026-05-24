@@ -2,14 +2,14 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/errors/db_error.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/tables/api_key/api_key_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/api_key/api_key_items.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import '../../models/mappers/api_key_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
-import '../../tables/vault_items/vault_items.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
 
 class ApiKeyRepository {
   final VaultDB db;

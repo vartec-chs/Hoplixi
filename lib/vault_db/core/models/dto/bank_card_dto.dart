@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/bank_card/bank_card_items.dart';
+import '../../scheme/tables/bank_card/bank_card_items.dart';
 import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 

@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/identity/identity_items.dart';
+import '../../scheme/tables/identity/identity_items.dart';
 
 final Map<String, DbConstraintDescriptor> identityRegistry = {
   IdentityItemConstraint.itemIdNotBlank.constraintName:

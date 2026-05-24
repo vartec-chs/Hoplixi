@@ -1,5 +1,5 @@
-import '../../../tables/ssh_key/ssh_key_items.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/ssh_key/ssh_key_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import '../models/history_field_snapshot.dart';
 import '../models/history_payload.dart';
 

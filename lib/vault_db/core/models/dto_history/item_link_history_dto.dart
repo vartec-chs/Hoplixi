@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/system/item_link/item_links.dart';
+import '../../scheme/tables/system/item_link/item_links.dart';
 import 'vault_snapshot_base_dto.dart';
 
 part 'item_link_history_dto.freezed.dart';

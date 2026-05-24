@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/ssh_key/ssh_key_items.dart';
+import '../../scheme/tables/ssh_key/ssh_key_items.dart';
 import 'vault_snapshot_base_dto.dart';
 
 part 'ssh_key_history_dto.freezed.dart';

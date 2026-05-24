@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/c
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
-import 'package:hoplixi/vault_db/core/tables/otp/otp_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
 
 import '../models/otp_form_state.dart';
 
@@ -244,19 +244,35 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
           PatchOtpDto(
             item: VaultItemPatchDto(
               itemId: state.editingOtpId!,
-              name: FieldUpdate.set(state.issuer.isNotEmpty ? state.issuer : state.accountName),
-              description: FieldUpdate.set(state.description.isEmpty ? null : state.description),
+              name: FieldUpdate.set(
+                state.issuer.isNotEmpty ? state.issuer : state.accountName,
+              ),
+              description: FieldUpdate.set(
+                state.description.isEmpty ? null : state.description,
+              ),
               categoryId: FieldUpdate.set(state.categoryId),
             ),
             otp: PatchOtpDataDto(
               type: FieldUpdate.set(state.otpType),
-              issuer: FieldUpdate.set(state.issuer.trim().isEmpty ? null : state.issuer.trim()),
-              accountName: FieldUpdate.set(state.accountName.trim().isEmpty ? null : state.accountName.trim()),
-              secret: FieldUpdate.set(Uint8List.fromList(normalizedSecret.codeUnits)),
+              issuer: FieldUpdate.set(
+                state.issuer.trim().isEmpty ? null : state.issuer.trim(),
+              ),
+              accountName: FieldUpdate.set(
+                state.accountName.trim().isEmpty
+                    ? null
+                    : state.accountName.trim(),
+              ),
+              secret: FieldUpdate.set(
+                Uint8List.fromList(normalizedSecret.codeUnits),
+              ),
               algorithm: FieldUpdate.set(state.algorithm),
               digits: FieldUpdate.set(state.digits),
-              period: FieldUpdate.set(state.otpType == OtpType.otp ? state.period : null),
-              counter: FieldUpdate.set(state.otpType == OtpType.hotp ? state.counter : null),
+              period: FieldUpdate.set(
+                state.otpType == OtpType.otp ? state.period : null,
+              ),
+              counter: FieldUpdate.set(
+                state.otpType == OtpType.hotp ? state.counter : null,
+              ),
             ),
             tags: FieldUpdate.set(state.tagIds),
           ),
@@ -270,10 +286,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
 
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
-            .triggerEntityUpdate(
-              EntityType.otp,
-              entityId: state.editingOtpId,
-            );
+            .triggerEntityUpdate(EntityType.otp, entityId: state.editingOtpId);
 
         return true;
       } else {
@@ -287,12 +300,16 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
             otp: OtpDataDto(
               type: state.otpType,
               issuer: state.issuer.trim().isEmpty ? null : state.issuer.trim(),
-              accountName: state.accountName.trim().isEmpty ? null : state.accountName.trim(),
+              accountName: state.accountName.trim().isEmpty
+                  ? null
+                  : state.accountName.trim(),
               secret: Uint8List.fromList(normalizedSecret.codeUnits),
               algorithm: state.algorithm,
               digits: state.digits,
               period: state.otpType == OtpType.otp ? state.period : null,
-              counter: state.otpType == OtpType.hotp ? (state.counter ?? 0) : null,
+              counter: state.otpType == OtpType.hotp
+                  ? (state.counter ?? 0)
+                  : null,
             ),
           ),
         );

@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import '../../../tables/password/password_history.dart';
+import '../../../scheme/tables/password/password_history.dart';
 
 part 'password_history_dao.g.dart';
 

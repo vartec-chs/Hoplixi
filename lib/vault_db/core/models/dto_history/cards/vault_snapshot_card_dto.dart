@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../tables/vault_items/vault_events_history.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_events_history.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 
 part 'vault_snapshot_card_dto.freezed.dart';
 part 'vault_snapshot_card_dto.g.dart';

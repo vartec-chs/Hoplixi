@@ -3,7 +3,7 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 import '../../../daos/daos.dart';
 import '../../../models/dto_history/cards/cards_exports.dart';
 import '../../../models/mappers/history/vault_snapshot_history_mapper.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import 'vault_history_type_reader.dart';
 
 class ContactHistoryCardReader implements VaultHistoryTypeReader {

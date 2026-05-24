@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/system/item_tags.dart';
+import '../../../scheme/tables/system/item_tags.dart';
 
 part 'item_tags_dao.g.dart';
 

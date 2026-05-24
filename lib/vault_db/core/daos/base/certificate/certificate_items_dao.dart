@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/certificate/certificate_items.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/certificate/certificate_items.dart';
 
 part 'certificate_items_dao.g.dart';
 
-@DriftAccessor(tables: [CertificateItems])
+@DriftAccessor(tables: [CertificateItemConstraint])
 class CertificateItemsDao extends DatabaseAccessor<VaultDB>
     with _$CertificateItemsDaoMixin {
   CertificateItemsDao(super.db);

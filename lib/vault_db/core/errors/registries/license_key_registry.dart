@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/license_key/license_key_items.dart';
+import '../../scheme/tables/license_key/license_key_items.dart';
 
 final Map<String, DbConstraintDescriptor> licenseKeyRegistry = {
   LicenseKeyItemConstraint.itemIdNotBlank.constraintName:

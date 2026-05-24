@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../tables/system/icons/custom_icons.dart';
+import '../../../scheme/tables/system/icons/custom_icons.dart';
 import '../../field_update.dart';
 import '../converters.dart';
 

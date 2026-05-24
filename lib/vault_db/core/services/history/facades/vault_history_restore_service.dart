@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_event_history_repository.dart';
 import 'package:hoplixi/vault_db/core/services/history/custom_fields/custom_fields_restore_service.dart';
 import 'package:hoplixi/vault_db/core/services/history/item_links_restore_service.dart';
 import 'package:hoplixi/vault_db/core/services/history/tags_restore_service.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../../../daos/daos.dart';
@@ -11,11 +11,11 @@ import '../../../errors/db_error.dart';
 import '../../../errors/db_exception_mapper.dart';
 import '../../../errors/db_result.dart';
 import '../../../models/dto/dto.dart';
-import '../../../tables/vault_items/vault_events_history.dart';
+import '../../../scheme/tables/vault_items/vault_events_history.dart';
 import '../../vault_typed_view_resolver.dart';
+import '../policy/vault_history_restore_policy_service.dart';
 import '../restore_handlers/restore_handlers.dart';
 import '../vault_history_normalized_loader.dart';
-import '../policy/vault_history_restore_policy_service.dart';
 import '../vault_snapshot_writer.dart';
 
 class VaultHistoryRestoreService {

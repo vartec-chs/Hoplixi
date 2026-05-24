@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 part 'bank_card_history_dao.g.dart';

@@ -3,7 +3,7 @@ import 'package:result_dart/result_dart.dart';
 
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 
 class VaultHistoryDeleteService {
   VaultHistoryDeleteService({required this.db});

@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/vault_items/vault_items.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
 import '../field_update.dart';
 
 part 'vault_item_base_dto.freezed.dart';

@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/vault_db/core/models/field_update.dart';
-import 'package:hoplixi/vault_db/core/tables/tables.dart';
 
 part 'store_meta_dto.freezed.dart';
 part 'store_meta_dto.g.dart';

@@ -5,7 +5,7 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 import '../../daos/daos.dart';
 import '../../models/mappers/history/vault_item_base_history_payload_mapper.dart';
-import '../../tables/vault_items/vault_items.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
 
 class VaultHistoryNormalizedLoader {
   VaultHistoryNormalizedLoader({

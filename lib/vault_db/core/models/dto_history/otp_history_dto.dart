@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/otp/otp_items.dart';
+import '../../scheme/tables/otp/otp_items.dart';
 import '../dto/converters.dart';
 import 'vault_snapshot_base_dto.dart';
 

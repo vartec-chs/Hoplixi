@@ -1,8 +1,8 @@
 import 'package:hoplixi/vault_db/core/services/history/history.dart';
-import 'package:hoplixi/vault_db/core/tables/file/file_metadata.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/file/file_metadata.dart';
 
-import '../../../tables/vault_items/vault_items.dart';
 import '../../../models/dto_history/cards/cards_exports.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 
 class VaultHistoryRestorePolicyService {
   bool isRestorable(AnyNormalizedHistorySnapshot snapshot) {

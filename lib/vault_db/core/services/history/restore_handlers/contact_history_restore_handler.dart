@@ -5,7 +5,7 @@ import 'package:result_dart/result_dart.dart';
 import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
-import '../../../tables/tables.dart';
+import '../../../scheme/tables/tables.dart';
 import '../models/history_payload.dart';
 import '../models/vault_item_base_history_payload.dart';
 import '../payloads/contact_history_payload.dart';

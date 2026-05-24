@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
-import '../../../tables/tables.dart';
+import '../../../scheme/tables/tables.dart';
 import '../models/history_payload.dart';
 import '../models/vault_item_base_history_payload.dart';
 import '../payloads/file_history_payload.dart';

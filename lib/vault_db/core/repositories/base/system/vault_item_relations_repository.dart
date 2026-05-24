@@ -6,7 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
-import '../../../tables/system/item_link/item_links.dart';
+import '../../../scheme/tables/system/item_link/item_links.dart';
 import '../../../models/mappers/system/item_link_mapper.dart';
 import '../../../models/mappers/system/tag_mapper.dart';
 

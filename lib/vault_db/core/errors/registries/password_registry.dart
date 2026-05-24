@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/password/password_items.dart';
+import '../../scheme/tables/password/password_items.dart';
 
 final Map<String, DbConstraintDescriptor> passwordRegistry = {
   PasswordItemConstraint.itemIdNotBlank.constraintName:

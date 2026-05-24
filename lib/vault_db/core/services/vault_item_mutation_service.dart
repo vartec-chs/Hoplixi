@@ -6,8 +6,8 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/core/services/history/history.dart';
 import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
 import 'package:hoplixi/vault_db/core/services/vault_typed_view_resolver.dart';
-import 'package:hoplixi/vault_db/core/tables/vault_items/vault_events_history.dart';
-import 'package:hoplixi/vault_db/core/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_events_history.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:result_dart/result_dart.dart';
 
 class VaultItemMutationService {

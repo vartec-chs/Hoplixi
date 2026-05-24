@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/system/icons/icon_refs.dart';
+import '../../../scheme/tables/system/icons/icon_refs.dart';
 
 part 'icon_refs_dao.g.dart';
 

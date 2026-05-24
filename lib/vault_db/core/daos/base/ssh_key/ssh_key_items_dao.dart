@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import '../../../tables/ssh_key/ssh_key_items.dart';
+import '../../../scheme/tables/ssh_key/ssh_key_items.dart';
 
 part 'ssh_key_items_dao.g.dart';
 

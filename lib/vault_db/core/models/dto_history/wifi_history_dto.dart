@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/wifi/wifi_items.dart';
+import '../../scheme/tables/wifi/wifi_items.dart';
 import 'vault_snapshot_base_dto.dart';
 
 part 'wifi_history_dto.freezed.dart';

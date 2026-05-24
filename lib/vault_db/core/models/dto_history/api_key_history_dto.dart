@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/api_key/api_key_items.dart';
+import '../../scheme/tables/api_key/api_key_items.dart';
 import 'vault_snapshot_base_dto.dart';
 
 part 'api_key_history_dto.freezed.dart';

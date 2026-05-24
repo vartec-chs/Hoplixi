@@ -6,7 +6,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/m
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
-import 'package:hoplixi/vault_db/core/tables/crypto_wallet/crypto_wallet_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/crypto_wallet/crypto_wallet_items.dart';
 
 import '../models/crypto_wallet_form_state.dart';
 
@@ -147,13 +147,17 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
             ),
             cryptoWallet: PatchCryptoWalletDataDto(
               walletType: FieldUpdate.set(
-                c.walletType.isEmpty ? null : CryptoWalletType.values.byName(c.walletType),
+                c.walletType.isEmpty
+                    ? null
+                    : CryptoWalletType.values.byName(c.walletType),
               ),
               mnemonic: FieldUpdate.set(clean(c.mnemonic)),
               privateKey: FieldUpdate.set(clean(c.privateKey)),
               derivationPath: FieldUpdate.set(clean(c.derivationPath)),
               network: FieldUpdate.set(
-                c.network.isEmpty ? null : CryptoNetwork.values.byName(c.network),
+                c.network.isEmpty
+                    ? null
+                    : CryptoNetwork.values.byName(c.network),
               ),
               addresses: FieldUpdate.set(clean(c.addresses)),
               xpub: FieldUpdate.set(clean(c.xpub)),

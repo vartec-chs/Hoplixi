@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../tables/system/tags.dart';
+import '../../../scheme/tables/system/tags.dart';
 import '../../field_update.dart';
 
 part 'tag_dto.freezed.dart';

@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/certificate/certificate_items.dart';
+import '../../scheme/tables/certificate/certificate_items.dart';
 
 final Map<String, DbConstraintDescriptor> certificateRegistry = {
   CertificateItemConstraint.itemIdNotBlank.constraintName:

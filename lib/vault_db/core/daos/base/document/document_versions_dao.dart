@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/document/document_versions.dart';
+import '../../../scheme/tables/document/document_versions.dart';
 
 part 'document_versions_dao.g.dart';
 

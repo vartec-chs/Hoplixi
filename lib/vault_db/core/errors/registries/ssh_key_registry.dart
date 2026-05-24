@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/ssh_key/ssh_key_items.dart';
+import '../../scheme/tables/ssh_key/ssh_key_items.dart';
 
 final Map<String, DbConstraintDescriptor> sshKeyRegistry = {
   SshKeyItemConstraint.itemIdNotBlank.constraintName:

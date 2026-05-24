@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/wifi/wifi_items.dart';
+import '../../scheme/tables/wifi/wifi_items.dart';
 
 final Map<String, DbConstraintDescriptor> wifiRegistry = {
   WifiItemConstraint.itemIdNotBlank.constraintName:

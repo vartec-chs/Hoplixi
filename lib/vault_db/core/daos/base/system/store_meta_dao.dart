@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/store_meta_dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/system/store/store_meta_table.dart';
+import '../../../scheme/tables/system/store/store_meta_table.dart';
 
 part 'store_meta_dao.g.dart';
 
@@ -121,15 +121,17 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
     String? passwordHash,
     DateTime? modifiedAt,
   }) {
-    return (update(storeMetaTable))
-        .write(StoreMetaTableCompanion(
-          name: name == null ? const Value.absent() : Value(name),
-          description: description,
-          passwordHash: passwordHash == null
-              ? const Value.absent()
-              : Value(passwordHash),
-          modifiedAt: modifiedAt == null ? const Value.absent() : Value(modifiedAt),
-        ));
+    return (update(storeMetaTable)).write(
+      StoreMetaTableCompanion(
+        name: name == null ? const Value.absent() : Value(name),
+        description: description,
+        passwordHash: passwordHash == null
+            ? const Value.absent()
+            : Value(passwordHash),
+        modifiedAt: modifiedAt == null
+            ? const Value.absent()
+            : Value(modifiedAt),
+      ),
+    );
   }
-  }
-
+}

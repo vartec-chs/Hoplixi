@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../tables/document/document_types.dart';
+import '../../scheme/tables/document/document_types.dart';
 import '../field_update.dart';
 import 'vault_item_base_dto.dart';
 

@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/loyalty_card/loyalty_card_items.dart';
+import '../../scheme/tables/loyalty_card/loyalty_card_items.dart';
 
 final Map<String, DbConstraintDescriptor> loyaltyCardRegistry = {
   LoyaltyCardItemConstraint.itemIdNotBlank.constraintName:

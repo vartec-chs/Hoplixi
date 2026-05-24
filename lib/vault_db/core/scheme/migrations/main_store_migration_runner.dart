@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/vault_db/core/migrations/main_store_migration_types.dart';
+import 'package:hoplixi/vault_db/core/scheme/migrations/main_store_migration_types.dart';
 
 final Map<int, VaultDBMigration> _vaultDBMigrationsByVersion = {};
 

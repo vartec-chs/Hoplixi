@@ -2,9 +2,9 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 import '../../models/filters/filters.dart';
-import '../../tables/vault_items/vault_events_history.dart';
-import '../../tables/vault_items/vault_items.dart';
-import '../../tables/vault_items/vault_snapshots_history.dart';
+import '../../scheme/tables/vault_items/vault_events_history.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
+import '../../scheme/tables/vault_items/vault_snapshots_history.dart';
 import 'filter_dao.dart';
 
 part 'vault_snapshot_history_filter_dao.g.dart';

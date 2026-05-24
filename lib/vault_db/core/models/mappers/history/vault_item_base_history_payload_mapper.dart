@@ -1,6 +1,7 @@
-import '../../../services/history/models/vault_item_base_history_payload.dart';
-import '../../../tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
+
+import '../../../scheme/tables/vault_items/vault_events_history.dart';
+import '../../../services/history/models/vault_item_base_history_payload.dart';
 import '../../dto/dto.dart';
 
 extension VaultSnapshotHistoryBasePayloadMapper on VaultSnapshotHistoryData {

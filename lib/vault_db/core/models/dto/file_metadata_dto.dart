@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/file/file_metadata.dart';
+import '../../scheme/tables/file/file_metadata.dart';
 import '../field_update.dart';
 
 part 'file_metadata_dto.freezed.dart';

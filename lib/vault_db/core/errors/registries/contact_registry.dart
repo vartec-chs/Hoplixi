@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/contact/contact_items.dart';
+import '../../scheme/tables/contact/contact_items.dart';
 
 final Map<String, DbConstraintDescriptor> contactRegistry = {
   ContactItemConstraint.itemIdNotBlank.constraintName:

@@ -1,4 +1,4 @@
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import 'vault_snapshot_type_handler.dart';
 
 class VaultSnapshotTypeHandlerRegistry {

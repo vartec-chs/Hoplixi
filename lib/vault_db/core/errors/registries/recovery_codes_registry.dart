@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/recovery_codes/recovery_codes_items.dart';
+import '../../scheme/tables/recovery_codes/recovery_codes_items.dart';
 
 final Map<String, DbConstraintDescriptor> recoveryCodesRegistry = {
   RecoveryCodesItemConstraint.itemIdNotBlank.constraintName:

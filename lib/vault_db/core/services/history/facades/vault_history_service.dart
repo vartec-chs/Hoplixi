@@ -4,8 +4,8 @@ import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_event_history_repository.dart';
 import 'package:hoplixi/vault_db/core/services/history/policy/store_history_policy_service.dart';
 import 'package:hoplixi/vault_db/core/services/history/vault_snapshot_writer.dart';
-import 'package:hoplixi/vault_db/core/tables/vault_items/vault_events_history.dart';
-import 'package:hoplixi/vault_db/core/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_events_history.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../../../models/dto/vault_item_base_dto.dart';

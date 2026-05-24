@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../tables/system/item_link/item_links.dart';
+import '../../../scheme/tables/system/item_link/item_links.dart';
 import '../../field_update.dart';
 
 part 'item_link_dto.freezed.dart';

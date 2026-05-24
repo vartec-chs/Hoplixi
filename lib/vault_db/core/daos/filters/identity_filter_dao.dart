@@ -3,11 +3,11 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
-import '../../tables/identity/identity_items.dart';
-import '../../tables/system/categories.dart';
-import '../../tables/system/item_tags.dart';
-import '../../tables/system/tags.dart';
-import '../../tables/vault_items/vault_items.dart';
+import '../../scheme/tables/identity/identity_items.dart';
+import '../../scheme/tables/system/categories.dart';
+import '../../scheme/tables/system/item_tags.dart';
+import '../../scheme/tables/system/tags.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
 import 'base_filter_query_mixin.dart';
 import 'filter_dao.dart';
 

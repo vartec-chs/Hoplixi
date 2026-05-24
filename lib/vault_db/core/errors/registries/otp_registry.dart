@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/otp/otp_items.dart';
+import '../../scheme/tables/otp/otp_items.dart';
 
 final Map<String, DbConstraintDescriptor> otpRegistry = {
   OtpItemConstraint.itemIdNotBlank.constraintName: const DbConstraintDescriptor(

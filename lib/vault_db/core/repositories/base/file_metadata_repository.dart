@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../errors/db_error.dart';
 import '../../errors/db_result.dart';
 import '../../models/mappers/file_mapper.dart';
-import '../../tables/file/file_metadata.dart';
+import '../../scheme/tables/file/file_metadata.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 class FileMetadataRepository {

@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../tables/tables.dart';
+import '../../../scheme/tables/tables.dart';
 import '../sort.dart';
 
 part 'vault_event_history_filter.freezed.dart';

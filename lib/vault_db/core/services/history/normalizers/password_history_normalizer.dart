@@ -3,7 +3,7 @@ import 'package:hoplixi/vault_db/core/repositories/base/password_repository.dart
 import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import '../models/history_payload.dart';
 import '../payloads/password_history_payload.dart';
 import 'vault_history_type_normalizer.dart';

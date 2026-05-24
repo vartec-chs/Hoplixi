@@ -1,7 +1,7 @@
 import 'package:result_dart/result_dart.dart';
 
 import '../../../errors/db_result.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import '../models/history_payload.dart';
 import '../models/vault_item_base_history_payload.dart';
 

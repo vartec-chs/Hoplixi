@@ -1,11 +1,10 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/api_key/api_key_items.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-
-import '../../../tables/api_key/api_key_items.dart';
 
 part 'api_key_items_dao.g.dart';
 
-@DriftAccessor(tables: [ApiKeyItems])
+@DriftAccessor(tables: [ApiKeyItemConstraint])
 class ApiKeyItemsDao extends DatabaseAccessor<VaultDB>
     with _$ApiKeyItemsDaoMixin {
   ApiKeyItemsDao(super.db);

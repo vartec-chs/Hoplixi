@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../tables/system/store/store_settings.dart';
+import '../../../scheme/tables/system/store/store_settings.dart';
 import '../../field_update.dart';
 
 part 'store_settings_dto.freezed.dart';

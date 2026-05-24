@@ -362,7 +362,23 @@ final List<String> vaultItemsTableIndexes = [
 enum VaultItemTrigger {
   preventCreatedAtUpdate('trg_vault_items_prevent_created_at_update'),
 
-  preventTypeUpdate('trg_vault_items_prevent_type_update');
+  preventTypeUpdate('trg_vault_items_prevent_type_update'),
+
+  preventArchivedAtStateOnInsert(
+    'trg_vault_items_prevent_archived_at_state_on_insert',
+  ),
+
+  preventArchivedAtStateOnUpdate(
+    'trg_vault_items_prevent_archived_at_state_on_update',
+  ),
+
+  preventDeletedAtStateOnInsert(
+    'trg_vault_items_prevent_deleted_at_state_on_insert',
+  ),
+
+  preventDeletedAtStateOnUpdate(
+    'trg_vault_items_prevent_deleted_at_state_on_update',
+  );
 
   const VaultItemTrigger(this.triggerName);
 
@@ -372,7 +388,15 @@ enum VaultItemTrigger {
 enum VaultItemRaise {
   createdAtImmutable('vault_items.created_at is immutable'),
 
-  typeImmutable('vault_items.type is immutable');
+  typeImmutable('vault_items.type is immutable'),
+
+  archivedAtStateMismatch(
+    'vault_items.archived_at must be NULL when is_archived = 0 and non-NULL when is_archived = 1',
+  ),
+
+  deletedAtStateMismatch(
+    'vault_items.deleted_at must be NULL when is_deleted = 0 and non-NULL when is_deleted = 1',
+  );
 
   const VaultItemRaise(this.message);
 
@@ -402,6 +426,70 @@ final List<String> vaultItemsTableTriggers = [
     SELECT RAISE(
       ABORT,
       '${VaultItemRaise.typeImmutable.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${VaultItemTrigger.preventArchivedAtStateOnInsert.triggerName}
+  BEFORE INSERT ON vault_items
+  FOR EACH ROW
+  WHEN (
+    (NEW.is_archived = 0 AND NEW.archived_at IS NOT NULL)
+    OR (NEW.is_archived = 1 AND NEW.archived_at IS NULL)
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${VaultItemRaise.archivedAtStateMismatch.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${VaultItemTrigger.preventArchivedAtStateOnUpdate.triggerName}
+  BEFORE UPDATE OF is_archived, archived_at ON vault_items
+  FOR EACH ROW
+  WHEN (
+    (NEW.is_archived = 0 AND NEW.archived_at IS NOT NULL)
+    OR (NEW.is_archived = 1 AND NEW.archived_at IS NULL)
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${VaultItemRaise.archivedAtStateMismatch.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${VaultItemTrigger.preventDeletedAtStateOnInsert.triggerName}
+  BEFORE INSERT ON vault_items
+  FOR EACH ROW
+  WHEN (
+    (NEW.is_deleted = 0 AND NEW.deleted_at IS NOT NULL)
+    OR (NEW.is_deleted = 1 AND NEW.deleted_at IS NULL)
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${VaultItemRaise.deletedAtStateMismatch.message}'
+    );
+  END;
+  ''',
+
+  '''
+  CREATE TRIGGER IF NOT EXISTS ${VaultItemTrigger.preventDeletedAtStateOnUpdate.triggerName}
+  BEFORE UPDATE OF is_deleted, deleted_at ON vault_items
+  FOR EACH ROW
+  WHEN (
+    (NEW.is_deleted = 0 AND NEW.deleted_at IS NOT NULL)
+    OR (NEW.is_deleted = 1 AND NEW.deleted_at IS NULL)
+  )
+  BEGIN
+    SELECT RAISE(
+      ABORT,
+      '${VaultItemRaise.deletedAtStateMismatch.message}'
     );
   END;
   ''',

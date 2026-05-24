@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/tables/ssh_key/ssh_key_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/ssh_key/ssh_key_items.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
@@ -9,7 +9,7 @@ import '../../errors/db_error.dart';
 import '../../errors/db_result.dart';
 import '../../models/mappers/ssh_key_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
-import '../../tables/vault_items/vault_items.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
 
 class SshKeyRepository {
   final VaultDB db;

@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/contact/contact_history.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import '../../../tables/contact/contact_history.dart';
 
 part 'contact_history_dao.g.dart';
 

@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/vault_items/vault_items.dart';
-import '../../../tables/vault_items/vault_snapshots_history.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_snapshots_history.dart';
 
 part 'vault_snapshots_history_dao.g.dart';
 

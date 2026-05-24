@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/note/note_items.dart';
+import '../../scheme/tables/note/note_items.dart';
 
 final Map<String, DbConstraintDescriptor> noteRegistry = {
   NoteItemConstraint.itemIdNotBlank.constraintName:

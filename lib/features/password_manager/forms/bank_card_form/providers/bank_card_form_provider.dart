@@ -6,7 +6,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/c
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
-import 'package:hoplixi/vault_db/core/tables/bank_card/bank_card_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/bank_card/bank_card_items.dart';
 
 import '../models/bank_card_form_state.dart';
 
@@ -42,7 +42,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
 
       final item = view.item;
       final details = view.bankCard;
-      
+
       // TODO: handle tags properly
       final tagIds = <String>[];
       final tagNames = <String>[];
@@ -274,7 +274,9 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
               itemId: state.editingBankCardId!,
               name: FieldUpdate.set(state.name.trim()),
               description: FieldUpdate.set(
-                state.description.trim().isEmpty ? null : state.description.trim(),
+                state.description.trim().isEmpty
+                    ? null
+                    : state.description.trim(),
               ),
               categoryId: FieldUpdate.set(state.categoryId),
             ),
@@ -321,10 +323,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
         );
         // TODO: handle icon ref
 
-        logInfo(
-          'Bank card updated: ${state.editingBankCardId}',
-          tag: _logTag,
-        );
+        logInfo('Bank card updated: ${state.editingBankCardId}', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);
 
         ref

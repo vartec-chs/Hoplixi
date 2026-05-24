@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../tables/vault_items/vault_item_custom_fields.dart';
+
+import '../../../scheme/tables/vault_items/vault_item_custom_fields.dart';
 
 part 'custom_field_history_card_dto.freezed.dart';
 part 'custom_field_history_card_dto.g.dart';

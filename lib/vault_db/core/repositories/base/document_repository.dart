@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/vault_item_base_dto.dart';
 import 'package:hoplixi/vault_db/core/models/field_update.dart';
-import 'package:hoplixi/vault_db/core/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:hoplixi/vault_db/core/vault_db.dart';
 import '../../errors/db_error.dart';
 import '../../errors/db_result.dart';
 import '../../models/dto/document_dto.dart';

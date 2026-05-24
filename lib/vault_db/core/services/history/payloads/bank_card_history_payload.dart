@@ -1,5 +1,5 @@
-import '../../../tables/bank_card/bank_card_items.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/bank_card/bank_card_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import '../models/history_field_snapshot.dart';
 import '../models/history_payload.dart';
 

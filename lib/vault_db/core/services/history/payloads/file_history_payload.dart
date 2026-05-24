@@ -1,5 +1,5 @@
-import '../../../tables/file/file_metadata.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/file/file_metadata.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import '../models/history_field_snapshot.dart';
 import '../models/history_payload.dart';
 

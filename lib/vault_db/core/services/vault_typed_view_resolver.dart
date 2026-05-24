@@ -14,7 +14,7 @@ import 'package:hoplixi/vault_db/core/repositories/base/password_repository.dart
 import 'package:hoplixi/vault_db/core/repositories/base/recovery_codes_repository.dart';
 import 'package:hoplixi/vault_db/core/repositories/base/ssh_key_repository.dart';
 import 'package:hoplixi/vault_db/core/repositories/base/wifi_repository.dart';
-import 'package:hoplixi/vault_db/core/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 class VaultTypedViewResolver {
   VaultTypedViewResolver({

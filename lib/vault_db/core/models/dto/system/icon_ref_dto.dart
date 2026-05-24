@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../tables/system/icons/icon_refs.dart';
+
+import '../../../scheme/tables/system/icons/icon_refs.dart';
 import '../../field_update.dart';
 
 part 'icon_ref_dto.freezed.dart';

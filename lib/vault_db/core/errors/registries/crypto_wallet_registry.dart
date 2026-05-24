@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/crypto_wallet/crypto_wallet_items.dart';
+import '../../scheme/tables/crypto_wallet/crypto_wallet_items.dart';
 
 final Map<String, DbConstraintDescriptor> cryptoWalletRegistry = {
   CryptoWalletItemConstraint.itemIdNotBlank.constraintName:

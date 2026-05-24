@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 import '../../../models/dto_history/cards/recovery_codes_history_card_dto.dart';
-import '../../../tables/recovery_codes/recovery_code_values_history.dart';
+import '../../../scheme/tables/recovery_codes/recovery_code_values_history.dart';
 
 part 'recovery_code_values_history_dao.g.dart';
 

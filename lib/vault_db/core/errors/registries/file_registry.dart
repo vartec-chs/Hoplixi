@@ -1,6 +1,6 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/file/file_items.dart';
-import '../../tables/file/file_metadata.dart';
+import '../../scheme/tables/file/file_items.dart';
+import '../../scheme/tables/file/file_metadata.dart';
 
 final Map<String, DbConstraintDescriptor> fileRegistry = {
   // --- File Items ---

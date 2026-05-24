@@ -49,7 +49,7 @@ DAOs или сервисов, пожалуйста,обновляйте этот
 
 ## Архитектурные слои
 
-### 1. [Tables](./tables/) — Определение схемы (DDL)
+### 1. [Tables](./scheme/tables) — Определение схемы (DDL)
 
 Низкоуровневое описание таблиц Drift, индексов и триггеров.
 
@@ -57,9 +57,9 @@ DAOs или сервисов, пожалуйста,обновляйте этот
   `*_history.dart` (таблицы для snapshot-ов истории).
 - Содержит SQL-триггеры для обеспечения целостности данных и автоматического
   ведения истории.
-- [all_table_indexes.dart](./tables/all_table_indexes.dart) — агрегатор всех
+- [all_table_indexes.dart](./scheme/tables/all_table_indexes.dart) — агрегатор всех
   индексов
-- [all_table_triggers.dart](./tables/all_table_triggers.dart) — агрегатор всех
+- [all_table_triggers.dart](./scheme/tables/all_table_triggers.dart) — агрегатор всех
   триггеров.
 
 ### 2. [DAOs](./daos) — Data Access Objects
@@ -213,7 +213,7 @@ final filter = VaultEventHistoryFilter.create(
 
 Логика проверки данных перед записью в БД, дополняющая SQL-ограничения.
 
-### 9. [Migrations](./migrations/) — Миграции
+### 9. [Migrations](./scheme/migrations) — Миграции
 
 Управление версиями схемы базы данных.
 

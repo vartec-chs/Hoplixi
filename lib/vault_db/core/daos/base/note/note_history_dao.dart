@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import '../../../tables/note/note_history.dart';
+import '../../../scheme/tables/note/note_history.dart';
 
 part 'note_history_dao.g.dart';
 

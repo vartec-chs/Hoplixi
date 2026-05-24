@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/vault_items/vault_items.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
 
 final Map<String, DbConstraintDescriptor> vaultItemRegistry = {
   VaultItemConstraint.idNotBlank.constraintName: const DbConstraintDescriptor(

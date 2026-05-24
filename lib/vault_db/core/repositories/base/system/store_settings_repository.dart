@@ -1,5 +1,5 @@
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
-import 'package:hoplixi/vault_db/core/tables/system/store/store_settings.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/store/store_settings.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 import '../../../errors/db_error.dart';

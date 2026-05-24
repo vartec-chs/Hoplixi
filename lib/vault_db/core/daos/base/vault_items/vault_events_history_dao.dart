@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/vault_items/vault_events_history.dart';
+import '../../../scheme/tables/vault_items/vault_events_history.dart';
 
 part 'vault_events_history_dao.g.dart';
 
@@ -27,5 +27,11 @@ class VaultEventsHistoryDao extends DatabaseAccessor<VaultDB>
     )..where((tbl) => tbl.snapshotHistoryId.equals(snapshotHistoryId))).write(
       const VaultEventsHistoryCompanion(snapshotHistoryId: Value(null)),
     );
+  }
+
+  Stream<bool> watchHasUnseenVaultEvents() {
+    final query = select(vaultEventsHistory)..limit(1);
+
+    return query.watch().map((rows) => rows.isNotEmpty);
   }
 }

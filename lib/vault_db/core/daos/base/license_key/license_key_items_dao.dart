@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import '../../../tables/license_key/license_key_items.dart';
+import '../../../scheme/tables/license_key/license_key_items.dart';
 
 part 'license_key_items_dao.g.dart';
 

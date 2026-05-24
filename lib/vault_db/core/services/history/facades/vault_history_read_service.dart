@@ -1,5 +1,4 @@
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:result_dart/result_dart.dart';
 
 import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
@@ -7,7 +6,7 @@ import '../../../errors/db_result.dart';
 import '../../../models/dto/dto.dart';
 import '../../../models/filters/history/vault_snapshot_history_filter.dart';
 import '../../../models/mappers/history/vault_snapshot_history_mapper.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import '../readers/readers.dart';
 
 class VaultHistoryReadService {

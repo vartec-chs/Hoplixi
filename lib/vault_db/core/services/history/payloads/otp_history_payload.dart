@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import '../../../tables/otp/otp_items.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/otp/otp_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import '../models/history_field_snapshot.dart';
 import '../models/history_payload.dart';
 

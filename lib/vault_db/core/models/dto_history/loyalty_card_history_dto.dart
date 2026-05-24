@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/loyalty_card/loyalty_card_items.dart';
+import '../../scheme/tables/loyalty_card/loyalty_card_items.dart';
 import 'vault_snapshot_base_dto.dart';
 
 part 'loyalty_card_history_dto.freezed.dart';

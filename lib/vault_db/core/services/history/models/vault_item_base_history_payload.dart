@@ -1,5 +1,5 @@
-import '../../../tables/vault_items/vault_events_history.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_events_history.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import 'history_field_snapshot.dart';
 
 class VaultItemBaseHistoryPayload {

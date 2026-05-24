@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../tables/license_key/license_key_items.dart';
+import '../../scheme/tables/license_key/license_key_items.dart';
 import 'vault_snapshot_base_dto.dart';
 
 part 'license_key_history_dto.freezed.dart';

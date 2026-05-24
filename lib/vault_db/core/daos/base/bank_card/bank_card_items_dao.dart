@@ -1,11 +1,10 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/bank_card/bank_card_items.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-
-import '../../../tables/bank_card/bank_card_items.dart';
 
 part 'bank_card_items_dao.g.dart';
 
-@DriftAccessor(tables: [BankCardItems])
+@DriftAccessor(tables: [BankCardItemConstraint])
 class BankCardItemsDao extends DatabaseAccessor<VaultDB>
     with _$BankCardItemsDaoMixin {
   BankCardItemsDao(super.db);

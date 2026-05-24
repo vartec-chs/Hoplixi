@@ -8,7 +8,7 @@ import '../../errors/db_error.dart';
 import '../../errors/db_result.dart';
 import '../../models/mappers/contact_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
-import '../../tables/vault_items/vault_items.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
 
 class ContactRepository {
   final VaultDB db;

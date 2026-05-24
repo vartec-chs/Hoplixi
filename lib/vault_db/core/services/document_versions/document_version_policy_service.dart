@@ -3,7 +3,7 @@ import 'package:result_dart/result_dart.dart';
 import '../../errors/db_error.dart';
 import '../../errors/db_result.dart';
 import '../../models/dto/document_version_dto.dart';
-import '../../tables/document/document_types.dart';
+import '../../scheme/tables/document/document_types.dart';
 
 class DocumentVersionPolicyService {
   const DocumentVersionPolicyService();

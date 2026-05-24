@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import '../../../tables/loyalty_card/loyalty_card_items.dart';
+import '../../../scheme/tables/loyalty_card/loyalty_card_items.dart';
 
 part 'loyalty_card_items_dao.g.dart';
 

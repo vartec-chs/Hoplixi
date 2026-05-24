@@ -1,4 +1,4 @@
-import 'package:hoplixi/vault_db/core/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
 
 class CreateDocumentVersionPageDto {
   const CreateDocumentVersionPageDto({
@@ -123,4 +123,3 @@ class DocumentVersionCardDto {
   final DateTime modifiedAt;
   final bool isCurrent;
 }
-

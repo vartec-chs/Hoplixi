@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/bank_card/bank_card_items.dart';
+import '../../scheme/tables/bank_card/bank_card_items.dart';
 
 final Map<String, DbConstraintDescriptor> bankCardRegistry = {
   BankCardItemConstraint.itemIdNotBlank.constraintName:

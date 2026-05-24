@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/api_key/api_key_items.dart';
+import '../../scheme/tables/api_key/api_key_items.dart';
 
 final Map<String, DbConstraintDescriptor> apiKeyRegistry = {
   ApiKeyItemConstraint.serviceNotBlank.constraintName:

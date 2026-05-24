@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/system/store/store_settings.dart';
+import '../../../scheme/tables/system/store/store_settings.dart';
 
 part 'store_settings_dao.g.dart';
 
@@ -94,14 +94,14 @@ class StoreSettingsDao extends DatabaseAccessor<VaultDB>
       final cutOffDate = DateTime.now().subtract(Duration(days: maxAgeDays));
 
       // Удаляем старые снапшоты (связанные данные удалятся каскадно через FK)
-      await (delete(db.vaultSnapshotsHistory)
-            ..where((t) => t.historyCreatedAt.isSmallerThanValue(cutOffDate)))
-          .go();
+      await (delete(
+        db.vaultSnapshotsHistory,
+      )..where((t) => t.historyCreatedAt.isSmallerThanValue(cutOffDate))).go();
 
       // Удаляем старые события
-      await (delete(db.vaultEventsHistory)
-            ..where((t) => t.eventCreatedAt.isSmallerThanValue(cutOffDate)))
-          .go();
+      await (delete(
+        db.vaultEventsHistory,
+      )..where((t) => t.eventCreatedAt.isSmallerThanValue(cutOffDate))).go();
     }
 
     // 2. Очистка по количеству (count-based)
@@ -112,7 +112,8 @@ class StoreSettingsDao extends DatabaseAccessor<VaultDB>
         await delete(db.vaultEventsHistory).go();
       } else if (maxRecordsPerItem > 0) {
         // Оставляем последние N записей для каждого элемента (item_id)
-        await customStatement('''
+        await customStatement(
+          '''
           DELETE FROM vault_snapshots_history 
           WHERE id IN (
             SELECT id FROM (
@@ -120,7 +121,9 @@ class StoreSettingsDao extends DatabaseAccessor<VaultDB>
               FROM vault_snapshots_history
             ) WHERE rn > ?
           )
-        ''', [maxRecordsPerItem]);
+        ''',
+          [maxRecordsPerItem],
+        );
       }
     }
   }

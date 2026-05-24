@@ -2,11 +2,11 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/vault_db/core/daos/daos.dart';
-import 'package:hoplixi/vault_db/core/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
 import 'package:uuid/uuid.dart';
 
-import 'tables/all_table_indexes.dart';
-import 'tables/all_table_triggers.dart';
+import 'scheme/tables/all_table_indexes.dart';
+import 'scheme/tables/all_table_triggers.dart';
 
 part 'vault_db.g.dart';
 
@@ -212,6 +212,15 @@ class VaultDB extends _$VaultDB {
   @override
   int get schemaVersion => MainConstants.databaseSchemaVersion;
 
+  Stream<void> watchVaultEventsHistoryUpdates() {
+    return tableUpdates(
+      TableUpdateQuery.onTable(
+        vaultEventsHistory,
+        limitUpdateKind: UpdateKind.insert,
+      ),
+    ).map((_) {});
+  }
+
   Future<void> _setupRuntimePragmas() async {
     await customStatement('PRAGMA foreign_keys = ON');
     await customStatement('PRAGMA recursive_triggers = ON');
@@ -224,70 +233,6 @@ class VaultDB extends _$VaultDB {
     await customStatement('PRAGMA synchronous = FULL');
 
     await customStatement('PRAGMA journal_size_limit = 0');
-  }
-
-  /// Поток для отслеживания изменений в данных.
-  ///
-  /// Эмитирует событие каждый раз при изменении данных
-  /// в любой из основных таблиц.
-  Stream<void> watchDataChanged() {
-    return customSelect(
-      'SELECT 1',
-      readsFrom: {
-        // storeSettings,
-        // vaultItems,
-        // passwordItems,
-        // passwordHistory,
-        // apiKeyItems,
-        // apiKeyHistory,
-        // sshKeyItems,
-        // sshKeyHistory,
-        // certificateItems,
-        // certificateHistory,
-        // contactItems,
-        // contactHistory,
-        // cryptoWalletItems,
-        // cryptoWalletHistory,
-        // wifiItems,
-        // wifiHistory,
-        // identityItems,
-        // identityHistory,
-        // licenseKeyItems,
-        // licenseKeyHistory,
-        // recoveryCodesItems,
-        // recoveryCodesHistory,
-        // recoveryCodes,
-        // loyaltyCardItems,
-        // loyaltyCardHistory,
-        // otpItems,
-        // otpHistory,
-        // noteItems,
-        // itemLinks,
-        // itemLinkHistory,
-        // noteHistory,
-        // bankCardItems,
-        // bankCardHistory,
-        // fileItems,
-        // fileHistory,
-        // fileMetadataHistory,
-        // documentItems,
-        // documentPages,
-        // documentVersions,
-        // documentVersionPages,
-        // itemTags,
-        // itemCategoryHistory,
-        // vaultItemTagHistory,
-        // vaultItemCustomFields,
-        // vaultItemCustomFieldsHistory,
-        // categories,
-        // tags,
-        // icons,
-        // iconRefs,
-        // vaultSnapshotsHistory,
-        // vaultEventsHistory,
-        // fileMetadata,
-      },
-    ).watch().map((_) {});
   }
 
   Future<void> _dropAllUserObjects() async {

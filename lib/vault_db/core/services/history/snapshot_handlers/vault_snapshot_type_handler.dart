@@ -2,7 +2,7 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../../../errors/db_result.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 
 abstract interface class VaultSnapshotTypeHandler {
   VaultItemType get type;

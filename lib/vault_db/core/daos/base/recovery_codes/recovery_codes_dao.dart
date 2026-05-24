@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../../tables/recovery_codes/recovery_codes.dart';
+import '../../../scheme/tables/recovery_codes/recovery_codes.dart';
 
 part 'recovery_codes_dao.g.dart';
 

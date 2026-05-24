@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import '../../../tables/password/password_items.dart';
+import '../../../scheme/tables/password/password_items.dart';
 
 part 'password_items_dao.g.dart';
 

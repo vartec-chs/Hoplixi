@@ -58,7 +58,7 @@ final dataUpdateStreamProvider = Provider<Stream<void>>((ref) {
       final store = ref
           .read(vaultDBManagerStateProvider.notifier)
           .requireDatabase;
-      return store.watchDataChanged().skip(1);
+      return store.watchVaultEventsHistoryUpdates();
     },
     orElse: () => const Stream.empty(),
   );

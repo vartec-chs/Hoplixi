@@ -1,5 +1,5 @@
-import '../../../tables/api_key/api_key_items.dart';
-import '../../../tables/vault_items/vault_items.dart';
+import '../../../scheme/tables/api_key/api_key_items.dart';
+import '../../../scheme/tables/vault_items/vault_items.dart';
 import '../models/history_field_snapshot.dart';
 import '../models/history_payload.dart';
 

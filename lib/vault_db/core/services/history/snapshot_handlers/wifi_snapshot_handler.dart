@@ -6,7 +6,7 @@ import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
 import '../../../models/dto/dto.dart';
-import '../../../tables/tables.dart';
+import '../../../scheme/tables/tables.dart';
 import 'vault_snapshot_type_handler.dart';
 
 class WifiSnapshotHandler implements VaultSnapshotTypeHandler {

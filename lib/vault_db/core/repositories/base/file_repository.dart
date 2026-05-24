@@ -10,8 +10,8 @@ import '../../models/dto/file_dto.dart';
 import '../../models/dto/vault_item_base_dto.dart';
 import '../../models/mappers/file_mapper.dart';
 import '../../models/mappers/vault_item_mapper.dart';
-import '../../tables/file/file_metadata.dart';
-import '../../tables/vault_items/vault_items.dart';
+import '../../scheme/tables/file/file_metadata.dart';
+import '../../scheme/tables/vault_items/vault_items.dart';
 
 class FileRepository {
   final VaultDB db;

@@ -1,50 +1,61 @@
 # Database Schema
 
 Данный документ отражает текущую схему таблиц Drift в директории
-`lib/main_db/core/tables`.
+`lib/vault_db/core/tables`.
 
 ## Core Vault Tables
 
-Основные таблицы для хранения элементов и их истории.
+Основные таблицы для элементов хранилища, их snapshot-истории и audit-логов.
 
 ### vault_items
 
 Базовая таблица для всех элементов хранилища. Columns: `id`, `type`, `name`,
 `description`, `categoryId`, `iconRefId`, `usedCount`, `isFavorite`,
-`isArchived`, `isPinned`, `isDeleted`, `createdAt`, `modifiedAt`, `recentScore`,
-`lastUsedAt`. Notes: `id` — UUID v4 (PK). `type` — `VaultItemType`. Связи с
-`categories` и `icon_refs`. Имеются ограничения на неотрицательность счетчиков и
-непустое имя. enum VaultItemType { password, otp, note, bankCard, document,
-file, contact, apiKey, sshKey, certificate, cryptoWallet, wifi, identity,
-licenseKey, recoveryCodes, loyaltyCard, }
+`isArchived`, `isPinned`, `isDeleted`, `createdAt`, `modifiedAt`, `lastUsedAt`,
+`archivedAt`, `deletedAt`, `recentScore`. Notes: `id` — UUID v4 (PK). `type` —
+`VaultItemType { password, otp, note, bankCard, document, file, contact, apiKey, sshKey, certificate, cryptoWallet, wifi, identity, licenseKey, recoveryCodes, loyaltyCard }`.
+Связи с `categories` и `icon_refs` nullable и удаляются через `SET NULL`.
+`usedCount` и `recentScore` не могут быть отрицательными, `name` не пустое и без
+outer whitespace. `archivedAt` и `deletedAt` отражают состояние
+soft-delete/архивации и дополнительно жёстко проверяются триггерами на
+insert/update, чтобы не допустить рассинхронизацию с `isArchived`/`isDeleted`.
 
-### vault_item_history
+### vault_snapshots_history
 
-Таблица истории изменений базовых полей элементов. Columns: `id`, `itemId`,
-`kind`, `action`, `type`, `name`, `description`, `categoryId`,
-`categoryHistoryId`, `iconRefId`, `usedCount`, `isFavorite`, `isArchived`,
-`isPinned`, `isDeleted`, `createdAt`, `modifiedAt`, `recentScore`, `lastUsedAt`,
-`snapshotId`, `historyCreatedAt`. Notes: Снимок состояния `vault_items` на
-момент действия `action`. Содержит только базовые поля item; `categoryHistoryId`
-ссылается на snapshot категории в `item_category_history`, snapshot тегов
-хранится как набор строк
-`vault_item_tag_history.historyId -> vault_item_history.id`. enum
-VaultItemHistoryKind { snapshot, event, } enum VaultItemHistoryAction { created,
-updated, archived, restored, deleted, recovered, favorited, unfavorited, pinned,
-unpinned, }
+Snapshot базовых полей vault item. Columns: `id`, `itemId`, `action`, `type`,
+`name`, `description`, `categoryId`, `categoryHistoryId`, `iconRefId`,
+`usedCount`, `isFavorite`, `isArchived`, `isPinned`, `isDeleted`, `createdAt`,
+`modifiedAt`, `lastUsedAt`, `archivedAt`, `deletedAt`, `recentScore`,
+`historyCreatedAt`. Notes: это restorable snapshot текущего состояния item;
+`categoryHistoryId` ссылается на
+[item_category_history](#item_category_history). Таблица использует тот же
+словарь действий, что и событийный лог, и хранит только базовые поля item без
+специфичных payload-таблиц.
+
+### vault_events_history
+
+Audit/event лог по элементам хранилища. Columns: `id`, `itemId`, `action`,
+`type`, `name`, `description`, `snapshotHistoryId`, `actorType`,
+`eventCreatedAt`. Notes: immutable event stream; `actorType` — `user`, `system`,
+`autoCleanup`, `import`, `sync`, `restore`, `extension`, `unknown`. Для
+restorable действий `snapshotHistoryId` обязателен.
 
 ### vault_item_custom_fields
 
 Кастомные поля элементов. Columns: `id`, `itemId`, `label`, `value`,
-`fieldType`, `fieldTypeOther`, `sortOrder`. Notes: Связь с `vault_items`
-(Cascade). `fieldType` — `CustomFieldType`. enum CustomFieldType { text,
-concealed, url, email, phone, date, number, multiline, boolean, json, other, }
+`fieldType`, `isSecret`, `sortOrder`, `createdAt`, `modifiedAt`. Notes:
+`fieldType` —
+`CustomFieldType { text, concealed, url, email, phone, date, number, multiline, boolean }`.
+`isSecret` — быстрый флаг для UI, поиска и экспорта. Связь с `vault_items`
+удаляется каскадно.
 
 ### vault_item_custom_fields_history
 
-История кастомных полей. Columns: `id`, `historyId`, `originalFieldId`, `label`,
-`value`, `fieldType`, `fieldTypeOther`, `sortOrder`. Notes: Связь с
-`vault_item_history`. Хранит снимки кастомных полей.
+История кастомных полей. Columns: `id`, `snapshotHistoryId`, `originalFieldId`,
+`label`, `value`, `fieldType`, `isSecret`, `sortOrder`, `createdAt`,
+`modifiedAt`, `historyCreatedAt`. Notes: append-only snapshot строк
+custom-fields; `snapshotHistoryId` указывает на `vault_snapshots_history`, а
+`originalFieldId` сохраняется как необязательная ссылка на исходное поле.
 
 ## Classification and Link Tables
 
@@ -55,7 +66,7 @@ concealed, url, email, phone, date, number, multiline, boolean, json, other, }
 Древовидные категории. Columns: `id`, `name`, `description`, `iconRefId`,
 `color`, `type`, `parentId`, `createdAt`, `modifiedAt`. Notes: `color` в формате
 `AARRGGBB`. `type` — `CategoryType`. Рекурсивная связь через `parentId`. enum
-CategoryType { note, password, totp, bankCard, file, document, contact, apiKey,
+CategoryType { note, password, otp, bankCard, file, document, contact, apiKey,
 sshKey, certificate, cryptoWallet, wifi, identity, licenseKey, recoveryCodes,
 loyaltyCard, mixed, }
 
@@ -63,7 +74,7 @@ loyaltyCard, mixed, }
 
 Теги для классификации. Columns: `id`, `name`, `color`, `type`, `createdAt`,
 `modifiedAt`. Notes: Уникальность по `(name, type)`. enum TagType { note,
-password, totp, bankCard, file, document, contact, apiKey, sshKey, certificate,
+password, otp, bankCard, file, document, contact, apiKey, sshKey, certificate,
 cryptoWallet, wifi, identity, licenseKey, recoveryCodes, loyaltyCard, mixed, }
 
 ### item_tags
@@ -102,14 +113,14 @@ Columns: `id`, `sourceItemId`, `targetItemId`, `relationType`,
 `sourceItemId`, `targetItemId`, `relationType`, `relationTypeOther`, `label`,
 `sortOrder`, `createdAt`, `modifiedAt`, `snapshotId`, `snapshotCreatedAt`.
 Notes: Хранит снимок `item_links` на момент создания записи
-`vault_item_history`.
+`vault_snapshots_history`.
 
 ### item_category_history
 
 Snapshot категории vault item. Columns: `id`, `snapshotId`, `itemId`,
 `categoryId`, `name`, `description`, `iconRefId`, `color`, `type`, `parentId`,
 `categoryCreatedAt`, `categoryModifiedAt`, `snapshotCreatedAt`. Notes:
-`vault_item_history.categoryHistoryId` указывает на эту запись.
+`vault_snapshots_history.categoryHistoryId` указывает на эту запись.
 
 ### vault_item_tag_history
 
@@ -145,8 +156,9 @@ IconSourceType { builtin, pack, custom }
 Поля одноразовых паролей (OTP). Columns: `itemId`, `type`, `issuer`,
 `accountName`, `secret`, `algorithm`, `digits`, `period`, `counter`. Notes:
 `secret` хранится как Blob. Все связи с паролями вынесены в `item_links`
-(`otpForPassword`). enum OtpType { totp, hotp } enum OtpHashAlgorithm { SHA1,
-SHA256, SHA512 }
+(`otpForPassword`). `OtpType { otp, hotp }`,
+`OtpHashAlgorithm { SHA1, SHA256, SHA512 }`. Для `otp` используется `period`,
+для `hotp` — `counter`.
 
 ### note_items
 
@@ -182,21 +194,23 @@ Live-указатели страниц документа. Columns: `id`, `docum
 
 ### document_versions
 
-Версии документа. Columns: `id`, `documentId`, `itemHistoryId`, `versionNumber`,
+Версии документа. Columns: `id`, `documentId`, `historyId`, `versionNumber`,
 `documentType`, `documentTypeOther`, `aggregateSha256Hash`, `pageCount`,
-`snapshotId`, `createdAt`, `modifiedAt`. Notes: Главный источник восстановления
-документа. Текущая версия выбирается через `document_items.currentVersionId`.
-Ссылка на историю изменений `itemHistoryId`. Snapshot-метаданные файлов хранятся
-на уровне страниц версии через `document_version_pages.metadataHistoryId`.
-Уникальность `(documentId, versionNumber)`.
+`createdAt`, `modifiedAt`. Notes: главный источник восстановления документа.
+Текущая версия выбирается через `document_items.currentVersionId`. Ссылка на
+snapshot базового item хранится в `historyId`. Snapshot-метаданные файлов
+хранятся на уровне страниц версии через
+`document_version_pages.metadataHistoryId`. Уникальность
+`(documentId, versionNumber)`.
 
 ### document_version_pages
 
-Страницы версии документа. Columns: `id`, `versionId`, `metadataHistoryId`,
-`pageNumber`, `extractedText`, `pageSha256Hash`, `isPrimary`, `createdAt`.
-Notes: связь с `document_versions` и snapshot-метаданными страницы в
-`file_metadata_history`. Уникальность `(versionId, pageNumber)`, частичный
-unique-index ограничивает одну primary-страницу на версию.
+Страницы версии документа. Columns: `id`, `versionId`, `pageId`,
+`metadataHistoryId`, `pageNumber`, `pageSha256Hash`, `isPrimary`, `createdAt`.
+Notes: связь с `document_versions`, `document_pages` и snapshot-метаданными
+страницы в `file_metadata_history`. Уникальность `(versionId, pageNumber)` и
+`(versionId, pageId)`, частичный unique-index ограничивает одну primary-
+страницу на версию.
 
 ### file_items
 
@@ -221,9 +235,9 @@ Snapshot технических данных файлов. Columns: `id`, `histo
 `missingDetectedAt`, `deletedAt`, `lastIntegrityCheckAt`, `snapshotCreatedAt`.
 Notes: `metadataId` не является FK, чтобы snapshot сохранялся после замены или
 удаления текущих `file_metadata`; `historyId` опционально связывает snapshot с
-`vault_item_history`. `ownerKind` задаёт непосредственного владельца snapshot:
-`fileItemHistory` или `documentVersionPage`. `ownerId` обязателен для всех
-типов. Для `fileItemHistory` `ownerId` должен совпадать с `historyId`.
+`vault_snapshots_history`. `ownerKind` задаёт непосредственного владельца
+snapshot: `fileItemHistory` или `documentVersionPage`. `ownerId` обязателен для
+всех типов. Для `fileItemHistory` `ownerId` должен совпадать с `historyId`.
 
 ### contact_items
 
@@ -234,27 +248,30 @@ Notes: `metadataId` не является FK, чтобы snapshot сохраня
 ### api_key_items
 
 API ключи. Columns: `itemId`, `service`, `key`, `tokenType`, `tokenTypeOther`,
-`environment`, `environmentOther`, `expiresAt`, `revoked`, `rotationPeriodDays`,
-`lastRotatedAt`, `scopes`, `owner`, `baseUrl`. Notes: Поддержка ротации и
-различных окружений. enum ApiKeyEnvironment { development, staging, production,
-testing, local, other, }
+`environment`, `environmentOther`, `expiresAt`, `revoked`, `revokedAt`,
+`rotationPeriodDays`, `lastRotatedAt`, `scopesText`, `owner`, `baseUrl`. Notes:
+`tokenType` — `ApiKeyTokenType { apiKey, bearer, jwt, pat, webhook, other }`,
+`environment` —
+`ApiKeyEnvironment { development, staging, production, testing, local, other }`.
+`scopesText` хранит scopes через один пробел; `revokedAt` фиксирует время
+отзыва.
 
 ### ssh_key_items
 
 SSH ключи. Columns: `itemId`, `publicKey`, `privateKey`, `keyType`,
-`keyTypeOther`, `keySize`, `fingerprint`, `createdBy`, `addedToAgent`, `usage`.
-Notes: Хранение ключа и его отпечатка. Файлы ключей привязываются через
-`item_links`. enum SshKeyType { rsa, ed25519, ecdsa, dsa, other }
+`keyTypeOther`, `keySize`. Notes: Файлы ключей привязываются через `item_links`.
+`publicKey` и `privateKey` nullable, но хотя бы одно из полей должно быть
+заполнено. `SshKeyType { rsa, ed25519, ecdsa, dsa, other }`.
 
 ### certificate_items
 
 Сертификаты. Columns: `itemId`, `certificateFormat`, `certificateFormatOther`,
 `certificatePem`, `certificateBlob`, `privateKey`, `privateKeyPassword`,
 `passwordForPfx`, `keyAlgorithm`, `keyAlgorithmOther`, `keySize`,
-`serialNumber`, `issuer`, `subject`, `validFrom`, `validTo`, `ocspUrl`,
-`crlUrl`. Notes: Поддержка PEM и бинарных форматов. Внешние файлы привязываются
-через `item_links`. enum CertificateFormat { pem, der, pfx, pkcs12, other } enum
-CertificateKeyAlgorithm { rsa, ecdsa, ed25519, dsa, other }
+`serialNumber`, `issuer`, `subject`, `validFrom`, `validTo`. Notes: Поддержка
+PEM и бинарных форматов. Внешние файлы привязываются через `item_links`.
+`CertificateFormat { pem, der, pfx, pkcs12, other }`,
+`CertificateKeyAlgorithm { rsa, ecdsa, ed25519, dsa, other }`.
 
 ### crypto_wallet_items
 
@@ -269,10 +286,12 @@ bip49, bip84, bip86, slip10, other, }
 
 ### wifi_items
 
-Данные Wi-Fi сетей. Columns: `itemId`, `ssid`, `password`, `security`,
-`securityOther`, `hidden`, `username`. Notes: Поддержка Enterprise (WPA/WPA2)
-через поле `username`. enum WifiSecurityType { open, wep, wpa, wpa2, wpa3,
-wpaEnterprise, other }
+Данные Wi-Fi сетей. Columns: `itemId`, `ssid`, `password`, `securityType`,
+`securityTypeOther`, `encryption`, `encryptionOther`, `hiddenSsid`. Notes:
+Поддержка Enterprise-сетей через `securityType` (`wpaEnterprise`,
+`wpa2Enterprise`, `wpa3Enterprise`) и отдельный `encryption` enum.
+`WifiSecurityType { open, wep, wpa, wpa2, wpa3, wpaEnterprise, wpa2Enterprise, wpa3Enterprise, other }`,
+`WifiEncryptionType { none, wep, tkip, aes, ccmp, gcmp, other }`.
 
 ### identity_items
 
@@ -285,37 +304,39 @@ wpaEnterprise, other }
 
 ### license_key_items
 
-Лицензионные ключи. Columns: `itemId`, `product`, `licenseKey`, `licenseType`,
-`licenseTypeOther`, `seats`, `maxActivations`, `activatedOn`, `purchaseDate`,
-`purchaseFrom`, `orderId`, `expiresAt`. Notes: Учет активаций и сроков.
-Документы покупки и контакты поддержки — через `item_links`. enum LicenseType {
-perpetual, subscription, trial, volume, oem, educational, openSource, other, }
+Лицензионные ключи. Columns: `itemId`, `productName`, `vendor`, `licenseKey`,
+`licenseType`, `licenseTypeOther`, `accountEmail`, `accountUsername`,
+`purchaseEmail`, `orderNumber`, `purchaseDate`, `purchasePrice`, `currency`,
+`validFrom`, `validTo`, `renewalDate`, `seats`, `activationLimit`,
+`activationsUsed`. Notes: `licenseKey` — secret; ротация и история
+оплаты/аккаунта хранятся прямо в таблице.
+`LicenseType { perpetual, subscription, trial, volume, oem, educational, openSource, other }`.
 
 ### recovery_codes_items
 
 Группы кодов восстановления. Columns: `itemId`, `codesCount`, `usedCount`,
-`generatedAt`, `oneTime`. Notes: Кэширует количество кодов из таблицы
+`generatedAt`, `oneTime`. Notes: кэширует количество кодов из таблицы
 `recovery_codes` через триггеры.
 
 ### recovery_codes
 
 Отдельные коды восстановления. Columns: `id`, `itemId`, `code`, `used`,
-`usedAt`, `position`. Notes: Связь с `recovery_codes_items`. Уникальность по
+`usedAt`, `position`. Notes: связь с `recovery_codes_items`. Уникальность по
 `(itemId, position)`. Позиция кодов начинается с 0.
 
 ### recovery_code_values_history
 
 Snapshot отдельных recovery codes. Columns: `id`, `historyId`, `originalCodeId`,
-`code`, `used`, `usedAt`, `position`. Notes: Позволяет полностью восстанавливать
+`code`, `used`, `usedAt`, `position`. Notes: позволяет полностью восстанавливать
 набор кодов из истории. Immutability обеспечивается триггером.
 
 ### loyalty_card_items
 
-Карты лояльности. Columns: `itemId`, `programName`, `cardNumber`, `holderName`,
-`barcodeValue`, `barcodeType`, `barcodeTypeOther`, `password`, `tier`,
-`expiryDate`, `website`, `phoneNumber`. Notes: Поддержка различных типов
-штрихкодов. enum LoyaltyBarcodeType { qr, code128, code39, ean13, ean8, upcA,
-upcE, aztec, pdf417, dataMatrix, other, }
+Карты лояльности. Columns: `itemId`, `programName`, `cardNumber`,
+`barcodeValue`, `password`, `barcodeType`, `barcodeTypeOther`, `issuer`,
+`website`, `phone`, `email`, `validFrom`, `validTo`. Notes: поддержка различных
+типов штрихкодов.
+`LoyaltyBarcodeType { code128, code39, ean13, ean8, upcA, upcE, qr, pdf417, aztec, dataMatrix, other }`.
 
 ## History Tables
 
@@ -324,15 +345,15 @@ item-таблицам (часто nullable для возможности час�
 
 - **api_key_history**: `historyId`, `service`, `key`, `tokenType`,
   `tokenTypeOther`, `environment`, `environmentOther`, `expiresAt`, `revoked`,
-  `rotationPeriodDays`, `lastRotatedAt`, `scopes`, `owner`, `baseUrl`.
+  `revokedAt`, `rotationPeriodDays`, `lastRotatedAt`, `scopesText`, `owner`,
+  `baseUrl`.
 - **bank_card_history**: `historyId`, `cardholderName`, `cardNumber`,
   `cardType`, `cardTypeOther`, `cardNetwork`, `cardNetworkOther`, `expiryMonth`,
   `expiryYear`, `cvv`, `bankName`, `accountNumber`, `routingNumber`.
 - **certificate_history**: `historyId`, `certificateFormat`,
   `certificateFormatOther`, `certificatePem`, `certificateBlob`, `privateKey`,
   `privateKeyPassword`, `passwordForPfx`, `keyAlgorithm`, `keyAlgorithmOther`,
-  `keySize`, `serialNumber`, `issuer`, `subject`, `validFrom`, `validTo`,
-  `ocspUrl`, `crlUrl`.
+  `keySize`, `serialNumber`, `issuer`, `subject`, `validFrom`, `validTo`.
 - **contact_history**: `historyId`, `firstName`, `middleName`, `lastName`,
   `phone`, `email`, `company`, `jobTitle`, `address`, `website`, `birthday`,
   `isEmergencyContact`.
@@ -352,12 +373,14 @@ item-таблицам (часто nullable для возможности час�
   `displayName`, `username`, `email`, `phone`, `address`, `birthday`, `company`,
   `jobTitle`, `website`, `taxId`, `nationalId`, `passportNumber`,
   `driverLicenseNumber`.
-- **license_key_history**: `historyId`, `product`, `licenseKey`, `licenseType`,
-  `licenseTypeOther`, `seats`, `maxActivations`, `activatedOn`, `purchaseDate`,
-  `purchaseFrom`, `orderId`, `expiresAt`.
+- **license_key_history**: `historyId`, `productName`, `vendor`, `licenseKey`,
+  `licenseType`, `licenseTypeOther`, `accountEmail`, `accountUsername`,
+  `purchaseEmail`, `orderNumber`, `purchaseDate`, `purchasePrice`, `currency`,
+  `validFrom`, `validTo`, `renewalDate`, `seats`, `activationLimit`,
+  `activationsUsed`.
 - **loyalty_card_history**: `historyId`, `programName`, `cardNumber`,
-  `holderName`, `barcodeValue`, `barcodeType`, `barcodeTypeOther`, `password`,
-  `tier`, `expiryDate`, `website`, `phoneNumber`.
+  `barcodeValue`, `password`, `barcodeType`, `barcodeTypeOther`, `issuer`,
+  `website`, `phone`, `email`, `validFrom`, `validTo`.
 - **note_history**: `historyId`, `deltaJson`, `content`.
 - **otp_history**: `historyId`, `type`, `issuer`, `accountName`, `secret`,
   `algorithm`, `digits`, `period`, `counter`.
@@ -366,10 +389,9 @@ item-таблицам (часто nullable для возможности час�
 - **recovery_codes_history**: `historyId`, `codesCount`, `usedCount`,
   `generatedAt`, `oneTime`.
 - **ssh_key_history**: `historyId`, `publicKey`, `privateKey`, `keyType`,
-  `keyTypeOther`, `keySize`, `fingerprint`, `createdBy`, `addedToAgent`,
-  `usage`.
-- **wifi_history**: `historyId`, `ssid`, `password`, `security`,
-  `securityOther`, `hidden`, `username`.
+  `keyTypeOther`, `keySize`.
+- **wifi_history**: `historyId`, `ssid`, `password`, `securityType`,
+  `securityTypeOther`, `encryption`, `encryptionOther`, `hiddenSsid`.
 
 ## System Tables
 
@@ -378,9 +400,9 @@ item-таблицам (часто nullable для возможности час�
 ### store_meta
 
 Метаданные текущего хранилища (Singleton). Columns: `singletonId`, `id`, `name`,
-`description`, `passwordHash`, `salt`, `attachmentKey`, `createdAt`,
-`modifiedAt`, `lastOpenedAt`. Notes: Содержит ровно одну строку
-(`singletonId = 1`). `id` — глобальный UUID хранилища.
+`description`, `passwordHash`, `attachmentKey`, `createdAt`, `modifiedAt`,
+`lastOpenedAt`. Notes: содержит ровно одну строку (`singletonId = 1`). `id` —
+глобальный UUID хранилища.
 
 ### store_settings
 

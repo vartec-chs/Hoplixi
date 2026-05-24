@@ -8,7 +8,7 @@ import '../../errors/db_error.dart';
 import '../../errors/db_exception_mapper.dart';
 import '../../errors/db_result.dart';
 import '../../models/dto/dto.dart';
-import '../../tables/vault_items/vault_events_history.dart';
+import '../../scheme/tables/vault_items/vault_events_history.dart';
 import '../relations/snapshot_relations_service.dart';
 import 'snapshot_handlers/snapshot_handlers.dart';
 

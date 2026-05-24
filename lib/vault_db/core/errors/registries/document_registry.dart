@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../tables/document/document_items.dart';
+import '../../scheme/tables/document/document_items.dart';
 
 final Map<String, DbConstraintDescriptor> documentRegistry = {
   DocumentItemConstraint.itemIdNotBlank.constraintName:
