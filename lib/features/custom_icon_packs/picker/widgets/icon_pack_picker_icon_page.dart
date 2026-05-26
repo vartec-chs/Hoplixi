@@ -7,7 +7,7 @@ import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_entry.dart';
 import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_summary.dart';
 import 'package:hoplixi/features/custom_icon_packs/picker/widgets/icon_pack_picker_empty_states.dart';
 import 'package:hoplixi/features/custom_icon_packs/picker/widgets/icon_pack_picker_icon_card.dart';
-import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 

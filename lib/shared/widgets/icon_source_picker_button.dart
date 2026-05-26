@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_source.dart';
 import 'package:hoplixi/features/custom_icon_packs/picker/icon_pack_picker_modal.dart';
 import 'package:hoplixi/features/password_manager/pickers/icon_picker/icon_picker.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 
 import 'icon_ref_preview.dart';
 
@@ -39,22 +39,28 @@ class IconSourcePickerButton extends ConsumerWidget {
       return;
     }
 
-    onChanged(IconRefDto.db(selectedIconId));
+    onChanged(IconRefDto(
+      iconSourceType: IconSourceType.custom,
+      customIconId: selectedIconId,
+    ));
   }
 
   Future<void> _pickIconPack(BuildContext context, WidgetRef ref) async {
     final selectedIconKey = await showIconPackPickerModal(
       context,
       ref,
-      initialIconKey: iconRef?.source == IconSourceType.iconPack
-          ? iconRef?.value
+      initialIconKey: iconRef?.iconSourceType == IconSourceType.pack
+          ? iconRef?.iconValue
           : null,
     );
     if (selectedIconKey == null || !context.mounted) {
       return;
     }
 
-    onChanged(IconRefDto.iconPack(selectedIconKey));
+    onChanged(IconRefDto(
+      iconSourceType: IconSourceType.pack,
+      iconValue: selectedIconKey,
+    ));
   }
 
   @override
@@ -142,7 +148,7 @@ class IconSourcePickerButton extends ConsumerWidget {
               if (iconRef != null) ...[
                 const SizedBox(height: 10),
                 Text(
-                  iconRef!.source == IconSourceType.db
+                  iconRef!.iconSourceType == IconSourceType.custom
                       ? 'Источник: мои иконки'
                       : 'Источник: пак иконок',
                   style: theme.textTheme.labelMedium?.copyWith(

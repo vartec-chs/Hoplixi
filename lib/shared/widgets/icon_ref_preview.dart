@@ -3,10 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/custom_icons.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 class IconRefPreview extends ConsumerStatefulWidget {
   const IconRefPreview({
@@ -75,26 +76,43 @@ class _IconRefPreviewState extends ConsumerState<IconRefPreview> {
     });
 
     try {
-      switch (iconRef.source) {
-        case IconSourceType.db:
-          final iconDao = await ref.read(iconDaoProvider.future);
-          final icon = await iconDao.getIconById(iconRef.value);
+      switch (iconRef.iconSourceType) {
+        case IconSourceType.custom:
+          final customIconId = iconRef.customIconId;
+          if (customIconId == null) {
+            throw Exception('customIconId is null for custom icon');
+          }
+          final repos = await ref.read(vaultRepositories.future);
+          final result = await repos.icon.getCustomIcon(customIconId);
+          final icon = result.getOrNull()?.getOrNull();
           if (!mounted) {
             return;
           }
           setState(() {
             _dbIconData = icon?.data;
-            _dbIconType = icon?.type.toString();
+            _dbIconType = icon?.format.name;
             _isLoading = false;
           });
-        case IconSourceType.iconPack:
+        case IconSourceType.pack:
+          final iconValue = iconRef.iconValue;
+          if (iconValue == null) {
+            throw Exception('iconValue is null for pack icon');
+          }
           final service = ref.read(iconPackCatalogServiceProvider);
-          final svg = await service.readSvgByKey(iconRef.value);
+          final svg = await service.readSvgByKey(iconValue);
           if (!mounted) {
             return;
           }
           setState(() {
             _svgContent = svg;
+            _isLoading = false;
+          });
+        case IconSourceType.builtin:
+          // TODO: handle builtin icons if needed in the future
+          if (!mounted) {
+            return;
+          }
+          setState(() {
             _isLoading = false;
           });
       }
@@ -135,12 +153,7 @@ class _IconRefPreviewState extends ConsumerState<IconRefPreview> {
             : ColorFilter.mode(widget.color!, BlendMode.srcIn),
       );
     } else if (_dbIconData != null && _dbIconType != null) {
-      final isSvg =
-          IconType.values.firstWhere(
-            (entry) => entry.toString() == _dbIconType,
-            orElse: () => IconType.png,
-          ) ==
-          IconType.svg;
+      final isSvg = _dbIconType == CustomIconFormat.svg.name;
       child = isSvg
           ? SvgPicture.memory(
               _dbIconData!,

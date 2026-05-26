@@ -16,9 +16,9 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_syn
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/features/home/providers/recent_database_provider.dart';
 import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/vault_db/services/db_history_services/model/db_history_model.dart';
@@ -65,7 +65,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
 
   Widget _buildCard(BuildContext context, WidgetRef ref, DatabaseEntry entry) {
     final colorScheme = Theme.of(context).colorScheme;
-    final dbStateAsync = ref.watch(vaultDBProvider);
+    final dbStateAsync = ref.watch(vaultDBStateProvider);
     final dbState = dbStateAsync.value;
     final lockState = ref.watch(currentStoreCloudLockProvider);
     final manifestAsync = ref.watch(
@@ -468,7 +468,6 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
       createdAt: entry.createdAt ?? fallbackDate,
       modifiedAt: manifest.content.dbFile.modifiedAt?.toUtc() ?? fallbackDate,
       lastOpenedAt: entry.lastAccessed ?? fallbackDate,
-      version: manifest.version.toString(),
     );
   }
 
@@ -548,7 +547,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     WidgetRef ref,
     DatabaseEntry entry,
   ) async {
-    final notifier = ref.read(vaultDBProvider.notifier);
+    final notifier = ref.read(vaultDBManagerStateProvider.notifier);
     final historyService = await ref.read(dbHistoryProvider.future);
     final attemptLimiter = getIt<StorePasswordAttemptLimiterService>();
     String? password;
@@ -701,7 +700,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
         return;
       }
 
-      final state = ref.read(vaultDBProvider);
+      final state = ref.read(vaultDBStateProvider);
       var errorMessage =
           state.value?.error?.message ?? 'Не удалось открыть базу данных';
 

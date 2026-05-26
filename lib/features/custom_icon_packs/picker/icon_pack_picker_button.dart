@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hoplixi/features/custom_icon_packs/picker/icon_pack_picker_modal.dart';
-import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 class IconPackPickerButton extends ConsumerStatefulWidget {
   const IconPackPickerButton({

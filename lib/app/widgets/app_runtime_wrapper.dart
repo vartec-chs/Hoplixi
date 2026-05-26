@@ -223,7 +223,7 @@ class _AppRuntimeWrapperState extends ConsumerState<AppRuntimeWrapper> {
   @override
   Widget build(BuildContext context) {
     final isStoreOpeningOverlayVisible = ref.watch(
-      vaultDBProvider.select(
+      vaultDBStateProvider.select(
         (asyncState) => asyncState.value?.isOpening ?? false,
       ),
     );

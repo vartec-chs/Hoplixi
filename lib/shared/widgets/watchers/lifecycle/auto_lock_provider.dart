@@ -78,7 +78,7 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
     });
 
     // Слушаем изменения состояния БД
-    ref.listen(vaultDBProvider, (previous, next) {
+    ref.listen(vaultDBStateProvider, (previous, next) {
       next.whenData((dbState) {
         // Если БД закрылась или заблокировалась, останавливаем таймер
         if (!dbState.isOpen) {
@@ -96,7 +96,7 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
   }
 
   void _handleLifecycleChange(AppLifecycleState lifecycleState) {
-    final dbState = ref.read(vaultDBProvider).value;
+    final dbState = ref.read(vaultDBStateProvider).value;
     final isDbOpen = dbState?.isOpen ?? false;
 
     // Проверяем, что таймаут не равен 0 (отключено)
@@ -150,13 +150,13 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
 
   Future<void> _triggerLock() async {
     logInfo('Auto-lock triggered', tag: _tag);
-    await ref.read(vaultDBProvider.notifier).lockStore();
+    await ref.read(vaultDBManagerStateProvider.notifier).lockStore();
   }
 
   Future<void> _triggerTrayLock() async {
     stopTimer();
     logInfo('Tray mode lock triggered', tag: _tag);
-    await ref.read(vaultDBProvider.notifier).lockStore();
+    await ref.read(vaultDBManagerStateProvider.notifier).lockStore();
   }
 }
 

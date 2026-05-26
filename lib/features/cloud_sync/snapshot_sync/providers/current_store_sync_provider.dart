@@ -7,7 +7,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_m
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/snapshot_sync_services_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync_service.dart';
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 
@@ -88,7 +88,7 @@ class CurrentStoreSyncManualReauthIssueNotifier
 class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
   @override
   Future<StoreSyncStatus> build() async {
-    final storeState = await ref.watch(vaultDBProvider.future);
+    final storeState = await ref.watch(vaultDBStateProvider.future);
     final status = await _loadCurrentStatus(storeState, useWatch: true);
     _publishCachedSyncStatus(status);
     _syncCloseStoreUploadPromptRequirement(status);
@@ -99,7 +99,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     final previous = state.value;
     state = const AsyncLoading();
     try {
-      final storeState = await ref.read(vaultDBProvider.future);
+      final storeState = await ref.read(vaultDBStateProvider.future);
       final next = await _loadCurrentStatus(storeState, useWatch: false);
       _setSyncState(next);
     } catch (error, stackTrace) {
@@ -142,7 +142,9 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       await loadStatus(rethrowOnError: true);
       if (state.value?.compareResult ==
           StoreVersionCompareResult.remoteMissing) {
-        ref.read(vaultDBProvider.notifier).markSnapshotUploadOnCloseRequired();
+        ref
+            .read(vaultDBManagerStateProvider.notifier)
+            .markSnapshotUploadOnCloseRequired();
       }
       _syncCloseStoreUploadPromptRequirement(state.value);
     } catch (error, stackTrace) {
@@ -211,7 +213,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
 
   void _syncCloseStoreUploadPromptRequirement(StoreSyncStatus? status) {
     ref
-        .read(vaultDBProvider.notifier)
+        .read(vaultDBManagerStateProvider.notifier)
         .syncPendingSnapshotUploadPrompt(
           storeUuid: status?.storeUuid,
           hasBinding: status?.binding != null,
@@ -238,8 +240,8 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       throw StateError('Cloud sync is not connected.');
     }
 
-    final manager = await ref.read(vaultDBManagerProvider.future);
-    final storeInfoResult = await manager.getStoreInfo();
+    final manager = ref.read(vaultDBManagerStateProvider.notifier);
+    final storeInfoResult = await manager.storeInfo;
     final storeInfo = storeInfoResult.fold(
       (info) => info,
       (error) => throw error,
@@ -280,7 +282,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       _setSyncState(downloadInProgressState);
       try {
         await ref
-            .read(vaultDBProvider.notifier)
+            .read(vaultDBManagerStateProvider.notifier)
             .lockStore(skipSnapshotSync: true);
         final result = await _runProgressStream(
           baseState: downloadInProgressState,
@@ -427,8 +429,8 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       throw StateError('Cloud sync is not connected.');
     }
 
-    final manager = await ref.read(vaultDBManagerProvider.future);
-    final storeInfoResult = await manager.getStoreInfo();
+    final manager = await ref.read(vaultDBManagerStateProvider.notifier);
+    final storeInfoResult = await manager.storeInfo;
     final storeInfo = storeInfoResult.fold(
       (info) => info,
       (error) => throw error,
@@ -462,7 +464,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     if (requiresUnlock) {
       try {
         await ref
-            .read(vaultDBProvider.notifier)
+            .read(vaultDBManagerStateProvider.notifier)
             .lockStore(skipSnapshotSync: true);
       } catch (error, stackTrace) {
         _setSyncState(
@@ -575,7 +577,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     required SnapshotSyncResultType lastResultType,
     bool clearPendingConflict = false,
   }) async {
-    final storeState = await ref.read(vaultDBProvider.future);
+    final storeState = await ref.read(vaultDBManagerStateProvider.future);
     final refreshed = await _loadCurrentStatus(storeState, useWatch: false);
     return refreshed.copyWith(
       lastResultType: lastResultType,
@@ -660,10 +662,10 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     final manager = useWatch
-        ? await ref.watch(vaultDBManagerProvider.future)
-        : await ref.read(vaultDBManagerProvider.future);
+        ? await ref.watch(vaultDBManagerStateProvider.notifier)
+        : await ref.read(vaultDBManagerStateProvider.notifier);
 
-    final storeInfoResult = await manager.getStoreInfo();
+    final storeInfoResult = await manager.storeInfo;
     final storeInfo = storeInfoResult.fold(
       (info) => info,
       (error) => throw error,

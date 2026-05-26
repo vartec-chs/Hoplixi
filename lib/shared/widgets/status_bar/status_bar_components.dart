@@ -78,7 +78,7 @@ class _DatabaseStatusWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dbState = ref.watch(vaultDBProvider);
+    final dbState = ref.watch(vaultDBStateProvider);
 
     return dbState.when(
       data: (state) {

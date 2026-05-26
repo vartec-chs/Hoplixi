@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/custom_icon_packs/services/icon_pack_catalog_service.dart';
 import 'package:hoplixi/vault_db/core/services/document_versions/document_version_service.dart';
 import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
 import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
@@ -11,6 +12,10 @@ import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/vault_db/services/other/document_storage_service.dart';
 import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
 import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
+
+final iconPackCatalogServiceProvider = Provider<IconPackCatalogService>((ref) {
+  return const IconPackCatalogService();
+});
 
 final documentVersionServiceProvider = FutureProvider<DocumentVersionService>((
   ref,

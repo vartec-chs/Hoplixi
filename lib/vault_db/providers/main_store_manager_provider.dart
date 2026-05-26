@@ -12,59 +12,33 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
-
-import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
-import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
-import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
-import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
-import 'package:hoplixi/vault_db/core/services/vault_entity_services.dart';
-import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
-import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
-import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
 
 import '../../features/cloud_sync/snapshot_sync/providers/close_sync_tracking_provider.dart';
 import '../services/main_store_manager.dart';
 
+/// Используется только внутри [VaultDBManagerNotifier]
 final _vaultDBManagerProvider = FutureProvider<VaultDBManager>((ref) async {
   final dbHistoryService = await ref.watch(dbHistoryProvider.future);
   final manager = VaultDBManagerFactory(
     dbHistoryService: dbHistoryService,
     performStoreCleanup: (db, storePath) async {
-      final repos = VaultRepositories(db);
-      final relationsService = VaultItemRelationsService(db);
-      final vaultHistoryServiceAssembly = VaultHistoryServiceAssembly(
-        db: db,
-        repos: repos,
-      );
-      final vaultItemsStateService = VaultItemsStateService(
-        db: db,
-        viewResolver: vaultHistoryServiceAssembly.viewResolver,
-        historyService: vaultHistoryServiceAssembly.historyService,
-      );
-      final entityServices = VaultEntityServices(
-        db: db,
-        repositories: repos,
-        relationsService: relationsService,
-        historyService: vaultHistoryServiceAssembly.historyService,
-        vaultItemsStateService: vaultItemsStateService,
-      );
-      const storageService = VaultDBFileService();
-      final fileStorageService = FileStorageService(
-        db: db,
-        attachmentsPath: storageService.getAttachmentsPath(storePath),
-        decryptedAttachmentsPath: storageService.getDecryptedAttachmentsPath(
-          storePath,
-        ),
-        fileService: entityServices.file,
-        fileRepository: repos.file,
-        fileMetadataRepository: repos.fileMetadata,
-      );
-      final cleanup = PerformStoreCleanup(
-        settingsDao: db.storeSettingsDao,
-        fileStorageService: fileStorageService,
-      );
-      await cleanup(ignoreInterval: false);
+      scheduleMicrotask(() async {
+        try {
+          final cleanup = await ref.read(performStoreCleanupProvider.future);
+          await cleanup(ignoreInterval: false);
+        } catch (error, stackTrace) {
+          logWarning(
+            'Failed to perform store cleanup in background',
+            tag: 'VaultDBManager',
+            data: {
+              'error': error.toString(),
+              'stackTrace': stackTrace.toString(),
+            },
+          );
+        }
+      });
     },
   ).create();
   return manager;
@@ -118,6 +92,22 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   DatabaseState get _currentState =>
       state.value ?? const DatabaseState(status: DatabaseStatus.closed);
+
+  AsyncResultDart<StoreInfoDto, AppError> get storeInfo {
+    final session = _manager.currentSession;
+    if (session == null) {
+      return AsyncResultDart.error(
+        AppError.mainDatabase(
+          code: MainDatabaseErrorCode.notInitialized,
+          message: 'База данных не открыта',
+          timestamp: DateTime.now(),
+        ),
+      );
+    }
+    return _manager.getStoreInfo();
+  }
+
+  String? get currentStorePath => _manager.currentStorePath;
 
   VaultDB get requireDatabase {
     final db = _manager.currentDB;
