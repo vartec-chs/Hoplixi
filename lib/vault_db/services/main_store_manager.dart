@@ -7,11 +7,9 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
 import 'package:hoplixi/vault_db/services/db_history_services/db_history_services.dart';
 import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
-import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
 import 'package:hoplixi/vault_db/usecases/close_main_store.dart';
 import 'package:hoplixi/vault_db/usecases/create_main_store.dart';
 import 'package:hoplixi/vault_db/usecases/open_main_store.dart';
-import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
 import 'package:hoplixi/vault_db/usecases/update_main_store.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
@@ -183,7 +181,6 @@ class VaultDBManager {
         );
       }
 
-      unawaited(runStartupCleanup(session));
       return Success(session);
     });
   }
@@ -243,7 +240,6 @@ class VaultDBManager {
         );
       }
 
-      unawaited(runStartupCleanup(session));
       return Success(session);
     });
   }
@@ -434,12 +430,12 @@ class VaultDBManager {
             ),
           );
 
-          if (dto.saveMasterPassword == false) {
+          if (dto.saveMasterPassword.valueOrNull == false) {
             await _dbHistoryService.setSavedPasswordByPath(
               session.storeDirectoryPath,
               null,
             );
-          } else if (dto.password != null && shouldSavePassword) {
+          } else if (dto.password.valueOrNull != null && shouldSavePassword) {
             await _dbHistoryService.setSavedPasswordByPath(
               session.storeDirectoryPath,
               dto.password.valueOrNull,
@@ -514,51 +510,6 @@ class VaultDBManager {
         );
       }
     });
-  }
-
-  Future<void> runStartupCleanup([Session? targetSession]) async {
-    final session = targetSession ?? _currentSession;
-    if (session == null) {
-      logWarning('Cannot run startup cleanup: no active session', tag: _logTag);
-      return;
-    }
-
-    try {
-      final attachmentsPath = _storageService.getAttachmentsPath(
-        session.storeDirectoryPath,
-      );
-      final decryptedAttachmentsPath = _storageService
-          .getDecryptedAttachmentsPath(session.storeDirectoryPath);
-      final fileStorageService = FileStorageService(
-        session.store,
-        attachmentsPath,
-        decryptedAttachmentsPath,
-      );
-      final cleanup = PerformStoreCleanup(
-        settingsDao: _currentDB!.storeSettingsDao,
-        fileStorageService: fileStorageService,
-      );
-      final result = await cleanup();
-      if (result.isSuccess) {
-        logInfo('Startup cleanup completed: ${result.message}', tag: _logTag);
-      } else {
-        logWarning(
-          'Startup cleanup failed: ${result.errorMessage ?? result.message}',
-          tag: _logTag,
-        );
-      }
-    } catch (error, stackTrace) {
-      logWarning(
-        'Unexpected startup cleanup error',
-        tag: _logTag,
-        data: {
-          'storeId': session.info.id,
-          'storePath': session.storeDirectoryPath,
-          'error': error.toString(),
-          'stackTrace': stackTrace.toString(),
-        },
-      );
-    }
   }
 
   Future<String> _resolveDeleteStorePath(

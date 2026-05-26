@@ -13,7 +13,7 @@ import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 class VaultItemRelationsService {
-  VaultItemRelationsService({required this.db})
+  VaultItemRelationsService(this.db)
     : vaultItemsDao = db.vaultItemsDao,
       categoriesDao = db.categoriesDao,
       tagsDao = db.tagsDao,

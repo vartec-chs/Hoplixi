@@ -1,4 +1,3 @@
-import 'package:result_dart/result_dart.dart';
 import '../../../errors/db_result.dart';
 import '../../../errors/db_error.dart';
 import '../../../models/dto_history/cards/vault_history_revision_detail_dto.dart';

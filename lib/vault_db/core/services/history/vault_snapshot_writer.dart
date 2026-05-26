@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/vault_db/core/services/history/history.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/vault_db/core/services/history/custom_fields/custom_fields_snapshot_service.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../daos/base/vault_items/vault_snapshots_history_dao.dart';
@@ -10,20 +10,19 @@ import '../../errors/db_result.dart';
 import '../../models/dto/dto.dart';
 import '../../scheme/tables/vault_items/vault_events_history.dart';
 import '../relations/snapshot_relations_service.dart';
-import 'snapshot_handlers/snapshot_handlers.dart';
 
 class VaultSnapshotWriter {
   VaultSnapshotWriter({
     required this.vaultSnapshotsHistoryDao,
     required this.snapshotRelationsService,
     required this.customFieldsSnapshotService,
-    required this.handlerRegistry,
+    required this.historyModules,
   });
 
   final VaultSnapshotsHistoryDao vaultSnapshotsHistoryDao;
   final SnapshotRelationsService snapshotRelationsService;
   final CustomFieldsSnapshotService customFieldsSnapshotService;
-  final VaultSnapshotTypeHandlerRegistry handlerRegistry;
+  final VaultItemHistoryModules historyModules;
 
   AsyncDbResult<String> writeSnapshot({
     required VaultEntityViewDto view,
@@ -36,7 +35,7 @@ class VaultSnapshotWriter {
 
       final historyId = (await _writeBaseSnapshot(item, action)).getOrThrow();
 
-      final handler = handlerRegistry.get(item.type);
+      final handler = historyModules.snapshotHandler(item.type);
       if (handler == null) {
         throw DBCoreError.validation(
           code: 'history.snapshot.unsupported_type',

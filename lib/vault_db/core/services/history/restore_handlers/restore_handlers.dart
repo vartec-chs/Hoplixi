@@ -13,6 +13,5 @@ export 'otp_history_restore_handler.dart';
 export 'password_history_restore_handler.dart';
 export 'recovery_codes_history_restore_handler.dart';
 export 'ssh_key_history_restore_handler.dart';
-export 'vault_history_restore_handler_registry.dart';
 export 'vault_history_restore_handler.dart';
 export 'wifi_history_restore_handler.dart';

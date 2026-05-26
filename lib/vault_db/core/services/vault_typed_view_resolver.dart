@@ -1,81 +1,33 @@
-import 'package:hoplixi/vault_db/core/repositories/base/api_key_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/bank_card_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/certificate_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/contact_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/crypto_wallet_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/document_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/file_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/identity_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/license_key_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/loyalty_card_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/note_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/otp_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/password_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/recovery_codes_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/ssh_key_repository.dart';
-import 'package:hoplixi/vault_db/core/repositories/base/wifi_repository.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 class VaultTypedViewResolver {
-  VaultTypedViewResolver({
-    required this.apiKeyRepository,
-    required this.passwordRepository,
-    required this.bankCardRepository,
-    required this.noteRepository,
-    required this.otpRepository,
-    required this.documentRepository,
-    required this.fileRepository,
-    required this.contactRepository,
-    required this.sshKeyRepository,
-    required this.certificateRepository,
-    required this.cryptoWalletRepository,
-    required this.wifiRepository,
-    required this.identityRepository,
-    required this.licenseKeyRepository,
-    required this.recoveryCodesRepository,
-    required this.loyaltyCardRepository,
-  });
+  VaultTypedViewResolver(this.repos);
 
-  final ApiKeyRepository apiKeyRepository;
-  final PasswordRepository passwordRepository;
-  final BankCardRepository bankCardRepository;
-  final NoteRepository noteRepository;
-  final OtpRepository otpRepository;
-  final DocumentRepository documentRepository;
-  final FileRepository fileRepository;
-  final ContactRepository contactRepository;
-  final SshKeyRepository sshKeyRepository;
-  final CertificateRepository certificateRepository;
-  final CryptoWalletRepository cryptoWalletRepository;
-  final WifiRepository wifiRepository;
-  final IdentityRepository identityRepository;
-  final LicenseKeyRepository licenseKeyRepository;
-  final RecoveryCodesRepository recoveryCodesRepository;
-  final LoyaltyCardRepository loyaltyCardRepository;
+  final VaultRepositories repos;
 
-  Future<Object?> getView({
+  Future<VaultEntityViewDto?> getView({
     required String itemId,
     required VaultItemType type,
   }) async {
     final result = await switch (type) {
-      VaultItemType.apiKey => apiKeyRepository.getViewById(itemId),
-      VaultItemType.password => passwordRepository.getViewById(itemId),
-      VaultItemType.bankCard => bankCardRepository.getViewById(itemId),
-      VaultItemType.note => noteRepository.getViewById(itemId),
-      VaultItemType.otp => otpRepository.getViewById(itemId),
-      VaultItemType.document => documentRepository.getViewById(itemId),
-      VaultItemType.file => fileRepository.getViewById(itemId),
-      VaultItemType.contact => contactRepository.getViewById(itemId),
-      VaultItemType.sshKey => sshKeyRepository.getViewById(itemId),
-      VaultItemType.certificate => certificateRepository.getViewById(itemId),
-      VaultItemType.cryptoWallet => cryptoWalletRepository.getViewById(itemId),
-      VaultItemType.wifi => wifiRepository.getViewById(itemId),
-      VaultItemType.identity => identityRepository.getViewById(itemId),
-      VaultItemType.licenseKey => licenseKeyRepository.getViewById(itemId),
-      VaultItemType.recoveryCodes => recoveryCodesRepository.getViewById(
-        itemId,
-      ),
-      VaultItemType.loyaltyCard => loyaltyCardRepository.getViewById(itemId),
+      VaultItemType.apiKey => repos.apiKey.getViewById(itemId),
+      VaultItemType.password => repos.password.getViewById(itemId),
+      VaultItemType.bankCard => repos.bankCard.getViewById(itemId),
+      VaultItemType.note => repos.note.getViewById(itemId),
+      VaultItemType.otp => repos.otp.getViewById(itemId),
+      VaultItemType.document => repos.document.getViewById(itemId),
+      VaultItemType.file => repos.file.getViewById(itemId),
+      VaultItemType.contact => repos.contact.getViewById(itemId),
+      VaultItemType.sshKey => repos.sshKey.getViewById(itemId),
+      VaultItemType.certificate => repos.certificate.getViewById(itemId),
+      VaultItemType.cryptoWallet => repos.cryptoWallet.getViewById(itemId),
+      VaultItemType.wifi => repos.wifi.getViewById(itemId),
+      VaultItemType.identity => repos.identity.getViewById(itemId),
+      VaultItemType.licenseKey => repos.licenseKey.getViewById(itemId),
+      VaultItemType.recoveryCodes => repos.recoveryCodes.getViewById(itemId),
+      VaultItemType.loyaltyCard => repos.loyaltyCard.getViewById(itemId),
     };
 
     return result.getOrThrow().getOrNull();

@@ -7,12 +7,12 @@ import '../../../models/dto/dto.dart';
 import '../../../models/filters/history/vault_snapshot_history_filter.dart';
 import '../../../models/mappers/history/vault_snapshot_history_mapper.dart';
 import '../../../scheme/tables/vault_items/vault_items.dart';
-import '../readers/readers.dart';
+import '../history.dart';
 
 class VaultHistoryReadService {
   VaultHistoryReadService({
     required this.db,
-    required this.readerRegistry,
+    required this.historyModules,
     required this.genericReader,
   }) : snapshotFilterDao = db.vaultSnapshotHistoryFilterDao,
        snapshotsHistoryDao = db.vaultSnapshotsHistoryDao;
@@ -20,7 +20,7 @@ class VaultHistoryReadService {
   final VaultDB db;
   final VaultSnapshotHistoryFilterDao snapshotFilterDao;
   final VaultSnapshotsHistoryDao snapshotsHistoryDao;
-  final VaultHistoryCardReaderRegistry readerRegistry;
+  final VaultItemHistoryModules historyModules;
   final GenericHistoryCardReader genericReader;
 
   AsyncDbResult<List<VaultHistoryCardDto>> getFilteredCards(
@@ -83,7 +83,7 @@ class VaultHistoryReadService {
     final Map<String, VaultHistoryCardDto> cardsByHistoryId = {};
 
     for (final entry in grouped.entries) {
-      final reader = readerRegistry.getReader(entry.key);
+      final reader = historyModules.cardReader(entry.key);
 
       final cards = reader == null
           ? await genericReader.getCardsBySnapshots(entry.value)

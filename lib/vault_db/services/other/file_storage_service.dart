@@ -9,12 +9,7 @@ import 'package:hoplixi/rust/api/crypt_api/types.dart' as crypt_types;
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/repositories/repositories.dart';
-import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/core/services/entities/file_service.dart';
-import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
-import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
-import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
-import 'package:hoplixi/vault_db/core/services/entities/base_vault_entity_service.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
@@ -26,38 +21,23 @@ class FileStorageService {
   final String _attachmentsPath;
   final String _decryptedAttachmentsPath;
 
-  late final FileService _fileService;
-  late final FileRepository _fileRepository;
-  late final FileMetadataRepository _fileMetadataRepository;
+  final FileService _fileService;
+  final FileRepository _fileRepository;
+  final FileMetadataRepository _fileMetadataRepository;
 
-  FileStorageService(
-    this._db,
-    this._attachmentsPath,
-    this._decryptedAttachmentsPath,
-  ) {
-    _fileRepository = FileRepository(_db);
-    final relationsService = VaultItemRelationsService(db: _db);
-    final historyAssembly = VaultHistoryServiceAssembly(_db);
-    final historyService = historyAssembly.historyService;
-    final viewResolver = historyAssembly.viewResolver;
-
-    final vaultItemsStateService = VaultItemsStateService(
-      db: _db,
-      viewResolver: viewResolver,
-      historyService: historyService,
-    );
-
-    final deps = VaultEntityServiceDeps(
-      db: _db,
-      repositories: VaultRepositories(_db),
-      relationsService: relationsService,
-      historyService: historyService,
-      vaultItemsStateService: vaultItemsStateService,
-    );
-
-    _fileService = FileService(deps: deps, repository: _fileRepository);
-    _fileMetadataRepository = deps.repositories.fileMetadata;
-  }
+  FileStorageService({
+    required VaultDB db,
+    required String attachmentsPath,
+    required String decryptedAttachmentsPath,
+    required FileService fileService,
+    required FileRepository fileRepository,
+    required FileMetadataRepository fileMetadataRepository,
+  }) : _db = db,
+       _attachmentsPath = attachmentsPath,
+       _decryptedAttachmentsPath = decryptedAttachmentsPath,
+       _fileService = fileService,
+       _fileRepository = fileRepository,
+       _fileMetadataRepository = fileMetadataRepository;
 
   /// Получить ключ шифрования из метаданных хранилища.
   Future<String> _getAttachmentKey() async {

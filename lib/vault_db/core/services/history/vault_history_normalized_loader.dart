@@ -11,7 +11,7 @@ class VaultHistoryNormalizedLoader {
   VaultHistoryNormalizedLoader({
     required this.db,
     required this.restorePolicyService,
-    required this.normalizerRegistry,
+    required this.historyModules,
   }) : snapshotsHistoryDao = db.vaultSnapshotsHistoryDao,
        vaultItemsDao = db.vaultItemsDao,
        customFieldsHistoryDao = db.vaultItemCustomFieldsHistoryDao,
@@ -22,7 +22,7 @@ class VaultHistoryNormalizedLoader {
   final VaultSnapshotsHistoryDao snapshotsHistoryDao;
   final VaultItemsDao vaultItemsDao;
   final VaultHistoryRestorePolicyService restorePolicyService;
-  final VaultHistoryNormalizerRegistry normalizerRegistry;
+  final VaultItemHistoryModules historyModules;
   final VaultItemCustomFieldsHistoryDao customFieldsHistoryDao;
   final VaultItemCustomFieldsDao customFieldsDao;
 
@@ -38,7 +38,7 @@ class VaultHistoryNormalizedLoader {
 
         final base = snapshotData.toVaultItemBaseHistoryPayload();
 
-        final normalizer = normalizerRegistry.get(base.type);
+        final normalizer = historyModules.normalizer(base.type);
         HistoryPayload? payload;
 
         if (normalizer != null) {
@@ -86,7 +86,7 @@ class VaultHistoryNormalizedLoader {
 
         final base = itemData.toCurrentVaultItemBaseHistoryPayload();
 
-        final normalizer = normalizerRegistry.get(base.type);
+        final normalizer = historyModules.normalizer(base.type);
         HistoryPayload? payload;
 
         if (normalizer != null) {

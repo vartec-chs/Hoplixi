@@ -14,5 +14,4 @@ export 'password_snapshot_handler.dart';
 export 'recovery_codes_snapshot_handler.dart';
 export 'ssh_key_snapshot_handler.dart';
 export 'vault_snapshot_type_handler.dart';
-export 'vault_snapshot_type_handler_registry.dart';
 export 'wifi_snapshot_handler.dart';

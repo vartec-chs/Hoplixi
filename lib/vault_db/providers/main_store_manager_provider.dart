@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,11 +11,11 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '../../features/cloud_sync/snapshot_sync/providers/close_sync_tracking_provider.dart';
 import '../services/main_store_manager.dart';
-import 'db_history_provider.dart';
 
 final _vaultDBManagerProvider = FutureProvider<VaultDBManager>((ref) async {
   final dbHistoryService = await ref.watch(dbHistoryProvider.future);

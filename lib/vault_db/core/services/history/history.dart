@@ -30,6 +30,7 @@ export 'vault_history_service_assembly.dart';
 export 'facades/vault_history_timeline_service.dart';
 export 'facades/vault_history_service.dart';
 export 'vault_snapshot_writer.dart';
+export 'vault_item_history_modules.dart';
 export 'policy/store_history_policy_service.dart';
 export 'facades/vault_history_delete_service.dart';
 export 'facades/vault_history_detail_service.dart';

@@ -2,21 +2,23 @@ import 'package:hoplixi/vault_db/core/errors/db_error.dart';
 import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_event_history_repository.dart';
-import 'package:hoplixi/vault_db/core/services/history/policy/store_history_policy_service.dart';
-import 'package:hoplixi/vault_db/core/services/history/vault_snapshot_writer.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/core/services/history/policy/store_history_policy_service.dart';
+import 'package:hoplixi/vault_db/core/services/history/vault_snapshot_writer.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../../../models/dto/vault_item_base_dto.dart';
 
 class VaultHistoryService {
   VaultHistoryService({
-    required this.policyService,
+    required this.db,
     required this.snapshotWriter,
     required this.eventHistoryRepository,
-  });
+  }) : policyService = StoreHistoryPolicyService(db.storeSettingsDao);
 
+  final VaultDB db;
   final StoreHistoryPolicyService policyService;
   final VaultSnapshotWriter snapshotWriter;
   final VaultEventHistoryRepository eventHistoryRepository;

@@ -13,6 +13,5 @@ export 'otp_history_normalizer.dart';
 export 'password_history_normalizer.dart';
 export 'recovery_codes_history_normalizer.dart';
 export 'ssh_key_history_normalizer.dart';
-export 'vault_history_normalizer_registry.dart';
 export 'vault_history_type_normalizer.dart';
 export 'wifi_history_normalizer.dart';

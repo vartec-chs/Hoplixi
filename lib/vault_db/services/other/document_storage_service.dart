@@ -6,14 +6,10 @@ import 'package:hoplixi/vault_db/core/models/dto/document_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/document_version_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/item_link_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/vault_item_base_dto.dart';
-import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
 import 'package:hoplixi/vault_db/core/services/document_versions/document_version_service.dart';
-import 'package:hoplixi/vault_db/core/services/entities/base_vault_entity_service.dart';
 import 'package:hoplixi/vault_db/core/services/entities/document_service.dart';
-import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
 import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
-import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
 import 'package:uuid/uuid.dart';
@@ -39,37 +35,21 @@ class DocumentPageCompat {
 class DocumentStorageService {
   final VaultDB _db;
   final FileStorageService _fileStorageService;
-  late final DocumentService _documentService;
-  late final DocumentVersionService _documentVersionService;
-  late final VaultItemRelationsService _relationsService;
+  final DocumentService _documentService;
+  final DocumentVersionService _documentVersionService;
+  final VaultItemRelationsService _relationsService;
 
-  DocumentStorageService(this._db, this._fileStorageService) {
-    _documentVersionService = DocumentVersionService(db: _db);
-    _relationsService = VaultItemRelationsService(db: _db);
-
-    final historyAssembly = VaultHistoryServiceAssembly(_db);
-    final historyService = historyAssembly.historyService;
-    final viewResolver = historyAssembly.viewResolver;
-
-    final vaultItemsStateService = VaultItemsStateService(
-      db: _db,
-      viewResolver: viewResolver,
-      historyService: historyService,
-    );
-
-    final deps = VaultEntityServiceDeps(
-      db: _db,
-      repositories: VaultRepositories(_db),
-      relationsService: _relationsService,
-      historyService: historyService,
-      vaultItemsStateService: vaultItemsStateService,
-    );
-
-    _documentService = DocumentService(
-      deps: deps,
-      repository: deps.repositories.document,
-    );
-  }
+  DocumentStorageService({
+    required VaultDB db,
+    required FileStorageService fileStorageService,
+    required DocumentService documentService,
+    required DocumentVersionService documentVersionService,
+    required VaultItemRelationsService relationsService,
+  }) : _db = db,
+       _fileStorageService = fileStorageService,
+       _documentService = documentService,
+       _documentVersionService = documentVersionService,
+       _relationsService = relationsService;
 
   /// Создать документ с несколькими страницами
   /// Возвращает ID созданного документа

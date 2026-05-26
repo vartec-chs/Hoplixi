@@ -14,6 +14,5 @@ export 'otp_history_card_reader.dart';
 export 'password_history_card_reader.dart';
 export 'recovery_codes_history_card_reader.dart';
 export 'ssh_key_history_card_reader.dart';
-export 'vault_history_card_reader_registry.dart';
 export 'vault_history_type_reader.dart';
 export 'wifi_history_card_reader.dart';

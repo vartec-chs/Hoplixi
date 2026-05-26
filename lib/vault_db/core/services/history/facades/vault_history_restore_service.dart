@@ -1,8 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_event_history_repository.dart';
-import 'package:hoplixi/vault_db/core/services/history/custom_fields/custom_fields_restore_service.dart';
-import 'package:hoplixi/vault_db/core/services/history/item_links_restore_service.dart';
-import 'package:hoplixi/vault_db/core/services/history/tags_restore_service.dart';
+import 'package:hoplixi/vault_db/core/services/history/history.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 
@@ -10,13 +8,8 @@ import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_exception_mapper.dart';
 import '../../../errors/db_result.dart';
-import '../../../models/dto/dto.dart';
 import '../../../scheme/tables/vault_items/vault_events_history.dart';
 import '../../vault_typed_view_resolver.dart';
-import '../policy/vault_history_restore_policy_service.dart';
-import '../restore_handlers/restore_handlers.dart';
-import '../vault_history_normalized_loader.dart';
-import '../vault_snapshot_writer.dart';
 
 class VaultHistoryRestoreService {
   VaultHistoryRestoreService({
@@ -24,7 +17,7 @@ class VaultHistoryRestoreService {
     required this.policy,
     required this.db,
     required this.vaultItemsDao,
-    required this.restoreHandlerRegistry,
+    required this.historyModules,
     required this.customFieldsRestoreService,
     required this.tagsRestoreService,
     required this.itemLinksRestoreService,
@@ -37,7 +30,7 @@ class VaultHistoryRestoreService {
   final VaultHistoryRestorePolicyService policy;
   final VaultDB db;
   final VaultItemsDao vaultItemsDao;
-  final VaultHistoryRestoreHandlerRegistry restoreHandlerRegistry;
+  final VaultItemHistoryModules historyModules;
   final CustomFieldsRestoreService customFieldsRestoreService;
   final TagsRestoreService tagsRestoreService;
   final ItemLinksRestoreService itemLinksRestoreService;
@@ -68,7 +61,7 @@ class VaultHistoryRestoreService {
         );
       }
 
-      final handler = restoreHandlerRegistry.get(selected.base.type);
+      final handler = historyModules.restoreHandler(selected.base.type);
       if (handler == null) {
         throw DBCoreError.validation(
           code: 'history.restore.unsupported_type',
@@ -95,14 +88,6 @@ class VaultHistoryRestoreService {
         }
 
         if (currentView != null) {
-          if (currentView is! VaultEntityViewDto) {
-            throw DBCoreError.conflict(
-              code: 'history.restore.invalid_current_view',
-              message: 'Current view does not implement VaultEntityViewDto',
-              entity: selected.base.type.name,
-            );
-          }
-
           final snapshotRes = await snapshotWriter.writeSnapshot(
             view: currentView,
             action: VaultEventHistoryAction.restored,

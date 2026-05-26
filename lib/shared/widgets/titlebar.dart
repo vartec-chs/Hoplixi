@@ -88,7 +88,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
     final theme = Theme.of(context);
     final titlebarState = ref.watch(titlebarStateProvider);
     final isStoreOpen = ref
-        .watch(vaultDBProvider)
+        .watch(vaultDBStateProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
     return DragToMoveArea(
       child: AnimatedContainer(
@@ -216,7 +216,9 @@ class _TitleBarState extends ConsumerState<TitleBar> {
                         return;
                       }
                       if (widget.lockStoreOnClose) {
-                        await ref.read(vaultDBProvider.notifier).lockStore();
+                        await ref
+                            .read(vaultDBManagerStateProvider.notifier)
+                            .lockStore();
                       }
                       await ref.read(trayServiceProvider).hideToTray();
                     },
