@@ -14,6 +14,15 @@ import 'package:hoplixi/vault_db/models/session.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:synchronized/synchronized.dart';
 
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
+import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
+import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
+import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
+import 'package:hoplixi/vault_db/core/services/vault_entity_services.dart';
+import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
+import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
+import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
+
 import '../../features/cloud_sync/snapshot_sync/providers/close_sync_tracking_provider.dart';
 import '../services/main_store_manager.dart';
 
@@ -21,6 +30,42 @@ final _vaultDBManagerProvider = FutureProvider<VaultDBManager>((ref) async {
   final dbHistoryService = await ref.watch(dbHistoryProvider.future);
   final manager = VaultDBManagerFactory(
     dbHistoryService: dbHistoryService,
+    performStoreCleanup: (db, storePath) async {
+      final repos = VaultRepositories(db);
+      final relationsService = VaultItemRelationsService(db);
+      final vaultHistoryServiceAssembly = VaultHistoryServiceAssembly(
+        db: db,
+        repos: repos,
+      );
+      final vaultItemsStateService = VaultItemsStateService(
+        db: db,
+        viewResolver: vaultHistoryServiceAssembly.viewResolver,
+        historyService: vaultHistoryServiceAssembly.historyService,
+      );
+      final entityServices = VaultEntityServices(
+        db: db,
+        repositories: repos,
+        relationsService: relationsService,
+        historyService: vaultHistoryServiceAssembly.historyService,
+        vaultItemsStateService: vaultItemsStateService,
+      );
+      const storageService = VaultDBFileService();
+      final fileStorageService = FileStorageService(
+        db: db,
+        attachmentsPath: storageService.getAttachmentsPath(storePath),
+        decryptedAttachmentsPath: storageService.getDecryptedAttachmentsPath(
+          storePath,
+        ),
+        fileService: entityServices.file,
+        fileRepository: repos.file,
+        fileMetadataRepository: repos.fileMetadata,
+      );
+      final cleanup = PerformStoreCleanup(
+        settingsDao: db.storeSettingsDao,
+        fileStorageService: fileStorageService,
+      );
+      await cleanup(ignoreInterval: false);
+    },
   ).create();
   return manager;
 });

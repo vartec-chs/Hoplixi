@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-26
+
+### vault_db
+
+- Интегрирован автоматический запуск обслуживания и очистки хранилища (`PerformStoreCleanup`) при его успешном открытии (`openStore`) и создании (`createStore`) в `VaultDBManager`.
+- Реализована безопасная передача функции обратного вызова `performStoreCleanup` в `VaultDBManagerFactory` и `VaultDBManager`, которая динамически разрешает зависимости (`VaultRepositories`, `VaultItemRelationsService`, `VaultHistoryServiceAssembly`, `VaultItemsStateService`, `VaultEntityServices`, `FileStorageService` и `PerformStoreCleanup`) без риска взаимных блокировок (deadlocks) в провайдерах.
+
 ## 2026-05-24
 
 ### vault_db

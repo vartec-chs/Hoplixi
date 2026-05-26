@@ -15,12 +15,14 @@ import 'package:result_dart/result_dart.dart';
 import 'package:synchronized/synchronized.dart';
 
 class VaultDBManagerFactory {
-  VaultDBManagerFactory({required this.dbHistoryService})
-    : createVaultDB = CreateVaultDB(),
-      openVaultDB = OpenVaultDB(),
-      closeVaultDB = CloseVaultDB(),
-      updateVaultDB = UpdateVaultDB(),
-      storageService = const VaultDBFileService();
+  VaultDBManagerFactory({
+    required this.dbHistoryService,
+    this.performStoreCleanup,
+  }) : createVaultDB = CreateVaultDB(),
+       openVaultDB = OpenVaultDB(),
+       closeVaultDB = CloseVaultDB(),
+       updateVaultDB = UpdateVaultDB(),
+       storageService = const VaultDBFileService();
 
   final DatabaseHistoryService dbHistoryService;
   final CreateVaultDB createVaultDB;
@@ -28,6 +30,8 @@ class VaultDBManagerFactory {
   final CloseVaultDB closeVaultDB;
   final UpdateVaultDB updateVaultDB;
   final VaultDBFileService storageService;
+  final Future<void> Function(VaultDB db, String storePath)?
+  performStoreCleanup;
 
   VaultDBManager create() {
     return VaultDBManager(
@@ -37,6 +41,7 @@ class VaultDBManagerFactory {
       closeVaultDB: closeVaultDB,
       updateVaultDB: updateVaultDB,
       storageService: storageService,
+      performStoreCleanup: performStoreCleanup,
     );
   }
 }
@@ -51,6 +56,8 @@ class VaultDBManager {
   final CloseVaultDB _closeVaultDB;
   final UpdateVaultDB _updateVaultDB;
   final VaultDBFileService _storageService;
+  final Future<void> Function(VaultDB db, String storePath)?
+  _performStoreCleanup;
 
   VaultDB? _currentDB;
   Session? _currentSession;
@@ -62,12 +69,14 @@ class VaultDBManager {
     required CloseVaultDB closeVaultDB,
     required UpdateVaultDB updateVaultDB,
     required VaultDBFileService storageService,
+    Future<void> Function(VaultDB db, String storePath)? performStoreCleanup,
   }) : _dbHistoryService = dbHistoryService,
        _createVaultDB = createVaultDB,
        _openVaultDB = openVaultDB,
        _closeVaultDB = closeVaultDB,
        _updateVaultDB = updateVaultDB,
-       _storageService = storageService;
+       _storageService = storageService,
+       _performStoreCleanup = performStoreCleanup;
 
   bool get isStoreOpen => _currentDB != null && _currentSession != null;
 
@@ -181,6 +190,28 @@ class VaultDBManager {
         );
       }
 
+      final performStoreCleanup = _performStoreCleanup;
+      if (performStoreCleanup != null) {
+        try {
+          await performStoreCleanup(session.store, session.storeDirectoryPath);
+          logInfo(
+            'Store cleanup completed successfully during store creation',
+            tag: _logTag,
+          );
+        } catch (error, stackTrace) {
+          logWarning(
+            'Failed to perform store cleanup during store creation',
+            tag: _logTag,
+            data: {
+              'storeId': session.info.id,
+              'storePath': session.storeDirectoryPath,
+              'error': error.toString(),
+              'stackTrace': stackTrace.toString(),
+            },
+          );
+        }
+      }
+
       return Success(session);
     });
   }
@@ -238,6 +269,28 @@ class VaultDBManager {
             'stackTrace': stackTrace.toString(),
           },
         );
+      }
+
+      final performStoreCleanup = _performStoreCleanup;
+      if (performStoreCleanup != null) {
+        try {
+          await performStoreCleanup(session.store, session.storeDirectoryPath);
+          logInfo(
+            'Store cleanup completed successfully during store opening',
+            tag: _logTag,
+          );
+        } catch (error, stackTrace) {
+          logWarning(
+            'Failed to perform store cleanup during store opening',
+            tag: _logTag,
+            data: {
+              'storeId': session.info.id,
+              'storePath': session.storeDirectoryPath,
+              'error': error.toString(),
+              'stackTrace': stackTrace.toString(),
+            },
+          );
+        }
       }
 
       return Success(session);
