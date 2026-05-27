@@ -7,7 +7,6 @@ import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 import 'package:flutter/cupertino.dart';
 
-
 import 'button_themes.dart';
 import 'colors.dart';
 import 'component_themes.dart';

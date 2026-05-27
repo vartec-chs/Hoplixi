@@ -64,21 +64,20 @@ class SmoothButton extends StatelessWidget {
     bool isFullWidth = false,
     ButtonStyle? style,
     Key? key,
-  }) =>
-      SmoothButton(
-        key: key,
-        label: label,
-        onPressed: onPressed,
-        type: SmoothButtonType.filled,
-        size: size,
-        variant: variant,
-        icon: icon,
-        iconPosition: iconPosition,
-        loading: loading,
-        bold: bold,
-        isFullWidth: isFullWidth,
-        style: style,
-      );
+  }) => SmoothButton(
+    key: key,
+    label: label,
+    onPressed: onPressed,
+    type: SmoothButtonType.filled,
+    size: size,
+    variant: variant,
+    icon: icon,
+    iconPosition: iconPosition,
+    loading: loading,
+    bold: bold,
+    isFullWidth: isFullWidth,
+    style: style,
+  );
 
   /// Creates a tonal smooth button.
   factory SmoothButton.tonal({
@@ -93,21 +92,20 @@ class SmoothButton extends StatelessWidget {
     bool isFullWidth = false,
     ButtonStyle? style,
     Key? key,
-  }) =>
-      SmoothButton(
-        key: key,
-        label: label,
-        onPressed: onPressed,
-        type: SmoothButtonType.tonal,
-        size: size,
-        variant: variant,
-        icon: icon,
-        iconPosition: iconPosition,
-        loading: loading,
-        bold: bold,
-        isFullWidth: isFullWidth,
-        style: style,
-      );
+  }) => SmoothButton(
+    key: key,
+    label: label,
+    onPressed: onPressed,
+    type: SmoothButtonType.tonal,
+    size: size,
+    variant: variant,
+    icon: icon,
+    iconPosition: iconPosition,
+    loading: loading,
+    bold: bold,
+    isFullWidth: isFullWidth,
+    style: style,
+  );
 
   /// Creates an outlined smooth button.
   factory SmoothButton.outline({
@@ -122,21 +120,20 @@ class SmoothButton extends StatelessWidget {
     bool isFullWidth = false,
     ButtonStyle? style,
     Key? key,
-  }) =>
-      SmoothButton(
-        key: key,
-        label: label,
-        onPressed: onPressed,
-        type: SmoothButtonType.outlined,
-        size: size,
-        variant: variant,
-        icon: icon,
-        iconPosition: iconPosition,
-        loading: loading,
-        bold: bold,
-        isFullWidth: isFullWidth,
-        style: style,
-      );
+  }) => SmoothButton(
+    key: key,
+    label: label,
+    onPressed: onPressed,
+    type: SmoothButtonType.outlined,
+    size: size,
+    variant: variant,
+    icon: icon,
+    iconPosition: iconPosition,
+    loading: loading,
+    bold: bold,
+    isFullWidth: isFullWidth,
+    style: style,
+  );
 
   /// Creates a text smooth button.
   factory SmoothButton.text({
@@ -151,21 +148,20 @@ class SmoothButton extends StatelessWidget {
     bool isFullWidth = false,
     ButtonStyle? style,
     Key? key,
-  }) =>
-      SmoothButton(
-        key: key,
-        label: label,
-        onPressed: onPressed,
-        type: SmoothButtonType.text,
-        size: size,
-        variant: variant,
-        icon: icon,
-        iconPosition: iconPosition,
-        loading: loading,
-        bold: bold,
-        isFullWidth: isFullWidth,
-        style: style,
-      );
+  }) => SmoothButton(
+    key: key,
+    label: label,
+    onPressed: onPressed,
+    type: SmoothButtonType.text,
+    size: size,
+    variant: variant,
+    icon: icon,
+    iconPosition: iconPosition,
+    loading: loading,
+    bold: bold,
+    isFullWidth: isFullWidth,
+    style: style,
+  );
 
   /// Creates a dashed smooth button.
   factory SmoothButton.dashed({
@@ -180,21 +176,20 @@ class SmoothButton extends StatelessWidget {
     bool isFullWidth = false,
     ButtonStyle? style,
     Key? key,
-  }) =>
-      SmoothButton(
-        key: key,
-        label: label,
-        onPressed: onPressed,
-        type: SmoothButtonType.dashed,
-        size: size,
-        variant: variant,
-        icon: icon,
-        iconPosition: iconPosition,
-        loading: loading,
-        bold: bold,
-        isFullWidth: isFullWidth,
-        style: style,
-      );
+  }) => SmoothButton(
+    key: key,
+    label: label,
+    onPressed: onPressed,
+    type: SmoothButtonType.dashed,
+    size: size,
+    variant: variant,
+    icon: icon,
+    iconPosition: iconPosition,
+    loading: loading,
+    bold: bold,
+    isFullWidth: isFullWidth,
+    style: style,
+  );
 
   double get _fontSize {
     switch (size) {

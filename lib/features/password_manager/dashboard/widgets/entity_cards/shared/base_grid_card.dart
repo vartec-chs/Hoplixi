@@ -102,7 +102,8 @@ class BaseGridCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconRefPreview(
-                            iconRef: IconRefDto.fromFields(
+                            iconRef:
+                                IconRefDto.fromFields(
                                   iconSource: iconSource,
                                   iconValue: iconValue,
                                 ) ??
@@ -188,7 +189,7 @@ class BaseGridCard extends StatelessWidget {
                       CardTagsList(tags: tags!, showTitle: false),
                       SizedBox(height: isMobile ? 3 : 4),
                     ],
-                    
+
                     const Spacer(),
 
                     if (!isDeleted) ...[
@@ -229,13 +230,9 @@ class BaseGridCard extends StatelessWidget {
                               const SizedBox(width: 8),
                               IconButton(
                                 icon: Icon(
-                                  isFavorite
-                                      ? Icons.star
-                                      : Icons.star_border,
+                                  isFavorite ? Icons.star : Icons.star_border,
                                   size: 18,
-                                  color: isFavorite
-                                      ? Colors.amber
-                                      : null,
+                                  color: isFavorite ? Colors.amber : null,
                                 ),
                                 onPressed: onToggleFavorite,
                                 tooltip: 'Избранное',
@@ -249,16 +246,14 @@ class BaseGridCard extends StatelessWidget {
                             children: [
                               if (onOpenHistory != null)
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.history,
-                                    size: 18,
-                                  ),
+                                  icon: const Icon(Icons.history, size: 18),
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                   onPressed: onOpenHistory,
                                   tooltip: 'История',
                                 ),
-                              if (onOpenHistory != null) const SizedBox(width: 8),
+                              if (onOpenHistory != null)
+                                const SizedBox(width: 8),
                               if (onEdit != null)
                                 IconButton(
                                   icon: const Icon(

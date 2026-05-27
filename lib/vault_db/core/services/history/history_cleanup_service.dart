@@ -100,17 +100,21 @@ class HistoryCleanupService {
   HistoryCleanupService(this._settingsDao, this._fileStorageService);
 
   /// Проверить необходимость и выполнить очистку истории и сиротских файлов.
-  /// 
+  ///
   /// [ignoreInterval] - если true, проверка интервала пропускается.
-  Future<HistoryCleanupResult> performCleanup({bool ignoreInterval = false}) async {
+  Future<HistoryCleanupResult> performCleanup({
+    bool ignoreInterval = false,
+  }) async {
     try {
       if (!ignoreInterval) {
         final lastCleanupStr = await _settingsDao.getString(
           StoreSettingsKey.historyLastCleanupTimestamp,
         );
-        final intervalDays = await _settingsDao.getInt(
-          StoreSettingsKey.historyCleanupIntervalDays,
-        ) ?? _defaultCleanupIntervalDays;
+        final intervalDays =
+            await _settingsDao.getInt(
+              StoreSettingsKey.historyCleanupIntervalDays,
+            ) ??
+            _defaultCleanupIntervalDays;
 
         if (lastCleanupStr != null) {
           final lastCleanup = DateTime.tryParse(lastCleanupStr);
@@ -138,18 +142,17 @@ class HistoryCleanupService {
       int? historyMaxAgeDays;
 
       // 1. Очистка истории в БД
-      final isHistoryEnabled = await _settingsDao.getBool(
-        StoreSettingsKey.historyEnabled,
-      ) ?? true;
+      final isHistoryEnabled =
+          await _settingsDao.getBool(StoreSettingsKey.historyEnabled) ?? true;
 
       if (isHistoryEnabled) {
-        historyLimit = await _settingsDao.getInt(
-          StoreSettingsKey.historyLimit,
-        ) ?? _defaultHistoryLimit;
-        
-        historyMaxAgeDays = await _settingsDao.getInt(
-          StoreSettingsKey.historyMaxAgeDays,
-        ) ?? _defaultHistoryMaxAgeDays;
+        historyLimit =
+            await _settingsDao.getInt(StoreSettingsKey.historyLimit) ??
+            _defaultHistoryLimit;
+
+        historyMaxAgeDays =
+            await _settingsDao.getInt(StoreSettingsKey.historyMaxAgeDays) ??
+            _defaultHistoryMaxAgeDays;
 
         await _settingsDao.cleanupHistory(
           maxAgeDays: historyMaxAgeDays,

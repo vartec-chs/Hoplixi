@@ -39,10 +39,12 @@ class IconSourcePickerButton extends ConsumerWidget {
       return;
     }
 
-    onChanged(IconRefDto(
-      iconSourceType: IconSourceType.custom,
-      customIconId: selectedIconId,
-    ));
+    onChanged(
+      IconRefDto(
+        iconSourceType: IconSourceType.custom,
+        customIconId: selectedIconId,
+      ),
+    );
   }
 
   Future<void> _pickIconPack(BuildContext context, WidgetRef ref) async {
@@ -57,10 +59,12 @@ class IconSourcePickerButton extends ConsumerWidget {
       return;
     }
 
-    onChanged(IconRefDto(
-      iconSourceType: IconSourceType.pack,
-      iconValue: selectedIconKey,
-    ));
+    onChanged(
+      IconRefDto(
+        iconSourceType: IconSourceType.pack,
+        iconValue: selectedIconKey,
+      ),
+    );
   }
 
   @override

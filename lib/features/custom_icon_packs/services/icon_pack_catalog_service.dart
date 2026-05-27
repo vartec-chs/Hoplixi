@@ -5,7 +5,8 @@ import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_entry.dart';
 import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_summary.dart';
 import 'package:hoplixi/rust/api/icon_pack_catalog_api.dart' as rust;
-import 'package:hoplixi/rust/api/icon_pack_catalog_api/types.dart' as rust_types;
+import 'package:hoplixi/rust/api/icon_pack_catalog_api/types.dart'
+    as rust_types;
 
 typedef IconPackImportProgress =
     void Function(int current, int total, String currentFile);

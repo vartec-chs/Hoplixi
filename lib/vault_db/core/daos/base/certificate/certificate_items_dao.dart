@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/certificate/certificate_items.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-
 part 'certificate_items_dao.g.dart';
 
 @DriftAccessor(tables: [CertificateItemConstraint])

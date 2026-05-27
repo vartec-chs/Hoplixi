@@ -152,11 +152,11 @@ class DeviceInfo {
       };
     } else if (Platform.isWindows) {
       final WindowsDeviceInfo windowsInfo = await deviceInfo.windowsInfo;
-      deviceId = windowsInfo.deviceId ;
+      deviceId = windowsInfo.deviceId;
       platform = 'Windows';
-      platformVersion = windowsInfo.displayVersion ;
-      deviceModel = windowsInfo.productName ;
-      deviceManufacturer = windowsInfo.registeredOwner ;
+      platformVersion = windowsInfo.displayVersion;
+      deviceModel = windowsInfo.productName;
+      deviceManufacturer = windowsInfo.registeredOwner;
       additionalInfo = {
         'computerName': windowsInfo.computerName,
         'userName': windowsInfo.userName,
@@ -182,8 +182,8 @@ class DeviceInfo {
       final MacOsDeviceInfo macInfo = await deviceInfo.macOsInfo;
       deviceId = macInfo.systemGUID ?? '';
       platform = 'macOS';
-      platformVersion = macInfo.osRelease ;
-      deviceModel = macInfo.model ;
+      platformVersion = macInfo.osRelease;
+      deviceModel = macInfo.model;
       deviceManufacturer = 'Apple';
       additionalInfo = {
         'computerName': macInfo.computerName,
@@ -202,7 +202,7 @@ class DeviceInfo {
       deviceId = linuxInfo.machineId ?? '';
       platform = 'Linux';
       platformVersion = linuxInfo.version ?? '';
-      deviceModel = linuxInfo.prettyName ;
+      deviceModel = linuxInfo.prettyName;
       deviceManufacturer = 'Unknown';
       additionalInfo = {
         'name': linuxInfo.name,

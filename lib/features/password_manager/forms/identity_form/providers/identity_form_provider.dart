@@ -132,7 +132,7 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
     final c = _current;
     final nameError = _req(c.name, t.dashboard_forms.validation_required_name);
     // TODO: proper validation
-    
+
     _update((s) => s.copyWith(nameError: nameError));
 
     return nameError == null;
@@ -183,7 +183,9 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
               taxId: FieldUpdate.set(clean(c.taxId)),
               nationalId: FieldUpdate.set(clean(c.nationalId)),
               passportNumber: FieldUpdate.set(clean(c.passportNumber)),
-              driverLicenseNumber: FieldUpdate.set(clean(c.driverLicenseNumber)),
+              driverLicenseNumber: FieldUpdate.set(
+                clean(c.driverLicenseNumber),
+              ),
             ),
             tags: FieldUpdate.set(c.tagIds),
           ),

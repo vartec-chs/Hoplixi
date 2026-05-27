@@ -7,4 +7,3 @@ final vaultRepositories = FutureProvider<VaultRepositories>((ref) async {
   final db = await ref.watch(vaultDBProvider.future);
   return VaultRepositories(db);
 });
-

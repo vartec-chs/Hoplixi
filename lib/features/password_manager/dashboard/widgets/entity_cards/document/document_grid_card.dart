@@ -62,7 +62,7 @@ class _DocumentGridCardState extends ConsumerState<DocumentGridCard> {
       fallbackIcon: Icons.description,
       category: null, // TODO: Map new category structure if needed
       tags: null, // TODO: Map new tags structure
-      usedCount: 0, 
+      usedCount: 0,
       isFavorite: document.item.isFavorite,
       isPinned: document.item.isPinned,
       isArchived: document.item.isArchived,

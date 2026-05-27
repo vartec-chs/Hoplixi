@@ -182,7 +182,10 @@ class IconPacksNotifier extends Notifier<IconPacksState> {
 
         lastProgressUpdate = now;
         lastProgressValue = nextProgress;
-        state = state.copyWith(progress: nextProgress, currentFile: currentFile);
+        state = state.copyWith(
+          progress: nextProgress,
+          currentFile: currentFile,
+        );
       }
 
       final importedPack = switch (sourceType) {

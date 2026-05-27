@@ -112,10 +112,9 @@ class VaultDBMetadataService {
       final companion = StoreMetaTableCompanion(
         name: dto.name.toRequiredValue(),
         description: dto.description.toNullableValue(),
-        passwordHash:
-            newPasswordHash != null
-                ? Value(newPasswordHash)
-                : const Value.absent(),
+        passwordHash: newPasswordHash != null
+            ? Value(newPasswordHash)
+            : const Value.absent(),
         modifiedAt: Value(now),
       );
 

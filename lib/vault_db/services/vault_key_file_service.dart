@@ -152,7 +152,7 @@ class VaultKeyFileService {
       final result = await FilePicker.pickFiles(
         allowMultiple: false,
         type: FileType.custom,
-        allowedExtensions:  [MainConstants.keyFileExtension.substring(1)],
+        allowedExtensions: [MainConstants.keyFileExtension.substring(1)],
       );
       final path = result?.files.single.path;
       if (path == null || path.trim().isEmpty) {
@@ -195,7 +195,7 @@ class VaultKeyFileService {
             ? suggestedFileName
             : '$suggestedFileName${MainConstants.keyFileExtension}',
         type: FileType.custom,
-        allowedExtensions:  [MainConstants.keyFileExtension.substring(1)],
+        allowedExtensions: [MainConstants.keyFileExtension.substring(1)],
         bytes: Uint8List.fromList(
           utf8.encode(
             const JsonEncoder.withIndent('  ').convert(keyFile.toJson()),

@@ -634,11 +634,11 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
 
     final totalBytes =
         downloads.any((item) => item.resource.metadata.sizeBytes == null)
-            ? null
-            : downloads.fold<int>(
-                0,
-                (sum, item) => sum + item.resource.metadata.sizeBytes!,
-              );
+        ? null
+        : downloads.fold<int>(
+            0,
+            (sum, item) => sum + item.resource.metadata.sizeBytes!,
+          );
     var completedFiles = 0;
     var completedBytes = 0;
 
@@ -728,8 +728,12 @@ class SnapshotSyncRepository implements CloudStoreLockRemoteStore {
     required CloudResourceRef parentRef,
     required String name,
   }) async {
-    final cached = _folderCache[
-        SnapshotSyncUtils.folderCacheKey(tokenId, parentRef, name)];
+    final cached =
+        _folderCache[SnapshotSyncUtils.folderCacheKey(
+          tokenId,
+          parentRef,
+          name,
+        )];
     if (cached != null) {
       return cached;
     }

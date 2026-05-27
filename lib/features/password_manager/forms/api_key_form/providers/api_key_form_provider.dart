@@ -36,10 +36,12 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     final details = view.apiKey;
 
     final tags = await ref.read(tagRepositoryProvider.future);
-    final itemTags = await ref.read(apiKeyRepositoryProvider.future).then((r) => []); // TODO: handle tags properly in repository
+    final itemTags = await ref
+        .read(apiKeyRepositoryProvider.future)
+        .then((r) => []); // TODO: handle tags properly in repository
     // Wait, I need a better way to get tags.
     // In NEW architecture, I should use VaultItemRelationsService or Repository.
-    
+
     final customFields = await loadCustomFields(ref, id);
 
     return ApiKeyFormState(
@@ -183,7 +185,9 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
             item: VaultItemPatchDto(
               itemId: current.editingApiKeyId!,
               name: FieldUpdate.set(name),
-              description: FieldUpdate.set(description.isEmpty ? null : description),
+              description: FieldUpdate.set(
+                description.isEmpty ? null : description,
+              ),
               categoryId: FieldUpdate.set(current.categoryId),
               // TODO: isFavorite, isPinned from current state if available
             ),
@@ -192,7 +196,9 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
               key: FieldUpdate.set(key),
               maskedKey: FieldUpdate.set(masked),
               expiresAt: FieldUpdate.set(current.expiresAt),
-              revokedAt: FieldUpdate.set(current.revoked ? DateTime.now() : null),
+              revokedAt: FieldUpdate.set(
+                current.revoked ? DateTime.now() : null,
+              ),
               // TODO: other fields
             ),
             tags: FieldUpdate.set(current.tagIds),
@@ -249,4 +255,3 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     _update((s) => s.copyWith(isSaved: false));
   }
 }
-

@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-05-27
+
+### vault_db
+
+- Выполнен комплексный архитектурный рефакторинг `VaultDBManager` по принципам Clean Architecture, SRP и DIP:
+  - Выделено реактивное управление состоянием сессии в [IVaultSessionHolder](lib/vault_db/services/session/ivault_session_holder.dart) и [VaultSessionHolder](lib/vault_db/services/session/vault_session_holder.dart).
+  - Изолированы файловые операции хранилища в [IVaultStorageManager](lib/vault_db/services/storage/ivault_storage_manager.dart) и [VaultStorageManager](lib/vault_db/services/storage/vault_storage_manager.dart).
+  - Выделена типизированная очистка хранилища в [VaultCleanupService](lib/vault_db/services/cleanup/vault_cleanup_service.dart).
+  - Вынесено управление жизненным циклом и транзакционная оркестрация операций в [IVaultLifecycleService](lib/vault_db/services/lifecycle/ivault_lifecycle_service.dart) и [VaultLifecycleService](lib/vault_db/services/lifecycle/vault_lifecycle_service.dart).
+  - Класс `VaultDBManager` в [main_store_manager.dart](lib/vault_db/services/main_store_manager.dart) превращен в ультра-тонкий фасад `VaultDBFacade` с сохранением полной обратной совместимости через `typedef`.
+  - Покрыты модульными тестами новые сервисы в [vault_db_services_test.dart](test/vault_db/vault_db_services_test.dart).
+
 ## 2026-05-26
 
 ### vault_db

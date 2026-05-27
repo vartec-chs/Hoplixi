@@ -43,4 +43,3 @@ class SharedPreferencesShowcaseStorage implements ShowcaseStorage {
 ShowcaseStorage createShowcaseStorage() {
   return SharedPreferencesShowcaseStorage(getIt<SharedPreferences>());
 }
-

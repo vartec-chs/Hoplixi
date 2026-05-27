@@ -150,38 +150,24 @@ sealed class AppError with _$AppError implements Exception {
     orElse: () => false,
   );
 
-  bool get isFileSystem => maybeWhen(
-    fileSystem: (_, _, _, _, _, _, _) => true,
-    orElse: () => false,
-  );
+  bool get isFileSystem =>
+      maybeWhen(fileSystem: (_, _, _, _, _, _, _) => true, orElse: () => false);
 
-  bool get isNetwork => maybeWhen(
-    network: (_, _, _, _, _, _, _) => true,
-    orElse: () => false,
-  );
+  bool get isNetwork =>
+      maybeWhen(network: (_, _, _, _, _, _, _) => true, orElse: () => false);
 
-  bool get isValidation => maybeWhen(
-    validation: (_, _, _, _, _, _, _) => true,
-    orElse: () => false,
-  );
+  bool get isValidation =>
+      maybeWhen(validation: (_, _, _, _, _, _, _) => true, orElse: () => false);
 
-  bool get isAuth => maybeWhen(
-    auth: (_, _, _, _, _, _, _) => true,
-    orElse: () => false,
-  );
+  bool get isAuth =>
+      maybeWhen(auth: (_, _, _, _, _, _, _) => true, orElse: () => false);
 
-  bool get isArchive => maybeWhen(
-    archive: (_, _, _, _, _, _, _) => true,
-    orElse: () => false,
-  );
+  bool get isArchive =>
+      maybeWhen(archive: (_, _, _, _, _, _, _) => true, orElse: () => false);
 
-  bool get isFeature => maybeWhen(
-    feature: (_, _, _, _, _, _, _, _) => true,
-    orElse: () => false,
-  );
+  bool get isFeature =>
+      maybeWhen(feature: (_, _, _, _, _, _, _, _) => true, orElse: () => false);
 
-  bool get isUnknown => maybeWhen(
-    unknown: (_, _, _, _, _, _, _) => true,
-    orElse: () => false,
-  );
+  bool get isUnknown =>
+      maybeWhen(unknown: (_, _, _, _, _, _, _) => true, orElse: () => false);
 }

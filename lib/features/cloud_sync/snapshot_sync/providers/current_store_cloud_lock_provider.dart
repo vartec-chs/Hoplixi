@@ -197,7 +197,8 @@ class CurrentStoreCloudLockNotifier extends AsyncNotifier<CloudStoreLockState> {
     }
 
     state = AsyncData(
-      (state.value ?? const CloudStoreLockState(phase: CloudStoreLockPhase.releasing))
+      (state.value ??
+              const CloudStoreLockState(phase: CloudStoreLockPhase.releasing))
           .copyWith(
             phase: CloudStoreLockPhase.releasing,
             storeUuid: lock.storeUuid,

@@ -41,7 +41,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
 
       final item = view.item;
       final details = view.password;
-      
+
       // TODO: handle tags properly
       final tagIds = <String>[];
       final tagNames = <String>[];
@@ -245,7 +245,9 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
               itemId: state.editingPasswordId!,
               name: FieldUpdate.set(state.name.trim()),
               description: FieldUpdate.set(
-                state.description.trim().isEmpty ? null : state.description.trim(),
+                state.description.trim().isEmpty
+                    ? null
+                    : state.description.trim(),
               ),
               categoryId: FieldUpdate.set(state.categoryId),
             ),

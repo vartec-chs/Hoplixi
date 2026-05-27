@@ -30,7 +30,9 @@ class VaultHistoryServiceAssembly {
       snapshotHandler: ApiKeySnapshotHandler(
         apiKeyHistoryDao: db.apiKeyHistoryDao,
       ),
-      cardReader: ApiKeyHistoryCardReader(apiKeyHistoryDao: db.apiKeyHistoryDao),
+      cardReader: ApiKeyHistoryCardReader(
+        apiKeyHistoryDao: db.apiKeyHistoryDao,
+      ),
     ),
     VaultItemHistoryModule(
       type: VaultItemType.password,

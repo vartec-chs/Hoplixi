@@ -155,10 +155,7 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     final nameError = _validateName(current.name);
     final firstNameError = _validateName(current.firstName);
     _update(
-      (s) => s.copyWith(
-        nameError: nameError,
-        firstNameError: firstNameError,
-      ),
+      (s) => s.copyWith(nameError: nameError, firstNameError: firstNameError),
     );
 
     return nameError == null && firstNameError == null;
@@ -189,10 +186,14 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
             contact: PatchContactDataDto(
               firstName: FieldUpdate.set(current.firstName.trim()),
               middleName: FieldUpdate.set(
-                current.middleName.trim().isEmpty ? null : current.middleName.trim(),
+                current.middleName.trim().isEmpty
+                    ? null
+                    : current.middleName.trim(),
               ),
               lastName: FieldUpdate.set(
-                current.lastName.trim().isEmpty ? null : current.lastName.trim(),
+                current.lastName.trim().isEmpty
+                    ? null
+                    : current.lastName.trim(),
               ),
               phone: FieldUpdate.set(
                 current.phone.trim().isEmpty ? null : current.phone.trim(),
@@ -204,7 +205,9 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
                 current.company.trim().isEmpty ? null : current.company.trim(),
               ),
               jobTitle: FieldUpdate.set(
-                current.jobTitle.trim().isEmpty ? null : current.jobTitle.trim(),
+                current.jobTitle.trim().isEmpty
+                    ? null
+                    : current.jobTitle.trim(),
               ),
               address: FieldUpdate.set(
                 current.address.trim().isEmpty ? null : current.address.trim(),

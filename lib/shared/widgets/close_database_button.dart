@@ -69,7 +69,9 @@ class _CloseDatabaseButtonState extends ConsumerState<CloseDatabaseButton> {
     });
 
     try {
-      final success = await ref.read(vaultDBManagerStateProvider.notifier).closeStore();
+      final success = await ref
+          .read(vaultDBManagerStateProvider.notifier)
+          .closeStore();
       if (!context.mounted || success) {
         return;
       }

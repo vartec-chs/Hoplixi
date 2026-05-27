@@ -227,10 +227,7 @@ class ArchiveService {
         e.toFileSystemAppError(
           message: 'Не удалось распаковать архив',
           stackTrace: s,
-          data: {
-            'archivePath': archivePath,
-            'stagingPath': ?stagingPath,
-          },
+          data: {'archivePath': archivePath, 'stagingPath': ?stagingPath},
         ),
       );
     }

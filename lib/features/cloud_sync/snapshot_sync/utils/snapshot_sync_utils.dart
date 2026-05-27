@@ -9,27 +9,27 @@ abstract final class SnapshotSyncUtils {
   static CloudResourceRef rootRefForProvider(CloudSyncProvider provider) {
     return switch (provider) {
       CloudSyncProvider.google => const CloudResourceRef.root(
-          provider: CloudSyncProvider.google,
-          resourceId: 'root',
-          path: '',
-        ),
+        provider: CloudSyncProvider.google,
+        resourceId: 'root',
+        path: '',
+      ),
       CloudSyncProvider.onedrive => const CloudResourceRef.root(
-          provider: CloudSyncProvider.onedrive,
-          resourceId: 'root',
-          path: '',
-        ),
+        provider: CloudSyncProvider.onedrive,
+        resourceId: 'root',
+        path: '',
+      ),
       CloudSyncProvider.yandex => const CloudResourceRef.root(
-          provider: CloudSyncProvider.yandex,
-          path: 'disk:/',
-        ),
+        provider: CloudSyncProvider.yandex,
+        path: 'disk:/',
+      ),
       CloudSyncProvider.dropbox => const CloudResourceRef.root(
-          provider: CloudSyncProvider.dropbox,
-          path: '',
-        ),
+        provider: CloudSyncProvider.dropbox,
+        path: '',
+      ),
       CloudSyncProvider.other => const CloudResourceRef.root(
-          provider: CloudSyncProvider.other,
-          path: '',
-        ),
+        provider: CloudSyncProvider.other,
+        path: '',
+      ),
     };
   }
 
@@ -44,21 +44,22 @@ abstract final class SnapshotSyncUtils {
 
     return switch (parentRef.provider) {
       CloudSyncProvider.dropbox => CloudResourceRef(
-          provider: CloudSyncProvider.dropbox,
-          path: joinDropboxPath(parentRef.path, trimmedName),
-        ),
+        provider: CloudSyncProvider.dropbox,
+        path: joinDropboxPath(parentRef.path, trimmedName),
+      ),
       CloudSyncProvider.yandex => CloudResourceRef(
-          provider: CloudSyncProvider.yandex,
-          path: joinYandexPath(parentRef.path, trimmedName),
-        ),
+        provider: CloudSyncProvider.yandex,
+        path: joinYandexPath(parentRef.path, trimmedName),
+      ),
       _ => null,
     };
   }
 
   static String joinDropboxPath(String? parentPath, String childName) {
     final base = (parentPath ?? '').trim();
-    final normalizedBase =
-        base.isEmpty ? '' : base.replaceFirst(RegExp(r'/+$'), '');
+    final normalizedBase = base.isEmpty
+        ? ''
+        : base.replaceFirst(RegExp(r'/+$'), '');
     final normalizedChild = childName.replaceFirst(RegExp(r'^/+'), '');
     return normalizedBase.isEmpty
         ? '/$normalizedChild'

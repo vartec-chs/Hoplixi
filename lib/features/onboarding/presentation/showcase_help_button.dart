@@ -25,20 +25,22 @@ class ShowcaseHelpButton extends StatelessWidget {
       icon: const Icon(Icons.help_outline),
       color: color,
       tooltip: tooltip,
-      onPressed: enabled ? () {
-        if (keys.isEmpty) {
-          return;
-        }
+      onPressed: enabled
+          ? () {
+              if (keys.isEmpty) {
+                return;
+              }
 
-        final showcaseView = scope == null
-            ? ShowcaseView.get()
-            : ShowcaseView.getNamed(scope!);
-        if (showcaseView.isShowcaseRunning) {
-          return;
-        }
+              final showcaseView = scope == null
+                  ? ShowcaseView.get()
+                  : ShowcaseView.getNamed(scope!);
+              if (showcaseView.isShowcaseRunning) {
+                return;
+              }
 
-        showcaseView.startShowCase(keys, delay: delay);
-      } : null,
+              showcaseView.startShowCase(keys, delay: delay);
+            }
+          : null,
     );
   }
 }
