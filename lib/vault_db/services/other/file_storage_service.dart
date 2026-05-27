@@ -14,6 +14,7 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
 class FileStorageService {
@@ -272,12 +273,9 @@ class FileStorageService {
 
     // Историю пишет SQL-триггер file_content_update_history автоматически
     // при обновлении metadata_id в file_items (когда история включена).
-    final historyEnabledStr =
-        await (_db.select(_db.storeSettings)
-              ..where((s) => s.key.equals(StoreSettingsKeys.historyEnabled)))
-            .getSingleOrNull();
-    final isHistoryEnabled =
-        historyEnabledStr == null || historyEnabledStr.value == 'true';
+    final isHistoryEnabled = await StoreSettingsRepository(
+      _db,
+    ).getOrDefault(StoreSettingsKey.historyEnabled).getOrThrow();
 
     final key = await _getAttachmentKey();
     final attachmentsPath = await _getAttachmentsPath();

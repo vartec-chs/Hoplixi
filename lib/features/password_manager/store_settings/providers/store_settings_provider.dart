@@ -5,19 +5,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/store_settings/models/store_settings_state.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/services/db_key_derivation_service.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
+
+import 'pinned_entity_types_provider.dart';
 
 /// Провайдер для управления настройками хранилища
 final storeSettingsProvider =
@@ -42,23 +44,21 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       String? currentDbCipherDescription;
 
       try {
-        final manager = await ref.read(vaultDBManagerProvider.future);
-        final db = manager.currentStore;
-        if (db != null) {
-          final pragmaRows = await db.customSelect('PRAGMA cipher;').get();
-          if (pragmaRows.isNotEmpty) {
-            final rawValue = pragmaRows.first.data.values.isNotEmpty
-                ? pragmaRows.first.data.values.first
-                : null;
-            final cipherValue = rawValue
-                ?.toString()
-                .replaceAll('"', '')
-                .trim()
-                .toLowerCase();
-            if (cipherValue!.isNotEmpty) {
-              currentDbCipher = cipherValue;
-              currentDbCipherDescription = dbCipherDescriptions[cipherValue];
-            }
+        final db = await ref.read(vaultDBProvider.future);
+
+        final pragmaRows = await db.customSelect('PRAGMA cipher;').get();
+        if (pragmaRows.isNotEmpty) {
+          final rawValue = pragmaRows.first.data.values.isNotEmpty
+              ? pragmaRows.first.data.values.first
+              : null;
+          final cipherValue = rawValue
+              ?.toString()
+              .replaceAll('"', '')
+              .trim()
+              .toLowerCase();
+          if (cipherValue!.isNotEmpty) {
+            currentDbCipher = cipherValue;
+            currentDbCipherDescription = dbCipherDescriptions[cipherValue];
           }
         }
       } catch (e) {
@@ -74,47 +74,33 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         isCipherLoading: false,
       );
 
-      final daoResult = await ref.read(storeMetaDaoProvider.future);
-      final meta = await daoResult.getStoreMeta();
+      final repos = await ref.read(vaultRepositories.future);
+      final storeMeta = repos.storeMeta;
+      final metaResult = await storeMeta.getStoreMeta();
+      final meta = metaResult.getOrNull();
 
-      final settingsDao = await ref.read(storeSettingsDaoProvider.future);
+      final storeSettings = repos.storeSettings;
 
-      final historyLimitStr = await settingsDao.getSetting(
-        StoreSettingsKeys.historyLimit,
-      );
-      final historyMaxAgeDaysStr = await settingsDao.getSetting(
-        StoreSettingsKeys.historyMaxAgeDays,
-      );
-      final historyEnabledStr = await settingsDao.getSetting(
-        StoreSettingsKeys.historyEnabled,
-      );
-      final incrementUsageOnCopyStr = await settingsDao.getSetting(
-        StoreSettingsKeys.incrementUsageOnCopy,
-      );
-      final historyCleanupIntervalDaysStr = await settingsDao.getSetting(
-        StoreSettingsKeys.historyCleanupIntervalDays,
-      );
+      final historyLimit = (await storeSettings.getOrDefault(
+        StoreSettingsKey.historyLimit,
+      )).getOrThrow();
+      final historyMaxAgeDays = (await storeSettings.getOrDefault(
+        StoreSettingsKey.historyMaxAgeDays,
+      )).getOrThrow();
+      final historyEnabled = (await storeSettings.getOrDefault(
+        StoreSettingsKey.historyEnabled,
+      )).getOrThrow();
+      final incrementUsageOnCopy = (await storeSettings.getOrDefault(
+        StoreSettingsKey.incrementUsageOnCopy,
+      )).getOrThrow();
+      final historyCleanupIntervalDays = (await storeSettings.getOrDefault(
+        StoreSettingsKey.historyCleanupIntervalDays,
+      )).getOrThrow();
 
-      final historyLimit = historyLimitStr != null
-          ? int.tryParse(historyLimitStr) ?? 100
-          : 100;
-      final historyMaxAgeDays = historyMaxAgeDaysStr != null
-          ? int.tryParse(historyMaxAgeDaysStr) ?? 30
-          : 30;
-      final historyEnabled = historyEnabledStr != null
-          ? historyEnabledStr == 'true'
-          : true;
-      final incrementUsageOnCopy = incrementUsageOnCopyStr != null
-          ? incrementUsageOnCopyStr == 'true'
-          : true;
-      final historyCleanupIntervalDays = historyCleanupIntervalDaysStr != null
-          ? int.tryParse(historyCleanupIntervalDaysStr) ?? 7
-          : 7;
+      final pinnedIds = (await storeSettings.getOrDefault(
+        StoreSettingsKey.pinnedEntityTypes,
+      )).getOrThrow();
 
-      final pinnedRaw = await settingsDao.getSetting(
-        StoreSettingsKeys.pinnedEntityTypes,
-      );
-      final pinnedIds = _parsePinnedEntityTypes(pinnedRaw);
       final dbState = await ref.read(vaultDBProvider.future);
       final manifest = dbState.path == null
           ? null
@@ -243,13 +229,18 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
 
     try {
-      final daoResult = await ref.read(storeMetaDaoProvider.future);
+      final repos = await ref.read(vaultRepositories.future);
+      final storeMeta = repos.storeMeta;
+      final storeSettings = repos.storeSettings;
       var settingsChanged = false;
 
       // Обновляем имя если изменилось
       if (state.newName.trim() != state.name) {
-        final nameUpdated = await daoResult.updateName(state.newName.trim());
-        if (!nameUpdated) {
+        final result = await storeMeta.updateInfo(
+          name: state.newName.trim(),
+          description: state.newDescription,
+        );
+        if (result.isError()) {
           state = state.copyWith(
             isSaving: false,
             saveError: 'Не удалось обновить имя хранилища',
@@ -260,10 +251,11 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
 
       // Обновляем описание если изменилось
       if (state.newDescription != state.description) {
-        final descUpdated = await daoResult.updateDescription(
-          state.newDescription,
+        final result = await storeMeta.updateInfo(
+          name: state.newName.trim(),
+          description: state.newDescription,
         );
-        if (!descUpdated) {
+        if (result.isError()) {
           state = state.copyWith(
             isSaving: false,
             saveError: 'Не удалось обновить описание хранилища',
@@ -272,61 +264,81 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         }
       }
 
-      final settingsDao = await ref.read(storeSettingsDaoProvider.future);
       bool shouldCleanupHistory = false;
 
       if (state.newHistoryLimit != state.historyLimit) {
-        await settingsDao.setSetting(
-          StoreSettingsKeys.historyLimit,
-          state.newHistoryLimit.toString(),
+        final result = await storeSettings.set(
+          StoreSettingsKey.historyLimit,
+          state.newHistoryLimit,
         );
+        if (result.isError()) {
+          return Failure(result.exceptionOrNull()!.message!);
+        }
         settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newHistoryMaxAgeDays != state.historyMaxAgeDays) {
-        await settingsDao.setSetting(
-          StoreSettingsKeys.historyMaxAgeDays,
-          state.newHistoryMaxAgeDays.toString(),
+        final result = await storeSettings.set(
+          StoreSettingsKey.historyMaxAgeDays,
+          state.newHistoryMaxAgeDays,
         );
+        if (result.isError()) {
+          return Failure(result.exceptionOrNull()!.message!);
+        }
         settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newHistoryEnabled != state.historyEnabled) {
-        await settingsDao.setSetting(
-          StoreSettingsKeys.historyEnabled,
-          state.newHistoryEnabled.toString(),
+        final result = await storeSettings.set(
+          StoreSettingsKey.historyEnabled,
+          state.newHistoryEnabled,
         );
+        if (result.isError()) {
+          return Failure(result.exceptionOrNull()!.message!);
+        }
         settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newIncrementUsageOnCopy != state.incrementUsageOnCopy) {
-        await settingsDao.setSetting(
-          StoreSettingsKeys.incrementUsageOnCopy,
-          state.newIncrementUsageOnCopy.toString(),
+        final result = await storeSettings.set(
+          StoreSettingsKey.incrementUsageOnCopy,
+          state.newIncrementUsageOnCopy,
         );
+        if (result.isError()) {
+          return Failure(result.exceptionOrNull()!.message!);
+        }
         settingsChanged = true;
       }
       if (state.newHistoryCleanupIntervalDays !=
           state.historyCleanupIntervalDays) {
-        await settingsDao.setSetting(
-          StoreSettingsKeys.historyCleanupIntervalDays,
-          state.newHistoryCleanupIntervalDays.toString(),
+        final result = await storeSettings.set(
+          StoreSettingsKey.historyCleanupIntervalDays,
+          state.newHistoryCleanupIntervalDays,
         );
+        if (result.isError()) {
+          return Failure(result.exceptionOrNull()!.message!);
+        }
         settingsChanged = true;
       }
 
       if (!_listEquals(state.newPinnedEntityTypes, state.pinnedEntityTypes)) {
-        await settingsDao.setSetting(
-          StoreSettingsKeys.pinnedEntityTypes,
-          jsonEncode(state.newPinnedEntityTypes),
+        final result = await storeSettings.set(
+          StoreSettingsKey.pinnedEntityTypes,
+          state.newPinnedEntityTypes,
         );
+        if (result.isError()) {
+          return Failure(result.exceptionOrNull()!.message!);
+        }
         settingsChanged = true;
         // Сбрасываем кэш провайдера закреплённых типов
-        ref.invalidate(storeSettingsDaoProvider);
+        ref.invalidate(pinnedEntityTypesProvider);
       }
 
       if (settingsChanged) {
-        await daoResult.touchModifiedAt();
+        final touchResult = await repos.db.storeMetaDao.touchModifiedAt();
+        if (touchResult.isError()) {
+          logWarning('Failed to touchModifiedAt: ${touchResult.exceptionOrNull()}');
+        }
       }
 
       if (shouldCleanupHistory) {
@@ -382,16 +394,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       saveError: null,
       successMessage: null,
     );
-  }
-
-  /// Парсинг JSON-списка закреплённых типов
-  static List<String> _parsePinnedEntityTypes(String? raw) {
-    if (raw == null || raw.isEmpty) return const [];
-    try {
-      return (jsonDecode(raw) as List).cast<String>();
-    } catch (_) {
-      return const [];
-    }
   }
 
   static bool _listEquals(List<String> a, List<String> b) {
@@ -452,7 +454,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
 
     try {
-      final daoResult = await ref.read(storeMetaDaoProvider.future);
+      final repos = await ref.read(vaultRepositories.future);
       final dbState = await ref.read(vaultDBProvider.future);
       final currentPath = dbState.path;
 
@@ -507,7 +509,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         kdfVersion: keyConfig.kdfVersion,
       );
 
-      final result = await daoResult.changePassword(newPragmaKey);
+      final result = await repos.db.storeMetaDao.changePassword(newPragmaKey);
 
       final resultException = result.exceptionOrNull();
 
@@ -519,10 +521,13 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       final newSalt = const Uuid().v4();
       final newPasswordHash = _hashPassword(state.newPassword, newSalt);
 
-      await daoResult.updatePasswordHash(
+      final updateHashResult = await repos.db.storeMetaDao.updatePasswordHash(
         newPasswordHash: newPasswordHash,
         newSalt: newSalt,
       );
+      if (updateHashResult.isError()) {
+        throw Exception(updateHashResult.exceptionOrNull());
+      }
 
       // Обновляем пароль в истории, если он был сохранён
       await _updatePasswordInHistory(currentPath, state.newPassword);
@@ -730,8 +735,11 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
 
     try {
-      final dao = await ref.read(storeMetaDaoProvider.future);
-      final meta = await dao.getStoreMeta();
+      final repos = await ref.read(vaultRepositories.future);
+      final storeMeta = repos.storeMeta;
+      final metaResult = await storeMeta.getStoreMeta();
+      final meta = metaResult.getOrNull();
+
       if (meta == null) {
         throw StateError('Метаданные хранилища не найдены');
       }
@@ -760,7 +768,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         kdfVersion: keyConfig.kdfVersion,
       );
 
-      final result = await dao.changePassword(newPragmaKey);
+      final result = await repos.db.storeMetaDao.changePassword(newPragmaKey);
       final resultException = result.exceptionOrNull();
       if (resultException != null) {
         throw Exception(resultException);
@@ -810,8 +818,11 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
 
     try {
-      final dao = await ref.read(storeMetaDaoProvider.future);
-      final meta = await dao.getStoreMeta();
+      final repos = await ref.read(vaultRepositories.future);
+      final storeMeta = repos.storeMeta;
+      final metaResult = await storeMeta.getStoreMeta();
+      final meta = metaResult.getOrNull();
+      
       if (meta == null) {
         throw StateError('Метаданные хранилища не найдены');
       }
@@ -840,7 +851,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         kdfVersion: keyConfig.kdfVersion,
       );
 
-      final result = await dao.changePassword(newPragmaKey);
+      final result = await repos.db.storeMetaDao.changePassword(newPragmaKey);
       final resultException = result.exceptionOrNull();
       if (resultException != null) {
         throw Exception(resultException);

@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-enum StoreSettingValueType { string, int, double, bool, json }
+enum StoreSettingValueType { string, int, double, bool, json, list }
 
 @DataClassName('StoreSettingData')
 class StoreSettings extends Table {

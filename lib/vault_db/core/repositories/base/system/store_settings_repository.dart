@@ -2,6 +2,7 @@ import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/store/store_settings.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
+
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
 
@@ -79,96 +80,136 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<Optional<int>> getInt(StoreSettingsKey key) {
+  AsyncDbResult<Optional<T>> get<T extends Object>(StoreSettingsKey<T> key) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final data = await db.storeSettingsDao.getInt(key);
-        return Optional.fromNullable(data);
+        final raw = await db.storeSettingsDao.getRawValue(key.storageKey);
+
+        if (raw == null) {
+          return Optional.fromNullable(null);
+        }
+
+        final value = key.codec.decode(raw);
+        return Optional.fromNullable(value);
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при получении целочисленной настройки',
+              message: 'Ошибка при получении настройки ${key.storageKey}',
               cause: e,
               stackTrace: st,
             ),
     );
   }
 
-  AsyncDbResult<Optional<bool>> getBool(StoreSettingsKey key) {
+  AsyncDbResult<T> getOrDefault<T extends Object>(StoreSettingsKey<T> key) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final data = await db.storeSettingsDao.getBool(key);
-        return Optional.fromNullable(data);
+        final raw = await db.storeSettingsDao.getRawValue(key.storageKey);
+
+        if (raw == null) {
+          return key.defaultValue;
+        }
+
+        return key.codec.decode(raw);
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при получении логической настройки',
+              message:
+                  'Ошибка при получении настройки ${key.storageKey} со значением по умолчанию',
               cause: e,
               stackTrace: st,
             ),
     );
   }
 
-  AsyncDbResult<Optional<String>> getString(StoreSettingsKey key) {
+  AsyncDbResult<Unit> set<T>(StoreSettingsKey<T> key, T value) {
     return ResultUtils.tryCatchAsync(
       () async {
-        final data = await db.storeSettingsDao.getString(key);
-        return Optional.fromNullable(data);
-      },
-      (e, st) => e is DBCoreError
-          ? e
-          : DBCoreError.unknown(
-              message: 'Ошибка при получении строковой настройки',
-              cause: e,
-              stackTrace: st,
-            ),
-    );
-  }
+        await db.storeSettingsDao.setRawValue(
+          key: key.storageKey,
+          value: key.codec.encode(value),
+          valueType: key.valueType,
+        );
 
-  AsyncDbResult<Unit> setInt(StoreSettingsKey key, int value) {
-    return ResultUtils.tryCatchAsync(
-      () async {
-        await db.storeSettingsDao.setInt(key, value);
         return unit;
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при установке целочисленной настройки',
+              message: 'Ошибка при установке настройки ${key.storageKey}',
               cause: e,
               stackTrace: st,
             ),
     );
   }
 
-  AsyncDbResult<Unit> setBool(StoreSettingsKey key, bool value) {
+  AsyncDbResult<Unit> initializeDefaults() {
     return ResultUtils.tryCatchAsync(
       () async {
-        await db.storeSettingsDao.setBool(key, value);
+        for (final key in StoreSettingsKey.values) {
+          final raw = await db.storeSettingsDao.getRawValue(key.storageKey);
+
+          if (raw != null) continue;
+
+          await db.storeSettingsDao.setRawValue(
+            key: key.storageKey,
+            value: key.codec.encode(key.defaultValue),
+            valueType: key.valueType,
+          );
+        }
+
         return unit;
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при установке логической настройки',
+              message: 'Ошибка при инициализации настроек хранилища',
               cause: e,
               stackTrace: st,
             ),
     );
   }
 
-  AsyncDbResult<Unit> setString(StoreSettingsKey key, String value) {
+  AsyncDbResult<Unit> repairSettings() {
     return ResultUtils.tryCatchAsync(
       () async {
-        await db.storeSettingsDao.setString(key, value);
+        for (final key in StoreSettingsKey.values) {
+          final raw = await db.storeSettingsDao.getRawValue(key.storageKey);
+
+          if (raw == null) {
+            await db.storeSettingsDao.setRawValue(
+              key: key.storageKey,
+              value: key.codec.encode(key.defaultValue),
+              valueType: key.valueType,
+            );
+            continue;
+          }
+
+          try {
+            final decoded = key.codec.decode(raw);
+
+            await db.storeSettingsDao.setRawValue(
+              key: key.storageKey,
+              value: key.codec.encode(decoded),
+              valueType: key.valueType,
+            );
+          } catch (_) {
+            await db.storeSettingsDao.setRawValue(
+              key: key.storageKey,
+              value: key.codec.encode(key.defaultValue),
+              valueType: key.valueType,
+            );
+          }
+        }
+
         return unit;
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при установке строковой настройки',
+              message: 'Ошибка при починке настроек хранилища',
               cause: e,
               stackTrace: st,
             ),

@@ -222,13 +222,13 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
       _isResolvingDecision = true;
     });
     ref
-        .read(vaultDBProvider.notifier)
+        .read(vaultDBManagerStateProvider.notifier)
         .resolveCloseStoreUploadDecision(shouldUpload);
   }
 
   @override
   Widget build(BuildContext context) {
-    final dbState = ref.watch(vaultDBProvider).value;
+    final dbState = ref.watch(vaultDBStateProvider).value;
     final closeSyncState = ref.watch(vaultDBCloseSyncProvider).value;
     final closeSyncStatus = closeSyncState?.status;
     final isCompleted =

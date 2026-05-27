@@ -7,11 +7,12 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/store_settings/providers/pinned_entity_types_provider.dart';
 import 'package:hoplixi/features/password_manager/store_settings/widgets/pinned_entity_types_selector.dart';
-import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
+import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// Показать отдельную модалку для настройки закреплённых типов сущностей.
@@ -90,9 +91,10 @@ class _PinnedEntityTypesModalContentState
     });
 
     try {
-      final dao = await ref.read(storeSettingsDaoProvider.future);
-      final raw = await dao.getSetting(StoreSettingsKeys.pinnedEntityTypes);
-      final ids = _parsePinnedEntityTypes(raw);
+      final repos = (await ref.read(vaultRepositories.future)).storeSettings;
+      final ids = await (repos
+          .getOrDefault(StoreSettingsKey.pinnedEntityTypes)
+          .getOrThrow());
 
       if (!mounted) return;
       setState(() {
@@ -126,13 +128,15 @@ class _PinnedEntityTypesModalContentState
     });
 
     try {
-      final dao = await ref.read(storeSettingsDaoProvider.future);
+      final storeSettings = (await ref.read(
+        vaultRepositories.future,
+      )).storeSettings;
       final normalizedIds = _normalizePinnedEntityTypes(_selectedEntityTypeIds);
 
       if (!_listEquals(normalizedIds, _initialEntityTypeIds)) {
-        await dao.setSetting(
-          StoreSettingsKeys.pinnedEntityTypes,
-          jsonEncode(normalizedIds),
+        await storeSettings.set(
+          StoreSettingsKey.pinnedEntityTypes,
+          normalizedIds,
         );
         ref.invalidate(pinnedEntityTypesProvider);
       }

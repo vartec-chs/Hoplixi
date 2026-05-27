@@ -18,9 +18,9 @@ import 'package:hoplixi/features/password_manager/create_store/widgets/step1_nam
 import 'package:hoplixi/features/password_manager/create_store/widgets/step2_select_path.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step3_master_password.dart';
 import 'package:hoplixi/features/password_manager/create_store/widgets/step4_confirmation.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 
@@ -267,7 +267,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
     CreateStoreFormState formState,
   ) async {
     final formNotifier = ref.read(createStoreFormProvider.notifier);
-    final storeNotifier = ref.read(vaultDBProvider.notifier);
+    final storeNotifier = ref.read(vaultDBManagerStateProvider.notifier);
 
     formNotifier.setCreating(true);
 
@@ -304,7 +304,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
         // Редирект на dashboard произойдёт автоматически через router.dart
         // когда состояние БД изменится на isOpen
       } else {
-        final storeState = await ref.read(vaultDBProvider.future);
+        final storeState = await ref.read(vaultDBStateProvider.future);
         final errorMessage =
             storeState.error?.message ?? 'Не удалось создать хранилище';
 
