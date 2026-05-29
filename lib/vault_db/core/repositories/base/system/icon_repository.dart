@@ -16,7 +16,7 @@ class IconRepository {
 
   IconRepository(this.db);
 
-  AsyncDbResult<String> createCustomIcon(CreateCustomIconDto dto) {
+  AsyncDBResult<String> createCustomIcon(CreateCustomIconDto dto) {
     return tryCatchAsync(
       () async {
         final id = const Uuid().v4();
@@ -45,7 +45,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<Unit> updateCustomIcon(PatchCustomIconDto dto) {
+  AsyncDBResult<Unit> updateCustomIcon(PatchCustomIconDto dto) {
     return tryCatchAsync(
       () async {
         final count = await db.customIconsDao.updateCustomIconById(
@@ -73,7 +73,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<Unit> deleteCustomIcon(String customIconId) {
+  AsyncDBResult<Unit> deleteCustomIcon(String customIconId) {
     return tryCatchAsync(
       () async {
         await db.customIconsDao.deleteCustomIconById(customIconId);
@@ -89,7 +89,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<Optional<CustomIconViewDto>> getCustomIcon(
+  AsyncDBResult<Optional<CustomIconViewDto>> getCustomIcon(
     String customIconId,
   ) {
     return tryCatchAsync(
@@ -107,7 +107,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<List<CustomIconCardDto>> getCustomIcons() {
+  AsyncDBResult<List<CustomIconCardDto>> getCustomIcons() {
     return tryCatchAsync(
       () async {
         final rows = await db.customIconsDao.getAllCustomIcons();
@@ -123,7 +123,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<String> createIconRef(CreateIconRefDto dto) {
+  AsyncDBResult<String> createIconRef(CreateIconRefDto dto) {
     return tryCatchAsync(
       () async {
         final id = const Uuid().v4();
@@ -155,7 +155,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<Unit> updateIconRef(PatchIconRefDto dto) {
+  AsyncDBResult<Unit> updateIconRef(PatchIconRefDto dto) {
     return tryCatchAsync(
       () async {
         final count = await db.iconRefsDao.updateIconRefById(
@@ -186,7 +186,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<Unit> deleteIconRef(String iconRefId) {
+  AsyncDBResult<Unit> deleteIconRef(String iconRefId) {
     return tryCatchAsync(
       () async {
         await db.iconRefsDao.deleteIconRefById(iconRefId);
@@ -202,7 +202,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<Optional<IconRefViewDto>> getIconRef(String iconRefId) {
+  AsyncDBResult<Optional<IconRefViewDto>> getIconRef(String iconRefId) {
     return tryCatchAsync(
       () async {
         final row = await db.iconRefsDao.getIconRefById(iconRefId);
@@ -218,7 +218,7 @@ class IconRepository {
     );
   }
 
-  AsyncDbResult<List<IconRefCardDto>> getIconRefs() {
+  AsyncDBResult<List<IconRefCardDto>> getIconRefs() {
     return tryCatchAsync(
       () async {
         final rows = await db.iconRefsDao.getAllIconRefs();

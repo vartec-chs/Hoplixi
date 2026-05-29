@@ -12,7 +12,7 @@ import 'package:result_dart/result_dart.dart';
 class DocumentService extends BaseVaultEntityService<DocumentRepository> {
   DocumentService({required super.deps, required super.repository});
 
-  Future<DbResult<String>> create(CreateDocumentDto dto) async {
+  Future<DBResult<String>> create(CreateDocumentDto dto) async {
     final validationError = validateCreateDocument(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -57,7 +57,7 @@ class DocumentService extends BaseVaultEntityService<DocumentRepository> {
     }
   }
 
-  Future<DbResult<Unit>> update(PatchDocumentDto dto) async {
+  Future<DBResult<Unit>> update(PatchDocumentDto dto) async {
     final validationError = validatePatchDocument(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -105,35 +105,35 @@ class DocumentService extends BaseVaultEntityService<DocumentRepository> {
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) {
+  Future<DBResult<Unit>> softDelete(String itemId) {
     return vaultItemsStateService.softDelete(
       itemId: itemId,
       type: VaultItemType.document,
     );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) {
+  Future<DBResult<Unit>> recover(String itemId) {
     return vaultItemsStateService.recover(
       itemId: itemId,
       type: VaultItemType.document,
     );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) {
+  Future<DBResult<Unit>> archive(String itemId) {
     return vaultItemsStateService.archive(
       itemId: itemId,
       type: VaultItemType.document,
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) {
+  Future<DBResult<Unit>> restoreArchived(String itemId) {
     return vaultItemsStateService.restoreArchived(
       itemId: itemId,
       type: VaultItemType.document,
     );
   }
 
-  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+  Future<DBResult<Unit>> setFavorite(String itemId, bool value) {
     return vaultItemsStateService.setFavorite(
       itemId: itemId,
       type: VaultItemType.document,
@@ -141,7 +141,7 @@ class DocumentService extends BaseVaultEntityService<DocumentRepository> {
     );
   }
 
-  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+  Future<DBResult<Unit>> setPinned(String itemId, bool value) {
     return vaultItemsStateService.setPinned(
       itemId: itemId,
       type: VaultItemType.document,

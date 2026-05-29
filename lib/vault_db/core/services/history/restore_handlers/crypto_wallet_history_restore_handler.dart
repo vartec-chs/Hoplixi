@@ -20,7 +20,7 @@ class CryptoWalletHistoryRestoreHandler implements VaultHistoryRestoreHandler {
   VaultItemType get type => VaultItemType.cryptoWallet;
 
   @override
-  Future<DbResult<Unit>> restoreTypeSpecific({
+  Future<DBResult<Unit>> restoreTypeSpecific({
     required VaultItemBaseHistoryPayload base,
     required HistoryPayload payload,
   }) async {

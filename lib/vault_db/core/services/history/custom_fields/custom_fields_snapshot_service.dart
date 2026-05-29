@@ -16,7 +16,7 @@ class CustomFieldsSnapshotService {
   final VaultItemCustomFieldsDao customFieldsDao;
   final VaultItemCustomFieldsHistoryDao customFieldsHistoryDao;
 
-  AsyncDbResult<Unit> snapshotCustomFieldsForItem({
+  AsyncDBResult<Unit> snapshotCustomFieldsForItem({
     required String snapshotHistoryId,
     required String itemId,
     bool includeSecrets = true,

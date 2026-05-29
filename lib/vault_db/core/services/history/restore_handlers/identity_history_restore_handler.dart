@@ -20,7 +20,7 @@ class IdentityHistoryRestoreHandler implements VaultHistoryRestoreHandler {
   VaultItemType get type => VaultItemType.identity;
 
   @override
-  Future<DbResult<Unit>> restoreTypeSpecific({
+  Future<DBResult<Unit>> restoreTypeSpecific({
     required VaultItemBaseHistoryPayload base,
     required HistoryPayload payload,
   }) async {

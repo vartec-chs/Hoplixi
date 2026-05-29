@@ -20,7 +20,7 @@ class SshKeyHistoryRestoreHandler implements VaultHistoryRestoreHandler {
   VaultItemType get type => VaultItemType.sshKey;
 
   @override
-  Future<DbResult<Unit>> restoreTypeSpecific({
+  Future<DBResult<Unit>> restoreTypeSpecific({
     required VaultItemBaseHistoryPayload base,
     required HistoryPayload payload,
   }) async {

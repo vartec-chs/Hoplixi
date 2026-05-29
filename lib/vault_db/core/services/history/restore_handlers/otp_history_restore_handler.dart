@@ -20,7 +20,7 @@ class OtpHistoryRestoreHandler implements VaultHistoryRestoreHandler {
   VaultItemType get type => VaultItemType.otp;
 
   @override
-  Future<DbResult<Unit>> restoreTypeSpecific({
+  Future<DBResult<Unit>> restoreTypeSpecific({
     required VaultItemBaseHistoryPayload base,
     required HistoryPayload payload,
   }) async {

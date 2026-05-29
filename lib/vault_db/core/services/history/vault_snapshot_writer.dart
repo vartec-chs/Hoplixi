@@ -24,7 +24,7 @@ class VaultSnapshotWriter {
   final CustomFieldsSnapshotService customFieldsSnapshotService;
   final VaultItemHistoryModules historyModules;
 
-  AsyncDbResult<String> writeSnapshot({
+  AsyncDBResult<String> writeSnapshot({
     required VaultEntityViewDto view,
     required VaultEventHistoryAction action,
     bool includeSecrets = true,
@@ -72,7 +72,7 @@ class VaultSnapshotWriter {
     }, (e, st) => e is DBCoreError ? e : mapDbException(e, st));
   }
 
-  AsyncDbResult<String> _writeBaseSnapshot(
+  AsyncDBResult<String> _writeBaseSnapshot(
     VaultItemViewDto item,
     VaultEventHistoryAction action,
   ) {

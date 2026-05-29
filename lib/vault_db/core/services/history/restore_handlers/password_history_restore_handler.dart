@@ -20,7 +20,7 @@ class PasswordHistoryRestoreHandler implements VaultHistoryRestoreHandler {
   VaultItemType get type => VaultItemType.password;
 
   @override
-  Future<DbResult<Unit>> restoreTypeSpecific({
+  Future<DBResult<Unit>> restoreTypeSpecific({
     required VaultItemBaseHistoryPayload base,
     required HistoryPayload payload,
   }) async {

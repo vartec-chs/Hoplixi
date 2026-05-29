@@ -18,7 +18,7 @@ class FileRepository {
 
   FileRepository(this.db);
 
-  AsyncDbResult<String> create(CreateFileDto dto) {
+  AsyncDBResult<String> create(CreateFileDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -89,7 +89,7 @@ class FileRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchFileDto dto) {
+  AsyncDBResult<Unit> update(PatchFileDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -174,7 +174,7 @@ class FileRepository {
     );
   }
 
-  AsyncDbResult<Optional<FileViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<FileViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -216,7 +216,7 @@ class FileRepository {
     );
   }
 
-  AsyncDbResult<Optional<FileCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<FileCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
@@ -238,7 +238,7 @@ class FileRepository {
     );
   }
 
-  AsyncDbResult<List<FileCardDto>> getCards({int limit = 50, int offset = 0}) {
+  AsyncDBResult<List<FileCardDto>> getCards({int limit = 50, int offset = 0}) {
     return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
@@ -259,7 +259,7 @@ class FileRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         // Note: file_items will be deleted by cascade.

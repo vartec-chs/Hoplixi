@@ -13,7 +13,7 @@ class CryptoWalletService
     extends BaseVaultEntityService<CryptoWalletRepository> {
   CryptoWalletService({required super.deps, required super.repository});
 
-  Future<DbResult<String>> create(CreateCryptoWalletDto dto) async {
+  Future<DBResult<String>> create(CreateCryptoWalletDto dto) async {
     final validationError = validateCreateCryptoWallet(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -58,7 +58,7 @@ class CryptoWalletService
     }
   }
 
-  Future<DbResult<Unit>> update(PatchCryptoWalletDto dto) async {
+  Future<DBResult<Unit>> update(PatchCryptoWalletDto dto) async {
     final validationError = validatePatchCryptoWallet(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -106,35 +106,35 @@ class CryptoWalletService
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) {
+  Future<DBResult<Unit>> softDelete(String itemId) {
     return vaultItemsStateService.softDelete(
       itemId: itemId,
       type: VaultItemType.cryptoWallet,
     );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) {
+  Future<DBResult<Unit>> recover(String itemId) {
     return vaultItemsStateService.recover(
       itemId: itemId,
       type: VaultItemType.cryptoWallet,
     );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) {
+  Future<DBResult<Unit>> archive(String itemId) {
     return vaultItemsStateService.archive(
       itemId: itemId,
       type: VaultItemType.cryptoWallet,
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) {
+  Future<DBResult<Unit>> restoreArchived(String itemId) {
     return vaultItemsStateService.restoreArchived(
       itemId: itemId,
       type: VaultItemType.cryptoWallet,
     );
   }
 
-  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+  Future<DBResult<Unit>> setFavorite(String itemId, bool value) {
     return vaultItemsStateService.setFavorite(
       itemId: itemId,
       type: VaultItemType.cryptoWallet,
@@ -142,7 +142,7 @@ class CryptoWalletService
     );
   }
 
-  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+  Future<DBResult<Unit>> setPinned(String itemId, bool value) {
     return vaultItemsStateService.setPinned(
       itemId: itemId,
       type: VaultItemType.cryptoWallet,

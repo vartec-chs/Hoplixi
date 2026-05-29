@@ -11,7 +11,7 @@ class VaultItemRepository {
 
   VaultItemRepository(this.db);
 
-  AsyncDbResult<Optional<VaultItemViewDto>> getById(String itemId) {
+  AsyncDBResult<Optional<VaultItemViewDto>> getById(String itemId) {
     return tryCatchAsync(
       () async {
         final row = await db.vaultItemsDao.getVaultItemById(itemId);
@@ -27,7 +27,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<bool> exists(String itemId) {
+  AsyncDBResult<bool> exists(String itemId) {
     return tryCatchAsync(
       () => db.vaultItemsDao.existsVaultItem(itemId),
       (e, st) => e is DBCoreError
@@ -40,7 +40,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<bool> existsWithType(String itemId, VaultItemType type) {
+  AsyncDBResult<bool> existsWithType(String itemId, VaultItemType type) {
     return tryCatchAsync(
       () => db.vaultItemsDao.existsVaultItemWithType(itemId, type),
       (e, st) => e is DBCoreError
@@ -54,7 +54,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(String itemId, VaultItemsCompanion companion) {
+  AsyncDBResult<Unit> update(String itemId, VaultItemsCompanion companion) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.updateVaultItemById(itemId, companion);
@@ -70,7 +70,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> touch(String itemId) {
+  AsyncDBResult<Unit> touch(String itemId) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.touchModifiedAt(itemId, DateTime.now());
@@ -86,7 +86,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> incrementUsedCount(String itemId) {
+  AsyncDBResult<Unit> incrementUsedCount(String itemId) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.incrementUsedCount(itemId, DateTime.now());
@@ -102,7 +102,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> archive(String itemId) {
+  AsyncDBResult<Unit> archive(String itemId) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.archiveItem(itemId, DateTime.now());
@@ -118,7 +118,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> restoreArchived(String itemId) {
+  AsyncDBResult<Unit> restoreArchived(String itemId) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.restoreArchivedItem(itemId, DateTime.now());
@@ -134,7 +134,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> softDelete(String itemId) {
+  AsyncDBResult<Unit> softDelete(String itemId) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.softDeleteItem(itemId, DateTime.now());
@@ -150,7 +150,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> recover(String itemId) {
+  AsyncDBResult<Unit> recover(String itemId) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.recoverDeletedItem(itemId, DateTime.now());
@@ -166,7 +166,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> setFavorite(String itemId, bool isFavorite) {
+  AsyncDBResult<Unit> setFavorite(String itemId, bool isFavorite) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.setFavorite(itemId, isFavorite, DateTime.now());
@@ -182,7 +182,7 @@ class VaultItemRepository {
     );
   }
 
-  AsyncDbResult<Unit> setPinned(String itemId, bool isPinned) {
+  AsyncDBResult<Unit> setPinned(String itemId, bool isPinned) {
     return tryCatchAsync(
       () async {
         await db.vaultItemsDao.setPinned(itemId, isPinned, DateTime.now());

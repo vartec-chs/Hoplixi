@@ -21,7 +21,7 @@ class NoteHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.note;
 
   @override
-  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+  AsyncDBResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
     return tryCatchAsync(
@@ -48,7 +48,7 @@ class NoteHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+  AsyncDBResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
     return tryCatchAsync(

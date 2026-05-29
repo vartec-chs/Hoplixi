@@ -23,7 +23,7 @@ class VaultHistoryService {
   final VaultSnapshotWriter snapshotWriter;
   final VaultEventHistoryRepository eventHistoryRepository;
 
-  AsyncDbResult<Optional<String>> snapshotAfterCreate({
+  AsyncDBResult<Optional<String>> snapshotAfterCreate({
     required VaultEntityViewDto createdView,
     required VaultEventHistoryAction action,
     bool includeSecrets = true,
@@ -44,7 +44,7 @@ class VaultHistoryService {
     }, (e, st) => e is DBCoreError ? e : mapDbException(e, st));
   }
 
-  AsyncDbResult<Optional<String>> snapshotBeforeUpdate({
+  AsyncDBResult<Optional<String>> snapshotBeforeUpdate({
     required VaultEntityViewDto oldView,
     required VaultEventHistoryAction action,
     bool includeSecrets = true,
@@ -65,7 +65,7 @@ class VaultHistoryService {
     }, (e, st) => e is DBCoreError ? e : mapDbException(e, st));
   }
 
-  AsyncDbResult<Unit> writeEvent({
+  AsyncDBResult<Unit> writeEvent({
     required String itemId,
     required VaultItemType type,
     required VaultEventHistoryAction action,

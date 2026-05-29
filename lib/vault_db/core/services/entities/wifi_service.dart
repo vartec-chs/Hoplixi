@@ -12,7 +12,7 @@ import 'package:result_dart/result_dart.dart';
 class WifiService extends BaseVaultEntityService<WifiRepository> {
   WifiService({required super.deps, required super.repository});
 
-  Future<DbResult<String>> create(CreateWifiDto dto) async {
+  Future<DBResult<String>> create(CreateWifiDto dto) async {
     final validationError = validateCreateWifi(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -59,7 +59,7 @@ class WifiService extends BaseVaultEntityService<WifiRepository> {
     }
   }
 
-  Future<DbResult<Unit>> update(PatchWifiDto dto) async {
+  Future<DBResult<Unit>> update(PatchWifiDto dto) async {
     final validationError = validatePatchWifi(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -109,35 +109,35 @@ class WifiService extends BaseVaultEntityService<WifiRepository> {
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) {
+  Future<DBResult<Unit>> softDelete(String itemId) {
     return vaultItemsStateService.softDelete(
       itemId: itemId,
       type: VaultItemType.wifi,
     );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) {
+  Future<DBResult<Unit>> recover(String itemId) {
     return vaultItemsStateService.recover(
       itemId: itemId,
       type: VaultItemType.wifi,
     );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) {
+  Future<DBResult<Unit>> archive(String itemId) {
     return vaultItemsStateService.archive(
       itemId: itemId,
       type: VaultItemType.wifi,
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) {
+  Future<DBResult<Unit>> restoreArchived(String itemId) {
     return vaultItemsStateService.restoreArchived(
       itemId: itemId,
       type: VaultItemType.wifi,
     );
   }
 
-  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+  Future<DBResult<Unit>> setFavorite(String itemId, bool value) {
     return vaultItemsStateService.setFavorite(
       itemId: itemId,
       type: VaultItemType.wifi,
@@ -145,7 +145,7 @@ class WifiService extends BaseVaultEntityService<WifiRepository> {
     );
   }
 
-  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+  Future<DBResult<Unit>> setPinned(String itemId, bool value) {
     return vaultItemsStateService.setPinned(
       itemId: itemId,
       type: VaultItemType.wifi,

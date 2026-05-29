@@ -29,7 +29,7 @@ class VaultItemRelationsService {
 
   // --- Tags ---
 
-  Future<DbResult<Unit>> replaceTags({
+  Future<DBResult<Unit>> replaceTags({
     required String itemId,
     required List<String> tagIds,
   }) async {
@@ -78,7 +78,7 @@ class VaultItemRelationsService {
     }
   }
 
-  Future<DbResult<Unit>> addTags({
+  Future<DBResult<Unit>> addTags({
     required String itemId,
     required List<String> tagIds,
   }) async {
@@ -104,7 +104,7 @@ class VaultItemRelationsService {
     }
   }
 
-  Future<DbResult<Unit>> removeTags({
+  Future<DBResult<Unit>> removeTags({
     required String itemId,
     required List<String> tagIds,
   }) async {
@@ -120,7 +120,7 @@ class VaultItemRelationsService {
     }
   }
 
-  Future<DbResult<Unit>> clearTags(String itemId) async {
+  Future<DBResult<Unit>> clearTags(String itemId) async {
     try {
       await itemTagsDao.removeAllTagsFromItem(itemId);
       return const Success(unit);
@@ -129,7 +129,7 @@ class VaultItemRelationsService {
     }
   }
 
-  AsyncDbResult<List<String>> getTagIdsForItem(String itemId) {
+  AsyncDBResult<List<String>> getTagIdsForItem(String itemId) {
     return tryCatchAsync(
       () async {
         final tags = await itemTagsDao.getTagsForItem(itemId);
@@ -147,7 +147,7 @@ class VaultItemRelationsService {
 
   // --- Category ---
 
-  Future<DbResult<Unit>> changeCategory({
+  Future<DBResult<Unit>> changeCategory({
     required String itemId,
     required String? categoryId,
   }) async {
@@ -180,7 +180,7 @@ class VaultItemRelationsService {
     }
   }
 
-  AsyncDbResult<Optional<String>> getCategoryIdForItem(String itemId) {
+  AsyncDBResult<Optional<String>> getCategoryIdForItem(String itemId) {
     return tryCatchAsync(
       () async {
         final item = await vaultItemsDao.getVaultItemById(itemId);
@@ -198,7 +198,7 @@ class VaultItemRelationsService {
 
   // --- Item Links ---
 
-  Future<DbResult<String>> createLink(CreateItemLinkDto dto) async {
+  Future<DBResult<String>> createLink(CreateItemLinkDto dto) async {
     try {
       return await db.transaction(() async {
         if (dto.sourceItemId == dto.targetItemId) {
@@ -253,7 +253,7 @@ class VaultItemRelationsService {
     }
   }
 
-  Future<DbResult<Unit>> updateLink(PatchItemLinkDto dto) async {
+  Future<DBResult<Unit>> updateLink(PatchItemLinkDto dto) async {
     try {
       await itemLinksDao.updateItemLinkById(
         dto.id,
@@ -271,7 +271,7 @@ class VaultItemRelationsService {
     }
   }
 
-  Future<DbResult<Unit>> deleteLink(String linkId) async {
+  Future<DBResult<Unit>> deleteLink(String linkId) async {
     try {
       await itemLinksDao.deleteItemLinkById(linkId);
       return const Success(unit);

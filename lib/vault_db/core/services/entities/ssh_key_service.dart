@@ -12,7 +12,7 @@ import 'package:result_dart/result_dart.dart';
 class SshKeyService extends BaseVaultEntityService<SshKeyRepository> {
   SshKeyService({required super.deps, required super.repository});
 
-  Future<DbResult<String>> create(CreateSshKeyDto dto) async {
+  Future<DBResult<String>> create(CreateSshKeyDto dto) async {
     final validationError = validateCreateSshKey(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -57,7 +57,7 @@ class SshKeyService extends BaseVaultEntityService<SshKeyRepository> {
     }
   }
 
-  Future<DbResult<Unit>> update(PatchSshKeyDto dto) async {
+  Future<DBResult<Unit>> update(PatchSshKeyDto dto) async {
     final validationError = validatePatchSshKey(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -105,35 +105,35 @@ class SshKeyService extends BaseVaultEntityService<SshKeyRepository> {
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) {
+  Future<DBResult<Unit>> softDelete(String itemId) {
     return vaultItemsStateService.softDelete(
       itemId: itemId,
       type: VaultItemType.sshKey,
     );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) {
+  Future<DBResult<Unit>> recover(String itemId) {
     return vaultItemsStateService.recover(
       itemId: itemId,
       type: VaultItemType.sshKey,
     );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) {
+  Future<DBResult<Unit>> archive(String itemId) {
     return vaultItemsStateService.archive(
       itemId: itemId,
       type: VaultItemType.sshKey,
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) {
+  Future<DBResult<Unit>> restoreArchived(String itemId) {
     return vaultItemsStateService.restoreArchived(
       itemId: itemId,
       type: VaultItemType.sshKey,
     );
   }
 
-  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+  Future<DBResult<Unit>> setFavorite(String itemId, bool value) {
     return vaultItemsStateService.setFavorite(
       itemId: itemId,
       type: VaultItemType.sshKey,
@@ -141,7 +141,7 @@ class SshKeyService extends BaseVaultEntityService<SshKeyRepository> {
     );
   }
 
-  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+  Future<DBResult<Unit>> setPinned(String itemId, bool value) {
     return vaultItemsStateService.setPinned(
       itemId: itemId,
       type: VaultItemType.sshKey,

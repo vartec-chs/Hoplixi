@@ -15,7 +15,7 @@ class IdentityRepository {
 
   IdentityRepository(this.db);
 
-  AsyncDbResult<String> create(CreateIdentityDto dto) {
+  AsyncDBResult<String> create(CreateIdentityDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -80,7 +80,7 @@ class IdentityRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchIdentityDto dto) {
+  AsyncDBResult<Unit> update(PatchIdentityDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -149,7 +149,7 @@ class IdentityRepository {
     );
   }
 
-  AsyncDbResult<Optional<IdentityViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<IdentityViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -185,7 +185,7 @@ class IdentityRepository {
     );
   }
 
-  AsyncDbResult<Optional<IdentityCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<IdentityCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
@@ -207,7 +207,7 @@ class IdentityRepository {
     );
   }
 
-  AsyncDbResult<List<IdentityCardDto>> getCards({
+  AsyncDBResult<List<IdentityCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -231,7 +231,7 @@ class IdentityRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

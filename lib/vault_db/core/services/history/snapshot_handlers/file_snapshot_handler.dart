@@ -23,7 +23,7 @@ class FileSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.file;
 
   @override
-  AsyncDbResult<Unit> writeTypeSnapshot({
+  AsyncDBResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

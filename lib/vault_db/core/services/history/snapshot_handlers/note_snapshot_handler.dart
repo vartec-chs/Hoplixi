@@ -18,7 +18,7 @@ class NoteSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.note;
 
   @override
-  AsyncDbResult<Unit> writeTypeSnapshot({
+  AsyncDBResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

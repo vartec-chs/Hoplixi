@@ -16,7 +16,7 @@ class SshKeyRepository {
 
   SshKeyRepository(this.db);
 
-  AsyncDbResult<String> create(CreateSshKeyDto dto) {
+  AsyncDBResult<String> create(CreateSshKeyDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -70,7 +70,7 @@ class SshKeyRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchSshKeyDto dto) {
+  AsyncDBResult<Unit> update(PatchSshKeyDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -127,7 +127,7 @@ class SshKeyRepository {
     );
   }
 
-  AsyncDbResult<Optional<SshKeyViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<SshKeyViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -163,7 +163,7 @@ class SshKeyRepository {
     );
   }
 
-  AsyncDbResult<Optional<SshKeyCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<SshKeyCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _SshKeyCardExpressions(db);
@@ -186,7 +186,7 @@ class SshKeyRepository {
     );
   }
 
-  AsyncDbResult<List<SshKeyCardDto>> getCards({
+  AsyncDBResult<List<SshKeyCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -211,7 +211,7 @@ class SshKeyRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

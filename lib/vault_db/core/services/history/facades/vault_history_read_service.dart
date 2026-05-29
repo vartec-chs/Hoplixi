@@ -23,7 +23,7 @@ class VaultHistoryReadService {
   final VaultItemHistoryModules historyModules;
   final GenericHistoryCardReader genericReader;
 
-  AsyncDbResult<List<VaultHistoryCardDto>> getFilteredCards(
+  AsyncDBResult<List<VaultHistoryCardDto>> getFilteredCards(
     VaultSnapshotHistoryFilter filter,
   ) {
     return tryCatchAsync(
@@ -42,7 +42,7 @@ class VaultHistoryReadService {
     );
   }
 
-  AsyncDbResult<Optional<VaultHistoryCardDto>> getCardByHistoryId(
+  AsyncDBResult<Optional<VaultHistoryCardDto>> getCardByHistoryId(
     String historyId,
   ) {
     return tryCatchAsync(

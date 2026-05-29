@@ -15,7 +15,7 @@ class NoteRepository {
 
   NoteRepository(this.db);
 
-  AsyncDbResult<String> create(CreateNoteDto dto) {
+  AsyncDBResult<String> create(CreateNoteDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -66,7 +66,7 @@ class NoteRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchNoteDto dto) {
+  AsyncDBResult<Unit> update(PatchNoteDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -120,7 +120,7 @@ class NoteRepository {
     );
   }
 
-  AsyncDbResult<Optional<NoteViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<NoteViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -156,7 +156,7 @@ class NoteRepository {
     );
   }
 
-  AsyncDbResult<Optional<NoteCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<NoteCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
@@ -178,7 +178,7 @@ class NoteRepository {
     );
   }
 
-  AsyncDbResult<List<NoteCardDto>> getCards({int limit = 50, int offset = 0}) {
+  AsyncDBResult<List<NoteCardDto>> getCards({int limit = 50, int offset = 0}) {
     return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
@@ -199,7 +199,7 @@ class NoteRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

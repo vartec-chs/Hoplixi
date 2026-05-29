@@ -10,7 +10,7 @@ class VaultHistoryDeleteService {
 
   final VaultDB db;
 
-  AsyncDbResult<Unit> deleteRevision(String historyId) {
+  AsyncDBResult<Unit> deleteRevision(String historyId) {
     return tryCatchAsync(
       () async {
         await db.transaction(() async {
@@ -123,7 +123,7 @@ class VaultHistoryDeleteService {
     await db.vaultSnapshotsHistoryDao.deleteSnapshotById(historyId);
   }
 
-  AsyncDbResult<Unit> clearItemHistory({
+  AsyncDBResult<Unit> clearItemHistory({
     required String itemId,
     required VaultItemType type,
   }) {

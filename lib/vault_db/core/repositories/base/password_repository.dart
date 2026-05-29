@@ -15,7 +15,7 @@ class PasswordRepository {
 
   PasswordRepository(this.db);
 
-  AsyncDbResult<String> create(CreatePasswordDto dto) {
+  AsyncDBResult<String> create(CreatePasswordDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -69,7 +69,7 @@ class PasswordRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchPasswordDto dto) {
+  AsyncDBResult<Unit> update(PatchPasswordDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -126,7 +126,7 @@ class PasswordRepository {
     );
   }
 
-  AsyncDbResult<Optional<PasswordViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<PasswordViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -162,7 +162,7 @@ class PasswordRepository {
     );
   }
 
-  AsyncDbResult<Optional<PasswordCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<PasswordCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _PasswordCardExpressions(db);
@@ -185,7 +185,7 @@ class PasswordRepository {
     );
   }
 
-  AsyncDbResult<List<PasswordCardDto>> getCards({
+  AsyncDBResult<List<PasswordCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -210,7 +210,7 @@ class PasswordRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

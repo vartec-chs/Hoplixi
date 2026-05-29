@@ -14,7 +14,7 @@ class FileMetadataRepository {
 
   FileMetadataRepository(this.db);
 
-  AsyncDbResult<String> createMetadata(FileMetadataDataDto dto) {
+  AsyncDBResult<String> createMetadata(FileMetadataDataDto dto) {
     return tryCatchAsync(
       () async {
         final id = const Uuid().v4();
@@ -46,7 +46,7 @@ class FileMetadataRepository {
     );
   }
 
-  AsyncDbResult<Unit> updateMetadata(PatchFileMetadataDto dto) {
+  AsyncDBResult<Unit> updateMetadata(PatchFileMetadataDto dto) {
     return tryCatchAsync(
       () async {
         await db.fileMetadataDao.updateFileMetadataById(
@@ -77,7 +77,7 @@ class FileMetadataRepository {
     );
   }
 
-  AsyncDbResult<Optional<FileMetadataViewDto>> getMetadataById(
+  AsyncDBResult<Optional<FileMetadataViewDto>> getMetadataById(
     String metadataId,
   ) {
     return tryCatchAsync(
@@ -95,7 +95,7 @@ class FileMetadataRepository {
     );
   }
 
-  AsyncDbResult<Unit> markMissing({
+  AsyncDBResult<Unit> markMissing({
     required String metadataId,
     required DateTime detectedAt,
   }) {
@@ -118,7 +118,7 @@ class FileMetadataRepository {
     );
   }
 
-  AsyncDbResult<Unit> markDeleted({
+  AsyncDBResult<Unit> markDeleted({
     required String metadataId,
     required DateTime deletedAt,
   }) {
@@ -141,7 +141,7 @@ class FileMetadataRepository {
     );
   }
 
-  AsyncDbResult<Unit> markAvailable({required String metadataId}) {
+  AsyncDBResult<Unit> markAvailable({required String metadataId}) {
     return tryCatchAsync(
       () async {
         await db.fileMetadataDao.updateAvailabilityStatus(
@@ -160,7 +160,7 @@ class FileMetadataRepository {
     );
   }
 
-  AsyncDbResult<Unit> updateIntegrityStatus({
+  AsyncDBResult<Unit> updateIntegrityStatus({
     required String metadataId,
     required FileIntegrityStatus status,
     required DateTime checkedAt,
@@ -184,7 +184,7 @@ class FileMetadataRepository {
     );
   }
 
-  AsyncDbResult<Unit> updateSha256({
+  AsyncDBResult<Unit> updateSha256({
     required String metadataId,
     required String? sha256,
     required DateTime checkedAt,

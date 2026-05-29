@@ -18,7 +18,7 @@ class OtpSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.otp;
 
   @override
-  AsyncDbResult<Unit> writeTypeSnapshot({
+  AsyncDBResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

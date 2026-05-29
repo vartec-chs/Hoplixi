@@ -15,7 +15,7 @@ class RecoveryCodesRepository {
 
   RecoveryCodesRepository(this.db);
 
-  AsyncDbResult<String> create(CreateRecoveryCodesDto dto) {
+  AsyncDBResult<String> create(CreateRecoveryCodesDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -78,7 +78,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchRecoveryCodesDto dto) {
+  AsyncDBResult<Unit> update(PatchRecoveryCodesDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -128,7 +128,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<Optional<RecoveryCodesViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<RecoveryCodesViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -171,7 +171,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<Optional<RecoveryCodesCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<RecoveryCodesCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
@@ -193,7 +193,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<List<RecoveryCodesCardDto>> getCards({
+  AsyncDBResult<List<RecoveryCodesCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -217,7 +217,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(
@@ -240,7 +240,7 @@ class RecoveryCodesRepository {
 
   // --- Методы управления кодами ---
 
-  AsyncDbResult<int> addCode({
+  AsyncDBResult<int> addCode({
     required String itemId,
     required RecoveryCodeValueDto code,
   }) {
@@ -268,7 +268,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<Unit> addCodes({
+  AsyncDBResult<Unit> addCodes({
     required String itemId,
     required List<RecoveryCodeValueDto> codes,
   }) {
@@ -300,7 +300,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<int> markCodeUsed({
+  AsyncDBResult<int> markCodeUsed({
     required int codeId,
     required DateTime usedAt,
   }) {
@@ -329,7 +329,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<int> markCodeUnused({required int codeId}) {
+  AsyncDBResult<int> markCodeUnused({required int codeId}) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
@@ -352,7 +352,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<int> deleteCode(int codeId) {
+  AsyncDBResult<int> deleteCode(int codeId) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
@@ -374,7 +374,7 @@ class RecoveryCodesRepository {
     );
   }
 
-  AsyncDbResult<Unit> replaceCodes({
+  AsyncDBResult<Unit> replaceCodes({
     required String itemId,
     required List<RecoveryCodeValueDto> codes,
   }) {

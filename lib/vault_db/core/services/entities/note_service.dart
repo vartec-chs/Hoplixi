@@ -12,7 +12,7 @@ import 'package:result_dart/result_dart.dart';
 class NoteService extends BaseVaultEntityService<NoteRepository> {
   NoteService({required super.deps, required super.repository});
 
-  Future<DbResult<String>> create(CreateNoteDto dto) async {
+  Future<DBResult<String>> create(CreateNoteDto dto) async {
     final validationError = validateCreateNote(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -57,7 +57,7 @@ class NoteService extends BaseVaultEntityService<NoteRepository> {
     }
   }
 
-  Future<DbResult<Unit>> update(PatchNoteDto dto) async {
+  Future<DBResult<Unit>> update(PatchNoteDto dto) async {
     final validationError = validatePatchNote(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -105,35 +105,35 @@ class NoteService extends BaseVaultEntityService<NoteRepository> {
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) {
+  Future<DBResult<Unit>> softDelete(String itemId) {
     return vaultItemsStateService.softDelete(
       itemId: itemId,
       type: VaultItemType.note,
     );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) {
+  Future<DBResult<Unit>> recover(String itemId) {
     return vaultItemsStateService.recover(
       itemId: itemId,
       type: VaultItemType.note,
     );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) {
+  Future<DBResult<Unit>> archive(String itemId) {
     return vaultItemsStateService.archive(
       itemId: itemId,
       type: VaultItemType.note,
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) {
+  Future<DBResult<Unit>> restoreArchived(String itemId) {
     return vaultItemsStateService.restoreArchived(
       itemId: itemId,
       type: VaultItemType.note,
     );
   }
 
-  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+  Future<DBResult<Unit>> setFavorite(String itemId, bool value) {
     return vaultItemsStateService.setFavorite(
       itemId: itemId,
       type: VaultItemType.note,
@@ -141,7 +141,7 @@ class NoteService extends BaseVaultEntityService<NoteRepository> {
     );
   }
 
-  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+  Future<DBResult<Unit>> setPinned(String itemId, bool value) {
     return vaultItemsStateService.setPinned(
       itemId: itemId,
       type: VaultItemType.note,

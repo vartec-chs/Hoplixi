@@ -33,7 +33,7 @@ class DocumentVersionService {
   final DocumentVersionHashService hashService;
   final DocumentVersionPolicyService policyService;
 
-  Future<DbResult<DocumentVersionViewDto>> createVersion(
+  Future<DBResult<DocumentVersionViewDto>> createVersion(
     CreateDocumentVersionDto dto,
   ) async {
     final validationResult = policyService.validateCreateVersion(dto);
@@ -162,7 +162,7 @@ class DocumentVersionService {
     }
   }
 
-  Future<DbResult<Unit>> activateVersion({
+  Future<DBResult<Unit>> activateVersion({
     required String documentId,
     required String versionId,
   }) async {
@@ -206,7 +206,7 @@ class DocumentVersionService {
     }
   }
 
-  Future<DbResult<List<DocumentVersionCardDto>>> getVersions({
+  Future<DBResult<List<DocumentVersionCardDto>>> getVersions({
     required String documentId,
     int? limit,
     int? offset,
@@ -249,7 +249,7 @@ class DocumentVersionService {
     }
   }
 
-  Future<DbResult<DocumentVersionViewDto>> getVersionDetail({
+  Future<DBResult<DocumentVersionViewDto>> getVersionDetail({
     required String versionId,
   }) async {
     try {
@@ -307,7 +307,7 @@ class DocumentVersionService {
     }
   }
 
-  Future<DbResult<DocumentVersionViewDto>> getCurrentVersion({
+  Future<DBResult<DocumentVersionViewDto>> getCurrentVersion({
     required String documentId,
   }) async {
     try {
@@ -329,7 +329,7 @@ class DocumentVersionService {
     }
   }
 
-  Future<DbResult<Unit>> deleteVersion({
+  Future<DBResult<Unit>> deleteVersion({
     required String documentId,
     required String versionId,
   }) async {

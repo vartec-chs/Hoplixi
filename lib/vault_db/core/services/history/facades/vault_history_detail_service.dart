@@ -19,7 +19,7 @@ class VaultHistoryDetailService {
   final VaultHistoryDiffService diffService;
   final VaultHistoryRestorePolicyService restorePolicy;
 
-  AsyncDbResult<VaultHistoryRevisionDetailDto> getRevisionDetail({
+  AsyncDBResult<VaultHistoryRevisionDetailDto> getRevisionDetail({
     required String historyId,
   }) {
     return tryCatchAsync(

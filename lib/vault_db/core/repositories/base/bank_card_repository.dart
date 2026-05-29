@@ -16,7 +16,7 @@ class BankCardRepository {
 
   BankCardRepository(this.db);
 
-  AsyncDbResult<String> create(CreateBankCardDto dto) {
+  AsyncDBResult<String> create(CreateBankCardDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -77,7 +77,7 @@ class BankCardRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchBankCardDto dto) {
+  AsyncDBResult<Unit> update(PatchBankCardDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -140,7 +140,7 @@ class BankCardRepository {
     );
   }
 
-  AsyncDbResult<Optional<BankCardViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<BankCardViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -176,7 +176,7 @@ class BankCardRepository {
     );
   }
 
-  AsyncDbResult<Optional<BankCardCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<BankCardCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _BankCardCardExpressions(db);
@@ -199,7 +199,7 @@ class BankCardRepository {
     );
   }
 
-  AsyncDbResult<List<BankCardCardDto>> getCards({
+  AsyncDBResult<List<BankCardCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -224,7 +224,7 @@ class BankCardRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final count = await (db.delete(

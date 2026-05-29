@@ -12,7 +12,7 @@ import 'package:result_dart/result_dart.dart';
 class FileService extends BaseVaultEntityService<FileRepository> {
   FileService({required super.deps, required super.repository});
 
-  Future<DbResult<String>> create(CreateFileDto dto) async {
+  Future<DBResult<String>> create(CreateFileDto dto) async {
     final validationError = validateCreateFile(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -57,7 +57,7 @@ class FileService extends BaseVaultEntityService<FileRepository> {
     }
   }
 
-  Future<DbResult<Unit>> update(PatchFileDto dto) async {
+  Future<DBResult<Unit>> update(PatchFileDto dto) async {
     final validationError = validatePatchFile(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -104,35 +104,35 @@ class FileService extends BaseVaultEntityService<FileRepository> {
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) {
+  Future<DBResult<Unit>> softDelete(String itemId) {
     return vaultItemsStateService.softDelete(
       itemId: itemId,
       type: VaultItemType.file,
     );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) {
+  Future<DBResult<Unit>> recover(String itemId) {
     return vaultItemsStateService.recover(
       itemId: itemId,
       type: VaultItemType.file,
     );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) {
+  Future<DBResult<Unit>> archive(String itemId) {
     return vaultItemsStateService.archive(
       itemId: itemId,
       type: VaultItemType.file,
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) {
+  Future<DBResult<Unit>> restoreArchived(String itemId) {
     return vaultItemsStateService.restoreArchived(
       itemId: itemId,
       type: VaultItemType.file,
     );
   }
 
-  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+  Future<DBResult<Unit>> setFavorite(String itemId, bool value) {
     return vaultItemsStateService.setFavorite(
       itemId: itemId,
       type: VaultItemType.file,
@@ -140,7 +140,7 @@ class FileService extends BaseVaultEntityService<FileRepository> {
     );
   }
 
-  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+  Future<DBResult<Unit>> setPinned(String itemId, bool value) {
     return vaultItemsStateService.setPinned(
       itemId: itemId,
       type: VaultItemType.file,

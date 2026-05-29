@@ -16,7 +16,7 @@ class LicenseKeyRepository {
 
   LicenseKeyRepository(this.db);
 
-  AsyncDbResult<String> create(CreateLicenseKeyDto dto) {
+  AsyncDBResult<String> create(CreateLicenseKeyDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -83,7 +83,7 @@ class LicenseKeyRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchLicenseKeyDto dto) {
+  AsyncDBResult<Unit> update(PatchLicenseKeyDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -152,7 +152,7 @@ class LicenseKeyRepository {
     );
   }
 
-  AsyncDbResult<Optional<LicenseKeyViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<LicenseKeyViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -188,7 +188,7 @@ class LicenseKeyRepository {
     );
   }
 
-  AsyncDbResult<Optional<LicenseKeyCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<LicenseKeyCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _LicenseKeyCardExpressions(db);
@@ -211,7 +211,7 @@ class LicenseKeyRepository {
     );
   }
 
-  AsyncDbResult<List<LicenseKeyCardDto>> getCards({
+  AsyncDBResult<List<LicenseKeyCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -236,7 +236,7 @@ class LicenseKeyRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

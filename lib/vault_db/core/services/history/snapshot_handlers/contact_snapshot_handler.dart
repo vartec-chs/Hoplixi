@@ -18,7 +18,7 @@ class ContactSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.contact;
 
   @override
-  AsyncDbResult<Unit> writeTypeSnapshot({
+  AsyncDBResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

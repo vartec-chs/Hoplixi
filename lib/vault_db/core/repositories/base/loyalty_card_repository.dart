@@ -15,7 +15,7 @@ class LoyaltyCardRepository {
 
   LoyaltyCardRepository(this.db);
 
-  AsyncDbResult<String> create(CreateLoyaltyCardDto dto) {
+  AsyncDBResult<String> create(CreateLoyaltyCardDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -72,7 +72,7 @@ class LoyaltyCardRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchLoyaltyCardDto dto) {
+  AsyncDBResult<Unit> update(PatchLoyaltyCardDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -133,7 +133,7 @@ class LoyaltyCardRepository {
     );
   }
 
-  AsyncDbResult<Optional<LoyaltyCardViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<LoyaltyCardViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -171,7 +171,7 @@ class LoyaltyCardRepository {
     );
   }
 
-  AsyncDbResult<Optional<LoyaltyCardCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<LoyaltyCardCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
@@ -193,7 +193,7 @@ class LoyaltyCardRepository {
     );
   }
 
-  AsyncDbResult<List<LoyaltyCardCardDto>> getCards({
+  AsyncDBResult<List<LoyaltyCardCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -217,7 +217,7 @@ class LoyaltyCardRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

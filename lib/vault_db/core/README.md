@@ -57,10 +57,10 @@ DAOs или сервисов, пожалуйста,обновляйте этот
   `*_history.dart` (таблицы для snapshot-ов истории).
 - Содержит SQL-триггеры для обеспечения целостности данных и автоматического
   ведения истории.
-- [all_table_indexes.dart](./scheme/tables/all_table_indexes.dart) — агрегатор всех
-  индексов
-- [all_table_triggers.dart](./scheme/tables/all_table_triggers.dart) — агрегатор всех
-  триггеров.
+- [all_table_indexes.dart](./scheme/tables/all_table_indexes.dart) — агрегатор
+  всех индексов
+- [all_table_triggers.dart](./scheme/tables/all_table_triggers.dart) — агрегатор
+  всех триггеров.
 
 ### 2. [DAOs](./daos) — Data Access Objects
 
@@ -185,7 +185,7 @@ final filter = VaultEventHistoryFilter.create(
 - Папка `entities/` содержит CRUD-сервисы по типам данных, `history/` — запись
   snapshot/event history и политику истории, `relations/` — текущие и
   snapshot-связи.
-- **Result Pattern**: Все публичные методы возвращают `DbResult<T, DBCoreError>`
+- **Result Pattern**: Все публичные методы возвращают `DBResult<T, DBCoreError>`
   из пакета `result_dart`.
 - Подробное описание в [README сервисов](./services/README.md).
 

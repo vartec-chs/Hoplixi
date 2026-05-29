@@ -16,7 +16,7 @@ class ApiKeyRepository {
 
   ApiKeyRepository(this.db);
 
-  AsyncDbResult<String> create(CreateApiKeyDto dto) {
+  AsyncDBResult<String> create(CreateApiKeyDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -79,7 +79,7 @@ class ApiKeyRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchApiKeyDto dto) {
+  AsyncDBResult<Unit> update(PatchApiKeyDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -150,7 +150,7 @@ class ApiKeyRepository {
     );
   }
 
-  AsyncDbResult<Optional<ApiKeyViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<ApiKeyViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -186,7 +186,7 @@ class ApiKeyRepository {
     );
   }
 
-  AsyncDbResult<Optional<ApiKeyCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<ApiKeyCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _ApiKeyCardExpressions(db);
@@ -209,7 +209,7 @@ class ApiKeyRepository {
     );
   }
 
-  AsyncDbResult<List<ApiKeyCardDto>> getCards({
+  AsyncDBResult<List<ApiKeyCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -234,7 +234,7 @@ class ApiKeyRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

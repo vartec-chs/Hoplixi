@@ -23,7 +23,7 @@ class VaultItemsStateService {
   final VaultTypedViewResolver viewResolver;
   final VaultHistoryService historyService;
 
-  Future<DbResult<Unit>> softDelete({
+  Future<DBResult<Unit>> softDelete({
     required String itemId,
     required VaultItemType type,
   }) {
@@ -35,7 +35,7 @@ class VaultItemsStateService {
     );
   }
 
-  Future<DbResult<Unit>> recover({
+  Future<DBResult<Unit>> recover({
     required String itemId,
     required VaultItemType type,
   }) {
@@ -47,7 +47,7 @@ class VaultItemsStateService {
     );
   }
 
-  Future<DbResult<Unit>> archive({
+  Future<DBResult<Unit>> archive({
     required String itemId,
     required VaultItemType type,
   }) {
@@ -59,7 +59,7 @@ class VaultItemsStateService {
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived({
+  Future<DBResult<Unit>> restoreArchived({
     required String itemId,
     required VaultItemType type,
   }) {
@@ -71,7 +71,7 @@ class VaultItemsStateService {
     );
   }
 
-  Future<DbResult<Unit>> setFavorite({
+  Future<DBResult<Unit>> setFavorite({
     required String itemId,
     required VaultItemType type,
     required bool value,
@@ -89,7 +89,7 @@ class VaultItemsStateService {
     );
   }
 
-  Future<DbResult<Unit>> setPinned({
+  Future<DBResult<Unit>> setPinned({
     required String itemId,
     required VaultItemType type,
     required bool value,
@@ -107,7 +107,7 @@ class VaultItemsStateService {
     );
   }
 
-  Future<DbResult<Unit>> _mutateState({
+  Future<DBResult<Unit>> _mutateState({
     required String itemId,
     required VaultItemType type,
     required VaultEventHistoryAction action,

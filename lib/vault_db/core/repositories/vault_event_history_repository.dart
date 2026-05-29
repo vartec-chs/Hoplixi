@@ -16,7 +16,7 @@ class VaultEventHistoryRepository {
 
   final VaultEventsHistoryDao eventsHistoryDao;
 
-  AsyncDbResult<Unit> writeEvent({
+  AsyncDBResult<Unit> writeEvent({
     required String itemId,
     required VaultItemType type,
     required VaultEventHistoryAction action,

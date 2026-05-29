@@ -11,7 +11,7 @@ class SnapshotRelationsRepository {
 
   SnapshotRelationsRepository(this.db);
 
-  AsyncDbResult<Optional<String>> snapshotCategoryForItem({
+  AsyncDBResult<Optional<String>> snapshotCategoryForItem({
     required String? categoryId,
   }) {
     return tryCatchAsync(
@@ -52,7 +52,7 @@ class SnapshotRelationsRepository {
     );
   }
 
-  AsyncDbResult<Unit> snapshotTagsForItem({
+  AsyncDBResult<Unit> snapshotTagsForItem({
     required String historyId,
     required String itemId,
   }) {
@@ -92,7 +92,7 @@ class SnapshotRelationsRepository {
     );
   }
 
-  AsyncDbResult<Unit> snapshotLinksForItem({
+  AsyncDBResult<Unit> snapshotLinksForItem({
     required String historyId,
     required String itemId,
   }) {

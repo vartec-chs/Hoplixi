@@ -30,7 +30,7 @@ class ItemLinksRestoreService {
   final ItemLinkHistoryDao itemLinkHistoryDao;
   final VaultItemsDao vaultItemsDao;
 
-  Future<DbResult<ItemLinksRestoreResult>> restoreLinksForSnapshot({
+  Future<DBResult<ItemLinksRestoreResult>> restoreLinksForSnapshot({
     required String itemId,
     required String snapshotHistoryId,
   }) async {

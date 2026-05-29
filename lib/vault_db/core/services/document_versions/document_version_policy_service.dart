@@ -8,7 +8,7 @@ import '../../scheme/tables/document/document_types.dart';
 class DocumentVersionPolicyService {
   const DocumentVersionPolicyService();
 
-  DbResult<Unit> validateCreateVersion(CreateDocumentVersionDto dto) {
+  DBResult<Unit> validateCreateVersion(CreateDocumentVersionDto dto) {
     if (dto.documentId.trim().isEmpty) {
       return const Failure(
         DBCoreError.validation(

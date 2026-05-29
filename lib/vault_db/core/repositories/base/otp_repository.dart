@@ -16,7 +16,7 @@ class OtpRepository {
 
   OtpRepository(this.db);
 
-  AsyncDbResult<String> create(CreateOtpDto dto) {
+  AsyncDBResult<String> create(CreateOtpDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -73,7 +73,7 @@ class OtpRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchOtpDto dto) {
+  AsyncDBResult<Unit> update(PatchOtpDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -133,7 +133,7 @@ class OtpRepository {
     );
   }
 
-  AsyncDbResult<Optional<OtpViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<OtpViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -166,7 +166,7 @@ class OtpRepository {
     );
   }
 
-  AsyncDbResult<Optional<OtpCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<OtpCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _OtpCardExpressions(db);
@@ -189,7 +189,7 @@ class OtpRepository {
     );
   }
 
-  AsyncDbResult<List<OtpCardDto>> getCards({int limit = 50, int offset = 0}) {
+  AsyncDBResult<List<OtpCardDto>> getCards({int limit = 50, int offset = 0}) {
     return tryCatchAsync(
       () async {
         final expr = _OtpCardExpressions(db);
@@ -211,7 +211,7 @@ class OtpRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

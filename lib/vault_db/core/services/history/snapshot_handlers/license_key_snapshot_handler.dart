@@ -18,7 +18,7 @@ class LicenseKeySnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.licenseKey;
 
   @override
-  AsyncDbResult<Unit> writeTypeSnapshot({
+  AsyncDBResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

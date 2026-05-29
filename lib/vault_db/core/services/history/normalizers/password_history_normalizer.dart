@@ -21,7 +21,7 @@ class PasswordHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.password;
 
   @override
-  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+  AsyncDBResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
     return tryCatchAsync(
@@ -54,7 +54,7 @@ class PasswordHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+  AsyncDBResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
     return tryCatchAsync(

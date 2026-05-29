@@ -4,5 +4,5 @@ export 'package:hoplixi/core/utils/result/result_utils.dart';
 
 import 'db_error.dart';
 
-typedef DbResult<T extends Object> = ResultDart<T, DBCoreError>;
-typedef AsyncDbResult<T extends Object> = AsyncResultDart<T, DBCoreError>;
+typedef DBResult<T extends Object> = ResultDart<T, DBCoreError>;
+typedef AsyncDBResult<T extends Object> = AsyncResultDart<T, DBCoreError>;

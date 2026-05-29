@@ -38,7 +38,7 @@ class VaultHistoryRestoreService {
   final VaultSnapshotWriter snapshotWriter;
   final VaultEventHistoryRepository eventHistoryRepository;
 
-  AsyncDbResult<Unit> restoreRevision({
+  AsyncDBResult<Unit> restoreRevision({
     required String historyId,
     bool recreate = false,
   }) {

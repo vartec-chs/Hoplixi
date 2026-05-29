@@ -21,7 +21,7 @@ class CryptoWalletHistoryNormalizer implements VaultHistoryTypeNormalizer {
   VaultItemType get type => VaultItemType.cryptoWallet;
 
   @override
-  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+  AsyncDBResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
     return tryCatchAsync(
@@ -62,7 +62,7 @@ class CryptoWalletHistoryNormalizer implements VaultHistoryTypeNormalizer {
   }
 
   @override
-  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+  AsyncDBResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
     return tryCatchAsync(

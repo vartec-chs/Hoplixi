@@ -24,7 +24,7 @@ class TagsRestoreService {
   final VaultItemTagHistoryDao vaultItemTagHistoryDao;
   final TagsDao tagsDao;
 
-  Future<DbResult<TagsRestoreResult>> restoreTagsForSnapshot({
+  Future<DBResult<TagsRestoreResult>> restoreTagsForSnapshot({
     required String itemId,
     required String snapshotHistoryId,
   }) async {

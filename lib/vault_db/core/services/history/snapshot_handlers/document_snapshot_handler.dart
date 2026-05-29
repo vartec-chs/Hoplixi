@@ -11,7 +11,7 @@ class DocumentSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.document;
 
   @override
-  AsyncDbResult<Unit> writeTypeSnapshot({
+  AsyncDBResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

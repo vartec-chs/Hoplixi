@@ -18,7 +18,7 @@ class VaultHistoryRetentionService {
   final VaultHistoryDeleteService deleteService;
   final StoreSettingsDao settingsDao;
 
-  AsyncDbResult<Unit> maybeCleanup() {
+  AsyncDBResult<Unit> maybeCleanup() {
     return tryCatchAsync(
       () async {
         final enabled =
@@ -84,7 +84,7 @@ class VaultHistoryRetentionService {
     );
   }
 
-  AsyncDbResult<Unit> cleanupByItemLimit({
+  AsyncDBResult<Unit> cleanupByItemLimit({
     required String itemId,
     required VaultItemType type,
     required int limit,
@@ -118,7 +118,7 @@ class VaultHistoryRetentionService {
     );
   }
 
-  AsyncDbResult<Unit> cleanupByMaxAge({required int maxAgeDays}) {
+  AsyncDBResult<Unit> cleanupByMaxAge({required int maxAgeDays}) {
     return tryCatchAsync(
       () async {
         if (maxAgeDays <= 0) {

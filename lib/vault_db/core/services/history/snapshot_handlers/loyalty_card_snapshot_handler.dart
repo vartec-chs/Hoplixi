@@ -18,7 +18,7 @@ class LoyaltyCardSnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.loyaltyCard;
 
   @override
-  AsyncDbResult<Unit> writeTypeSnapshot({
+  AsyncDBResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

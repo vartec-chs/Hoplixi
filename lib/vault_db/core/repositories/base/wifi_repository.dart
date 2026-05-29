@@ -15,7 +15,7 @@ class WifiRepository {
 
   WifiRepository(this.db);
 
-  AsyncDbResult<String> create(CreateWifiDto dto) {
+  AsyncDBResult<String> create(CreateWifiDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -71,7 +71,7 @@ class WifiRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchWifiDto dto) {
+  AsyncDBResult<Unit> update(PatchWifiDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -130,7 +130,7 @@ class WifiRepository {
     );
   }
 
-  AsyncDbResult<Optional<WifiViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<WifiViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -166,7 +166,7 @@ class WifiRepository {
     );
   }
 
-  AsyncDbResult<Optional<WifiCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<WifiCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _WifiCardExpressions(db);
@@ -189,7 +189,7 @@ class WifiRepository {
     );
   }
 
-  AsyncDbResult<List<WifiCardDto>> getCards({int limit = 50, int offset = 0}) {
+  AsyncDBResult<List<WifiCardDto>> getCards({int limit = 50, int offset = 0}) {
     return tryCatchAsync(
       () async {
         final expr = _WifiCardExpressions(db);
@@ -211,7 +211,7 @@ class WifiRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

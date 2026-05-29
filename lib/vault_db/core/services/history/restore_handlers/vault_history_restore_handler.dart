@@ -8,7 +8,7 @@ import '../models/vault_item_base_history_payload.dart';
 abstract interface class VaultHistoryRestoreHandler {
   VaultItemType get type;
 
-  Future<DbResult<Unit>> restoreTypeSpecific({
+  Future<DBResult<Unit>> restoreTypeSpecific({
     required VaultItemBaseHistoryPayload base,
     required HistoryPayload payload,
   });

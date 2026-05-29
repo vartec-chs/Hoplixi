@@ -26,7 +26,7 @@ class VaultHistoryNormalizedLoader {
   final VaultItemCustomFieldsHistoryDao customFieldsHistoryDao;
   final VaultItemCustomFieldsDao customFieldsDao;
 
-  AsyncDbResult<Optional<AnyNormalizedHistorySnapshot>> loadHistorySnapshot(
+  AsyncDBResult<Optional<AnyNormalizedHistorySnapshot>> loadHistorySnapshot(
     String historyId,
   ) {
     return tryCatchAsync(
@@ -75,7 +75,7 @@ class VaultHistoryNormalizedLoader {
     );
   }
 
-  AsyncDbResult<Optional<AnyNormalizedHistorySnapshot>> loadCurrentSnapshot({
+  AsyncDBResult<Optional<AnyNormalizedHistorySnapshot>> loadCurrentSnapshot({
     required String itemId,
     required VaultItemType type,
   }) {

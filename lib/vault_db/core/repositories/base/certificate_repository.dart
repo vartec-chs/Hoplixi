@@ -16,7 +16,7 @@ class CertificateRepository {
 
   CertificateRepository(this.db);
 
-  AsyncDbResult<String> create(CreateCertificateDto dto) {
+  AsyncDBResult<String> create(CreateCertificateDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -82,7 +82,7 @@ class CertificateRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchCertificateDto dto) {
+  AsyncDBResult<Unit> update(PatchCertificateDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -152,7 +152,7 @@ class CertificateRepository {
     );
   }
 
-  AsyncDbResult<Optional<CertificateViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<CertificateViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -190,7 +190,7 @@ class CertificateRepository {
     );
   }
 
-  AsyncDbResult<Optional<CertificateCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<CertificateCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _CertificateCardExpressions(db);
@@ -213,7 +213,7 @@ class CertificateRepository {
     );
   }
 
-  AsyncDbResult<List<CertificateCardDto>> getCards({
+  AsyncDBResult<List<CertificateCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -238,7 +238,7 @@ class CertificateRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

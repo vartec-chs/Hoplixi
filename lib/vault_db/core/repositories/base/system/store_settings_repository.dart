@@ -11,7 +11,7 @@ class StoreSettingsRepository {
 
   StoreSettingsRepository(this.db);
 
-  AsyncDbResult<Optional<String>> getRawValue(String key) {
+  AsyncDBResult<Optional<String>> getRawValue(String key) {
     return tryCatchAsync(
       () async {
         final data = await db.storeSettingsDao.getRawValue(key);
@@ -27,7 +27,7 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<Unit> setRawValue({
+  AsyncDBResult<Unit> setRawValue({
     required String key,
     required String value,
     StoreSettingValueType valueType = StoreSettingValueType.string,
@@ -51,7 +51,7 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<Unit> deleteSetting(String key) {
+  AsyncDBResult<Unit> deleteSetting(String key) {
     return tryCatchAsync(
       () async {
         await db.storeSettingsDao.deleteSetting(key);
@@ -67,7 +67,7 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<List<StoreSettingData>> getAllSettings() {
+  AsyncDBResult<List<StoreSettingData>> getAllSettings() {
     return tryCatchAsync(
       () => db.storeSettingsDao.getAllSettings(),
       (e, st) => e is DBCoreError
@@ -80,7 +80,7 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<Optional<T>> get<T extends Object>(StoreSettingsKey<T> key) {
+  AsyncDBResult<Optional<T>> get<T extends Object>(StoreSettingsKey<T> key) {
     return tryCatchAsync(
       () async {
         final raw = await db.storeSettingsDao.getRawValue(key.storageKey);
@@ -102,7 +102,7 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<T> getOrDefault<T extends Object>(StoreSettingsKey<T> key) {
+  AsyncDBResult<T> getOrDefault<T extends Object>(StoreSettingsKey<T> key) {
     return tryCatchAsync(
       () async {
         final raw = await db.storeSettingsDao.getRawValue(key.storageKey);
@@ -124,7 +124,7 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<Unit> set<T>(StoreSettingsKey<T> key, T value) {
+  AsyncDBResult<Unit> set<T>(StoreSettingsKey<T> key, T value) {
     return tryCatchAsync(
       () async {
         await db.storeSettingsDao.setRawValue(
@@ -145,7 +145,7 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<Unit> initializeDefaults() {
+  AsyncDBResult<Unit> initializeDefaults() {
     return tryCatchAsync(
       () async {
         for (final key in StoreSettingsKey.values) {
@@ -172,7 +172,7 @@ class StoreSettingsRepository {
     );
   }
 
-  AsyncDbResult<Unit> repairSettings() {
+  AsyncDBResult<Unit> repairSettings() {
     return tryCatchAsync(
       () async {
         for (final key in StoreSettingsKey.values) {

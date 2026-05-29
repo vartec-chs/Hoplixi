@@ -23,7 +23,7 @@ class VaultItemMutationService {
   final VaultItemRelationsService relationsService;
   final VaultHistoryService historyService;
 
-  Future<DbResult<Unit>> replaceItemTags({
+  Future<DBResult<Unit>> replaceItemTags({
     required String itemId,
     required VaultItemType type,
     required List<String> tagIds,
@@ -75,7 +75,7 @@ class VaultItemMutationService {
     }
   }
 
-  Future<DbResult<Unit>> changeItemCategory({
+  Future<DBResult<Unit>> changeItemCategory({
     required String itemId,
     required VaultItemType type,
     required String? categoryId,

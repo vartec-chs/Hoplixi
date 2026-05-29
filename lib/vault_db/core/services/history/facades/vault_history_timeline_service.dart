@@ -34,7 +34,7 @@ class VaultHistoryTimelineService {
   final VaultHistoryDetailService detailService;
   final VaultHistoryRestorePolicyService restorePolicyService;
 
-  AsyncDbResult<List<VaultHistoryTimelineItemDto>> getTimeline(
+  AsyncDBResult<List<VaultHistoryTimelineItemDto>> getTimeline(
     VaultSnapshotHistoryFilter filter, {
     VaultHistoryTimelineDiffMode diffMode =
         VaultHistoryTimelineDiffMode.lightweight,

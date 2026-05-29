@@ -14,7 +14,7 @@ class CategoryRepository {
 
   CategoryRepository(this.db);
 
-  AsyncDbResult<String> createCategory(CreateCategoryDto dto) {
+  AsyncDBResult<String> createCategory(CreateCategoryDto dto) {
     return tryCatchAsync(
       () async {
         final name = dto.name.trim();
@@ -67,7 +67,7 @@ class CategoryRepository {
     );
   }
 
-  AsyncDbResult<Unit> updateCategory(PatchCategoryDto dto) {
+  AsyncDBResult<Unit> updateCategory(PatchCategoryDto dto) {
     return tryCatchAsync(
       () async {
         if (dto.name is FieldUpdateSet<String>) {
@@ -146,7 +146,7 @@ class CategoryRepository {
     );
   }
 
-  AsyncDbResult<Unit> deleteCategory(String categoryId) {
+  AsyncDBResult<Unit> deleteCategory(String categoryId) {
     return tryCatchAsync(
       () async {
         await db.categoriesDao.deleteCategoryById(categoryId);
@@ -162,7 +162,7 @@ class CategoryRepository {
     );
   }
 
-  AsyncDbResult<Optional<CategoryViewDto>> getCategory(String categoryId) {
+  AsyncDBResult<Optional<CategoryViewDto>> getCategory(String categoryId) {
     return tryCatchAsync(
       () async {
         final row = await db.categoriesDao.getCategoryById(categoryId);
@@ -178,7 +178,7 @@ class CategoryRepository {
     );
   }
 
-  AsyncDbResult<List<CategoryCardDto>> getAllCategories() {
+  AsyncDBResult<List<CategoryCardDto>> getAllCategories() {
     return tryCatchAsync(
       () async {
         final rows = await db.categoriesDao.getAllCategories();
@@ -194,7 +194,7 @@ class CategoryRepository {
     );
   }
 
-  AsyncDbResult<List<CategoryTreeNodeDto>> getCategoryTree() {
+  AsyncDBResult<List<CategoryTreeNodeDto>> getCategoryTree() {
     return tryCatchAsync(
       () async {
         final allCategories = await db.categoriesDao.getAllCategories();
@@ -230,7 +230,7 @@ class CategoryRepository {
     );
   }
 
-  AsyncDbResult<bool> existsCategory(String categoryId) {
+  AsyncDBResult<bool> existsCategory(String categoryId) {
     return tryCatchAsync(
       () => db.categoriesDao.existsCategory(categoryId),
       (e, st) => e is DBCoreError

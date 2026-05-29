@@ -16,7 +16,7 @@ class CryptoWalletRepository {
 
   CryptoWalletRepository(this.db);
 
-  AsyncDbResult<String> create(CreateCryptoWalletDto dto) {
+  AsyncDBResult<String> create(CreateCryptoWalletDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -81,7 +81,7 @@ class CryptoWalletRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchCryptoWalletDto dto) {
+  AsyncDBResult<Unit> update(PatchCryptoWalletDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -148,7 +148,7 @@ class CryptoWalletRepository {
     );
   }
 
-  AsyncDbResult<Optional<CryptoWalletViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<CryptoWalletViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -186,7 +186,7 @@ class CryptoWalletRepository {
     );
   }
 
-  AsyncDbResult<Optional<CryptoWalletCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<CryptoWalletCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final expr = _CryptoWalletCardExpressions(db);
@@ -209,7 +209,7 @@ class CryptoWalletRepository {
     );
   }
 
-  AsyncDbResult<List<CryptoWalletCardDto>> getCards({
+  AsyncDBResult<List<CryptoWalletCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -234,7 +234,7 @@ class CryptoWalletRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(

@@ -5,11 +5,11 @@ import '../models/history_payload.dart';
 abstract interface class VaultHistoryTypeNormalizer {
   VaultItemType get type;
 
-  AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
+  AsyncDBResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   });
 
-  AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
+  AsyncDBResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   });
 }

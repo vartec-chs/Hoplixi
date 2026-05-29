@@ -12,7 +12,7 @@ import 'package:result_dart/result_dart.dart';
 class BankCardService extends BaseVaultEntityService<BankCardRepository> {
   BankCardService({required super.deps, required super.repository});
 
-  Future<DbResult<String>> create(CreateBankCardDto dto) async {
+  Future<DBResult<String>> create(CreateBankCardDto dto) async {
     final validationError = validateCreateBankCard(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -57,7 +57,7 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
     }
   }
 
-  Future<DbResult<Unit>> update(PatchBankCardDto dto) async {
+  Future<DBResult<Unit>> update(PatchBankCardDto dto) async {
     final validationError = validatePatchBankCard(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -105,35 +105,35 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) {
+  Future<DBResult<Unit>> softDelete(String itemId) {
     return vaultItemsStateService.softDelete(
       itemId: itemId,
       type: VaultItemType.bankCard,
     );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) {
+  Future<DBResult<Unit>> recover(String itemId) {
     return vaultItemsStateService.recover(
       itemId: itemId,
       type: VaultItemType.bankCard,
     );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) {
+  Future<DBResult<Unit>> archive(String itemId) {
     return vaultItemsStateService.archive(
       itemId: itemId,
       type: VaultItemType.bankCard,
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) {
+  Future<DBResult<Unit>> restoreArchived(String itemId) {
     return vaultItemsStateService.restoreArchived(
       itemId: itemId,
       type: VaultItemType.bankCard,
     );
   }
 
-  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+  Future<DBResult<Unit>> setFavorite(String itemId, bool value) {
     return vaultItemsStateService.setFavorite(
       itemId: itemId,
       type: VaultItemType.bankCard,
@@ -141,7 +141,7 @@ class BankCardService extends BaseVaultEntityService<BankCardRepository> {
     );
   }
 
-  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+  Future<DBResult<Unit>> setPinned(String itemId, bool value) {
     return vaultItemsStateService.setPinned(
       itemId: itemId,
       type: VaultItemType.bankCard,

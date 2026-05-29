@@ -12,7 +12,7 @@ import 'package:result_dart/result_dart.dart';
 class LoyaltyCardService extends BaseVaultEntityService<LoyaltyCardRepository> {
   LoyaltyCardService({required super.deps, required super.repository});
 
-  Future<DbResult<String>> create(CreateLoyaltyCardDto dto) async {
+  Future<DBResult<String>> create(CreateLoyaltyCardDto dto) async {
     final validationError = validateCreateLoyaltyCard(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -57,7 +57,7 @@ class LoyaltyCardService extends BaseVaultEntityService<LoyaltyCardRepository> {
     }
   }
 
-  Future<DbResult<Unit>> update(PatchLoyaltyCardDto dto) async {
+  Future<DBResult<Unit>> update(PatchLoyaltyCardDto dto) async {
     final validationError = validatePatchLoyaltyCard(dto);
     if (validationError != null) return Failure(validationError);
 
@@ -105,35 +105,35 @@ class LoyaltyCardService extends BaseVaultEntityService<LoyaltyCardRepository> {
     }
   }
 
-  Future<DbResult<Unit>> softDelete(String itemId) {
+  Future<DBResult<Unit>> softDelete(String itemId) {
     return vaultItemsStateService.softDelete(
       itemId: itemId,
       type: VaultItemType.loyaltyCard,
     );
   }
 
-  Future<DbResult<Unit>> recover(String itemId) {
+  Future<DBResult<Unit>> recover(String itemId) {
     return vaultItemsStateService.recover(
       itemId: itemId,
       type: VaultItemType.loyaltyCard,
     );
   }
 
-  Future<DbResult<Unit>> archive(String itemId) {
+  Future<DBResult<Unit>> archive(String itemId) {
     return vaultItemsStateService.archive(
       itemId: itemId,
       type: VaultItemType.loyaltyCard,
     );
   }
 
-  Future<DbResult<Unit>> restoreArchived(String itemId) {
+  Future<DBResult<Unit>> restoreArchived(String itemId) {
     return vaultItemsStateService.restoreArchived(
       itemId: itemId,
       type: VaultItemType.loyaltyCard,
     );
   }
 
-  Future<DbResult<Unit>> setFavorite(String itemId, bool value) {
+  Future<DBResult<Unit>> setFavorite(String itemId, bool value) {
     return vaultItemsStateService.setFavorite(
       itemId: itemId,
       type: VaultItemType.loyaltyCard,
@@ -141,7 +141,7 @@ class LoyaltyCardService extends BaseVaultEntityService<LoyaltyCardRepository> {
     );
   }
 
-  Future<DbResult<Unit>> setPinned(String itemId, bool value) {
+  Future<DBResult<Unit>> setPinned(String itemId, bool value) {
     return vaultItemsStateService.setPinned(
       itemId: itemId,
       type: VaultItemType.loyaltyCard,

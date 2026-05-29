@@ -33,7 +33,7 @@ class SnapshotRelationsService {
   final VaultItemTagHistoryDao vaultItemTagHistoryDao;
   final ItemLinkHistoryDao itemLinkHistoryDao;
 
-  AsyncDbResult<Optional<String>> snapshotCategoryForItem({
+  AsyncDBResult<Optional<String>> snapshotCategoryForItem({
     required String? categoryId,
     String? snapshotId,
     String? itemId,
@@ -79,7 +79,7 @@ class SnapshotRelationsService {
     );
   }
 
-  AsyncDbResult<Unit> snapshotTagsForItem({
+  AsyncDBResult<Unit> snapshotTagsForItem({
     required String historyId,
     required String itemId,
   }) {
@@ -117,7 +117,7 @@ class SnapshotRelationsService {
     );
   }
 
-  AsyncDbResult<Unit> snapshotLinksForItem({
+  AsyncDBResult<Unit> snapshotLinksForItem({
     required String historyId,
     required String itemId,
   }) {

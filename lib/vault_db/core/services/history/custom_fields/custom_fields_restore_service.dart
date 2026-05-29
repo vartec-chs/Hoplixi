@@ -16,7 +16,7 @@ class CustomFieldsRestoreService {
   final VaultItemCustomFieldsDao customFieldsDao;
   final VaultItemCustomFieldsHistoryDao customFieldsHistoryDao;
 
-  Future<DbResult<Unit>> restoreCustomFieldsForSnapshot({
+  Future<DBResult<Unit>> restoreCustomFieldsForSnapshot({
     required String itemId,
     required String snapshotHistoryId,
   }) async {

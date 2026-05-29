@@ -18,7 +18,7 @@ class SshKeySnapshotHandler implements VaultSnapshotTypeHandler {
   VaultItemType get type => VaultItemType.sshKey;
 
   @override
-  AsyncDbResult<Unit> writeTypeSnapshot({
+  AsyncDBResult<Unit> writeTypeSnapshot({
     required String historyId,
     required VaultEntityViewDto view,
     required bool includeSecrets,

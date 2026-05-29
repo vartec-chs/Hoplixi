@@ -17,7 +17,7 @@ class DocumentRepository {
 
   DocumentRepository(this.db);
 
-  AsyncDbResult<String> create(CreateDocumentDto dto) {
+  AsyncDBResult<String> create(CreateDocumentDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -67,7 +67,7 @@ class DocumentRepository {
     );
   }
 
-  AsyncDbResult<Unit> update(PatchDocumentDto dto) {
+  AsyncDBResult<Unit> update(PatchDocumentDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
@@ -119,7 +119,7 @@ class DocumentRepository {
     );
   }
 
-  AsyncDbResult<Optional<DocumentViewDto>> getViewById(String itemId) {
+  AsyncDBResult<Optional<DocumentViewDto>> getViewById(String itemId) {
     return tryCatchAsync(
       () async {
         final query =
@@ -155,7 +155,7 @@ class DocumentRepository {
     );
   }
 
-  AsyncDbResult<Optional<DocumentCardDto>> getCardById(String itemId) {
+  AsyncDBResult<Optional<DocumentCardDto>> getCardById(String itemId) {
     return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
@@ -177,7 +177,7 @@ class DocumentRepository {
     );
   }
 
-  AsyncDbResult<List<DocumentCardDto>> getCards({
+  AsyncDBResult<List<DocumentCardDto>> getCards({
     int limit = 50,
     int offset = 0,
   }) {
@@ -201,7 +201,7 @@ class DocumentRepository {
     );
   }
 
-  AsyncDbResult<Unit> deletePermanently(String itemId) {
+  AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {
         final rows = await (db.delete(
