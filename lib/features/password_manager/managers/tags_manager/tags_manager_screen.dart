@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
 import 'providers/tag_pagination_provider.dart';
 import 'widgets/tag_card.dart';
@@ -232,8 +232,8 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
 
     if (confirmed == true && context.mounted) {
       try {
-        final tagDao = await ref.read(tagDaoProvider.future);
-        await tagDao.deleteTag(tag.id);
+        final repositories = await ref.watch(vaultRepositories.future);
+        await repositories.tag.deleteTag(tag.id);
 
         ref.read(managerRefreshTriggerProvider.notifier).triggerTagRefresh();
         _refresh();

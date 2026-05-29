@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/models/note_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/providers/note_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/widgets/note_list_tile.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/note_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -87,7 +87,9 @@ class _NotePickerContentState extends ConsumerState<_NotePickerContent> {
   }
 
   void _onNoteSelected(NoteCardDto note) {
-    Navigator.of(context).pop(NotePickerResult(id: note.id, name: note.title));
+    Navigator.of(
+      context,
+    ).pop(NotePickerResult(id: note.item.itemId, name: note.item.name));
   }
 
   @override
@@ -141,7 +143,7 @@ class _NotePickerContentState extends ConsumerState<_NotePickerContent> {
                         );
                       }
 
-                      final note = data.notes[index] as NoteCardDto;
+                      final note = data.notes[index].card;
                       return NoteListTile(
                         note: note,
                         onTap: () => _onNoteSelected(note),

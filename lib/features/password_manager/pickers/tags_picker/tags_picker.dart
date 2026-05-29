@@ -34,6 +34,7 @@
 /// ```
 library;
 
+export 'models/tag_picker_filter.dart';
 export 'widgets/tag_picker_field.dart';
 
 // export 'widgets/tag_picker_modal.dart';

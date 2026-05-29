@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/models/otp_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/providers/otp_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/widgets/otp_list_tile.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/otp_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -108,14 +108,15 @@ class _OtpPickerMultiContentState
   }
 
   void _toggleOtpSelection(OtpCardDto otp) {
+    final id = otp.item.itemId;
+    final title = otp.otp.issuer ?? otp.otp.accountName ?? otp.item.name;
     setState(() {
-      if (_selectedOtpIds.contains(otp.id)) {
-        _selectedOtpIds.remove(otp.id);
-        _selectedOtpTitles.remove(otp.id);
+      if (_selectedOtpIds.contains(id)) {
+        _selectedOtpIds.remove(id);
+        _selectedOtpTitles.remove(id);
       } else {
-        _selectedOtpIds.add(otp.id);
-        _selectedOtpTitles[otp.id] =
-            otp.issuer ?? otp.accountName ?? 'Без названия';
+        _selectedOtpIds.add(id);
+        _selectedOtpTitles[id] = title;
       }
     });
   }
@@ -208,8 +209,10 @@ class _OtpPickerMultiContentState
                         );
                       }
 
-                      final otp = data.otps[index] as OtpCardDto;
-                      final isSelected = _selectedOtpIds.contains(otp.id);
+                      final otp = data.otps[index].card;
+                      final isSelected = _selectedOtpIds.contains(
+                        otp.item.itemId,
+                      );
 
                       return OtpListTile(
                         otp: otp,

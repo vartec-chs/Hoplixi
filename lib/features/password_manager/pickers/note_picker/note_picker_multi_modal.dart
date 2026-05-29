@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/models/note_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/providers/note_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/widgets/note_list_tile.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/note_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -108,13 +108,15 @@ class _NotePickerMultiContentState
   }
 
   void _toggleNoteSelection(NoteCardDto note) {
+    final id = note.item.itemId;
+    final title = note.item.name;
     setState(() {
-      if (_selectedNoteIds.contains(note.id)) {
-        _selectedNoteIds.remove(note.id);
-        _selectedNoteTitles.remove(note.id);
+      if (_selectedNoteIds.contains(id)) {
+        _selectedNoteIds.remove(id);
+        _selectedNoteTitles.remove(id);
       } else {
-        _selectedNoteIds.add(note.id);
-        _selectedNoteTitles[note.id] = note.title;
+        _selectedNoteIds.add(id);
+        _selectedNoteTitles[id] = title;
       }
     });
   }
@@ -207,8 +209,10 @@ class _NotePickerMultiContentState
                         );
                       }
 
-                      final note = data.notes[index] as NoteCardDto;
-                      final isSelected = _selectedNoteIds.contains(note.id);
+                      final note = data.notes[index].card;
+                      final isSelected = _selectedNoteIds.contains(
+                        note.item.itemId,
+                      );
 
                       return NoteListTile(
                         note: note,

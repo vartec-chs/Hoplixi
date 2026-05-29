@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/file_picker_modal.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:result_dart/result_dart.dart';
 
 /// Поле формы для выбора файла из хранилища.
 ///
@@ -56,6 +57,7 @@ class _FilePickerFieldState extends ConsumerState<FilePickerField> {
 
   /// Кэшированное имя файла, загруженное по id
   String? _resolvedFileName;
+  bool _isResolvingFileName = false;
 
   bool _isHovered = false;
 
@@ -63,13 +65,17 @@ class _FilePickerFieldState extends ConsumerState<FilePickerField> {
   void initState() {
     super.initState();
     _internalFocusNode = FocusNode();
+    _syncResolvedFileName();
   }
 
   @override
   void didUpdateWidget(covariant FilePickerField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedFileId != widget.selectedFileId) {
+    if (oldWidget.selectedFileId != widget.selectedFileId ||
+        oldWidget.selectedFileName != widget.selectedFileName) {
       _resolvedFileName = null;
+      _isResolvingFileName = false;
+      _syncResolvedFileName();
     }
   }
 
@@ -100,6 +106,37 @@ class _FilePickerFieldState extends ConsumerState<FilePickerField> {
     }
   }
 
+  Future<void> _syncResolvedFileName() async {
+    final fileId = widget.selectedFileId;
+    final fileName = widget.selectedFileName;
+
+    if (fileName != null && fileName.isNotEmpty) {
+      _resolvedFileName = fileName;
+      _isResolvingFileName = false;
+      return;
+    }
+
+    if (fileId == null || fileId.isEmpty) {
+      _resolvedFileName = null;
+      _isResolvingFileName = false;
+      return;
+    }
+
+    if (!_isResolvingFileName && mounted) {
+      setState(() => _isResolvingFileName = true);
+    }
+
+    final repos = await ref.read(vaultRepositories.future);
+    final result = await repos.file.getCardById(fileId);
+    final file = result.getOrNull()?.getOrNull();
+    if (!mounted || widget.selectedFileId != fileId) return;
+
+    setState(() {
+      _resolvedFileName = file?.file.fileName ?? file?.item.name;
+      _isResolvingFileName = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -114,31 +151,8 @@ class _FilePickerFieldState extends ConsumerState<FilePickerField> {
     if (widget.selectedFileId != null &&
         widget.selectedFileId!.isNotEmpty &&
         (widget.selectedFileName == null || widget.selectedFileName!.isEmpty)) {
-      if (_resolvedFileName != null) {
-        effectiveFileName = _resolvedFileName;
-      } else {
-        final fileDao = ref.watch(fileDaoProvider);
-        fileDao.when(
-          data: (dao) {
-            dao.getById(widget.selectedFileId!).then((result) {
-              if (result != null) {
-                final name = result.$1.name;
-                if (mounted && _resolvedFileName != name) {
-                  setState(() => _resolvedFileName = name);
-                }
-              }
-            });
-          },
-          loading: () {},
-          error: (_, _) {},
-        );
-
-        effectiveFileName = fileDao.when(
-          data: (_) => _resolvedFileName ?? 'Загрузка...',
-          loading: () => 'Загрузка...',
-          error: (_, _) => null,
-        );
-      }
+      effectiveFileName =
+          _resolvedFileName ?? (_isResolvingFileName ? 'Загрузка...' : null);
     }
 
     final hasValue = effectiveFileName != null && effectiveFileName.isNotEmpty;

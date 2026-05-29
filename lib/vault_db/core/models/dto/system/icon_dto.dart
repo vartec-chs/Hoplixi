@@ -17,8 +17,8 @@ sealed class IconRefDto with _$IconRefDto {
     String? iconPackId,
     String? iconValue,
     String? customIconId,
-    String? color,
-    String? backgroundColor,
+    int? color,
+    int? backgroundColor,
     DateTime? createdAt,
     DateTime? modifiedAt,
   }) = _IconRefDto;

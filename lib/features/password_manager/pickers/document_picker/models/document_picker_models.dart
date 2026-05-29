@@ -1,3 +1,5 @@
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+
 /// Результат выбора документа
 class DocumentPickerResult {
   final String id;
@@ -19,7 +21,7 @@ class DocumentPickerMultiResult {
 
 /// Состояние данных документов в пикере
 class DocumentPickerData {
-  final List<dynamic> documents;
+  final List<FilteredCardDto<DocumentCardDto>> documents;
   final bool hasMore;
   final bool isLoadingMore;
   final String? excludeDocumentId;
@@ -32,7 +34,7 @@ class DocumentPickerData {
   });
 
   DocumentPickerData copyWith({
-    List<dynamic>? documents,
+    List<FilteredCardDto<DocumentCardDto>>? documents,
     bool? hasMore,
     bool? isLoadingMore,
     String? excludeDocumentId,

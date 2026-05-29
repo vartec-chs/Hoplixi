@@ -1,3 +1,6 @@
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+
+
 /// Результат выбора заметки
 class NotePickerResult {
   final String id;
@@ -19,7 +22,7 @@ class NotePickerMultiResult {
 
 /// Состояние данных заметок
 class NotePickerData {
-  final List<dynamic> notes;
+  final List<FilteredCardDto<NoteCardDto>> notes;
   final bool hasMore;
   final bool isLoadingMore;
   final String? excludeNoteId;
@@ -32,7 +35,7 @@ class NotePickerData {
   });
 
   NotePickerData copyWith({
-    List<dynamic>? notes,
+    List<FilteredCardDto<NoteCardDto>>? notes,
     bool? hasMore,
     bool? isLoadingMore,
     String? excludeNoteId,

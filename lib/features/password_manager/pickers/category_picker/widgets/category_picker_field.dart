@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_info_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_modal.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -175,7 +175,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
       await CategoryPickerModal.showMultiple(
         context: context,
         currentCategoryIds: widget.selectedCategoryIds,
-        filterByType: widget.filterByType?.map((e) => e.value).toList(),
+        filterByType: widget.filterByType,
         onCategoriesSelected: (categoryIds, categoryNames) {
           widget.onCategoriesSelected?.call(categoryIds, categoryNames);
         },
@@ -184,7 +184,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
       // Обычный режим - одиночный выбор
       await CategoryPickerModal.show(
         context: context,
-        filterByType: widget.filterByType?.map((e) => e.value).toList(),
+        filterByType: widget.filterByType,
         currentCategoryId: widget.selectedCategoryId,
         onCategorySelected: (categoryId, categoryName) {
           widget.onCategorySelected?.call(categoryId, categoryName);

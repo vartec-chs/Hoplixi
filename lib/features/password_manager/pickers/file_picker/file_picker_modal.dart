@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/models/file_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/providers/file_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/widgets/file_list_tile.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -85,7 +85,12 @@ class _FilePickerContentState extends ConsumerState<_FilePickerContent> {
   }
 
   void _onFileSelected(FileCardDto file) {
-    Navigator.of(context).pop(FilePickerResult(id: file.id, name: file.name));
+    Navigator.of(context).pop(
+      FilePickerResult(
+        id: file.item.itemId,
+        name: file.file.fileName ?? file.item.name,
+      ),
+    );
   }
 
   @override
@@ -134,7 +139,7 @@ class _FilePickerContentState extends ConsumerState<_FilePickerContent> {
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
-                      final file = data.files[index] as FileCardDto;
+                      final file = data.files[index].card;
                       return FileListTile(
                         file: file,
                         onTap: () => _onFileSelected(file),

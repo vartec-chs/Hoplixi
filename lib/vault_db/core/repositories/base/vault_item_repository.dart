@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/vault_item_base_dto.dart';
 import 'package:hoplixi/vault_db/core/models/mappers/vault_item_mapper.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
@@ -48,6 +49,52 @@ class VaultItemRepository {
           : DBCoreError.unknown(
               message:
                   'Ошибка при проверке существования элемента заданного типа',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDBResult<List<VaultItemCardDto>> searchLinkableItems({
+    required String query,
+    String? excludeItemId,
+    int limit = 50,
+  }) {
+    return tryCatchAsync(
+      () async {
+        final normalizedQuery = query.trim();
+        final statement = db.select(db.vaultItems)
+          ..where((tbl) => tbl.isDeleted.equals(false))
+          ..where((tbl) => tbl.isArchived.equals(false));
+
+        if (excludeItemId != null && excludeItemId.trim().isNotEmpty) {
+          statement.where((tbl) => tbl.id.equals(excludeItemId).not());
+        }
+
+        if (normalizedQuery.isNotEmpty) {
+          statement.where(
+            (tbl) =>
+                tbl.name.contains(normalizedQuery) |
+                tbl.description.contains(normalizedQuery),
+          );
+        }
+
+        statement
+          ..orderBy([
+            (tbl) => OrderingTerm(
+              expression: tbl.modifiedAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(limit);
+
+        final rows = await statement.get();
+        return rows.map((row) => row.toVaultItemCardDto()).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при поиске объектов хранилища',
               cause: e,
               stackTrace: st,
             ),

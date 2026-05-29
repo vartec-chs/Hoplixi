@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 /// Форматирует размер файла в байтах в читаемую строку
 String _formatFileSize(int bytes) {
@@ -27,11 +27,11 @@ class FileListTile extends StatelessWidget {
   /// Формирует subtitle из расширения и размера файла
   String? _buildSubtitle() {
     final parts = <String>[];
-    if (file.fileExtension != null && file.fileExtension!.isNotEmpty) {
-      parts.add(file.fileExtension!.toUpperCase());
+    if (file.file.fileExtension != null && file.file.fileExtension!.isNotEmpty) {
+      parts.add(file.file.fileExtension!.toUpperCase());
     }
-    if (file.fileSize != null) {
-      parts.add(_formatFileSize(file.fileSize!));
+    if (file.file.fileSize != null) {
+      parts.add(_formatFileSize(file.file.fileSize!));
     }
     return parts.isEmpty ? null : parts.join(' · ');
   }
@@ -48,7 +48,7 @@ class FileListTile extends StatelessWidget {
         child: Icon(Icons.attach_file, color: colorScheme.onPrimaryContainer),
       ),
       title: Text(
-        file.name,
+        file.file.fileName ?? file.item.name,
         style: textTheme.bodyLarge,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -63,7 +63,7 @@ class FileListTile extends StatelessWidget {
           : null,
       trailing:
           trailing ??
-          (file.isFavorite
+          (file.item.isFavorite
               ? Icon(Icons.star, color: colorScheme.primary, size: 20)
               : null),
       onTap: onTap,

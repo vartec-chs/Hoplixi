@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 /// Элемент списка документов в пикере
 class DocumentListTile extends StatelessWidget {
@@ -16,11 +16,11 @@ class DocumentListTile extends StatelessWidget {
 
   String? _buildSubtitle() {
     final parts = <String>[];
-    if (document.documentType != null && document.documentType!.isNotEmpty) {
-      parts.add(document.documentType!);
+    if (document.document.documentType != null) {
+      parts.add(document.document.documentType!.name);
     }
-    if (document.pageCount > 0) {
-      parts.add('${document.pageCount} стр.');
+    if ((document.document.pageCount ?? 0) > 0) {
+      parts.add('${document.document.pageCount} стр.');
     }
     return parts.isEmpty ? null : parts.join(' · ');
   }
@@ -40,7 +40,7 @@ class DocumentListTile extends StatelessWidget {
         ),
       ),
       title: Text(
-        document.title ?? document.id,
+        document.item.name,
         style: textTheme.bodyLarge,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -55,7 +55,7 @@ class DocumentListTile extends StatelessWidget {
           : null,
       trailing:
           trailing ??
-          (document.isFavorite
+          (document.item.isFavorite
               ? Icon(Icons.star, color: colorScheme.primary, size: 20)
               : null),
       onTap: onTap,

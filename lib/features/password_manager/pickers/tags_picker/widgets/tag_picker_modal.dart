@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/models/tag_picker_filter.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/providers/tag_picker_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_filters.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_item.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// Модальное окно выбора тегов
@@ -120,7 +121,7 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
   late List<String> _selectedTagIds;
   final GlobalKey<SliverAnimatedListState> _listKey =
       GlobalKey<SliverAnimatedListState>();
-  List<dynamic> _items = [];
+  List<TagCardDto> _items = [];
 
   /// Кэшированный список типов для провайдера
   late final List<TagType?> _cachedTypes;
@@ -135,7 +136,7 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
         : <TagType?>[];
   }
 
-  void _updateItems(List<dynamic> newItems) {
+  void _updateItems(List<TagCardDto> newItems) {
     if (!mounted) return;
 
     final oldLength = _items.length;
@@ -203,7 +204,7 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
     );
   }
 
-  void _toggleTag(String tagId, String tagName, List<dynamic> allTags) {
+  void _toggleTag(String tagId, String tagName, List<TagCardDto> allTags) {
     if (widget.isSingleMode) {
       // Режим одиночного выбора
       setState(() {

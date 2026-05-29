@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/models/tag_picker_filter.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:result_dart/result_dart.dart';
 
 import '../models/tag_pagination_state.dart';
 import 'tag_filter_provider.dart';
@@ -22,45 +23,43 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
 
   @override
   Future<TagPaginationState> build() async {
-    // Слушаем изменения фильтра для автоматической перезагрузки
     ref.listen(tagPickerFilterProvider, (previous, next) {
       if (previous != next) {
         refresh();
       }
     });
 
-    // Загружаем первую страницу
     return await _fetchTagsWithFilter(page: 0);
   }
 
-  /// Получить теги с применением текущего фильтра
   Future<TagPaginationState> _fetchTagsWithFilter({
     required int page,
     List<TagCardDto>? existingItems,
   }) async {
     try {
       final filter = ref.read(tagPickerFilterProvider);
-      final tagDao = await ref.read(tagDaoProvider.future);
-
-      // Создаем фильтр с пагинацией
-      final paginatedFilter = filter.copyWith(
-        offset: page * _pageSize,
-        limit: _pageSize,
-        types: initialTypes.isNotEmpty ? initialTypes : filter.types,
+      final repos = await ref.read(vaultRepositories.future);
+      final result = await repos.tag.getAllTags();
+      final allTags = result.getOrThrow();
+      final effectiveTypes = initialTypes.isNotEmpty
+          ? initialTypes
+          : filter.types;
+      final filteredTags = _applyFilter(
+        allTags,
+        filter.copyWith(types: effectiveTypes),
       );
-
-      final newItems = await tagDao.getTagCardsFiltered(paginatedFilter);
+      final newItems = filteredTags.skip(page * _pageSize).take(_pageSize).toList();
       final allItems = existingItems != null
           ? [...existingItems, ...newItems]
           : newItems;
 
       return TagPaginationState(
         items: allItems,
-        hasMore: newItems.length >= _pageSize,
+        hasMore: allItems.length < filteredTags.length,
         isLoading: false,
         error: null,
         currentPage: page,
-        totalCount: allItems.length,
+        totalCount: filteredTags.length,
       );
     } catch (e) {
       return TagPaginationState(
@@ -74,7 +73,6 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
     }
   }
 
-  /// Загрузить следующую страницу тегов
   Future<void> loadMore() async {
     final currentState = state.value;
     if (currentState == null ||
@@ -83,10 +81,8 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
       return;
     }
 
-    // Устанавливаем флаг загрузки
     state = AsyncValue.data(currentState.copyWith(isLoading: true));
 
-    // Загружаем следующую страницу
     final nextPage = currentState.currentPage + 1;
     final newState = await _fetchTagsWithFilter(
       page: nextPage,
@@ -96,9 +92,31 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
     state = AsyncValue.data(newState);
   }
 
-  /// Обновить список тегов (сброс пагинации)
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchTagsWithFilter(page: 0));
+  }
+
+  List<TagCardDto> _applyFilter(List<TagCardDto> tags, TagPickerFilter filter) {
+    final query = filter.query.trim().toLowerCase();
+    var result = tags;
+
+    if (query.isNotEmpty) {
+      result = result.where((tag) => tag.name.toLowerCase().contains(query)).toList();
+    }
+
+    if (filter.color != null && filter.color!.trim().isNotEmpty) {
+      final color = _parseColor(filter.color!);
+      if (color != null) {
+        result = result.where((tag) => tag.color == color).toList();
+      }
+    }
+
+    return [...result]..sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  int? _parseColor(String value) {
+    final normalized = value.trim().replaceFirst('#', '');
+    return int.tryParse(normalized, radix: 16);
   }
 }

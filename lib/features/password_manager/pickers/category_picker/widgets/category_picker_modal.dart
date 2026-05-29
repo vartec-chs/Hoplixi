@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_picker_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_filters.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_item.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// Модальное окно выбора категории
@@ -16,7 +16,7 @@ class CategoryPickerModal {
     required Function(String categoryId, String categoryName)
     onCategorySelected,
     String? currentCategoryId,
-    List<String>? filterByType,
+    List<CategoryType?>? filterByType,
   }) {
     return WoltModalSheet.show(
       context: context,
@@ -40,7 +40,7 @@ class CategoryPickerModal {
     required Function(List<String> categoryIds, List<String> categoryNames)
     onCategoriesSelected,
     List<String>? currentCategoryIds,
-    List<String>? filterByType,
+    List<CategoryType?>? filterByType,
   }) {
     return WoltModalSheet.show(
       context: context,
@@ -61,7 +61,7 @@ class CategoryPickerModal {
     BuildContext context,
     Function(String categoryId, String categoryName) onCategorySelected,
     String? currentCategoryId,
-    List<String>? filterByType,
+    List<CategoryType?>? filterByType,
   ) {
     return SliverWoltModalSheetPage(
       heroImage: null,
@@ -94,7 +94,7 @@ class CategoryPickerModal {
     Function(List<String> categoryIds, List<String> categoryNames)
     onCategoriesSelected,
     List<String> currentCategoryIds,
-    List<String>? filterByType,
+    List<CategoryType?>? filterByType,
   ) {
     return SliverWoltModalSheetPage(
       heroImage: null,
@@ -175,7 +175,7 @@ class _CategoryListView extends ConsumerStatefulWidget {
 
   final String? currentCategoryId;
   final Function(String categoryId, String categoryName) onCategorySelected;
-  final List<String>? filterByType;
+  final List<CategoryType?>? filterByType;
 
   @override
   ConsumerState<_CategoryListView> createState() => _CategoryListViewState();
@@ -196,8 +196,6 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
     _cachedTypes =
         widget.filterByType != null && widget.filterByType!.isNotEmpty
         ? widget.filterByType!
-              .map((type) => CategoryTypeX.fromString(type))
-              .toList()
         : <CategoryType?>[];
   }
 
@@ -381,7 +379,7 @@ class _MultipleCategoryPickerContent extends ConsumerStatefulWidget {
   final Function(List<String> categoryIds, List<String> categoryNames)
   onCategoriesSelected;
   final List<String> initialCategoryIds;
-  final List<String>? filterByType;
+  final List<CategoryType?>? filterByType;
 
   @override
   ConsumerState<_MultipleCategoryPickerContent> createState() =>
@@ -406,8 +404,6 @@ class _MultipleCategoryPickerContentState
     _cachedTypes =
         widget.filterByType != null && widget.filterByType!.isNotEmpty
         ? widget.filterByType!
-              .map((type) => CategoryTypeX.fromString(type))
-              .toList()
         : <CategoryType?>[];
   }
 

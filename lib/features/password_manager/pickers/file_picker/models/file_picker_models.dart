@@ -1,3 +1,5 @@
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+
 /// Результат выбора файла
 class FilePickerResult {
   final String id;
@@ -19,7 +21,7 @@ class FilePickerMultiResult {
 
 /// Состояние данных файлов
 class FilePickerData {
-  final List<dynamic> files;
+  final List<FilteredCardDto<FileCardDto>> files;
   final bool hasMore;
   final bool isLoadingMore;
   final String? excludeFileId;
@@ -32,7 +34,7 @@ class FilePickerData {
   });
 
   FilePickerData copyWith({
-    List<dynamic>? files,
+    List<FilteredCardDto<FileCardDto>>? files,
     bool? hasMore,
     bool? isLoadingMore,
     String? excludeFileId,

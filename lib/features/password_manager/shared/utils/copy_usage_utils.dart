@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
 Future<bool> copyCardValue({
   required WidgetRef ref,
@@ -32,18 +32,15 @@ Future<void> incrementCardUsageIfEnabled({
   required WidgetRef ref,
   required String itemId,
 }) async {
-  final settingsDao = await ref.read(storeSettingsDaoProvider.future);
-  final incrementUsageOnCopy = await settingsDao.getSetting(
-    StoreSettingsKeys.incrementUsageOnCopy,
+  final repo = await ref.watch(vaultRepositories.future);
+  final storeSettingsRepo = repo.storeSettings;
+  final incrementUsageOnCopy = await storeSettingsRepo.getOrDefault(
+    StoreSettingsKey.incrementUsageOnCopy,
   );
 
-  final shouldIncrement = incrementUsageOnCopy == null
-      ? true
-      : incrementUsageOnCopy == 'true';
-  if (!shouldIncrement) {
+  if (incrementUsageOnCopy.isError()) {
     return;
   }
 
-  final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-  await vaultItemDao.incrementUsage(itemId);
+  await repo.vaultItem.incrementUsedCount(itemId);
 }

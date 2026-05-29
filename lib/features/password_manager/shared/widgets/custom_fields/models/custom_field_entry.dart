@@ -1,6 +1,6 @@
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/custom_field_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/custom_fields/vault_item_custom_fields.dart';
+import 'package:drift/drift.dart';
 
 /// UI-модель кастомного поля для использования в формах.
 /// Не зависит от кодогенерации — простой иммутабельный Dart-класс.
@@ -11,6 +11,8 @@ class CustomFieldEntry {
     this.value,
     this.fieldType = CustomFieldType.text,
     this.isObscured = true,
+    this.isSecret = false,
+    this.sortOrder = 0,
   });
 
   /// [id] существующей записи в БД; null для нового несохранённого поля.
@@ -22,6 +24,12 @@ class CustomFieldEntry {
   /// Скрыто ли значение в UI (актуально только для [CustomFieldType.concealed]).
   final bool isObscured;
 
+  /// Флаг секретности поля.
+  final bool isSecret;
+
+  /// Порядок отображения.
+  final int sortOrder;
+
   static const _sentinel = Object();
 
   CustomFieldEntry copyWith({
@@ -30,6 +38,8 @@ class CustomFieldEntry {
     Object? value = _sentinel,
     CustomFieldType? fieldType,
     bool? isObscured,
+    bool? isSecret,
+    int? sortOrder,
   }) {
     return CustomFieldEntry(
       id: id == _sentinel ? this.id : id as String?,
@@ -37,6 +47,8 @@ class CustomFieldEntry {
       value: value == _sentinel ? this.value : value as String?,
       fieldType: fieldType ?? this.fieldType,
       isObscured: isObscured ?? this.isObscured,
+      isSecret: isSecret ?? this.isSecret,
+      sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 
@@ -46,14 +58,20 @@ class CustomFieldEntry {
       label: data.label,
       value: data.value,
       fieldType: data.fieldType,
+      isSecret: data.isSecret,
+      sortOrder: data.sortOrder,
     );
   }
 
-  CreateCustomFieldDto toCreateDto() {
-    return CreateCustomFieldDto(
+  VaultItemCustomFieldsCompanion toCompanion(String itemId) {
+    return VaultItemCustomFieldsCompanion.insert(
+      id: id == null ? const Value.absent() : Value(id!),
+      itemId: itemId,
       label: label,
-      value: value,
-      fieldType: fieldType,
+      value: Value(value),
+      fieldType: Value(fieldType),
+      isSecret: Value(isSecret),
+      sortOrder: Value(sortOrder),
     );
   }
 }

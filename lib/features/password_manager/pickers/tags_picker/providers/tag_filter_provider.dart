@@ -1,27 +1,26 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/tags_filter.dart';
+import 'package:hoplixi/features/password_manager/pickers/tags_picker/models/tag_picker_filter.dart';
 
 /// Провайдер для управления состоянием фильтра тегов
 final tagPickerFilterProvider =
-    NotifierProvider.autoDispose<TagFilterNotifier, TagsFilter>(() {
+    NotifierProvider.autoDispose<TagFilterNotifier, TagPickerFilter>(() {
       return TagFilterNotifier();
     });
 
 /// Notifier для управления фильтром тегов
-class TagFilterNotifier extends Notifier<TagsFilter> {
+class TagFilterNotifier extends Notifier<TagPickerFilter> {
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
   @override
-  TagsFilter build() {
+  TagPickerFilter build() {
     // Очищаем таймер при destroy провайдера
     ref.onDispose(() {
       _debounceTimer?.cancel();
     });
-    return const TagsFilter();
+    return const TagPickerFilter();
   }
 
   /// Обновить поисковый запрос с дебаунсингом
@@ -70,11 +69,11 @@ class TagFilterNotifier extends Notifier<TagsFilter> {
   /// Сбросить фильтр к начальному состоянию
   Future<void> reset() async {
     _debounceTimer?.cancel();
-    state = const TagsFilter();
+    state = const TagPickerFilter();
   }
 
   /// Обновить весь фильтр сразу
-  Future<void> updateFilter(TagsFilter filter) async {
+  Future<void> updateFilter(TagPickerFilter filter) async {
     _debounceTimer?.cancel();
     state = filter;
   }

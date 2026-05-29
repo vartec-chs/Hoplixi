@@ -2,27 +2,26 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/categories_filter.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
 
 /// Провайдер для управления состоянием фильтра категорий
 final categoryPickerFilterProvider =
-    NotifierProvider.autoDispose<CategoryFilterNotifier, CategoriesFilter>(
+    NotifierProvider.autoDispose<CategoryFilterNotifier, CategoryPickerFilter>(
       CategoryFilterNotifier.new,
     );
 
 /// Notifier для управления фильтром категорий
-class CategoryFilterNotifier extends Notifier<CategoriesFilter> {
+class CategoryFilterNotifier extends Notifier<CategoryPickerFilter> {
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
   @override
-  CategoriesFilter build() {
+  CategoryPickerFilter build() {
     // Очищаем таймер при destroy провайдера
     ref.onDispose(() {
       _debounceTimer?.cancel();
     });
-    return const CategoriesFilter();
+    return const CategoryPickerFilter();
   }
 
   /// Обновить поисковый запрос с дебаунсингом
@@ -85,11 +84,11 @@ class CategoryFilterNotifier extends Notifier<CategoriesFilter> {
   /// Сбросить фильтр к начальному состоянию
   Future<void> reset() async {
     _debounceTimer?.cancel();
-    state = const CategoriesFilter();
+    state = const CategoryPickerFilter();
   }
 
   /// Обновить весь фильтр сразу
-  Future<void> updateFilter(CategoriesFilter filter) async {
+  Future<void> updateFilter(CategoryPickerFilter filter) async {
     _debounceTimer?.cancel();
     state = filter;
   }

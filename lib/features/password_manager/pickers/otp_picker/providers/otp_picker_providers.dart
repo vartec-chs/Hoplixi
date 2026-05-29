@@ -1,29 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/models/otp_picker_models.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/otps_filter.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
+import 'package:result_dart/result_dart.dart';
 
 const int pageSize = 20;
 
 /// Provider для фильтра OTP
 final otpPickerFilterProvider =
-    NotifierProvider<OtpPickerFilterNotifier, OtpsFilter>(
+    NotifierProvider<OtpPickerFilterNotifier, OtpFilter>(
       OtpPickerFilterNotifier.new,
     );
 
-class OtpPickerFilterNotifier extends Notifier<OtpsFilter> {
+class OtpPickerFilterNotifier extends Notifier<OtpFilter> {
   @override
-  OtpsFilter build() {
-    return OtpsFilter.create(
+  OtpFilter build() {
+    return OtpFilter.create(
       base: BaseFilter.create(
         query: '',
         limit: pageSize,
         offset: 0,
         sortDirection: SortDirection.desc,
       ),
-      sortField: OtpsSortField.modifiedAt,
+      sortField: OtpSortField.modifiedAt,
     );
   }
 
@@ -37,20 +39,20 @@ class OtpPickerFilterNotifier extends Notifier<OtpsFilter> {
   /// Увеличить offset для пагинации
   void incrementOffset() {
     state = state.copyWith(
-      base: state.base.copyWith(offset: (state.base.offset ?? 0) + pageSize),
+      base: state.base.copyWith(offset: state.base.offset + pageSize),
     );
   }
 
   /// Сбросить фильтр
   void reset() {
-    state = OtpsFilter.create(
+    state = OtpFilter.create(
       base: BaseFilter.create(
         query: '',
         limit: pageSize,
         offset: 0,
         sortDirection: SortDirection.desc,
       ),
-      sortField: OtpsSortField.modifiedAt,
+      sortField: OtpSortField.modifiedAt,
     );
   }
 }
@@ -70,28 +72,16 @@ class OtpPickerDataNotifier extends Notifier<OtpPickerData> {
   /// Загрузить первую страницу OTP
   Future<void> loadInitial(String? excludeOtpId) async {
     final filter = ref.read(otpPickerFilterProvider);
-    final vaultDBAsync = ref.read(vaultDBProvider);
-
-    final vaultDB = vaultDBAsync.value;
-    if (vaultDB == null || !vaultDB.isOpen) {
-      Toaster.error(title: 'Ошибка', description: 'База данных не открыта');
-      return;
-    }
+    final service = await _getService();
+    if (service == null) return;
 
     try {
-      final manager = await ref.read(vaultDBManagerProvider.future);
-      if (manager.currentStore == null) {
-        Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
-        return;
-      }
-
-      final dao = manager.currentStore!.otpFilterDao;
-      final otps = await dao.getFiltered(filter);
-      final total = await dao.countFiltered(filter);
+      final otps = (await service.getOtps(filter)).getOrThrow();
+      final total = (await service.countOtps(filter)).getOrThrow();
 
       // Исключаем текущий OTP из списка
       final filteredOtps = excludeOtpId != null
-          ? otps.where((otp) => otp.id != excludeOtpId).toList()
+          ? otps.where((otp) => otp.card.item.itemId != excludeOtpId).toList()
           : otps;
 
       state = OtpPickerData(
@@ -102,8 +92,7 @@ class OtpPickerDataNotifier extends Notifier<OtpPickerData> {
       );
     } catch (e, stack) {
       Toaster.error(title: 'Ошибка', description: 'Не удалось загрузить OTP');
-      // ignore: avoid_print
-      print('Error loading OTPs: $e\n$stack');
+      logError('Error loading OTPs', error: e, stackTrace: stack);
     }
   }
 
@@ -117,19 +106,20 @@ class OtpPickerDataNotifier extends Notifier<OtpPickerData> {
       ref.read(otpPickerFilterProvider.notifier).incrementOffset();
       final filter = ref.read(otpPickerFilterProvider);
 
-      final manager = await ref.read(vaultDBManagerProvider.future);
-      if (manager.currentStore == null) return;
+      final service = await _getService();
+      if (service == null) return;
 
-      final dao = manager.currentStore!.otpFilterDao;
-      final newOtps = await dao.getFiltered(filter);
-      final total = await dao.countFiltered(filter);
+      final newOtps = (await service.getOtps(filter)).getOrThrow();
+      final total = (await service.countOtps(filter)).getOrThrow();
 
       final currentOtps = List.of(state.otps);
 
       // Исключаем если попался в "новых" (хотя пагинация должна работать)
       final excludeId = state.excludeOtpId;
       if (excludeId != null) {
-        currentOtps.addAll(newOtps.where((otp) => otp.id != excludeId));
+        currentOtps.addAll(
+          newOtps.where((otp) => otp.card.item.itemId != excludeId),
+        );
       } else {
         currentOtps.addAll(newOtps);
       }
@@ -145,6 +135,15 @@ class OtpPickerDataNotifier extends Notifier<OtpPickerData> {
         title: 'Ошибка',
         description: 'Не удалось загрузить больше OTP',
       );
+    }
+  }
+
+  Future<VaultCardFilterService?> _getService() async {
+    try {
+      return await ref.read(vaultCardFilterServiceProvider.future);
+    } catch (_) {
+      Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
+      return null;
     }
   }
 }

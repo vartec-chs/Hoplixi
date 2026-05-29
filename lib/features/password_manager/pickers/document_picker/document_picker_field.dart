@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/document_picker_modal.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:result_dart/result_dart.dart';
 
 /// Поле формы для выбора документа из хранилища.
 ///
@@ -57,19 +58,24 @@ class _DocumentPickerFieldState extends ConsumerState<DocumentPickerField> {
   FocusNode get _effectiveFocusNode => widget.focusNode ?? _internalFocusNode;
 
   String? _resolvedTitle;
+  bool _isResolvingTitle = false;
   bool _isHovered = false;
 
   @override
   void initState() {
     super.initState();
     _internalFocusNode = FocusNode();
+    _syncResolvedTitle();
   }
 
   @override
   void didUpdateWidget(covariant DocumentPickerField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedDocumentId != widget.selectedDocumentId) {
+    if (oldWidget.selectedDocumentId != widget.selectedDocumentId ||
+        oldWidget.selectedDocumentTitle != widget.selectedDocumentTitle) {
       _resolvedTitle = null;
+      _isResolvingTitle = false;
+      _syncResolvedTitle();
     }
   }
 
@@ -100,6 +106,37 @@ class _DocumentPickerFieldState extends ConsumerState<DocumentPickerField> {
     }
   }
 
+  Future<void> _syncResolvedTitle() async {
+    final documentId = widget.selectedDocumentId;
+    final documentTitle = widget.selectedDocumentTitle;
+
+    if (documentTitle != null && documentTitle.isNotEmpty) {
+      _resolvedTitle = documentTitle;
+      _isResolvingTitle = false;
+      return;
+    }
+
+    if (documentId == null || documentId.isEmpty) {
+      _resolvedTitle = null;
+      _isResolvingTitle = false;
+      return;
+    }
+
+    if (!_isResolvingTitle && mounted) {
+      setState(() => _isResolvingTitle = true);
+    }
+
+    final repos = await ref.read(vaultRepositories.future);
+    final result = await repos.document.getCardById(documentId);
+    final document = result.getOrNull()?.getOrNull();
+    if (!mounted || widget.selectedDocumentId != documentId) return;
+
+    setState(() {
+      _resolvedTitle = document?.item.name;
+      _isResolvingTitle = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -114,31 +151,8 @@ class _DocumentPickerFieldState extends ConsumerState<DocumentPickerField> {
         widget.selectedDocumentId!.isNotEmpty &&
         (widget.selectedDocumentTitle == null ||
             widget.selectedDocumentTitle!.isEmpty)) {
-      if (_resolvedTitle != null) {
-        effectiveTitle = _resolvedTitle;
-      } else {
-        final documentDao = ref.watch(documentDaoProvider);
-        documentDao.when(
-          data: (dao) {
-            dao.getById(widget.selectedDocumentId!).then((result) {
-              if (result != null) {
-                final title = result.$1.name;
-                if (mounted && _resolvedTitle != title) {
-                  setState(() => _resolvedTitle = title);
-                }
-              }
-            });
-          },
-          loading: () {},
-          error: (_, _) {},
-        );
-
-        effectiveTitle = documentDao.when(
-          data: (_) => _resolvedTitle ?? 'Загрузка...',
-          loading: () => 'Загрузка...',
-          error: (_, _) => null,
-        );
-      }
+      effectiveTitle =
+          _resolvedTitle ?? (_isResolvingTitle ? 'Загрузка...' : null);
     }
 
     final hasValue = effectiveTitle != null && effectiveTitle.isNotEmpty;

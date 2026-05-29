@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:result_dart/result_dart.dart';
 
 import '../models/category_pagination_state.dart';
 import 'category_filter_provider.dart';
@@ -31,34 +32,35 @@ class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
       }
     });
 
-    // Загружаем первую страницу
     return await _fetchCategoriesWithFilter(page: 0);
   }
 
-  /// Получить категории с применением текущего фильтра
   Future<CategoryPaginationState> _fetchCategoriesWithFilter({
     required int page,
     List<CategoryCardDto>? existingItems,
   }) async {
     try {
       final filter = ref.read(categoryPickerFilterProvider);
-      final categoryDao = await ref.read(categoryDaoProvider.future);
+      final repos = await ref.read(vaultRepositories.future);
 
       logDebug(
         'Fetching categories with filter: types=${filter.types}, query="${filter.query}", page=$page',
         tag: 'CategoryListNotifier',
       );
 
-      // Создаем фильтр с пагинацией
-      final paginatedFilter = filter.copyWith(
-        offset: page * _pageSize,
-        limit: _pageSize,
-        types: initialTypes.isNotEmpty ? initialTypes : filter.types,
+      final result = await repos.category.getAllCategories();
+      final allCategories = result.getOrThrow();
+      final effectiveTypes = initialTypes.isNotEmpty
+          ? initialTypes
+          : filter.types;
+      final filteredCategories = _applyFilter(
+        allCategories,
+        filter.copyWith(types: effectiveTypes),
       );
-
-      final newItems = await categoryDao.getCategoryCardsFiltered(
-        paginatedFilter,
-      );
+      final newItems = filteredCategories
+          .skip(page * _pageSize)
+          .take(_pageSize)
+          .toList();
       final allItems = existingItems != null
           ? [...existingItems, ...newItems]
           : newItems;
@@ -70,11 +72,11 @@ class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
 
       return CategoryPaginationState(
         items: allItems,
-        hasMore: newItems.length >= _pageSize,
+        hasMore: allItems.length < filteredCategories.length,
         isLoading: false,
         error: null,
         currentPage: page,
-        totalCount: allItems.length,
+        totalCount: filteredCategories.length,
       );
     } catch (e) {
       return CategoryPaginationState(
@@ -88,7 +90,6 @@ class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
     }
   }
 
-  /// Загрузить следующую страницу категорий
   Future<void> loadMore() async {
     final currentState = state.value;
     if (currentState == null ||
@@ -97,10 +98,8 @@ class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
       return;
     }
 
-    // Устанавливаем флаг загрузки
     state = AsyncValue.data(currentState.copyWith(isLoading: true));
 
-    // Загружаем следующую страницу
     final nextPage = currentState.currentPage + 1;
     final newState = await _fetchCategoriesWithFilter(
       page: nextPage,
@@ -110,9 +109,42 @@ class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
     state = AsyncValue.data(newState);
   }
 
-  /// Обновить список категорий (сброс пагинации)
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchCategoriesWithFilter(page: 0));
+  }
+
+  List<CategoryCardDto> _applyFilter(
+    List<CategoryCardDto> categories,
+    CategoryPickerFilter filter,
+  ) {
+    final query = filter.query.trim().toLowerCase();
+    var result = categories;
+
+    if (query.isNotEmpty) {
+      result = result
+          .where((category) => category.name.toLowerCase().contains(query))
+          .toList();
+    }
+
+    if (filter.color != null && filter.color!.trim().isNotEmpty) {
+      final color = _parseColor(filter.color!);
+      if (color != null) {
+        result = result.where((category) => category.color == color).toList();
+      }
+    }
+
+    if (filter.hasIcon != null) {
+      result = result
+          .where((category) => (category.iconRefId != null) == filter.hasIcon)
+          .toList();
+    }
+
+    return [...result]..sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  int? _parseColor(String value) {
+    final normalized = value.trim().replaceFirst('#', '');
+    return int.tryParse(normalized, radix: 16);
   }
 }

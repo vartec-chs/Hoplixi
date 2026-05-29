@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/otp_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 /// Элемент списка OTP
 class OtpListTile extends StatelessWidget {
@@ -16,8 +16,8 @@ class OtpListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = otp.issuer ?? otp.accountName ?? 'Без названия';
-    final subtitle = otp.issuer != null ? otp.accountName : null;
+    final title = otp.otp.issuer ?? otp.otp.accountName ?? otp.item.name;
+    final subtitle = otp.otp.issuer != null ? otp.otp.accountName : null;
 
     return ListTile(
       title: Text(
@@ -43,7 +43,7 @@ class OtpListTile extends StatelessWidget {
       ),
       trailing:
           trailing ??
-          (otp.isFavorite
+          (otp.item.isFavorite
               ? Icon(
                   Icons.star,
                   color: Theme.of(context).colorScheme.primary,

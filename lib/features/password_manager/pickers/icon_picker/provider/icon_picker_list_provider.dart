@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/icons_filter.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:result_dart/result_dart.dart';
 import '../models/icon_picker_state.dart';
 import 'icon_picker_filter_provider.dart';
 
@@ -33,28 +33,36 @@ class IconPickerListNotifier extends AsyncNotifier<IconPickerState> {
   /// Получить иконки с применением текущего фильтра
   Future<IconPickerState> _fetchIcons({
     required int page,
-    List<IconCardDto>? existingItems,
+    List<IconRefCardDto>? existingItems,
   }) async {
     try {
       final searchQuery = ref.read(iconPickerSearchProvider);
-      final iconDao = await ref.read(iconDaoProvider.future);
+      final repos = await ref.read(vaultRepositories.future);
+      final result = await repos.icon.getIconRefs();
+      final icons = result.getOrThrow();
+      final query = searchQuery.trim().toLowerCase();
+      final filteredIcons = query.isEmpty
+          ? icons
+          : icons
+                .where(
+                  (icon) =>
+                      (icon.iconValue ?? '').toLowerCase().contains(query) ||
+                      (icon.iconPackId ?? '').toLowerCase().contains(query) ||
+                      (icon.customIconId ?? '').toLowerCase().contains(query),
+                )
+                .toList();
 
-      // Создаем фильтр с пагинацией и поиском
-      final filter = IconsFilter(
-        query: searchQuery,
-        sortField: IconsSortField.name,
-        limit: _pageSize,
-        offset: page * _pageSize,
-      );
-
-      final newItems = await iconDao.getIconCardsFiltered(filter);
+      final newItems = filteredIcons
+          .skip(page * _pageSize)
+          .take(_pageSize)
+          .toList();
       final allItems = existingItems != null
           ? [...existingItems, ...newItems]
           : newItems;
 
       return IconPickerState(
         items: allItems,
-        hasMore: newItems.length >= _pageSize,
+        hasMore: allItems.length < filteredIcons.length,
         isLoading: false,
         error: null,
         currentPage: page,

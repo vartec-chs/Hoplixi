@@ -1,12 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 part 'icon_picker_state.freezed.dart';
 
 @freezed
 sealed class IconPickerState with _$IconPickerState {
   const factory IconPickerState({
-    required List<IconCardDto> items,
+    required List<IconRefCardDto> items,
     required bool hasMore,
     required bool isLoading,
     required Object? error,

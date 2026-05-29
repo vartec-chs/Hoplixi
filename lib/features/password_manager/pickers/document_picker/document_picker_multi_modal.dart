@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/models/document_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/providers/document_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/widgets/document_list_tile.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -106,13 +106,15 @@ class _DocumentPickerMultiContentState
   }
 
   void _toggleSelection(DocumentCardDto document) {
+    final id = document.item.itemId;
+    final title = document.item.name;
     setState(() {
-      if (_selectedIds.contains(document.id)) {
-        _selectedIds.remove(document.id);
-        _selectedTitles.remove(document.id);
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+        _selectedTitles.remove(id);
       } else {
-        _selectedIds.add(document.id);
-        _selectedTitles[document.id] = document.title ?? document.id;
+        _selectedIds.add(id);
+        _selectedTitles[id] = title;
       }
     });
   }
@@ -195,8 +197,10 @@ class _DocumentPickerMultiContentState
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
-                      final doc = data.documents[index] as DocumentCardDto;
-                      final isSelected = _selectedIds.contains(doc.id);
+                      final doc = data.documents[index].card;
+                      final isSelected = _selectedIds.contains(
+                        doc.item.itemId,
+                      );
                       return DocumentListTile(
                         document: doc,
                         onTap: () => _toggleSelection(doc),

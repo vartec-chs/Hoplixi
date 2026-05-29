@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_field_type_icon.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/custom_fields/vault_item_custom_fields.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Виджет просмотра кастомных полей (read-only).
@@ -78,6 +79,9 @@ class _FieldCard extends StatelessWidget {
   bool get _isConcealed => entry.fieldType == CustomFieldType.concealed;
   String get _displayValue {
     final v = entry.value ?? '';
+    if (entry.fieldType == CustomFieldType.boolean) {
+      return v == 'true' ? 'Включено' : 'Выключено';
+    }
     if (_isConcealed && !isRevealed && v.isNotEmpty) {
       return '•' * v.length.clamp(8, 20);
     }
@@ -93,7 +97,7 @@ class _FieldCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: ListTile(
         leading: Icon(
-          _iconFor(entry.fieldType),
+          iconForCustomFieldType(entry.fieldType),
           color: theme.colorScheme.primary,
         ),
         title: Text(entry.label, style: theme.textTheme.bodySmall),
@@ -118,7 +122,7 @@ class _FieldCard extends StatelessWidget {
                 tooltip: isRevealed ? 'Скрыть' : 'Показать',
                 onPressed: onToggleReveal,
               ),
-            if (hasValue)
+            if (hasValue && entry.fieldType != CustomFieldType.boolean)
               IconButton(
                 icon: const Icon(LucideIcons.copy, size: 18),
                 tooltip: 'Копировать',
@@ -135,14 +139,4 @@ class _FieldCard extends StatelessWidget {
       ),
     );
   }
-
-  static IconData _iconFor(CustomFieldType type) => switch (type) {
-    CustomFieldType.text => LucideIcons.textCursor,
-    CustomFieldType.concealed => LucideIcons.lock,
-    CustomFieldType.url => LucideIcons.globe,
-    CustomFieldType.email => LucideIcons.mail,
-    CustomFieldType.phone => LucideIcons.phone,
-    CustomFieldType.date => LucideIcons.calendar,
-    CustomFieldType.number => LucideIcons.hash,
-  };
 }

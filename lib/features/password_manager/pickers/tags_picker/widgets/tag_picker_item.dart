@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 /// Элемент списка тегов в пикере
 class TagPickerItem extends StatelessWidget {
@@ -19,8 +19,7 @@ class TagPickerItem extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Парсим цвет тега
-    final tagColor = _parseColor(tag.color);
+    final tagColor = Color(0xFF000000 | tag.color);
 
     return Material(
       color: isSelected
@@ -73,23 +72,16 @@ class TagPickerItem extends StatelessWidget {
 
               const Spacer(),
 
-              // Информация о типе и количестве элементов
+              // Информация о теге
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    tag.type,
+                    'Тег',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
-                  if (tag.itemsCount > 0)
-                    Text(
-                      '${tag.itemsCount} элементов',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.5),
-                      ),
-                    ),
                 ],
               ),
 
@@ -109,19 +101,5 @@ class TagPickerItem extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// Парсит HEX строку в Color
-  Color _parseColor(String? hexColor) {
-    if (hexColor == null || hexColor.isEmpty) {
-      return Colors.grey;
-    }
-
-    try {
-      final hexCode = hexColor.replaceAll('#', '');
-      return Color(int.parse('FF$hexCode', radix: 16));
-    } catch (e) {
-      return Colors.grey;
-    }
   }
 }

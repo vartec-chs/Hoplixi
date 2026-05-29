@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/linked_vault_item_card_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
+
+class LinkedVaultItemCardDto {
+  const LinkedVaultItemCardDto({
+    required this.id,
+    required this.name,
+    required this.vaultItemType,
+    this.description,
+  });
+
+  final String id;
+  final String name;
+  final VaultItemType vaultItemType;
+  final String? description;
+
+  String get title => name;
+}
 
 Future<LinkedVaultItemCardDto?> showVaultItemPickerModal(
   BuildContext context,
@@ -143,10 +160,21 @@ class _VaultItemPickerContentState
   }
 
   Future<List<LinkedVaultItemCardDto>> _loadItems(String query) async {
-    final dao = await ref.read(vaultItemDaoProvider.future);
-    return dao.searchLinkableItems(
+    final repos = await ref.read(vaultRepositories.future);
+    final result = await repos.vaultItem.searchLinkableItems(
       query: query,
       excludeItemId: widget.excludeItemId,
     );
+    return result
+        .getOrThrow()
+        .map(
+          (item) => LinkedVaultItemCardDto(
+            id: item.itemId,
+            name: item.name,
+            vaultItemType: item.type,
+            description: item.description,
+          ),
+        )
+        .toList();
   }
 }

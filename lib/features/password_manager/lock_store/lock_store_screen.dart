@@ -39,7 +39,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
   }
 
   Future<void> _checkSavedPassword() async {
-    final dbState = ref.read(vaultDBProvider).value;
+    final dbState = ref.read(vaultDBStateProvider).value;
     if (dbState?.path == null) return;
 
     final historyService = await ref.read(dbHistoryProvider.future);
@@ -80,7 +80,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
     });
 
     try {
-      final dbState = await ref.read(vaultDBProvider.future);
+      final dbState = await ref.read(vaultDBStateProvider.future);
       final storePath = dbState.path;
       VaultKeyFile? keyFile;
       if (storePath != null) {
@@ -113,7 +113,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
       }
 
       final success = await ref
-          .read(vaultDBProvider.notifier)
+          .read(vaultDBManagerStateProvider.notifier)
           .unlockStore(
             _passwordController.text,
             keyFileId: keyFile?.id,
@@ -160,13 +160,13 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
       return;
     }
 
-    ref.read(vaultDBProvider.notifier).resetState();
+    ref.read(vaultDBManagerStateProvider.notifier).resetState();
     context.go(AppRoutesPaths.home);
   }
 
   @override
   Widget build(BuildContext context) {
-    final dbState = ref.watch(vaultDBProvider).value;
+    final dbState = ref.watch(vaultDBStateProvider).value;
     final syncState = ref.watch(currentStoreSyncProvider);
     final syncStatus = syncState.value;
     final isSyncStatusLoading = syncState.isLoading && syncStatus == null;

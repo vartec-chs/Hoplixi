@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/daos/daos.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/session_providers.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 
 /// Загрузить кастомные поля vault-элемента из БД.
@@ -8,8 +8,8 @@ Future<List<CustomFieldEntry>> loadCustomFields(
   Object ref,
   String itemId,
 ) async {
-  final dao = await _readCustomFieldDao(ref);
-  final rows = await dao.getByItemId(itemId);
+  final db = await _readVaultDb(ref);
+  final rows = await db.vaultItemCustomFieldsDao.getCustomFieldsByItemId(itemId);
   return rows.map(CustomFieldEntry.fromData).toList();
 }
 
@@ -21,16 +21,21 @@ Future<void> saveCustomFields(
   String itemId,
   List<CustomFieldEntry> fields,
 ) async {
-  final dao = await _readCustomFieldDao(ref);
-  await dao.replaceAll(itemId, fields.map((e) => e.toCreateDto()).toList());
+  final db = await _readVaultDb(ref);
+  await db.vaultItemCustomFieldsDao.replaceCustomFieldsForItem(
+    itemId: itemId,
+    fields: fields.asMap().entries.map((e) {
+      return e.value.copyWith(sortOrder: e.key).toCompanion(itemId);
+    }).toList(),
+  );
 }
 
-Future<CustomFieldDao> _readCustomFieldDao(Object ref) {
+Future<VaultDB> _readVaultDb(Object ref) {
   if (ref is Ref) {
-    return ref.read(customFieldDaoProvider.future);
+    return ref.read(vaultDBProvider.future);
   }
   if (ref is WidgetRef) {
-    return ref.read(customFieldDaoProvider.future);
+    return ref.read(vaultDBProvider.future);
   }
 
   throw ArgumentError.value(ref, 'ref', 'Expected Ref or WidgetRef');

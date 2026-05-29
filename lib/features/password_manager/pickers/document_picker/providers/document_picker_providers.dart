@@ -1,32 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/models/document_picker_models.dart';
-import 'package:hoplixi/main_db/core/old/daos/daos.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/documents_filter.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
+import 'package:result_dart/result_dart.dart';
 
 const int _pageSize = 20;
 
 /// Provider для фильтра документов
 final documentPickerFilterProvider =
-    NotifierProvider<DocumentPickerFilterNotifier, DocumentsFilter>(
+    NotifierProvider<DocumentPickerFilterNotifier, DocumentFilter>(
       DocumentPickerFilterNotifier.new,
     );
 
 /// Управляет фильтром поиска в пикере документов
-class DocumentPickerFilterNotifier extends Notifier<DocumentsFilter> {
+class DocumentPickerFilterNotifier extends Notifier<DocumentFilter> {
   @override
-  DocumentsFilter build() => _defaultFilter();
+  DocumentFilter build() => _defaultFilter();
 
-  DocumentsFilter _defaultFilter() => DocumentsFilter.create(
+  DocumentFilter _defaultFilter() => DocumentFilter.create(
     base: BaseFilter.create(
       query: '',
       limit: _pageSize,
       offset: 0,
       sortDirection: SortDirection.desc,
     ),
-    sortField: DocumentsSortField.modifiedAt,
+    sortField: DocumentSortField.modifiedAt,
   );
 
   /// Обновить поисковый запрос и сбросить offset
@@ -39,7 +39,7 @@ class DocumentPickerFilterNotifier extends Notifier<DocumentsFilter> {
   /// Увеличить offset для пагинации
   void incrementOffset() {
     state = state.copyWith(
-      base: state.base.copyWith(offset: (state.base.offset ?? 0) + _pageSize),
+      base: state.base.copyWith(offset: state.base.offset + _pageSize),
     );
   }
 
@@ -63,15 +63,17 @@ class DocumentPickerDataNotifier extends Notifier<DocumentPickerData> {
   /// Загрузить первую страницу документов
   Future<void> loadInitial(String? excludeDocumentId) async {
     final filter = ref.read(documentPickerFilterProvider);
-    final dao = await _getDao();
-    if (dao == null) return;
+    final service = await _getService();
+    if (service == null) return;
 
     try {
-      final documents = await dao.getFiltered(filter);
-      final total = await dao.countFiltered(filter);
+      final documents = (await service.getDocuments(filter)).getOrThrow();
+      final total = (await service.countDocuments(filter)).getOrThrow();
 
       final filtered = excludeDocumentId != null
-          ? documents.where((d) => d.id != excludeDocumentId).toList()
+          ? documents
+                .where((d) => d.card.item.itemId != excludeDocumentId)
+                .toList()
           : documents;
 
       state = DocumentPickerData(
@@ -91,8 +93,8 @@ class DocumentPickerDataNotifier extends Notifier<DocumentPickerData> {
 
     state = state.copyWith(isLoadingMore: true);
 
-    final dao = await _getDao();
-    if (dao == null) {
+    final service = await _getService();
+    if (service == null) {
       state = state.copyWith(isLoadingMore: false);
       return;
     }
@@ -101,11 +103,14 @@ class DocumentPickerDataNotifier extends Notifier<DocumentPickerData> {
       ref.read(documentPickerFilterProvider.notifier).incrementOffset();
       final updatedFilter = ref.read(documentPickerFilterProvider);
 
-      final newDocuments = await dao.getFiltered(updatedFilter);
-      final total = await dao.countFiltered(updatedFilter);
+      final newDocuments = (await service.getDocuments(updatedFilter))
+          .getOrThrow();
+      final total = (await service.countDocuments(updatedFilter)).getOrThrow();
 
       final filteredNew = state.excludeDocumentId != null
-          ? newDocuments.where((d) => d.id != state.excludeDocumentId).toList()
+          ? newDocuments
+                .where((d) => d.card.item.itemId != state.excludeDocumentId)
+                .toList()
           : newDocuments;
 
       final allDocuments = [...state.documents, ...filteredNew];
@@ -122,9 +127,9 @@ class DocumentPickerDataNotifier extends Notifier<DocumentPickerData> {
     }
   }
 
-  Future<DocumentFilterDao?> _getDao() async {
+  Future<VaultCardFilterService?> _getService() async {
     try {
-      return await ref.read(documentFilterDaoProvider.future);
+      return await ref.read(vaultCardFilterServiceProvider.future);
     } catch (_) {
       Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
       return null;

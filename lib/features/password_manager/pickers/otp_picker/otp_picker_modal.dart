@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/models/otp_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/providers/otp_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/widgets/otp_list_tile.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/otp_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -87,8 +87,8 @@ class _OtpPickerContentState extends ConsumerState<_OtpPickerContent> {
   }
 
   void _onOtpSelected(OtpCardDto otp) {
-    final name = otp.issuer ?? otp.accountName ?? 'Без названия';
-    Navigator.of(context).pop(OtpPickerResult(id: otp.id, name: name));
+    final name = otp.otp.issuer ?? otp.otp.accountName ?? otp.item.name;
+    Navigator.of(context).pop(OtpPickerResult(id: otp.item.itemId, name: name));
   }
 
   @override
@@ -142,7 +142,7 @@ class _OtpPickerContentState extends ConsumerState<_OtpPickerContent> {
                         );
                       }
 
-                      final otp = data.otps[index] as OtpCardDto;
+                      final otp = data.otps[index].card;
                       return OtpListTile(
                         otp: otp,
                         onTap: () => _onOtpSelected(otp),

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/otp_picker/otp_picker_modal.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:result_dart/result_dart.dart';
 
 /// Виджет для выбора OTP
 class OtpPickerField extends ConsumerStatefulWidget {
@@ -54,6 +55,7 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
 
   /// Закэшированное название OTP (для случая, когда передан только ID)
   String? _resolvedOtpName;
+  bool _isResolvingOtpName = false;
 
   /// Состояние наведения курсора
   bool _isHovered = false;
@@ -62,6 +64,7 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
   void initState() {
     super.initState();
     _internalFocusNode = FocusNode();
+    _syncResolvedOtpName();
   }
 
   @override
@@ -69,8 +72,11 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
     super.didUpdateWidget(oldWidget);
 
     // Сбрасываем кэш если изменился ID OTP
-    if (oldWidget.selectedOtpId != widget.selectedOtpId) {
+    if (oldWidget.selectedOtpId != widget.selectedOtpId ||
+        oldWidget.selectedOtpName != widget.selectedOtpName) {
       _resolvedOtpName = null;
+      _isResolvingOtpName = false;
+      _syncResolvedOtpName();
     }
   }
 
@@ -101,6 +107,38 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
     }
   }
 
+  Future<void> _syncResolvedOtpName() async {
+    final otpId = widget.selectedOtpId;
+    final otpName = widget.selectedOtpName;
+
+    if (otpName != null && otpName.isNotEmpty) {
+      _resolvedOtpName = otpName;
+      _isResolvingOtpName = false;
+      return;
+    }
+
+    if (otpId == null || otpId.isEmpty) {
+      _resolvedOtpName = null;
+      _isResolvingOtpName = false;
+      return;
+    }
+
+    if (!_isResolvingOtpName && mounted) {
+      setState(() => _isResolvingOtpName = true);
+    }
+
+    final repos = await ref.read(vaultRepositories.future);
+    final result = await repos.otp.getCardById(otpId);
+    final otp = result.getOrNull()?.getOrNull();
+    if (!mounted || widget.selectedOtpId != otpId) return;
+
+    setState(() {
+      _resolvedOtpName =
+          otp?.otp.issuer ?? otp?.otp.accountName ?? otp?.item.name;
+      _isResolvingOtpName = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -116,41 +154,8 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
     if (widget.selectedOtpId != null &&
         widget.selectedOtpId!.isNotEmpty &&
         (widget.selectedOtpName == null || widget.selectedOtpName!.isEmpty)) {
-      // Используем кэш, если уже загружено
-      if (_resolvedOtpName != null) {
-        effectiveOtpName = _resolvedOtpName;
-      } else {
-        // Загружаем через провайдер
-        final otpDao = ref.watch(otpDaoProvider);
-
-        otpDao.when(
-          data: (dao) {
-            // Загружаем асинхронно
-            dao.getById(widget.selectedOtpId!).then((otp) {
-              if (otp != null) {
-                final name =
-                    otp.$2.issuer ?? otp.$2.accountName ?? 'Без названия';
-                if (_resolvedOtpName != name) {
-                  if (mounted) {
-                    setState(() {
-                      _resolvedOtpName = name;
-                    });
-                  }
-                }
-              }
-            });
-          },
-          loading: () {},
-          error: (_, _) {},
-        );
-
-        // Показываем временный текст пока загружается
-        effectiveOtpName = otpDao.when(
-          data: (_) => _resolvedOtpName ?? "Загрузка...",
-          loading: () => "Загрузка...",
-          error: (_, _) => null,
-        );
-      }
+      effectiveOtpName =
+          _resolvedOtpName ?? (_isResolvingOtpName ? 'Загрузка...' : null);
     }
 
     // Определяем наличие значения

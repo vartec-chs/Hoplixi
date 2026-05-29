@@ -1,31 +1,15 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/icon_ref_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:result_dart/result_dart.dart';
 
 import 'widgets/icon_picker_modal.dart';
 
-/// Виджет для выбора иконки с превью и возможностью удаления
+/// Виджет для выбора иконки с превью и возможностью удаления.
 class IconPickerButton extends ConsumerStatefulWidget {
-  /// ID текущей выбранной иконки (опционально)
-  final String? selectedIconId;
-
-  /// Callback при выборе иконки
-  final ValueChanged<String?> onIconSelected;
-
-  /// Асинхронный callback перед открытием picker.
-  /// Верните `false`, чтобы отменить открытие.
-  final Future<bool> Function(BuildContext context)? onBeforeOpenPicker;
-
-  /// Размер контейнера для превью
-  final double size;
-
-  /// Текст подсказки когда иконка не выбрана
-  final String? hintText;
-
   const IconPickerButton({
     super.key,
     this.selectedIconId,
@@ -35,13 +19,28 @@ class IconPickerButton extends ConsumerStatefulWidget {
     this.hintText,
   });
 
+  /// ID текущей выбранной ссылки на иконку.
+  final String? selectedIconId;
+
+  /// Callback при выборе иконки.
+  final ValueChanged<String?> onIconSelected;
+
+  /// Асинхронный callback перед открытием picker.
+  /// Верните `false`, чтобы отменить открытие.
+  final Future<bool> Function(BuildContext context)? onBeforeOpenPicker;
+
+  /// Размер контейнера для превью.
+  final double size;
+
+  /// Текст подсказки когда иконка не выбрана.
+  final String? hintText;
+
   @override
   ConsumerState<IconPickerButton> createState() => _IconPickerButtonState();
 }
 
 class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
-  Uint8List? _iconData;
-  String? _iconType;
+  IconRefDto? _iconRef;
   bool _isLoading = false;
 
   @override
@@ -62,10 +61,7 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
         if (widget.selectedIconId != null) {
           _loadIcon(widget.selectedIconId!);
         } else {
-          setState(() {
-            _iconData = null;
-            _iconType = null;
-          });
+          setState(() => _iconRef = null);
         }
       });
     }
@@ -75,23 +71,29 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
     setState(() => _isLoading = true);
 
     try {
-      final iconDao = await ref.read(iconDaoProvider.future);
-      final icon = await iconDao.getIconById(iconId);
+      final repos = await ref.read(vaultRepositories.future);
+      final result = await repos.icon.getIconRef(iconId);
+      final icon = result.getOrNull()?.getOrNull();
 
-      if (icon != null && mounted) {
-        setState(() {
-          _iconData = icon.data;
-          _iconType = icon.type.toString();
-          _isLoading = false;
-        });
-      } else if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _iconRef = icon == null
+            ? null
+            : IconRefDto(
+                id: icon.id,
+                iconSourceType: icon.iconSourceType,
+                iconPackId: icon.iconPackId,
+                iconValue: icon.iconValue,
+                customIconId: icon.customIconId,
+                color: icon.color,
+                backgroundColor: icon.backgroundColor,
+              );
+        _isLoading = false;
+      });
+    } catch (_) {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-      debugPrint('Ошибка загрузки иконки: $e');
     }
   }
 
@@ -110,10 +112,7 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
   }
 
   void _clearIcon() {
-    setState(() {
-      _iconData = null;
-      _iconType = null;
-    });
+    setState(() => _iconRef = null);
     widget.onIconSelected(null);
   }
 
@@ -121,7 +120,6 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Основной контейнер
         InkWell(
           onTap: _openIconPicker,
           borderRadius: BorderRadius.circular(12),
@@ -139,15 +137,14 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
             child: _buildContent(context),
           ),
         ),
-        // Кнопка удаления (только если иконка выбрана)
-        if (_iconData != null && !_isLoading)
+        if (_iconRef != null && !_isLoading)
           Positioned(
             bottom: 0,
             right: 0,
             child: Material(
               color: Colors.transparent,
               child: Tooltip(
-                message: "Удалить иконку",
+                message: 'Удалить иконку',
                 child: InkWell(
                   onTap: _clearIcon,
                   customBorder: const CircleBorder(),
@@ -176,14 +173,16 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_iconData != null && _iconType != null) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _buildIconPreview(),
+    if (_iconRef != null) {
+      return Center(
+        child: IconRefPreview(
+          iconRef: _iconRef,
+          fallbackIcon: Icons.image_outlined,
+          size: widget.size * 0.5,
+        ),
       );
     }
 
-    // Пустое состояние - показываем hint
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -194,7 +193,7 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
         ),
         const SizedBox(height: 8),
         Text(
-          widget.hintText ?? "Выберите иконку",
+          widget.hintText ?? 'Выберите иконку',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -202,35 +201,5 @@ class _IconPickerButtonState extends ConsumerState<IconPickerButton> {
         ),
       ],
     );
-  }
-
-  Widget _buildIconPreview() {
-    final isSvg =
-        IconType.values.firstWhere(
-          (e) => e.toString() == _iconType,
-          orElse: () => IconType.png,
-        ) ==
-        IconType.svg;
-
-    if (isSvg) {
-      return SvgPicture.memory(
-        _iconData!,
-        fit: BoxFit.contain,
-        placeholderBuilder: (context) =>
-            const Center(child: CircularProgressIndicator()),
-      );
-    } else {
-      return Image.memory(
-        _iconData!,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(
-            Icons.broken_image,
-            size: 48,
-            color: Theme.of(context).colorScheme.error,
-          );
-        },
-      );
-    }
   }
 }

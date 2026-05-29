@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/theme/theme.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_field_type_icon.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/custom_fields/vault_item_custom_fields.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -163,6 +164,7 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
     final isConcealed = widget.entry.fieldType == CustomFieldType.concealed;
     final isDateField = widget.entry.fieldType == CustomFieldType.date;
     final isPhoneField = widget.entry.fieldType == CustomFieldType.phone;
+    final isBooleanField = widget.entry.fieldType == CustomFieldType.boolean;
 
     return Card(
       elevation: 0,
@@ -209,43 +211,49 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
             ),
             const SizedBox(height: 8),
             // Поле: значение
-            isPhoneField
-                ? _buildPhoneValueField(context)
-                : TextField(
-                    controller: _valueCtrl,
-                    obscureText: isConcealed && widget.entry.isObscured,
-                    readOnly: isDateField,
-                    decoration: primaryInputDecoration(
-                      context,
-                      labelText: 'Значение',
-                      isDense: true,
-                      suffixIcon: isConcealed
-                          ? IconButton(
-                              icon: Icon(
-                                widget.entry.isObscured
-                                    ? LucideIcons.eye
-                                    : LucideIcons.eyeOff,
-                                size: 18,
-                              ),
-                              onPressed: () => widget.onChanged(
-                                widget.entry.copyWith(
-                                  isObscured: !widget.entry.isObscured,
-                                ),
-                              ),
-                            )
-                          : isDateField
-                          ? IconButton(
-                              icon: const Icon(LucideIcons.calendar, size: 18),
-                              tooltip: 'Выбрать дату и время',
-                              onPressed: _pickDateTime,
-                            )
-                          : null,
-                    ),
-                    keyboardType: _keyboardTypeFor(widget.entry.fieldType),
-                    onChanged: (v) => widget.onChanged(
-                      widget.entry.copyWith(value: v.isEmpty ? null : v),
-                    ),
-                  ),
+            if (isPhoneField)
+              _buildPhoneValueField(context)
+            else if (isBooleanField)
+              _buildBooleanValueField(context)
+            else
+              TextField(
+                controller: _valueCtrl,
+                obscureText: isConcealed && widget.entry.isObscured,
+                readOnly: isDateField,
+                decoration: primaryInputDecoration(
+                  context,
+                  labelText: 'Значение',
+                  isDense: true,
+                  suffixIcon: isConcealed
+                      ? IconButton(
+                          icon: Icon(
+                            widget.entry.isObscured
+                                ? LucideIcons.eye
+                                : LucideIcons.eyeOff,
+                            size: 18,
+                          ),
+                          onPressed: () => widget.onChanged(
+                            widget.entry.copyWith(
+                              isObscured: !widget.entry.isObscured,
+                            ),
+                          ),
+                        )
+                      : isDateField
+                      ? IconButton(
+                          icon: const Icon(LucideIcons.calendar, size: 18),
+                          tooltip: 'Выбрать дату и время',
+                          onPressed: _pickDateTime,
+                        )
+                      : null,
+                ),
+                keyboardType: _keyboardTypeFor(widget.entry.fieldType),
+                maxLines: widget.entry.fieldType == CustomFieldType.multiline
+                    ? null
+                    : 1,
+                onChanged: (v) => widget.onChanged(
+                  widget.entry.copyWith(value: v.isEmpty ? null : v),
+                ),
+              ),
           ],
         ),
       ),
@@ -258,6 +266,7 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
     CustomFieldType.phone => TextInputType.phone,
     CustomFieldType.number => TextInputType.number,
     CustomFieldType.date => TextInputType.datetime,
+    CustomFieldType.multiline => TextInputType.multiline,
     _ => TextInputType.text,
   };
 
@@ -287,6 +296,16 @@ class _CustomFieldRowState extends State<_CustomFieldRow> {
     final formatted = _dateTimeFormat.format(result);
     _valueCtrl.text = formatted;
     widget.onChanged(widget.entry.copyWith(value: formatted));
+  }
+
+  Widget _buildBooleanValueField(BuildContext context) {
+    final isChecked = widget.entry.value == 'true';
+    return SwitchListTile(
+      title: const Text('Включено'),
+      value: isChecked,
+      onChanged: (v) =>
+          widget.onChanged(widget.entry.copyWith(value: v.toString())),
+    );
   }
 
   Widget _buildPhoneValueField(BuildContext context) {
@@ -416,7 +435,11 @@ class _TypeDropdown extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(_iconFor(type), size: 14, color: theme.colorScheme.primary),
+              Icon(
+                iconForCustomFieldType(type),
+                size: 14,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 6),
               Text(_labelFor(type), style: theme.textTheme.bodySmall),
             ],
@@ -427,16 +450,6 @@ class _TypeDropdown extends StatelessWidget {
     );
   }
 
-  static IconData _iconFor(CustomFieldType type) => switch (type) {
-    CustomFieldType.text => LucideIcons.textCursor,
-    CustomFieldType.concealed => LucideIcons.lock,
-    CustomFieldType.url => LucideIcons.globe,
-    CustomFieldType.email => LucideIcons.mail,
-    CustomFieldType.phone => LucideIcons.phone,
-    CustomFieldType.date => LucideIcons.calendar,
-    CustomFieldType.number => LucideIcons.hash,
-  };
-
   static String _labelFor(CustomFieldType type) => switch (type) {
     CustomFieldType.text => 'Текст',
     CustomFieldType.concealed => 'Секрет',
@@ -445,5 +458,7 @@ class _TypeDropdown extends StatelessWidget {
     CustomFieldType.phone => 'Телефон',
     CustomFieldType.date => 'Дата',
     CustomFieldType.number => 'Число',
+    CustomFieldType.multiline => 'Многострочный',
+    CustomFieldType.boolean => 'Логический',
   };
 }

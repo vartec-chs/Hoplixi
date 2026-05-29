@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/models/document_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/providers/document_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/document_picker/widgets/document_list_tile.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -90,8 +90,8 @@ class _DocumentPickerContentState
   void _onDocumentSelected(DocumentCardDto document) {
     Navigator.of(context).pop(
       DocumentPickerResult(
-        id: document.id,
-        name: document.title ?? document.id,
+        id: document.item.itemId,
+        name: document.item.name,
       ),
     );
   }
@@ -143,7 +143,7 @@ class _DocumentPickerContentState
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
-                      final doc = data.documents[index] as DocumentCardDto;
+                      final doc = data.documents[index].card;
                       return DocumentListTile(
                         document: doc,
                         onTap: () => _onDocumentSelected(doc),

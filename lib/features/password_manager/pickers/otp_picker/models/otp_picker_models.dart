@@ -1,3 +1,6 @@
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+
+
 /// Результат выбора OTP
 class OtpPickerResult {
   final String id;
@@ -19,7 +22,7 @@ class OtpPickerMultiResult {
 
 /// Состояние данных OTP
 class OtpPickerData {
-  final List<dynamic> otps;
+  final List<FilteredCardDto<OtpCardDto>> otps;
   final bool hasMore;
   final bool isLoadingMore;
   final String? excludeOtpId;
@@ -32,7 +35,7 @@ class OtpPickerData {
   });
 
   OtpPickerData copyWith({
-    List<dynamic>? otps,
+    List<FilteredCardDto<OtpCardDto>>? otps,
     bool? hasMore,
     bool? isLoadingMore,
     String? excludeOtpId,

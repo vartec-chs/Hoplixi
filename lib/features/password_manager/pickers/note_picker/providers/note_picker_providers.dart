@@ -1,29 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/models/note_picker_models.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/notes_filter.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
+import 'package:result_dart/result_dart.dart';
 
 const int pageSize = 20;
 
 /// Provider для фильтра заметок
 final notePickerFilterProvider =
-    NotifierProvider<NotePickerFilterNotifier, NotesFilter>(
+    NotifierProvider<NotePickerFilterNotifier, NoteFilter>(
       NotePickerFilterNotifier.new,
     );
 
-class NotePickerFilterNotifier extends Notifier<NotesFilter> {
+class NotePickerFilterNotifier extends Notifier<NoteFilter> {
   @override
-  NotesFilter build() {
-    return NotesFilter.create(
+  NoteFilter build() {
+    return NoteFilter.create(
       base: BaseFilter.create(
         query: '',
         limit: pageSize,
         offset: 0,
         sortDirection: SortDirection.desc,
       ),
-      sortField: NotesSortField.modifiedAt,
+      sortField: NoteSortField.modifiedAt,
     );
   }
 
@@ -37,20 +38,20 @@ class NotePickerFilterNotifier extends Notifier<NotesFilter> {
   /// Увеличить offset для пагинации
   void incrementOffset() {
     state = state.copyWith(
-      base: state.base.copyWith(offset: (state.base.offset ?? 0) + pageSize),
+      base: state.base.copyWith(offset: state.base.offset + pageSize),
     );
   }
 
   /// Сбросить фильтр
   void reset() {
-    state = NotesFilter.create(
+    state = NoteFilter.create(
       base: BaseFilter.create(
         query: '',
         limit: pageSize,
         offset: 0,
         sortDirection: SortDirection.desc,
       ),
-      sortField: NotesSortField.modifiedAt,
+      sortField: NoteSortField.modifiedAt,
     );
   }
 }
@@ -70,28 +71,16 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
   /// Загрузить первую страницу заметок
   Future<void> loadInitial(String? excludeNoteId) async {
     final filter = ref.read(notePickerFilterProvider);
-    final vaultDBAsync = ref.read(vaultDBProvider);
-
-    final vaultDB = vaultDBAsync.value;
-    if (vaultDB == null || !vaultDB.isOpen) {
-      Toaster.error(title: 'Ошибка', description: 'База данных не открыта');
-      return;
-    }
+    final service = await _getService();
+    if (service == null) return;
 
     try {
-      final manager = await ref.read(vaultDBManagerProvider.future);
-      if (manager.currentStore == null) {
-        Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
-        return;
-      }
-
-      final dao = manager.currentStore!.noteFilterDao;
-      final notes = await dao.getFiltered(filter);
-      final total = await dao.countFiltered(filter);
+      final notes = (await service.getNotes(filter)).getOrThrow();
+      final total = (await service.countNotes(filter)).getOrThrow();
 
       // Исключаем текущую заметку из списка
       final filteredNotes = excludeNoteId != null
-          ? notes.where((note) => note.id != excludeNoteId).toList()
+          ? notes.where((note) => note.card.item.itemId != excludeNoteId).toList()
           : notes;
 
       state = NotePickerData(
@@ -111,10 +100,8 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
 
     state = state.copyWith(isLoadingMore: true);
 
-    final vaultDBAsync = ref.read(vaultDBProvider);
-
-    final vaultDB = vaultDBAsync.value;
-    if (vaultDB == null || !vaultDB.isOpen) {
+    final service = await _getService();
+    if (service == null) {
       state = state.copyWith(isLoadingMore: false);
       return;
     }
@@ -124,19 +111,14 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
       ref.read(notePickerFilterProvider.notifier).incrementOffset();
       final updatedFilter = ref.read(notePickerFilterProvider);
 
-      final manager = await ref.read(vaultDBManagerProvider.future);
-      if (manager.currentStore == null) {
-        state = state.copyWith(isLoadingMore: false);
-        return;
-      }
-
-      final dao = manager.currentStore!.noteFilterDao;
-      final newNotes = await dao.getFiltered(updatedFilter);
-      final total = await dao.countFiltered(updatedFilter);
+      final newNotes = (await service.getNotes(updatedFilter)).getOrThrow();
+      final total = (await service.countNotes(updatedFilter)).getOrThrow();
 
       // Исключаем текущую заметку из новых данных
       final filteredNewNotes = state.excludeNoteId != null
-          ? newNotes.where((note) => note.id != state.excludeNoteId).toList()
+          ? newNotes
+                .where((note) => note.card.item.itemId != state.excludeNoteId)
+                .toList()
           : newNotes;
 
       final allNotes = [...state.notes, ...filteredNewNotes];
@@ -150,6 +132,15 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
     } catch (e) {
       state = state.copyWith(isLoadingMore: false);
       Toaster.error(title: 'Ошибка загрузки', description: e.toString());
+    }
+  }
+
+  Future<VaultCardFilterService?> _getService() async {
+    try {
+      return await ref.read(vaultCardFilterServiceProvider.future);
+    } catch (_) {
+      Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
+      return null;
     }
   }
 }

@@ -1,32 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/models/file_picker_models.dart';
-import 'package:hoplixi/main_db/core/old/daos/daos.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/base_filter.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/files_filter.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
+import 'package:result_dart/result_dart.dart';
 
 const int _pageSize = 20;
 
 /// Provider для фильтра файлов
 final filePickerFilterProvider =
-    NotifierProvider<FilePickerFilterNotifier, FilesFilter>(
+    NotifierProvider<FilePickerFilterNotifier, FileFilter>(
       FilePickerFilterNotifier.new,
     );
 
 /// Управляет фильтром поиска в пикере файлов
-class FilePickerFilterNotifier extends Notifier<FilesFilter> {
+class FilePickerFilterNotifier extends Notifier<FileFilter> {
   @override
-  FilesFilter build() => _defaultFilter();
+  FileFilter build() => _defaultFilter();
 
-  FilesFilter _defaultFilter() => FilesFilter.create(
+  FileFilter _defaultFilter() => FileFilter.create(
     base: BaseFilter.create(
       query: '',
       limit: _pageSize,
       offset: 0,
       sortDirection: SortDirection.desc,
     ),
-    sortField: FilesSortField.modifiedAt,
+    sortField: FileSortField.modifiedAt,
   );
 
   /// Обновить поисковый запрос и сбросить offset
@@ -39,7 +39,7 @@ class FilePickerFilterNotifier extends Notifier<FilesFilter> {
   /// Увеличить offset для пагинации
   void incrementOffset() {
     state = state.copyWith(
-      base: state.base.copyWith(offset: (state.base.offset ?? 0) + _pageSize),
+      base: state.base.copyWith(offset: state.base.offset + _pageSize),
     );
   }
 
@@ -63,15 +63,15 @@ class FilePickerDataNotifier extends Notifier<FilePickerData> {
   /// Загрузить первую страницу файлов
   Future<void> loadInitial(String? excludeFileId) async {
     final filter = ref.read(filePickerFilterProvider);
-    final dao = await _getDao();
-    if (dao == null) return;
+    final service = await _getService();
+    if (service == null) return;
 
     try {
-      final files = await dao.getFiltered(filter);
-      final total = await dao.countFiltered(filter);
+      final files = (await service.getFiles(filter)).getOrThrow();
+      final total = (await service.countFiles(filter)).getOrThrow();
 
       final filtered = excludeFileId != null
-          ? files.where((f) => f.id != excludeFileId).toList()
+          ? files.where((f) => f.card.item.itemId != excludeFileId).toList()
           : files;
 
       state = FilePickerData(
@@ -91,8 +91,8 @@ class FilePickerDataNotifier extends Notifier<FilePickerData> {
 
     state = state.copyWith(isLoadingMore: true);
 
-    final dao = await _getDao();
-    if (dao == null) {
+    final service = await _getService();
+    if (service == null) {
       state = state.copyWith(isLoadingMore: false);
       return;
     }
@@ -101,11 +101,13 @@ class FilePickerDataNotifier extends Notifier<FilePickerData> {
       ref.read(filePickerFilterProvider.notifier).incrementOffset();
       final updatedFilter = ref.read(filePickerFilterProvider);
 
-      final newFiles = await dao.getFiltered(updatedFilter);
-      final total = await dao.countFiltered(updatedFilter);
+      final newFiles = (await service.getFiles(updatedFilter)).getOrThrow();
+      final total = (await service.countFiles(updatedFilter)).getOrThrow();
 
       final filteredNew = state.excludeFileId != null
-          ? newFiles.where((f) => f.id != state.excludeFileId).toList()
+          ? newFiles
+                .where((f) => f.card.item.itemId != state.excludeFileId)
+                .toList()
           : newFiles;
 
       final allFiles = [...state.files, ...filteredNew];
@@ -122,9 +124,9 @@ class FilePickerDataNotifier extends Notifier<FilePickerData> {
     }
   }
 
-  Future<FileFilterDao?> _getDao() async {
+  Future<VaultCardFilterService?> _getService() async {
     try {
-      return await ref.read(fileFilterDaoProvider.future);
+      return await ref.read(vaultCardFilterServiceProvider.future);
     } catch (_) {
       Toaster.error(title: 'Ошибка', description: 'База данных недоступна');
       return null;

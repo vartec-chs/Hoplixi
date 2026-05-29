@@ -6,8 +6,8 @@ import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
 import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/main_store_dto.dart';
 import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
@@ -242,7 +242,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
             : null,
       );
 
-      final storeNotifier = ref.read(vaultDBProvider.notifier);
+      final storeNotifier = ref.read(vaultDBManagerStateProvider.notifier);
       final success = await storeNotifier.openStore(dto);
       if (!_isMounted) {
         return false;
@@ -257,7 +257,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         return true;
       }
 
-      final storeState = await ref.read(vaultDBProvider.future);
+      final storeState = await ref.read(vaultDBStateProvider.future);
       if (!_isMounted) {
         return false;
       }
@@ -311,7 +311,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         return false;
       }
 
-      final storeNotifier = ref.read(vaultDBProvider.notifier);
+      final storeNotifier = ref.read(vaultDBManagerStateProvider.notifier);
       final dir = Directory(path).parent;
       final success = await storeNotifier.deleteStoreFromDisk(dir.path);
       if (!_isMounted) {

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_modal.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:result_dart/result_dart.dart';
 
 /// Виджет для выбора заметки
 class NotePickerField extends ConsumerStatefulWidget {
@@ -125,13 +126,14 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
       setState(() => _isResolvingNoteName = true);
     }
 
-    final noteDao = await ref.read(noteDaoProvider.future);
-    final note = await noteDao.getById(noteId);
+    final repos = await ref.read(vaultRepositories.future);
+    final result = await repos.note.getCardById(noteId);
+    final note = result.getOrNull()?.getOrNull();
 
     if (!mounted || widget.selectedNoteId != noteId) return;
 
     setState(() {
-      _resolvedNoteName = note?.$1.name;
+      _resolvedNoteName = note?.item.name;
       _isResolvingNoteName = false;
     });
   }

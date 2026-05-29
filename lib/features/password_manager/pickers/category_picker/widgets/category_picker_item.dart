@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 /// Элемент списка категорий в пикере.
@@ -29,7 +29,7 @@ class CategoryPickerItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final categoryColor = _parseColor(category.color);
+    final categoryColor = Color(0xFF000000 | category.color);
 
     return Material(
       color: isSelected
@@ -73,7 +73,7 @@ class CategoryPickerItem extends StatelessWidget {
               const SizedBox(width: 12),
 
               // Иконка категории (если есть)
-              if (category.effectiveIconRef != null) ...[
+              if (category.iconRefId != null) ...[
                 Container(
                   width: 40,
                   height: 40,
@@ -82,7 +82,6 @@ class CategoryPickerItem extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: IconRefPreview(
-                    iconRef: category.effectiveIconRef,
                     fallbackIcon: Icons.category_outlined,
                     size: 20,
                     color: categoryColor,
@@ -126,19 +125,11 @@ class CategoryPickerItem extends StatelessWidget {
                           const SizedBox(width: 6),
                         ],
                         Text(
-                          category.type,
+                          'Категория',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurface.withOpacity(0.6),
                           ),
                         ),
-                        if (category.itemsCount > 0) ...[
-                          Text(
-                            ' • ${category.itemsCount} элементов',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.6),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ],
@@ -155,13 +146,4 @@ class CategoryPickerItem extends StatelessWidget {
     );
   }
 
-  Color _parseColor(String? hexColor) {
-    if (hexColor == null || hexColor.isEmpty) return Colors.grey;
-    try {
-      final hexCode = hexColor.replaceAll('#', '');
-      return Color(int.parse('FF$hexCode', radix: 16));
-    } catch (e) {
-      return Colors.grey;
-    }
-  }
 }

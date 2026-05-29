@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 
@@ -76,7 +75,7 @@ class CurrentStoreAutocompleteSuggestionsNotifier
 
     final List<String> suggestions;
     try {
-      final store = await _requireOpenStore();
+      final store = await ref.read(vaultDBProvider.future);
       suggestions = await _selectSuggestions(
         store,
         _loginSuggestionsSql,
@@ -116,7 +115,7 @@ class CurrentStoreAutocompleteSuggestionsNotifier
 
     final List<String> suggestions;
     try {
-      final store = await _requireOpenStore();
+      final store = await ref.read(vaultDBProvider.future);
       suggestions = await _selectSuggestions(
         store,
         _emailSuggestionsSql,
@@ -134,21 +133,6 @@ class CurrentStoreAutocompleteSuggestionsNotifier
       latest.copyWith(emailSuggestions: suggestions, isEmailLoading: false),
     );
     return suggestions;
-  }
-
-  Future<VaultDB> _requireOpenStore() async {
-    await ref.read(vaultDBManagerStateProvider.future);
-    final store = ref.read(vaultDBManagerStateProvider.notifier).currentStore;
-
-    if (store == null) {
-      throw AppError.mainDatabase(
-        code: MainDatabaseErrorCode.notInitialized,
-        message: 'Хранилище не открыто',
-        timestamp: DateTime.now(),
-      );
-    }
-
-    return store;
   }
 
   Future<List<String>> _selectSuggestions(

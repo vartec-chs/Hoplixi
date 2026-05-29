@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-05-30
+
+### password_manager
+
+- Вынес общий маппинг иконок для custom fields в
+  [lib/features/password_manager/shared/widgets/custom_fields/custom_field_type_icon.dart](lib/features/password_manager/shared/widgets/custom_fields/custom_field_type_icon.dart)
+  и убрал дублирование `_iconFor` в
+  [lib/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart](lib/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart)
+  и
+  [lib/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_viewer.dart](lib/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_viewer.dart).
+
 ## 2026-05-29
 
 ### docs

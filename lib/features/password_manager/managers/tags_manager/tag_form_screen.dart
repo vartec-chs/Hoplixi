@@ -4,11 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
 /// Экран для создания/редактирования тега
 class TagFormScreen extends ConsumerStatefulWidget {
@@ -26,7 +24,6 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
   Color? _selectedColor;
-  late TagType _selectedType;
   bool _isLoading = false;
   bool _isDataLoading = true;
 
@@ -41,22 +38,14 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
   Future<void> _loadData() async {
     if (_isEditMode) {
       try {
-        final tagDao = await ref.read(tagDaoProvider.future);
-        final tag = await tagDao.getTagById(widget.tagId!);
-        if (tag != null) {
-          setState(() {
-            _name = tag.name;
-            _selectedType = tag.type;
+        final repositories = await ref.watch(vaultRepositories.future);
+        final tag = (await repositories.tag.getTag(widget.tagId!)).getOrThrow();
+        if (tag.isPresent) {
+          final tagData = tag.getOrNull()!;
 
-            // Конвертируем HEX строку в Color если есть
-            if (tag.color.isNotEmpty) {
-              try {
-                final hexColor = tag.color.replaceAll('#', '');
-                _selectedColor = Color(int.parse('FF$hexColor', radix: 16));
-              } catch (e) {
-                _selectedColor = null;
-              }
-            }
+          setState(() {
+            _name = tagData.name;
+            _selectedColor = Color(tagData.color);
           });
         }
       } catch (e) {
@@ -71,9 +60,7 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
       // Режим создания - значения по умолчанию
       _name = '';
       _selectedColor = null;
-      _selectedType = widget.entityType != null
-          ? _convertEntityTypeToTagType(widget.entityType!)
-          : TagType.mixed;
+ 
     }
     setState(() {
       _isDataLoading = false;

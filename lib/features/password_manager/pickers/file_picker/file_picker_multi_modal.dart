@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/models/file_picker_models.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/providers/file_picker_providers.dart';
 import 'package:hoplixi/features/password_manager/pickers/file_picker/widgets/file_list_tile.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -104,13 +104,15 @@ class _FilePickerMultiContentState
   }
 
   void _toggleSelection(FileCardDto file) {
+    final id = file.item.itemId;
+    final name = file.file.fileName ?? file.item.name;
     setState(() {
-      if (_selectedIds.contains(file.id)) {
-        _selectedIds.remove(file.id);
-        _selectedNames.remove(file.id);
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+        _selectedNames.remove(id);
       } else {
-        _selectedIds.add(file.id);
-        _selectedNames[file.id] = file.name;
+        _selectedIds.add(id);
+        _selectedNames[id] = name;
       }
     });
   }
@@ -190,8 +192,10 @@ class _FilePickerMultiContentState
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
-                      final file = data.files[index] as FileCardDto;
-                      final isSelected = _selectedIds.contains(file.id);
+                      final file = data.files[index].card;
+                      final isSelected = _selectedIds.contains(
+                        file.item.itemId,
+                      );
                       return FileListTile(
                         file: file,
                         onTap: () => _toggleSelection(file),
