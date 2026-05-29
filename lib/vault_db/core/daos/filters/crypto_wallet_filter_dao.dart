@@ -4,7 +4,7 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
 import '../../scheme/tables/crypto_wallet/crypto_wallet_items.dart';
-import '../../scheme/tables/system/categories.dart';
+import '../../scheme/tables/system/categories/categories.dart';
 import '../../scheme/tables/system/item_tags.dart';
 import '../../scheme/tables/system/tags.dart';
 import '../../scheme/tables/vault_items/vault_items.dart';

@@ -5,7 +5,7 @@ import 'package:result_dart/result_dart.dart';
 import '../../../daos/daos.dart';
 import '../../../errors/db_error.dart';
 import '../../../errors/db_result.dart';
-import '../../../scheme/tables/custom_fields/vault_item_custom_fields.dart';
+import '../../../scheme/tables/system/custom_fields/vault_item_custom_fields.dart';
 
 class CustomFieldsSnapshotService {
   CustomFieldsSnapshotService({

@@ -5,7 +5,7 @@ import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
 import '../../scheme/tables/file/file_items.dart';
 import '../../scheme/tables/file/file_metadata.dart';
-import '../../scheme/tables/system/categories.dart';
+import '../../scheme/tables/system/categories/categories.dart';
 import '../../scheme/tables/system/item_tags.dart';
 import '../../scheme/tables/system/tags.dart';
 import '../../scheme/tables/vault_items/vault_items.dart';

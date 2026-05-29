@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../scheme/tables/system/categories.dart';
+import '../../../scheme/tables/system/categories/categories.dart';
 import '../../field_update.dart';
 
 part 'category_dto.freezed.dart';

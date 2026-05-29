@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import 'vault_item_custom_fields.dart';
-import '../vault_items/vault_snapshots_history.dart';
+import '../../vault_items/vault_snapshots_history.dart';
 
 /// History-таблица для кастомных полей vault item.
 ///

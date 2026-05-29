@@ -1,5 +1,5 @@
 import '../db_constraint_descriptor.dart';
-import '../../scheme/tables/system/categories.dart';
+import '../../scheme/tables/system/categories/categories.dart';
 import '../../scheme/tables/system/tags.dart';
 import '../../scheme/tables/system/item_link/item_links.dart';
 

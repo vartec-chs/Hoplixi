@@ -2,8 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 import '../../../models/dto_history/cards/custom_field_history_card_dto.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/custom_fields/vault_item_custom_fields.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/custom_fields/vault_item_custom_fields_history.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/custom_fields/vault_item_custom_fields.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/custom_fields/vault_item_custom_fields_history.dart';
 
 part 'vault_item_custom_fields_history_dao.g.dart';
 

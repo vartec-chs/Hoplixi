@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../scheme/tables/system/categories.dart';
+import '../../../scheme/tables/system/categories/categories.dart';
 
 part 'item_category_history_dto.freezed.dart';
 part 'item_category_history_dto.g.dart';

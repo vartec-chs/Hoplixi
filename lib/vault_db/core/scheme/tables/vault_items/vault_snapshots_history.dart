@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../system/item_category_history.dart';
+import '../system/categories/item_category_history.dart';
 import 'vault_events_history.dart';
 import 'vault_items.dart';
 
