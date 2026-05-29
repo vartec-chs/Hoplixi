@@ -4,7 +4,7 @@ import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/services/history/history.dart';
-import 'package:hoplixi/vault_db/core/services/vault_typed_view_resolver.dart';
+import 'package:hoplixi/vault_db/core/services/utils/vault_typed_view_resolver.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:result_dart/result_dart.dart';

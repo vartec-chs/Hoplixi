@@ -23,7 +23,7 @@ class LoyaltyCardSnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! LoyaltyCardViewDto) {
           throw const DBCoreError.conflict(

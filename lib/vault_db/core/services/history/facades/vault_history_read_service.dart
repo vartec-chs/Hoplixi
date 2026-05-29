@@ -26,7 +26,7 @@ class VaultHistoryReadService {
   AsyncDbResult<List<VaultHistoryCardDto>> getFilteredCards(
     VaultSnapshotHistoryFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final snapshots = await snapshotFilterDao.getFiltered(filter);
         if (snapshots.isEmpty) return const [];
@@ -45,7 +45,7 @@ class VaultHistoryReadService {
   AsyncDbResult<Optional<VaultHistoryCardDto>> getCardByHistoryId(
     String historyId,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final snapshot = await snapshotsHistoryDao.getSnapshotById(historyId);
         if (snapshot == null) return const None();

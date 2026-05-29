@@ -23,7 +23,7 @@ class SshKeySnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! SshKeyViewDto) {
           throw const DBCoreError.conflict(

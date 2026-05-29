@@ -24,7 +24,7 @@ class IdentityHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await identityHistoryDao.getIdentityHistoryByHistoryIds([
           historyId,
@@ -68,7 +68,7 @@ class IdentityHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await identityRepository.getViewById(
           itemId,

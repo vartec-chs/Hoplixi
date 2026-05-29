@@ -9,7 +9,7 @@ class DocumentPageRepository {
   DocumentPageRepository(this.db);
 
   AsyncDbResult<String> createPage(String documentId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.documentPagesDao.createDocumentPage(documentId: documentId),
       (e, st) => e is DBCoreError
           ? e
@@ -22,7 +22,7 @@ class DocumentPageRepository {
   }
 
   AsyncDbResult<Optional<DocumentPagesData>> getPageById(String id) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final data = await db.documentPagesDao.getPageById(id);
         return Optional.fromNullable(data);
@@ -40,7 +40,7 @@ class DocumentPageRepository {
   AsyncDbResult<List<DocumentPagesData>> getPagesByDocumentId(
     String documentId,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.documentPagesDao.getPagesByDocumentId(documentId),
       (e, st) => e is DBCoreError
           ? e
@@ -55,7 +55,7 @@ class DocumentPageRepository {
   AsyncDbResult<Unit> updateCurrentVersionPagesBatch(
     Map<String, String> pageIdToVersionPageId,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.documentPagesDao.updateCurrentVersionPagesBatch(
           pageIdToVersionPageId,
@@ -73,7 +73,7 @@ class DocumentPageRepository {
   }
 
   AsyncDbResult<Unit> deletePage(String id) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.documentPagesDao.deletePageById(id);
         return unit;
@@ -89,7 +89,7 @@ class DocumentPageRepository {
   }
 
   AsyncDbResult<Unit> deletePagesByDocumentId(String documentId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.documentPagesDao.deletePagesByDocumentId(documentId);
         return unit;

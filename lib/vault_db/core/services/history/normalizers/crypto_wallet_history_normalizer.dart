@@ -24,7 +24,7 @@ class CryptoWalletHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await cryptoWalletHistoryDao
             .getCryptoWalletHistoryByHistoryIds([historyId]);
@@ -65,7 +65,7 @@ class CryptoWalletHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await cryptoWalletRepository.getViewById(
           itemId,

@@ -38,7 +38,7 @@ class SnapshotRelationsService {
     String? snapshotId,
     String? itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (categoryId == null) {
           return const None();
@@ -83,7 +83,7 @@ class SnapshotRelationsService {
     required String historyId,
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final itemTags = await itemTagsDao.getTagsForItem(itemId);
         if (itemTags.isEmpty) return unit;
@@ -121,7 +121,7 @@ class SnapshotRelationsService {
     required String historyId,
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final links = await itemLinksDao.getAllLinksForItem(itemId);
         if (links.isEmpty) return unit;

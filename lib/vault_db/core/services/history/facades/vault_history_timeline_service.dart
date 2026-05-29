@@ -39,7 +39,7 @@ class VaultHistoryTimelineService {
     VaultHistoryTimelineDiffMode diffMode =
         VaultHistoryTimelineDiffMode.lightweight,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final cards = (await readService.getFilteredCards(filter)).getOrThrow();
 

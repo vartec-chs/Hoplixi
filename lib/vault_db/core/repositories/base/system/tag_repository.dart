@@ -14,7 +14,7 @@ class TagRepository {
   TagRepository(this.db);
 
   AsyncDbResult<String> createTag(CreateTagDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final name = dto.name.trim();
         if (name.isEmpty) {
@@ -51,7 +51,7 @@ class TagRepository {
   }
 
   AsyncDbResult<Unit> updateTag(PatchTagDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (dto.name is FieldUpdateSet<String>) {
           final name = (dto.name as FieldUpdateSet<String>).value;
@@ -88,7 +88,7 @@ class TagRepository {
   }
 
   AsyncDbResult<Unit> deleteTag(String tagId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.tagsDao.deleteTagById(tagId);
         return unit;
@@ -104,7 +104,7 @@ class TagRepository {
   }
 
   AsyncDbResult<Optional<TagViewDto>> getTag(String tagId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final row = await db.tagsDao.getTagById(tagId);
         return Optional.fromNullable(row?.toTagViewDto());
@@ -120,7 +120,7 @@ class TagRepository {
   }
 
   AsyncDbResult<List<TagCardDto>> getAllTags() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await db.tagsDao.getAllTags();
         return rows.map((r) => r.toTagCardDto()).toList();
@@ -136,7 +136,7 @@ class TagRepository {
   }
 
   AsyncDbResult<List<TagCardDto>> searchTags(String query) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await db.tagsDao.searchTagsByName(query);
         return rows.map((r) => r.toTagCardDto()).toList();
@@ -152,7 +152,7 @@ class TagRepository {
   }
 
   AsyncDbResult<bool> existsTag(String tagId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.tagsDao.existsTag(tagId),
       (e, st) => e is DBCoreError
           ? e

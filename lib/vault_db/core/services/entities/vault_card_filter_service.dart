@@ -12,7 +12,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<ApiKeyCardDto>>> getApiKeys(
     ApiKeyFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.apiKeyFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -25,7 +25,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countApiKeys(ApiKeyFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.apiKeyFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -40,7 +40,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<BankCardCardDto>>> getBankCards(
     BankCardFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.bankCardFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -53,7 +53,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countBankCards(BankCardFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.bankCardFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -68,7 +68,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<CertificateCardDto>>> getCertificates(
     CertificateFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.certificateFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -81,7 +81,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countCertificates(CertificateFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.certificateFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -96,7 +96,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<ContactCardDto>>> getContacts(
     ContactFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.contactFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -109,7 +109,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countContacts(ContactFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.contactFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -124,7 +124,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<CryptoWalletCardDto>>> getCryptoWallets(
     CryptoWalletFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.cryptoWalletFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -137,7 +137,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countCryptoWallets(CryptoWalletFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.cryptoWalletFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -152,7 +152,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<DocumentCardDto>>> getDocuments(
     DocumentFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.documentFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -165,7 +165,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countDocuments(DocumentFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.documentFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -180,7 +180,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<FileCardDto>>> getFiles(
     FileFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.fileFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -193,7 +193,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countFiles(FileFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.fileFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -208,7 +208,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<IdentityCardDto>>> getIdentities(
     IdentityFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.identityFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -221,7 +221,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countIdentities(IdentityFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.identityFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -236,7 +236,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<LicenseKeyCardDto>>> getLicenseKeys(
     LicenseKeyFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.licenseKeyFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -250,7 +250,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countLicenseKeys(LicenseKeyFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.licenseKeyFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -265,7 +265,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<LoyaltyCardCardDto>>> getLoyaltyCards(
     LoyaltyCardFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.loyaltyCardFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -278,7 +278,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countLoyaltyCards(LoyaltyCardFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.loyaltyCardFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -293,7 +293,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<NoteCardDto>>> getNotes(
     NoteFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.noteFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -306,7 +306,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countNotes(NoteFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.noteFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -319,7 +319,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<List<FilteredCardDto<OtpCardDto>>> getOtps(OtpFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.otpFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -332,7 +332,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countOtps(OtpFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.otpFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -347,7 +347,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<PasswordCardDto>>> getPasswords(
     PasswordFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.passwordFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -360,7 +360,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countPasswords(PasswordFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.passwordFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -375,7 +375,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<RecoveryCodesCardDto>>> getRecoveryCodes(
     RecoveryCodesFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.recoveryCodesFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -389,7 +389,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countRecoveryCodes(RecoveryCodesFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.recoveryCodesFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -404,7 +404,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<SshKeyCardDto>>> getSshKeys(
     SshKeyFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.sshKeyFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -417,7 +417,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countSshKeys(SshKeyFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.sshKeyFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -432,7 +432,7 @@ class VaultCardFilterService {
   AsyncDbResult<List<FilteredCardDto<WifiCardDto>>> getWifis(
     WifiFilter filter,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.wifiFilterDao.getFiltered(filter),
       (e, st) => e is DBCoreError
           ? e
@@ -445,7 +445,7 @@ class VaultCardFilterService {
   }
 
   AsyncDbResult<int> countWifis(WifiFilter filter) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.wifiFilterDao.countFiltered(filter),
       (e, st) => e is DBCoreError
           ? e

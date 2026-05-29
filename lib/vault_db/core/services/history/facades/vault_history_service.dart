@@ -29,7 +29,7 @@ class VaultHistoryService {
     bool includeSecrets = true,
     bool includeRelations = true,
   }) {
-    return ResultUtils.tryCatchAsync(() async {
+    return tryCatchAsync(() async {
       if (!await policyService.isHistoryEnabled()) {
         return const None();
       }
@@ -50,7 +50,7 @@ class VaultHistoryService {
     bool includeSecrets = true,
     bool includeRelations = true,
   }) {
-    return ResultUtils.tryCatchAsync(() async {
+    return tryCatchAsync(() async {
       if (!await policyService.isHistoryEnabled()) {
         return const None();
       }
@@ -74,7 +74,7 @@ class VaultHistoryService {
     String? snapshotHistoryId,
     VaultHistoryActorType actorType = VaultHistoryActorType.user,
   }) {
-    return ResultUtils.tryCatchAsync(() async {
+    return tryCatchAsync(() async {
       // Согласно рекомендации: event пишем всегда, snapshot только если включен.
       (await eventHistoryRepository.writeEvent(
         itemId: itemId,

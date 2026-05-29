@@ -12,7 +12,7 @@ class VaultItemRepository {
   VaultItemRepository(this.db);
 
   AsyncDbResult<Optional<VaultItemViewDto>> getById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final row = await db.vaultItemsDao.getVaultItemById(itemId);
         return Optional.fromNullable(row?.toVaultItemViewDto());
@@ -28,7 +28,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<bool> exists(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.vaultItemsDao.existsVaultItem(itemId),
       (e, st) => e is DBCoreError
           ? e
@@ -41,7 +41,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<bool> existsWithType(String itemId, VaultItemType type) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.vaultItemsDao.existsVaultItemWithType(itemId, type),
       (e, st) => e is DBCoreError
           ? e
@@ -55,7 +55,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> update(String itemId, VaultItemsCompanion companion) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.updateVaultItemById(itemId, companion);
         return unit;
@@ -71,7 +71,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> touch(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.touchModifiedAt(itemId, DateTime.now());
         return unit;
@@ -87,7 +87,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> incrementUsedCount(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.incrementUsedCount(itemId, DateTime.now());
         return unit;
@@ -103,7 +103,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> archive(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.archiveItem(itemId, DateTime.now());
         return unit;
@@ -119,7 +119,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> restoreArchived(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.restoreArchivedItem(itemId, DateTime.now());
         return unit;
@@ -135,7 +135,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> softDelete(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.softDeleteItem(itemId, DateTime.now());
         return unit;
@@ -151,7 +151,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> recover(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.recoverDeletedItem(itemId, DateTime.now());
         return unit;
@@ -167,7 +167,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> setFavorite(String itemId, bool isFavorite) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.setFavorite(itemId, isFavorite, DateTime.now());
         return unit;
@@ -183,7 +183,7 @@ class VaultItemRepository {
   }
 
   AsyncDbResult<Unit> setPinned(String itemId, bool isPinned) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemsDao.setPinned(itemId, isPinned, DateTime.now());
         return unit;

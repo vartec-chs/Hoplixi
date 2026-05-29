@@ -18,7 +18,7 @@ class DocumentRepository {
   DocumentRepository(this.db);
 
   AsyncDbResult<String> create(CreateDocumentDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -49,7 +49,6 @@ class DocumentRepository {
               ),
             );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -69,7 +68,7 @@ class DocumentRepository {
   }
 
   AsyncDbResult<Unit> update(PatchDocumentDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -121,7 +120,7 @@ class DocumentRepository {
   }
 
   AsyncDbResult<Optional<DocumentViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -157,7 +156,7 @@ class DocumentRepository {
   }
 
   AsyncDbResult<Optional<DocumentCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.id.equals(itemId))
@@ -182,7 +181,7 @@ class DocumentRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.type.equalsValue(VaultItemType.document))
@@ -203,7 +202,7 @@ class DocumentRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,

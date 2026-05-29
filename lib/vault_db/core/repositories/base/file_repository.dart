@@ -19,7 +19,7 @@ class FileRepository {
   FileRepository(this.db);
 
   AsyncDbResult<String> create(CreateFileDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -71,7 +71,6 @@ class FileRepository {
           ),
         );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -91,7 +90,7 @@ class FileRepository {
   }
 
   AsyncDbResult<Unit> update(PatchFileDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -176,7 +175,7 @@ class FileRepository {
   }
 
   AsyncDbResult<Optional<FileViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -218,7 +217,7 @@ class FileRepository {
   }
 
   AsyncDbResult<Optional<FileCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.id.equals(itemId))
@@ -240,7 +239,7 @@ class FileRepository {
   }
 
   AsyncDbResult<List<FileCardDto>> getCards({int limit = 50, int offset = 0}) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.type.equalsValue(VaultItemType.file))
@@ -261,7 +260,7 @@ class FileRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         // Note: file_items will be deleted by cascade.
         // metadata is NOT deleted automatically as it might be shared.

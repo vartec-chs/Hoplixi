@@ -23,7 +23,7 @@ class OtpSnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! OtpViewDto) {
           throw const DBCoreError.conflict(

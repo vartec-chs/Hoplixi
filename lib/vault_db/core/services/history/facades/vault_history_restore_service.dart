@@ -9,7 +9,7 @@ import '../../../errors/db_error.dart';
 import '../../../errors/db_exception_mapper.dart';
 import '../../../errors/db_result.dart';
 import '../../../scheme/tables/vault_items/vault_events_history.dart';
-import '../../vault_typed_view_resolver.dart';
+import '../../utils/vault_typed_view_resolver.dart';
 
 class VaultHistoryRestoreService {
   VaultHistoryRestoreService({
@@ -42,7 +42,7 @@ class VaultHistoryRestoreService {
     required String historyId,
     bool recreate = false,
   }) {
-    return ResultUtils.tryCatchAsync(() async {
+    return tryCatchAsync(() async {
       final selectedOpt = (await loader.loadHistorySnapshot(
         historyId,
       )).getOrThrow();

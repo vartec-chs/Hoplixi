@@ -23,7 +23,7 @@ class LicenseKeySnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! LicenseKeyViewDto) {
           throw const DBCoreError.conflict(

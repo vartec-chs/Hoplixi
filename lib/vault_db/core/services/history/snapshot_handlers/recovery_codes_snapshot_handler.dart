@@ -27,7 +27,7 @@ class RecoveryCodesSnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! RecoveryCodesViewDto) {
           throw const DBCoreError.conflict(

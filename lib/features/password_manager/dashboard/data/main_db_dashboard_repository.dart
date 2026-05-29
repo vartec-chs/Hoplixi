@@ -28,7 +28,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
 
   @override
   AsyncResultDart<DashboardLoadResult, AppError> load(DashboardQuery query) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final baseFilter = _buildBaseFilter(query);
         final items = await _loadItems(
@@ -100,7 +100,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
     required EntityType entityType,
     required String id,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async => _permanentDeleteItem(entityType, id),
       (error, stackTrace) => _mapError(
         'Не удалось окончательно удалить элемент dashboard',
@@ -167,7 +167,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
     required EntityType entityType,
     required List<String> ids,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         var deletedCount = 0;
         for (final id in ids) {
@@ -203,7 +203,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
     required List<String> ids,
     required List<String> tagIds,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final dao = await _ref.read(vaultItemDaoProvider.future);
         await dao.bulkSyncTags(ids, tagIds);
@@ -512,7 +512,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
     String id,
     Future<bool> Function(VaultItemDao dao) action,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async => action(await _ref.read(vaultItemDaoProvider.future)),
       (error, stackTrace) => _mapError(
         'Не удалось изменить элемент dashboard',
@@ -528,7 +528,7 @@ final class MainDbDashboardRepository implements DashboardRepository {
     required List<String> ids,
     required Future<int> Function(VaultItemDao dao) action,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async => action(await _ref.read(vaultItemDaoProvider.future)),
       (error, stackTrace) => _mapError(
         'Не удалось выполнить массовое действие dashboard',

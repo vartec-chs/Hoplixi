@@ -24,7 +24,7 @@ class PasswordHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await passwordHistoryDao.getPasswordHistoryByHistoryIds([
           historyId,
@@ -57,7 +57,7 @@ class PasswordHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await passwordRepository.getViewById(
           itemId,

@@ -2,7 +2,7 @@ import 'package:hoplixi/vault_db/core/repositories/repositories.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/vault_db/core/services/history/history.dart';
-import 'package:hoplixi/vault_db/core/services/vault_typed_view_resolver.dart';
+import 'package:hoplixi/vault_db/core/services/utils/vault_typed_view_resolver.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 import '../relations/snapshot_relations_service.dart';

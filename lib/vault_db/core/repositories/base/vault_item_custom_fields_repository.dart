@@ -9,7 +9,7 @@ class VaultItemCustomFieldsRepository {
   VaultItemCustomFieldsRepository(this.db);
 
   AsyncDbResult<Unit> create(VaultItemCustomFieldsCompanion companion) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemCustomFieldsDao.insertCustomField(companion);
         return unit;
@@ -28,7 +28,7 @@ class VaultItemCustomFieldsRepository {
     String id,
     VaultItemCustomFieldsCompanion companion,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemCustomFieldsDao.updateCustomFieldById(id, companion);
         return unit;
@@ -44,7 +44,7 @@ class VaultItemCustomFieldsRepository {
   }
 
   AsyncDbResult<Optional<VaultItemCustomFieldsData>> getById(String id) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final data = await db.vaultItemCustomFieldsDao.getCustomFieldById(id);
         return Optional.fromNullable(data);
@@ -60,7 +60,7 @@ class VaultItemCustomFieldsRepository {
   }
 
   AsyncDbResult<List<VaultItemCustomFieldsData>> getByItemId(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.vaultItemCustomFieldsDao.getCustomFieldsByItemId(itemId),
       (e, st) => e is DBCoreError
           ? e
@@ -75,7 +75,7 @@ class VaultItemCustomFieldsRepository {
   AsyncDbResult<List<VaultItemCustomFieldsData>> getByItemIds(
     List<String> itemIds,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.vaultItemCustomFieldsDao.getCustomFieldsByItemIds(itemIds),
       (e, st) => e is DBCoreError
           ? e
@@ -88,7 +88,7 @@ class VaultItemCustomFieldsRepository {
   }
 
   AsyncDbResult<Unit> delete(String id) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemCustomFieldsDao.deleteCustomFieldById(id);
         return unit;
@@ -104,7 +104,7 @@ class VaultItemCustomFieldsRepository {
   }
 
   AsyncDbResult<Unit> deleteByItemId(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemCustomFieldsDao.deleteCustomFieldsByItemId(itemId);
         return unit;
@@ -123,7 +123,7 @@ class VaultItemCustomFieldsRepository {
     required String itemId,
     required List<VaultItemCustomFieldsCompanion> fields,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.vaultItemCustomFieldsDao.replaceCustomFieldsForItem(
           itemId: itemId,

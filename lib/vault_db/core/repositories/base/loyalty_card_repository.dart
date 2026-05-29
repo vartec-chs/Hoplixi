@@ -16,7 +16,7 @@ class LoyaltyCardRepository {
   LoyaltyCardRepository(this.db);
 
   AsyncDbResult<String> create(CreateLoyaltyCardDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -54,7 +54,6 @@ class LoyaltyCardRepository {
           ),
         );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -74,7 +73,7 @@ class LoyaltyCardRepository {
   }
 
   AsyncDbResult<Unit> update(PatchLoyaltyCardDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -135,7 +134,7 @@ class LoyaltyCardRepository {
   }
 
   AsyncDbResult<Optional<LoyaltyCardViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -173,7 +172,7 @@ class LoyaltyCardRepository {
   }
 
   AsyncDbResult<Optional<LoyaltyCardCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.id.equals(itemId))
@@ -198,7 +197,7 @@ class LoyaltyCardRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.type.equalsValue(VaultItemType.loyaltyCard))
@@ -219,7 +218,7 @@ class LoyaltyCardRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,

@@ -19,7 +19,7 @@ class VaultItemRelationsRepository {
     required String itemId,
     required List<String> tagIds,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         await db.itemTagsDao.removeAllTagsFromItem(itemId);
         for (final tagId in tagIds) {
@@ -41,7 +41,7 @@ class VaultItemRelationsRepository {
     required String itemId,
     required List<String> tagIds,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         for (final tagId in tagIds) {
           await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -62,7 +62,7 @@ class VaultItemRelationsRepository {
     required String itemId,
     required List<String> tagIds,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         for (final tagId in tagIds) {
           await db.itemTagsDao.removeTagFromItem(itemId: itemId, tagId: tagId);
@@ -80,7 +80,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<Unit> clearTags(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.itemTagsDao.removeAllTagsFromItem(itemId);
         return unit;
@@ -96,7 +96,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<List<String>> getTagIdsForItem(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await db.itemTagsDao.getTagsForItem(itemId);
         return rows.map((r) => r.tagId).toList();
@@ -112,7 +112,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<List<TagCardDto>> getTagsForItem(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final itemTags = await db.itemTagsDao.getTagsForItem(itemId);
         if (itemTags.isEmpty) return [];
@@ -135,7 +135,7 @@ class VaultItemRelationsRepository {
     required String itemId,
     required String? categoryId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         if (categoryId != null) {
           final exists = await db.categoriesDao.existsCategory(categoryId);
@@ -168,7 +168,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<Optional<String>> getCategoryIdForItem(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final item = await db.vaultItemsDao.getVaultItemById(itemId);
         return Optional.fromNullable(item?.categoryId);
@@ -184,7 +184,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<String> createLink(CreateItemLinkDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (dto.sourceItemId == dto.targetItemId) {
           throw const DBCoreError.validation(
@@ -234,7 +234,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<Unit> updateLink(PatchItemLinkDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final companion = ItemLinksCompanion(
           relationType: dto.relationType.toRequiredValue(),
@@ -264,7 +264,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<Unit> deleteLink(String linkId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.itemLinksDao.deleteItemLinkById(linkId);
         return unit;
@@ -280,7 +280,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<List<ItemLinkViewDto>> getLinksFromItem(String sourceItemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await db.itemLinksDao.getLinksFromItem(sourceItemId);
         return rows.map((r) => r.toItemLinkViewDto()).toList();
@@ -296,7 +296,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<List<ItemLinkViewDto>> getLinksToItem(String targetItemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await db.itemLinksDao.getLinksToItem(targetItemId);
         return rows.map((r) => r.toItemLinkViewDto()).toList();
@@ -312,7 +312,7 @@ class VaultItemRelationsRepository {
   }
 
   AsyncDbResult<List<ItemLinkViewDto>> getAllLinksForItem(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await db.itemLinksDao.getAllLinksForItem(itemId);
         return rows.map((r) => r.toItemLinkViewDto()).toList();

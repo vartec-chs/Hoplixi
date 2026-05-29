@@ -29,7 +29,7 @@ class VaultHistoryNormalizedLoader {
   AsyncDbResult<Optional<AnyNormalizedHistorySnapshot>> loadHistorySnapshot(
     String historyId,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final snapshotData = await snapshotsHistoryDao.getSnapshotById(
           historyId,
@@ -79,7 +79,7 @@ class VaultHistoryNormalizedLoader {
     required String itemId,
     required VaultItemType type,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final itemData = await vaultItemsDao.getVaultItemById(itemId);
         if (itemData == null) return const None();

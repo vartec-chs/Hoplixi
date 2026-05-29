@@ -23,7 +23,7 @@ class PasswordSnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! PasswordViewDto) {
           throw const DBCoreError.conflict(

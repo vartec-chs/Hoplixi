@@ -23,7 +23,7 @@ class ContactSnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! ContactViewDto) {
           throw const DBCoreError.conflict(

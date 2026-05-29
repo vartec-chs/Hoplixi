@@ -16,7 +16,7 @@ class ContactRepository {
   ContactRepository(this.db);
 
   AsyncDbResult<String> create(CreateContactDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -57,7 +57,6 @@ class ContactRepository {
               ),
             );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -77,7 +76,7 @@ class ContactRepository {
   }
 
   AsyncDbResult<Unit> update(PatchContactDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -140,7 +139,7 @@ class ContactRepository {
   }
 
   AsyncDbResult<Optional<ContactViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -176,7 +175,7 @@ class ContactRepository {
   }
 
   AsyncDbResult<Optional<ContactCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.id.equals(itemId))
@@ -201,7 +200,7 @@ class ContactRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.type.equalsValue(VaultItemType.contact))
@@ -222,7 +221,7 @@ class ContactRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,

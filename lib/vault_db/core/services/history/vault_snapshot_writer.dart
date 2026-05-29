@@ -30,7 +30,7 @@ class VaultSnapshotWriter {
     bool includeSecrets = true,
     bool includeRelations = true,
   }) {
-    return ResultUtils.tryCatchAsync(() async {
+    return tryCatchAsync(() async {
       final item = view.item;
 
       final historyId = (await _writeBaseSnapshot(item, action)).getOrThrow();
@@ -76,7 +76,7 @@ class VaultSnapshotWriter {
     VaultItemViewDto item,
     VaultEventHistoryAction action,
   ) {
-    return ResultUtils.tryCatchAsync(() async {
+    return tryCatchAsync(() async {
       final historyId = const Uuid().v4();
       final now = DateTime.now();
 

@@ -11,7 +11,7 @@ class VaultHistoryDeleteService {
   final VaultDB db;
 
   AsyncDbResult<Unit> deleteRevision(String historyId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.transaction(() async {
           await _deleteRevisionUnsafe(historyId);
@@ -127,7 +127,7 @@ class VaultHistoryDeleteService {
     required String itemId,
     required VaultItemType type,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.transaction(() async {
           final ids = await db.vaultSnapshotsHistoryDao.getSnapshotIdsForItem(

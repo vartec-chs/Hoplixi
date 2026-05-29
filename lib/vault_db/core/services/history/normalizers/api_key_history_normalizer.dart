@@ -24,7 +24,7 @@ class ApiKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await apiKeyHistoryDao.getApiKeyHistoryByHistoryIds([
           historyId,
@@ -65,7 +65,7 @@ class ApiKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await apiKeyRepository.getViewById(
           itemId,

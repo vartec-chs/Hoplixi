@@ -22,7 +22,7 @@ class VaultHistoryDetailService {
   AsyncDbResult<VaultHistoryRevisionDetailDto> getRevisionDetail({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final selectedOpt = (await loader.loadHistorySnapshot(
           historyId,

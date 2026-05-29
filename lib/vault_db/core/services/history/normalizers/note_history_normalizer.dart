@@ -24,7 +24,7 @@ class NoteHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await noteHistoryDao.getNoteHistoryByHistoryIds([
           historyId,
@@ -51,7 +51,7 @@ class NoteHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await noteRepository.getViewById(itemId)).getOrThrow();
         return viewOpt.fold((view) {

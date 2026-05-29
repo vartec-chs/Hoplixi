@@ -14,7 +14,7 @@ class SnapshotRelationsRepository {
   AsyncDbResult<Optional<String>> snapshotCategoryForItem({
     required String? categoryId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (categoryId == null) return const None();
 
@@ -56,7 +56,7 @@ class SnapshotRelationsRepository {
     required String historyId,
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final now = DateTime.now();
         final itemTags = await db.itemTagsDao.getTagsForItem(itemId);
@@ -96,7 +96,7 @@ class SnapshotRelationsRepository {
     required String historyId,
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final now = DateTime.now();
         final links = await db.itemLinksDao.getAllLinksForItem(itemId);

@@ -17,7 +17,7 @@ class CertificateRepository {
   CertificateRepository(this.db);
 
   AsyncDbResult<String> create(CreateCertificateDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -64,7 +64,6 @@ class CertificateRepository {
               ),
             );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -84,7 +83,7 @@ class CertificateRepository {
   }
 
   AsyncDbResult<Unit> update(PatchCertificateDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -154,7 +153,7 @@ class CertificateRepository {
   }
 
   AsyncDbResult<Optional<CertificateViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -192,7 +191,7 @@ class CertificateRepository {
   }
 
   AsyncDbResult<Optional<CertificateCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final expr = _CertificateCardExpressions(db);
         final query = _buildCardQuery(expr)
@@ -218,7 +217,7 @@ class CertificateRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final expr = _CertificateCardExpressions(db);
         final query = _buildCardQuery(expr)
@@ -240,7 +239,7 @@ class CertificateRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,

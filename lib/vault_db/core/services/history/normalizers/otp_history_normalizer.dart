@@ -24,7 +24,7 @@ class OtpHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await otpHistoryDao.getOtpHistoryByHistoryIds([historyId]);
         if (rows.isEmpty) return const None();
@@ -58,7 +58,7 @@ class OtpHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await otpRepository.getViewById(itemId)).getOrThrow();
         return viewOpt.fold((view) {

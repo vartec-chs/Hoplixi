@@ -24,7 +24,7 @@ class LicenseKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await licenseKeyHistoryDao
             .getLicenseKeyHistoryByHistoryIds([historyId]);
@@ -69,7 +69,7 @@ class LicenseKeyHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await licenseKeyRepository.getViewById(
           itemId,

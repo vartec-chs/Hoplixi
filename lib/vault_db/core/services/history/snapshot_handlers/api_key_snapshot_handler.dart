@@ -23,7 +23,7 @@ class ApiKeySnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! ApiKeyViewDto) {
           throw const DBCoreError.conflict(

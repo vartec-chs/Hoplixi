@@ -17,7 +17,7 @@ class OtpRepository {
   OtpRepository(this.db);
 
   AsyncDbResult<String> create(CreateOtpDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -55,7 +55,6 @@ class OtpRepository {
               ),
             );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -75,7 +74,7 @@ class OtpRepository {
   }
 
   AsyncDbResult<Unit> update(PatchOtpDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -113,7 +112,7 @@ class OtpRepository {
             counter: dto.otp.counter.toNullableValue(),
           ),
         );
-        
+
         final tagsUpdate = dto.tags;
         if (tagsUpdate is FieldUpdateSet<List<String>>) {
           await db.itemTagsDao.removeAllTagsFromItem(itemId);
@@ -135,7 +134,7 @@ class OtpRepository {
   }
 
   AsyncDbResult<Optional<OtpViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -168,7 +167,7 @@ class OtpRepository {
   }
 
   AsyncDbResult<Optional<OtpCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final expr = _OtpCardExpressions(db);
         final query = _buildCardQuery(expr)
@@ -191,7 +190,7 @@ class OtpRepository {
   }
 
   AsyncDbResult<List<OtpCardDto>> getCards({int limit = 50, int offset = 0}) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final expr = _OtpCardExpressions(db);
         final query = _buildCardQuery(expr)
@@ -213,7 +212,7 @@ class OtpRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,

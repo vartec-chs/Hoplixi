@@ -15,7 +15,7 @@ class CategoryRepository {
   CategoryRepository(this.db);
 
   AsyncDbResult<String> createCategory(CreateCategoryDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final name = dto.name.trim();
         if (name.isEmpty) {
@@ -68,7 +68,7 @@ class CategoryRepository {
   }
 
   AsyncDbResult<Unit> updateCategory(PatchCategoryDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (dto.name is FieldUpdateSet<String>) {
           final name = (dto.name as FieldUpdateSet<String>).value;
@@ -147,7 +147,7 @@ class CategoryRepository {
   }
 
   AsyncDbResult<Unit> deleteCategory(String categoryId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.categoriesDao.deleteCategoryById(categoryId);
         return unit;
@@ -163,7 +163,7 @@ class CategoryRepository {
   }
 
   AsyncDbResult<Optional<CategoryViewDto>> getCategory(String categoryId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final row = await db.categoriesDao.getCategoryById(categoryId);
         return Optional.fromNullable(row?.toCategoryViewDto());
@@ -179,7 +179,7 @@ class CategoryRepository {
   }
 
   AsyncDbResult<List<CategoryCardDto>> getAllCategories() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await db.categoriesDao.getAllCategories();
         return rows.map((r) => r.toCategoryCardDto()).toList();
@@ -195,7 +195,7 @@ class CategoryRepository {
   }
 
   AsyncDbResult<List<CategoryTreeNodeDto>> getCategoryTree() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final allCategories = await db.categoriesDao.getAllCategories();
         final Map<String, List<CategoriesData>> childrenMap = {};
@@ -231,7 +231,7 @@ class CategoryRepository {
   }
 
   AsyncDbResult<bool> existsCategory(String categoryId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.categoriesDao.existsCategory(categoryId),
       (e, st) => e is DBCoreError
           ? e

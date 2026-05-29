@@ -23,7 +23,7 @@ class NoteSnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! NoteViewDto) {
           throw const DBCoreError.conflict(

@@ -15,7 +15,7 @@ class FileMetadataRepository {
   FileMetadataRepository(this.db);
 
   AsyncDbResult<String> createMetadata(FileMetadataDataDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final id = const Uuid().v4();
         await db.fileMetadataDao.insertFileMetadata(
@@ -47,7 +47,7 @@ class FileMetadataRepository {
   }
 
   AsyncDbResult<Unit> updateMetadata(PatchFileMetadataDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.fileMetadataDao.updateFileMetadataById(
           dto.id,
@@ -80,7 +80,7 @@ class FileMetadataRepository {
   AsyncDbResult<Optional<FileMetadataViewDto>> getMetadataById(
     String metadataId,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final data = await db.fileMetadataDao.getFileMetadataById(metadataId);
         return Optional.fromNullable(data?.toFileMetadataViewDto());
@@ -99,7 +99,7 @@ class FileMetadataRepository {
     required String metadataId,
     required DateTime detectedAt,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.fileMetadataDao.updateAvailabilityStatus(
           id: metadataId,
@@ -122,7 +122,7 @@ class FileMetadataRepository {
     required String metadataId,
     required DateTime deletedAt,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.fileMetadataDao.updateAvailabilityStatus(
           id: metadataId,
@@ -142,7 +142,7 @@ class FileMetadataRepository {
   }
 
   AsyncDbResult<Unit> markAvailable({required String metadataId}) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.fileMetadataDao.updateAvailabilityStatus(
           id: metadataId,
@@ -165,7 +165,7 @@ class FileMetadataRepository {
     required FileIntegrityStatus status,
     required DateTime checkedAt,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.fileMetadataDao.updateIntegrityStatus(
           id: metadataId,
@@ -189,7 +189,7 @@ class FileMetadataRepository {
     required String? sha256,
     required DateTime checkedAt,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.fileMetadataDao.updateSha256(
           id: metadataId,

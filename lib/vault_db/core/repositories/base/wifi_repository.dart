@@ -16,7 +16,7 @@ class WifiRepository {
   WifiRepository(this.db);
 
   AsyncDbResult<String> create(CreateWifiDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -53,7 +53,6 @@ class WifiRepository {
               ),
             );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -73,7 +72,7 @@ class WifiRepository {
   }
 
   AsyncDbResult<Unit> update(PatchWifiDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -110,7 +109,7 @@ class WifiRepository {
             hiddenSsid: dto.wifi.hiddenSsid.toRequiredValue(),
           ),
         );
-        
+
         final tagsUpdate = dto.tags;
         if (tagsUpdate is FieldUpdateSet<List<String>>) {
           await db.itemTagsDao.removeAllTagsFromItem(itemId);
@@ -132,7 +131,7 @@ class WifiRepository {
   }
 
   AsyncDbResult<Optional<WifiViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -168,7 +167,7 @@ class WifiRepository {
   }
 
   AsyncDbResult<Optional<WifiCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final expr = _WifiCardExpressions(db);
         final query = _buildCardQuery(expr)
@@ -191,7 +190,7 @@ class WifiRepository {
   }
 
   AsyncDbResult<List<WifiCardDto>> getCards({int limit = 50, int offset = 0}) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final expr = _WifiCardExpressions(db);
         final query = _buildCardQuery(expr)
@@ -213,7 +212,7 @@ class WifiRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,

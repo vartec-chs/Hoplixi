@@ -13,7 +13,7 @@ class StoreMetaRepository {
 
   /// Получить метаданные хранилища.
   AsyncDbResult<StoreMetaDto> getStoreMeta() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final data = await db.storeMetaDao.getStoreMeta();
         if (data == null) {
@@ -37,7 +37,7 @@ class StoreMetaRepository {
 
   ///Создать метаданные хранилища (вызывается при создании нового хранилища).
   AsyncDbResult<Unit> createStoreMeta(CreateStoreMetaDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.storeMetaDao.createStoreMeta(dto);
         return unit;
@@ -55,7 +55,7 @@ class StoreMetaRepository {
 
   /// Проверить, создано ли хранилище.
   AsyncDbResult<bool> hasStore() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.storeMetaDao.hasStoreMeta(),
       (e, st) => e is DBCoreError
           ? e
@@ -69,7 +69,7 @@ class StoreMetaRepository {
 
   /// Обновить информацию о хранилище (имя, описание).
   AsyncDbResult<Unit> updateInfo({required String name, String? description}) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await db.storeMetaDao.updateStoreMeta(
           StoreMetaTableCompanion(
@@ -99,7 +99,7 @@ class StoreMetaRepository {
 
   /// Обновить время последнего открытия (вызывается при входе).
   AsyncDbResult<Unit> updateLastOpened() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.storeMetaDao.updateStoreMeta(
           StoreMetaTableCompanion(lastOpenedAt: Value(DateTime.now())),
@@ -114,7 +114,7 @@ class StoreMetaRepository {
 
   /// Полная инициализация метаданных (вызывается при создании нового хранилища).
   AsyncDbResult<Unit> initStore(StoreMetaTableCompanion companion) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         // Гарантируем, что singletonId всегда 1
         final finalCompanion = companion.copyWith(
@@ -140,7 +140,7 @@ class StoreMetaRepository {
 
   /// Получить краткую информацию о хранилище (без секретных данных).
   AsyncDbResult<StoreInfoDto> getStoreInfo() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final data = await db.storeMetaDao.getStoreInfo();
 
@@ -166,7 +166,7 @@ class StoreMetaRepository {
 
   /// Получить ключ для вложений (encryption key).
   AsyncDbResult<String> getAttachmentKey() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final key = await db.storeMetaDao.getAttachmentKey();
 
@@ -192,7 +192,7 @@ class StoreMetaRepository {
 
   /// Получить хэш пароля хранилища.
   AsyncDbResult<String> getPasswordHash() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final hash = await db.storeMetaDao.getPasswordHash();
 

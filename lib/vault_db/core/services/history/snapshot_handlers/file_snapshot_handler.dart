@@ -28,7 +28,7 @@ class FileSnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! FileViewDto) {
           throw const DBCoreError.conflict(

@@ -16,7 +16,7 @@ class NoteRepository {
   NoteRepository(this.db);
 
   AsyncDbResult<String> create(CreateNoteDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -48,7 +48,6 @@ class NoteRepository {
               ),
             );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -68,7 +67,7 @@ class NoteRepository {
   }
 
   AsyncDbResult<Unit> update(PatchNoteDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -100,7 +99,7 @@ class NoteRepository {
             content: dto.note.content.toRequiredValue(),
           ),
         );
-        
+
         final tagsUpdate = dto.tags;
         if (tagsUpdate is FieldUpdateSet<List<String>>) {
           await db.itemTagsDao.removeAllTagsFromItem(itemId);
@@ -122,7 +121,7 @@ class NoteRepository {
   }
 
   AsyncDbResult<Optional<NoteViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -158,7 +157,7 @@ class NoteRepository {
   }
 
   AsyncDbResult<Optional<NoteCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.id.equals(itemId))
@@ -180,7 +179,7 @@ class NoteRepository {
   }
 
   AsyncDbResult<List<NoteCardDto>> getCards({int limit = 50, int offset = 0}) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.type.equalsValue(VaultItemType.note))
@@ -201,7 +200,7 @@ class NoteRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,

@@ -17,7 +17,7 @@ class BankCardRepository {
   BankCardRepository(this.db);
 
   AsyncDbResult<String> create(CreateBankCardDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -59,7 +59,6 @@ class BankCardRepository {
               ),
             );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -79,7 +78,7 @@ class BankCardRepository {
   }
 
   AsyncDbResult<Unit> update(PatchBankCardDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -142,7 +141,7 @@ class BankCardRepository {
   }
 
   AsyncDbResult<Optional<BankCardViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -178,7 +177,7 @@ class BankCardRepository {
   }
 
   AsyncDbResult<Optional<BankCardCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final expr = _BankCardCardExpressions(db);
         final query = _buildCardQuery(expr)
@@ -204,7 +203,7 @@ class BankCardRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final expr = _BankCardCardExpressions(db);
         final query = _buildCardQuery(expr)
@@ -226,7 +225,7 @@ class BankCardRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final count = await (db.delete(
           db.vaultItems,

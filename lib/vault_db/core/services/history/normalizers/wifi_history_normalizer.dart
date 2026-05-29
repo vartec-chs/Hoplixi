@@ -24,7 +24,7 @@ class WifiHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await wifiHistoryDao.getWifiHistoryByHistoryIds([
           historyId,
@@ -59,7 +59,7 @@ class WifiHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await wifiRepository.getViewById(itemId)).getOrThrow();
         return viewOpt.fold((view) {

@@ -130,7 +130,7 @@ class VaultItemRelationsService {
   }
 
   AsyncDbResult<List<String>> getTagIdsForItem(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final tags = await itemTagsDao.getTagsForItem(itemId);
         return tags.map((t) => t.tagId).toList();
@@ -181,7 +181,7 @@ class VaultItemRelationsService {
   }
 
   AsyncDbResult<Optional<String>> getCategoryIdForItem(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final item = await vaultItemsDao.getVaultItemById(itemId);
         return Optional.fromNullable(item?.categoryId);

@@ -16,7 +16,7 @@ class DocumentSnapshotHandler implements VaultSnapshotTypeHandler {
     required VaultEntityViewDto view,
     required bool includeSecrets,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (view is! DocumentViewDto) {
           throw const DBCoreError.conflict(

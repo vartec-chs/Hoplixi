@@ -25,7 +25,7 @@ class VaultEventHistoryRepository {
     String? snapshotHistoryId,
     VaultHistoryActorType actorType = VaultHistoryActorType.user,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await eventsHistoryDao.insertVaultEvent(
           VaultEventsHistoryCompanion.insert(

@@ -9,7 +9,7 @@ class DocumentVersionRepository {
   DocumentVersionRepository(this.db);
 
   AsyncDbResult<Unit> createVersion(DocumentVersionsCompanion companion) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.documentVersionsDao.insertDocumentVersion(companion);
         return unit;
@@ -27,7 +27,7 @@ class DocumentVersionRepository {
   AsyncDbResult<Optional<DocumentVersionsData>> getVersionById(
     String versionId,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final data = await db.documentVersionsDao.getVersionById(versionId);
         return Optional.fromNullable(data);
@@ -47,7 +47,7 @@ class DocumentVersionRepository {
     int? limit,
     int? offset,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.documentVersionsDao.getVersionsByDocumentId(
         documentId,
         limit: limit,
@@ -64,7 +64,7 @@ class DocumentVersionRepository {
   }
 
   AsyncDbResult<Optional<int>> getMaxVersionNumber(String documentId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final data = await db.documentVersionsDao.getMaxVersionNumber(
           documentId,
@@ -82,7 +82,7 @@ class DocumentVersionRepository {
   }
 
   AsyncDbResult<Unit> deleteVersion(String versionId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.documentVersionsDao.deleteVersionById(versionId);
         return unit;
@@ -101,7 +101,7 @@ class DocumentVersionRepository {
   AsyncDbResult<Unit> createVersionPage(
     DocumentVersionPagesCompanion companion,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.documentVersionPagesDao.insertVersionPage(companion);
         return unit;
@@ -119,7 +119,7 @@ class DocumentVersionRepository {
   AsyncDbResult<List<DocumentVersionPagesData>> getPagesByVersionId(
     String versionId,
   ) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.documentVersionPagesDao.getPagesByVersionId(versionId),
       (e, st) => e is DBCoreError
           ? e
@@ -132,7 +132,7 @@ class DocumentVersionRepository {
   }
 
   AsyncDbResult<Unit> deletePagesByVersionId(String versionId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         await db.documentVersionPagesDao.deletePagesByVersionId(versionId);
         return unit;

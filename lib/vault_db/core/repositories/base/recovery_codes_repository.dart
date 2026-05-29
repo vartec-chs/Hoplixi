@@ -16,7 +16,7 @@ class RecoveryCodesRepository {
   RecoveryCodesRepository(this.db);
 
   AsyncDbResult<String> create(CreateRecoveryCodesDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -60,7 +60,6 @@ class RecoveryCodesRepository {
           );
         }
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -80,7 +79,7 @@ class RecoveryCodesRepository {
   }
 
   AsyncDbResult<Unit> update(PatchRecoveryCodesDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -130,7 +129,7 @@ class RecoveryCodesRepository {
   }
 
   AsyncDbResult<Optional<RecoveryCodesViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -173,7 +172,7 @@ class RecoveryCodesRepository {
   }
 
   AsyncDbResult<Optional<RecoveryCodesCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.id.equals(itemId))
@@ -198,7 +197,7 @@ class RecoveryCodesRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.type.equalsValue(VaultItemType.recoveryCodes))
@@ -219,7 +218,7 @@ class RecoveryCodesRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,
@@ -245,7 +244,7 @@ class RecoveryCodesRepository {
     required String itemId,
     required RecoveryCodeValueDto code,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final id = await db.recoveryCodesDao.insertRecoveryCode(
           RecoveryCodesCompanion.insert(
@@ -273,7 +272,7 @@ class RecoveryCodesRepository {
     required String itemId,
     required List<RecoveryCodeValueDto> codes,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         await db.recoveryCodesDao.insertRecoveryCodesBatch(
           codes
@@ -305,7 +304,7 @@ class RecoveryCodesRepository {
     required int codeId,
     required DateTime usedAt,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
         if (code == null) {
@@ -331,7 +330,7 @@ class RecoveryCodesRepository {
   }
 
   AsyncDbResult<int> markCodeUnused({required int codeId}) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
         if (code == null) {
@@ -354,7 +353,7 @@ class RecoveryCodesRepository {
   }
 
   AsyncDbResult<int> deleteCode(int codeId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final code = await db.recoveryCodesDao.getRecoveryCodeById(codeId);
         if (code == null) {
@@ -379,7 +378,7 @@ class RecoveryCodesRepository {
     required String itemId,
     required List<RecoveryCodeValueDto> codes,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         await db.recoveryCodesDao.deleteRecoveryCodesByItemId(itemId);
         if (codes.isNotEmpty) {

@@ -21,7 +21,7 @@ class CustomFieldsSnapshotService {
     required String itemId,
     bool includeSecrets = true,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final fields = await customFieldsDao.getCustomFieldsByItemId(itemId);
         if (fields.isEmpty) return unit;

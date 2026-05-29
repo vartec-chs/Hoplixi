@@ -16,7 +16,7 @@ class IdentityRepository {
   IdentityRepository(this.db);
 
   AsyncDbResult<String> create(CreateIdentityDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = const Uuid().v4();
@@ -62,7 +62,6 @@ class IdentityRepository {
               ),
             );
 
-        
         if (dto.tagIds.isNotEmpty) {
           for (final tagId in dto.tagIds) {
             await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
@@ -82,7 +81,7 @@ class IdentityRepository {
   }
 
   AsyncDbResult<Unit> update(PatchIdentityDto dto) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () => db.transaction(() async {
         final now = DateTime.now();
         final itemId = dto.item.itemId;
@@ -129,7 +128,7 @@ class IdentityRepository {
                 .toNullableValue(),
           ),
         );
-        
+
         final tagsUpdate = dto.tags;
         if (tagsUpdate is FieldUpdateSet<List<String>>) {
           await db.itemTagsDao.removeAllTagsFromItem(itemId);
@@ -151,7 +150,7 @@ class IdentityRepository {
   }
 
   AsyncDbResult<Optional<IdentityViewDto>> getViewById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query =
             db.select(db.vaultItems).join([
@@ -187,7 +186,7 @@ class IdentityRepository {
   }
 
   AsyncDbResult<Optional<IdentityCardDto>> getCardById(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.id.equals(itemId))
@@ -212,7 +211,7 @@ class IdentityRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final query = _buildCardQuery()
           ..where(db.vaultItems.type.equalsValue(VaultItemType.identity))
@@ -233,7 +232,7 @@ class IdentityRepository {
   }
 
   AsyncDbResult<Unit> deletePermanently(String itemId) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final rows = await (db.delete(
           db.vaultItems,

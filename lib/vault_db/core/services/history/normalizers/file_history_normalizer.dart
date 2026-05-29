@@ -26,7 +26,7 @@ class FileHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeHistory({
     required String historyId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final historyList = await fileHistoryDao.getFileHistoryByHistoryIds([
           historyId,
@@ -79,7 +79,7 @@ class FileHistoryNormalizer implements VaultHistoryTypeNormalizer {
   AsyncDbResult<Optional<HistoryPayload>> normalizeCurrent({
     required String itemId,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final viewOpt = (await fileRepository.getViewById(itemId)).getOrThrow();
         return viewOpt.fold((view) {

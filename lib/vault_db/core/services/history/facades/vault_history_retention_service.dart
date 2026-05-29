@@ -19,7 +19,7 @@ class VaultHistoryRetentionService {
   final StoreSettingsDao settingsDao;
 
   AsyncDbResult<Unit> maybeCleanup() {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final enabled =
             await settingsDao.getBool(StoreSettingsKey.historyEnabled) ?? true;
@@ -89,7 +89,7 @@ class VaultHistoryRetentionService {
     required VaultItemType type,
     required int limit,
   }) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         final snapshots = await snapshotsHistoryDao.getSnapshotsForItem(
           itemId: itemId,
@@ -119,7 +119,7 @@ class VaultHistoryRetentionService {
   }
 
   AsyncDbResult<Unit> cleanupByMaxAge({required int maxAgeDays}) {
-    return ResultUtils.tryCatchAsync(
+    return tryCatchAsync(
       () async {
         if (maxAgeDays <= 0) {
           throw const DBCoreError.validation(
