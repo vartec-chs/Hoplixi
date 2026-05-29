@@ -2,29 +2,28 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/categories_filter.dart';
+import '../models/category_manager_filter.dart';
 
 /// Провайдер для управления состоянием фильтра категорий
 final categoryFilterProvider =
-    NotifierProvider<CategoryFilterNotifier, CategoriesFilter>(
+    NotifierProvider<CategoryFilterNotifier, CategoryManagerFilter>(
       () => CategoryFilterNotifier(),
     );
 
 /// Notifier для управления фильтром категорий
-class CategoryFilterNotifier extends Notifier<CategoriesFilter> {
+class CategoryFilterNotifier extends Notifier<CategoryManagerFilter> {
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
   @override
-  CategoriesFilter build() {
+  CategoryManagerFilter build() {
     // Очищаем таймер при destroy провайдера
     ref.onDispose(() {
       _debounceTimer?.cancel();
     });
 
-    return CategoriesFilter.create(
-      sortField: CategoriesSortField.name,
+    return const CategoryManagerFilter(
+      sortField: CategoryManagerSortField.name,
       limit: 30,
     );
   }
@@ -37,14 +36,8 @@ class CategoryFilterNotifier extends Notifier<CategoriesFilter> {
     });
   }
 
-  /// Обновить тип категории
-  Future<void> updateType(List<CategoryType?> types) async {
-    state = state.copyWith(types: types);
-    await Future.microtask(() {});
-  }
-
   /// Обновить цвет
-  Future<void> updateColor(String? color) async {
+  Future<void> updateColor(int? color) async {
     state = state.copyWith(color: color);
     await Future.microtask(() {});
   }
@@ -86,35 +79,35 @@ class CategoryFilterNotifier extends Notifier<CategoriesFilter> {
   }
 
   /// Обновить поле сортировки
-  Future<void> updateSortField(CategoriesSortField sortField) async {
+  Future<void> updateSortField(CategoryManagerSortField sortField) async {
     state = state.copyWith(sortField: sortField);
     await Future.microtask(() {});
   }
 
   /// Обновить лимит
   Future<void> updateLimit(int? limit) async {
-    state = state.copyWith(limit: limit);
+    state = state.copyWith(limit: limit ?? 30);
     await Future.microtask(() {});
   }
 
   /// Обновить offset
   Future<void> updateOffset(int? offset) async {
-    state = state.copyWith(offset: offset);
+    state = state.copyWith(offset: offset ?? 0);
     await Future.microtask(() {});
   }
 
   /// Сбросить фильтр к начальному состоянию
   Future<void> reset() async {
     _debounceTimer?.cancel();
-    state = CategoriesFilter.create(
-      sortField: CategoriesSortField.name,
+    state = const CategoryManagerFilter(
+      sortField: CategoryManagerSortField.name,
       limit: 30,
     );
     await Future.microtask(() {});
   }
 
   /// Обновить весь фильтр сразу
-  Future<void> updateFilter(CategoriesFilter filter) async {
+  Future<void> updateFilter(CategoryManagerFilter filter) async {
     _debounceTimer?.cancel();
     state = filter;
     await Future.microtask(() {});

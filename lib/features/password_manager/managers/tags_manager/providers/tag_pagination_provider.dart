@@ -1,21 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/tag_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
 import '../../providers/manager_refresh_trigger_provider.dart';
+import '../models/tag_manager_filter.dart';
 import '../models/tag_pagination_state.dart';
 import 'tag_filter_provider.dart';
 
-/// Провайдер для получения отфильтрованного списка тегов с пагинацией
+/// Провайдер для получения отфильтрованного списка тегов
 final tagListProvider =
-    AsyncNotifierProvider.autoDispose<TagListNotifier, TagPaginationState>(() {
-      return TagListNotifier();
-    });
+    AsyncNotifierProvider.autoDispose<TagListNotifier, TagPaginationState>(
+  TagListNotifier.new,
+);
 
-/// AsyncNotifier для управления списком тегов с пагинацией
+/// AsyncNotifier для управления списком тегов
 class TagListNotifier extends AsyncNotifier<TagPaginationState> {
-  static const int _pageSize = 30;
-
   @override
   Future<TagPaginationState> build() async {
     // Слушаем изменения фильтра для автоматической перезагрузки
@@ -33,75 +32,70 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
       }
     });
 
-    // Загружаем первую страницу
-    return await _fetchTagsWithFilter(page: 0);
+    // Загружаем данные
+    return await _fetchTagsWithFilter();
   }
 
   /// Получить теги с применением текущего фильтра
-  Future<TagPaginationState> _fetchTagsWithFilter({
-    required int page,
-    List<TagCardDto>? existingItems,
-  }) async {
+  Future<TagPaginationState> _fetchTagsWithFilter() async {
     try {
       final filter = ref.read(tagFilterProvider);
-      final tagDao = await ref.read(tagDaoProvider.future);
+      final repos = await ref.read(vaultRepositories.future);
 
-      // Создаем фильтр с пагинацией
-      final paginatedFilter = filter.copyWith(
-        offset: page * _pageSize,
-        limit: _pageSize,
-      );
+      final result = await repos.tag.getAllTags();
+      final allTags = result.getOrThrow();
 
-      final newItems = await tagDao.getTagCardsFiltered(paginatedFilter);
-      final allItems = existingItems != null
-          ? [...existingItems, ...newItems]
-          : newItems;
+      // Фильтрация in-memory
+      var filtered = allTags.where((t) {
+        if (filter.query.isNotEmpty &&
+            !t.name.toLowerCase().contains(filter.query.toLowerCase())) {
+          return false;
+        }
+        if (filter.color != null && t.color != filter.color) {
+          return false;
+        }
+        return true;
+      }).toList();
+
+      // Сортировка
+      switch (filter.sortField) {
+        case TagManagerSortField.name:
+          filtered.sort((a, b) => a.name.compareTo(b.name));
+        case TagManagerSortField.createdAt:
+          filtered.sort((a, b) => a.name.compareTo(b.name));
+        case TagManagerSortField.modifiedAt:
+          filtered.sort((a, b) => a.name.compareTo(b.name));
+      }
 
       return TagPaginationState(
-        items: allItems,
-        hasMore: newItems.length >= _pageSize,
+        items: filtered,
+        hasMore: false,
         isLoading: false,
         error: null,
-        currentPage: page,
-        totalCount: allItems.length,
+        currentPage: 0,
+        totalCount: filtered.length,
       );
     } catch (e) {
       return TagPaginationState(
-        items: existingItems ?? [],
+        items: const [],
         hasMore: false,
         isLoading: false,
         error: e,
-        currentPage: page,
-        totalCount: existingItems?.length ?? 0,
+        currentPage: 0,
+        totalCount: 0,
       );
     }
   }
 
   /// Загрузить следующую страницу тегов
   Future<void> loadMore() async {
-    final currentState = state.value;
-    if (currentState == null ||
-        currentState.isLoading ||
-        !currentState.hasMore) {
-      return;
-    }
-
-    // Устанавливаем флаг загрузки
-    state = AsyncValue.data(currentState.copyWith(isLoading: true));
-
-    // Загружаем следующую страницу
-    final nextPage = currentState.currentPage + 1;
-    final newState = await _fetchTagsWithFilter(
-      page: nextPage,
-      existingItems: currentState.items,
-    );
-
-    state = AsyncValue.data(newState);
+    // В текущей реализации манагера грузим всё сразу
   }
 
-  /// Обновить список тегов (сброс пагинации)
+  /// Обновить список тегов
   Future<void> refresh() async {
+    if (!ref.mounted) return;
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchTagsWithFilter(page: 0));
+    state = await AsyncValue.guard(() => _fetchTagsWithFilter());
   }
 }

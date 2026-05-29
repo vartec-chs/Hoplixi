@@ -1,6 +1,5 @@
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
-
 /// Результат выбора заметки
 class NotePickerResult {
   final String id;

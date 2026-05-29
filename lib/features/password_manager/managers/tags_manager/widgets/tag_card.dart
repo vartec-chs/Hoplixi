@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/tag_dto.dart';
 
 /// Современная карточка тега с градиентным фоном и анимациями.
 ///
@@ -46,28 +46,6 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  Color _parseColor(String? colorHex) {
-    if (colorHex == null || colorHex.isEmpty) {
-      return Theme.of(context).colorScheme.tertiary;
-    }
-    final colorValue = int.tryParse(colorHex.replaceFirst('#', ''), radix: 16);
-    return colorValue != null
-        ? Color(0xFF000000 | colorValue)
-        : Theme.of(context).colorScheme.tertiary;
-  }
-
-  String _getTypeDisplayName(String type) {
-    return switch (type) {
-      'notes' => 'Заметки',
-      'password' => 'Пароли',
-      'totp' => 'TOTP',
-      'bankCard' => 'Карты',
-      'files' => 'Файлы',
-      'mixed' => 'Смешанный',
-      _ => type,
-    };
-  }
-
   /// Корректирует цвет для обеспечения контрастности на текущем фоне.
   /// Светлые цвета затемняются на светлом фоне, тёмные осветляются на тёмном.
   Color _adjustColorForContrast(Color color, bool isDark) {
@@ -92,7 +70,7 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final rawColor = _parseColor(widget.tag.color);
+    final rawColor = Color(0xFF000000 | widget.tag.color);
     final isDark = theme.brightness == Brightness.dark;
 
     // Корректируем цвет для контрастности
@@ -192,14 +170,7 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
                             ),
                             const SizedBox(height: 4),
 
-                            // Тип и количество элементов
-                            Row(
-                              children: [
-                                _buildTypeBadge(baseColor, isDark),
-                                const SizedBox(width: 8),
-                                _buildItemsCounter(colorScheme),
-                              ],
-                            ),
+                            // Информация о типе удалена т.к. нет в новом DTO
                           ],
                         ),
                       ),
@@ -244,47 +215,6 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
       child: Center(
         child: Icon(Icons.label_rounded, color: baseColor, size: 24),
       ),
-    );
-  }
-
-  Widget _buildTypeBadge(Color baseColor, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: baseColor.withOpacity(isDark ? 0.15 : 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: baseColor.withOpacity(0.15), width: 1),
-      ),
-      child: Text(
-        _getTypeDisplayName(widget.tag.type),
-        style: TextStyle(
-          color: baseColor,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItemsCounter(ColorScheme colorScheme) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.article_outlined,
-          size: 13,
-          color: colorScheme.onSurfaceVariant.withOpacity(0.7),
-        ),
-        const SizedBox(width: 3),
-        Text(
-          '${widget.tag.itemsCount}',
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant.withOpacity(0.7),
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 

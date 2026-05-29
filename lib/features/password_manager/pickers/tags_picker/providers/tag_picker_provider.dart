@@ -2,24 +2,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/models/tag_picker_filter.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
-import 'package:result_dart/result_dart.dart';
 
 import '../models/tag_pagination_state.dart';
 import 'tag_filter_provider.dart';
 
 /// Провайдер для получения отфильтрованного списка тегов с пагинацией
-final tagPickerListProvider = AsyncNotifierProvider.autoDispose
-    .family<TagListNotifier, TagPaginationState, List<TagType?>>(
+final tagPickerListProvider =
+    AsyncNotifierProvider.autoDispose<TagListNotifier, TagPaginationState>(
       TagListNotifier.new,
     );
 
 /// AsyncNotifier для управления списком тегов с пагинацией
 class TagListNotifier extends AsyncNotifier<TagPaginationState> {
   static const int _pageSize = 20;
-
-  TagListNotifier(this.initialTypes);
-
-  final List<TagType?> initialTypes;
 
   @override
   Future<TagPaginationState> build() async {
@@ -41,14 +36,12 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
       final repos = await ref.read(vaultRepositories.future);
       final result = await repos.tag.getAllTags();
       final allTags = result.getOrThrow();
-      final effectiveTypes = initialTypes.isNotEmpty
-          ? initialTypes
-          : filter.types;
-      final filteredTags = _applyFilter(
-        allTags,
-        filter.copyWith(types: effectiveTypes),
-      );
-      final newItems = filteredTags.skip(page * _pageSize).take(_pageSize).toList();
+
+      final filteredTags = _applyFilter(allTags, filter);
+      final newItems = filteredTags
+          .skip(page * _pageSize)
+          .take(_pageSize)
+          .toList();
       final allItems = existingItems != null
           ? [...existingItems, ...newItems]
           : newItems;
@@ -102,7 +95,9 @@ class TagListNotifier extends AsyncNotifier<TagPaginationState> {
     var result = tags;
 
     if (query.isNotEmpty) {
-      result = result.where((tag) => tag.name.toLowerCase().contains(query)).toList();
+      result = result
+          .where((tag) => tag.name.toLowerCase().contains(query))
+          .toList();
     }
 
     if (filter.color != null && filter.color!.trim().isNotEmpty) {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_picker_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_filters.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_item.dart';
@@ -16,7 +15,6 @@ class CategoryPickerModal {
     required Function(String categoryId, String categoryName)
     onCategorySelected,
     String? currentCategoryId,
-    List<CategoryType?>? filterByType,
   }) {
     return WoltModalSheet.show(
       context: context,
@@ -24,12 +22,7 @@ class CategoryPickerModal {
       useRootNavigator: true,
 
       pageListBuilder: (context) => [
-        _buildPickerPage(
-          context,
-          onCategorySelected,
-          currentCategoryId,
-          filterByType,
-        ),
+        _buildPickerPage(context, onCategorySelected, currentCategoryId),
       ],
     );
   }
@@ -40,7 +33,6 @@ class CategoryPickerModal {
     required Function(List<String> categoryIds, List<String> categoryNames)
     onCategoriesSelected,
     List<String>? currentCategoryIds,
-    List<CategoryType?>? filterByType,
   }) {
     return WoltModalSheet.show(
       context: context,
@@ -51,7 +43,6 @@ class CategoryPickerModal {
           context,
           onCategoriesSelected,
           currentCategoryIds ?? [],
-          filterByType,
         ),
       ],
     );
@@ -61,7 +52,6 @@ class CategoryPickerModal {
     BuildContext context,
     Function(String categoryId, String categoryName) onCategorySelected,
     String? currentCategoryId,
-    List<CategoryType?>? filterByType,
   ) {
     return SliverWoltModalSheetPage(
       heroImage: null,
@@ -74,15 +64,12 @@ class CategoryPickerModal {
 
       mainContentSliversBuilder: (context) => [
         // Фильтры (поле поиска всегда видно, типы только если не заданы извне)
-        SliverToBoxAdapter(
-          child: CategoryPickerFilters(hideTypeFilter: filterByType != null),
-        ),
+        const SliverToBoxAdapter(child: CategoryPickerFilters()),
 
         // Список категорий
         _CategoryListView(
           currentCategoryId: currentCategoryId,
           onCategorySelected: onCategorySelected,
-          filterByType: filterByType,
         ),
       ],
     );
@@ -94,7 +81,6 @@ class CategoryPickerModal {
     Function(List<String> categoryIds, List<String> categoryNames)
     onCategoriesSelected,
     List<String> currentCategoryIds,
-    List<CategoryType?>? filterByType,
   ) {
     return SliverWoltModalSheetPage(
       heroImage: null,
@@ -104,14 +90,11 @@ class CategoryPickerModal {
       isTopBarLayerAlwaysVisible: true,
       mainContentSliversBuilder: (context) => [
         // Фильтры (только поле поиска для множественного выбора)
-        const SliverToBoxAdapter(
-          child: CategoryPickerFilters(hideTypeFilter: true),
-        ),
+        const SliverToBoxAdapter(child: CategoryPickerFilters()),
         // Контент с состоянием
         _MultipleCategoryPickerContent(
           onCategoriesSelected: onCategoriesSelected,
           initialCategoryIds: currentCategoryIds,
-          filterByType: filterByType,
         ),
       ],
     );
@@ -170,12 +153,10 @@ class _CategoryListView extends ConsumerStatefulWidget {
   const _CategoryListView({
     required this.currentCategoryId,
     required this.onCategorySelected,
-    this.filterByType,
   });
 
   final String? currentCategoryId;
   final Function(String categoryId, String categoryName) onCategorySelected;
-  final List<CategoryType?>? filterByType;
 
   @override
   ConsumerState<_CategoryListView> createState() => _CategoryListViewState();
@@ -188,15 +169,10 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
   bool _showLoadingIndicator = false;
 
   /// Кэшированный список типов для провайдера
-  late final List<CategoryType?> _cachedTypes;
 
   @override
   void initState() {
     super.initState();
-    _cachedTypes =
-        widget.filterByType != null && widget.filterByType!.isNotEmpty
-        ? widget.filterByType!
-        : <CategoryType?>[];
   }
 
   void _updateItems(List<CategoryCardDto> newCats) {
@@ -271,7 +247,7 @@ class _CategoryListViewState extends ConsumerState<_CategoryListView> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesState = ref.watch(categoryPickerListProvider(_cachedTypes));
+    final categoriesState = ref.watch(categoryPickerListProvider);
 
     return categoriesState.when(
       data: (state) {
@@ -373,13 +349,11 @@ class _MultipleCategoryPickerContent extends ConsumerStatefulWidget {
   const _MultipleCategoryPickerContent({
     required this.onCategoriesSelected,
     required this.initialCategoryIds,
-    this.filterByType,
   });
 
   final Function(List<String> categoryIds, List<String> categoryNames)
   onCategoriesSelected;
   final List<String> initialCategoryIds;
-  final List<CategoryType?>? filterByType;
 
   @override
   ConsumerState<_MultipleCategoryPickerContent> createState() =>
@@ -394,17 +368,11 @@ class _MultipleCategoryPickerContentState
   List<_ListItemMeta> _items = [];
 
   /// Кэшированный список типов для провайдера
-  late final List<CategoryType?> _cachedTypes;
 
   @override
   void initState() {
     super.initState();
     _selectedCategoryIds = List<String>.from(widget.initialCategoryIds);
-    // Преобразуем типы один раз при инициализации
-    _cachedTypes =
-        widget.filterByType != null && widget.filterByType!.isNotEmpty
-        ? widget.filterByType!
-        : <CategoryType?>[];
   }
 
   void _updateItems(List<CategoryCardDto> newCats) {
@@ -514,7 +482,7 @@ class _MultipleCategoryPickerContentState
   @override
   Widget build(BuildContext context) {
     // Используем кэшированные типы
-    final categoriesState = ref.watch(categoryPickerListProvider(_cachedTypes));
+    final categoriesState = ref.watch(categoryPickerListProvider);
 
     return categoriesState.when(
       data: (state) {
@@ -531,12 +499,6 @@ class _MultipleCategoryPickerContentState
         if (state.items.isEmpty && !state.isLoading) {
           return SliverMainAxisGroup(
             slivers: [
-              if (widget.filterByType == null)
-                SliverToBoxAdapter(
-                  child: CategoryPickerFilters(
-                    selectedCount: _selectedCategoryIds.length,
-                  ),
-                ),
               SliverFillRemaining(
                 child: Center(
                   child: Column(
@@ -564,12 +526,6 @@ class _MultipleCategoryPickerContentState
 
         return SliverMainAxisGroup(
           slivers: [
-            if (widget.filterByType == null)
-              SliverToBoxAdapter(
-                child: CategoryPickerFilters(
-                  selectedCount: _selectedCategoryIds.length,
-                ),
-              ),
             SliverAnimatedList(
               key: _listKey,
               initialItemCount: _items.length,
@@ -596,11 +552,7 @@ class _MultipleCategoryPickerContentState
                           child: TextButton(
                             onPressed: () {
                               ref
-                                  .read(
-                                    categoryPickerListProvider(
-                                      _cachedTypes,
-                                    ).notifier,
-                                  )
+                                  .read(categoryPickerListProvider.notifier)
                                   .loadMore();
                             },
                             child: const Text('Загрузить еще'),
@@ -611,27 +563,15 @@ class _MultipleCategoryPickerContentState
           ],
         );
       },
-      loading: () => SliverMainAxisGroup(
+      loading: () => const SliverMainAxisGroup(
         slivers: [
-          if (widget.filterByType == null)
-            SliverToBoxAdapter(
-              child: CategoryPickerFilters(
-                selectedCount: _selectedCategoryIds.length,
-              ),
-            ),
-          const SliverFillRemaining(
+          SliverFillRemaining(
             child: Center(child: CircularProgressIndicator()),
           ),
         ],
       ),
       error: (error, stack) => SliverMainAxisGroup(
         slivers: [
-          if (widget.filterByType == null)
-            SliverToBoxAdapter(
-              child: CategoryPickerFilters(
-                selectedCount: _selectedCategoryIds.length,
-              ),
-            ),
           SliverFillRemaining(
             child: Center(
               child: Column(

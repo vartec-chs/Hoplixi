@@ -27,7 +27,8 @@ class FileListTile extends StatelessWidget {
   /// Формирует subtitle из расширения и размера файла
   String? _buildSubtitle() {
     final parts = <String>[];
-    if (file.file.fileExtension != null && file.file.fileExtension!.isNotEmpty) {
+    if (file.file.fileExtension != null &&
+        file.file.fileExtension!.isNotEmpty) {
       parts.add(file.file.fileExtension!.toUpperCase());
     }
     if (file.file.fileSize != null) {

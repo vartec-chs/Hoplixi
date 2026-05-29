@@ -7,15 +7,9 @@ import 'package:hoplixi/shared/ui/type_chip.dart';
 
 /// Панель фильтров для пикера тегов
 class TagPickerFilters extends ConsumerWidget {
-  const TagPickerFilters({
-    super.key,
-    this.filterByType,
-    this.selectedCount = 0,
-    this.maxCount,
-  });
+  const TagPickerFilters({super.key, this.selectedCount = 0, this.maxCount});
 
   /// Фиксированный тип для фильтрации (если задан, выбор типа скрыт)
-  final List<TagType?>? filterByType;
 
   /// Количество выбранных тегов
   final int selectedCount;
@@ -82,66 +76,6 @@ class TagPickerFilters extends ConsumerWidget {
               ],
             ],
           ),
-
-          // Фильтр по типу (скрываем если filterByType задан)
-          if (filterByType == null) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        TypeChip(
-                          label: 'Все',
-                          isSelected: filter.types.isEmpty,
-                          onTap: () => filterNotifier.updateType([]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Пароли',
-                          isSelected: filter.types.contains(TagType.password),
-                          onTap: () =>
-                              filterNotifier.updateType([TagType.password]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Банковские карты',
-                          isSelected: filter.types.contains(TagType.bankCard),
-                          onTap: () =>
-                              filterNotifier.updateType([TagType.bankCard]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Заметки',
-                          isSelected: filter.types.contains(TagType.note),
-                          onTap: () =>
-                              filterNotifier.updateType([TagType.note]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Файлы',
-                          isSelected: filter.types.contains(TagType.file),
-                          onTap: () =>
-                              filterNotifier.updateType([TagType.file]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Mixed',
-                          isSelected: filter.types.contains(TagType.mixed),
-                          onTap: () =>
-                              filterNotifier.updateType([TagType.mixed]),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );

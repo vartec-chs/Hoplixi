@@ -31,11 +31,6 @@ class TagFilterNotifier extends Notifier<TagPickerFilter> {
     });
   }
 
-  /// Обновить тип тега
-  Future<void> updateType(List<TagType?> types) async {
-    state = state.copyWith(types: types);
-  }
-
   /// Обновить цвет
   Future<void> updateColor(String? color) async {
     state = state.copyWith(color: color);

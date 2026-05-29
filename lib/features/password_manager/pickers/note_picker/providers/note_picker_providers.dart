@@ -80,7 +80,9 @@ class NotePickerDataNotifier extends Notifier<NotePickerData> {
 
       // Исключаем текущую заметку из списка
       final filteredNotes = excludeNoteId != null
-          ? notes.where((note) => note.card.item.itemId != excludeNoteId).toList()
+          ? notes
+                .where((note) => note.card.item.itemId != excludeNoteId)
+                .toList()
           : notes;
 
       state = NotePickerData(

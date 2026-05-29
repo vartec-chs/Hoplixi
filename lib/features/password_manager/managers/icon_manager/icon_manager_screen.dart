@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/icon_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
@@ -13,7 +14,7 @@ import 'provider/icon_list_provider.dart';
 import 'widgets/icon_list_view.dart';
 import 'widgets/icon_manager_app_bar.dart';
 
-/// Экран управления иконками с фильтрацией и пагинацией
+/// Экран управления иконками с фильтрацией
 class IconManagerScreen extends ConsumerStatefulWidget {
   const IconManagerScreen({super.key, required this.entity});
 
@@ -51,7 +52,10 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
         });
   }
 
-  Future<void> _handleDeleteIcon(BuildContext context, IconsData icon) async {
+  Future<void> _handleDeleteIcon(
+    BuildContext context,
+    CustomIconCardDto icon,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -78,8 +82,9 @@ class _IconManagerScreenState extends ConsumerState<IconManagerScreen> {
     }
 
     try {
-      final iconDao = await ref.read(iconDaoProvider.future);
-      await iconDao.deleteIcon(icon.id);
+      final repos = await ref.read(vaultRepositories.future);
+      final result = await repos.icon.deleteCustomIcon(icon.id);
+      result.getOrThrow();
 
       ref.read(managerRefreshTriggerProvider.notifier).triggerIconRefresh();
       _refresh();

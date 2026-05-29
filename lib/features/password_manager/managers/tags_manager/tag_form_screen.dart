@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,8 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/tag_dto.dart';
+import 'package:hoplixi/vault_db/core/models/field_update.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
 /// Экран для создания/редактирования тега
@@ -38,14 +41,13 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
   Future<void> _loadData() async {
     if (_isEditMode) {
       try {
-        final repositories = await ref.watch(vaultRepositories.future);
-        final tag = (await repositories.tag.getTag(widget.tagId!)).getOrThrow();
-        if (tag.isPresent) {
-          final tagData = tag.getOrNull()!;
-
+        final repositories = await ref.read(vaultRepositories.future);
+        final tagResult = await repositories.tag.getTag(widget.tagId!);
+        final tag = tagResult.getOrNull()?.getOrNull();
+        if (tag != null) {
           setState(() {
-            _name = tagData.name;
-            _selectedColor = Color(tagData.color);
+            _name = tag.name;
+            _selectedColor = Color(0xFF000000 | tag.color);
           });
         }
       } catch (e) {
@@ -60,7 +62,6 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
       // Режим создания - значения по умолчанию
       _name = '';
       _selectedColor = null;
- 
     }
     setState(() {
       _isDataLoading = false;
@@ -136,122 +137,81 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Название тега
-                      TextFormField(
-                        initialValue: _name,
-                        decoration: primaryInputDecoration(
-                          context,
-                          labelText: 'Название',
-                          hintText: 'Введите название тега',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Пожалуйста, введите название';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) => _name = value,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Тип тега
-                      if (_isEditMode)
-                        // В режиме редактирования - только для чтения
-                        TextFormField(
-                          initialValue: _getTagTypeLabel(_selectedType),
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Тип тега',
-                          ),
-                          enabled: false,
-                        )
-                      else
-                        // В режиме создания - dropdown
-                        DropdownButtonFormField<TagType>(
-                          initialValue: _selectedType,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: 'Тип тега',
-                          ),
-                          items: TagType.values.map((type) {
-                            return DropdownMenuItem(
-                              value: type,
-                              child: Text(_getTagTypeLabel(type)),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() {
-                                _selectedType = value;
-                              });
-                            }
-                          },
-                        ),
-                      const SizedBox(height: 16),
-
-                      // Выбор цвета
-                      InputDecorator(
-                        decoration: primaryInputDecoration(
-                          context,
-                          labelText: 'Цвет тега',
-                          hintText: 'Нажмите для выбора цвета',
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: _showColorPicker,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  _selectedColor != null
-                                      ? 'Цвет выбран'
-                                      : 'Выберите цвет',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        _selectedColor ?? Colors.grey.shade300,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.outline,
-                                      width: 1,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Название тега
+                  TextFormField(
+                    initialValue: _name,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Название',
+                      hintText: 'Введите название тега',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Пожалуйста, введите название';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) => _name = value,
                   ),
-                ),
+                  const SizedBox(height: 16),
+
+                  // Выбор цвета
+                  InputDecorator(
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Цвет тега',
+                      hintText: 'Нажмите для выбора цвета',
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: _showColorPicker,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _selectedColor != null
+                                  ? 'Цвет выбран'
+                                  : 'Выберите цвет',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color:
+                                    _selectedColor ?? Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outline,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
-
-    // Кнопки действий внизу
   }
 
   Future<void> _handleSubmit() async {
@@ -260,23 +220,19 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final tagDao = await ref.read(tagDaoProvider.future);
-
-      // Конвертируем Color в HEX строку без альфа-канала
-      String? colorHex;
-      if (_selectedColor != null) {
-        colorHex = _selectedColor!
-            .toARGB32()
-            .toRadixString(16)
-            .substring(2)
-            .toUpperCase();
-      }
+      final repositories = await ref.read(vaultRepositories.future);
+      final colorInt = _selectedColor?.toARGB32() ?? 0xFFFFFF;
 
       if (_isEditMode) {
         // Режим редактирования
-        final dto = UpdateTagDto(name: _name.trim(), color: colorHex);
+        final dto = PatchTagDto(
+          id: widget.tagId!,
+          name: FieldUpdate.set(_name.trim()),
+          color: FieldUpdate.set(colorInt),
+        );
 
-        await tagDao.updateTag(widget.tagId!, dto);
+        final result = await repositories.tag.updateTag(dto);
+        result.getOrThrow();
 
         // Уведомляем об обновлении тега
         ref.read(managerRefreshTriggerProvider.notifier).triggerTagRefresh();
@@ -290,11 +246,11 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
         // Режим создания
         final dto = CreateTagDto(
           name: _name.trim(),
-          type: _selectedType.value,
-          color: colorHex,
+          color: colorInt,
         );
 
-        await tagDao.createTag(dto);
+        final result = await repositories.tag.createTag(dto);
+        result.getOrThrow();
 
         // Уведомляем о создании тега
         ref.read(managerRefreshTriggerProvider.notifier).triggerTagRefresh();
@@ -311,83 +267,5 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
         Toaster.error(title: 'Ошибка', description: e.toString());
       }
     }
-  }
-}
-
-/// Получить человекочитаемое название типа тега
-String _getTagTypeLabel(TagType type) {
-  switch (type) {
-    case TagType.note:
-      return 'Заметки';
-    case TagType.password:
-      return 'Пароли';
-    case TagType.totp:
-      return 'TOTP коды';
-    case TagType.bankCard:
-      return 'Банковские карты';
-    case TagType.file:
-      return 'Файлы';
-    case TagType.document:
-      return 'Документы';
-    case TagType.contact:
-      return 'Контакты';
-    case TagType.apiKey:
-      return 'API-ключи';
-    case TagType.sshKey:
-      return 'SSH-ключи';
-    case TagType.certificate:
-      return 'Сертификаты';
-    case TagType.cryptoWallet:
-      return 'Криптокошельки';
-    case TagType.wifi:
-      return 'Wi-Fi';
-    case TagType.identity:
-      return 'Идентификация';
-    case TagType.licenseKey:
-      return 'Лицензии';
-    case TagType.recoveryCodes:
-      return 'Коды восстановления';
-    case TagType.loyaltyCard:
-      return 'Карты лояльности';
-    case TagType.mixed:
-      return 'Смешанная';
-  }
-}
-
-/// Преобразовать EntityType в TagType
-TagType _convertEntityTypeToTagType(EntityType entityType) {
-  switch (entityType) {
-    case EntityType.password:
-      return TagType.password;
-    case EntityType.note:
-      return TagType.note;
-    case EntityType.bankCard:
-      return TagType.bankCard;
-    case EntityType.file:
-      return TagType.file;
-    case EntityType.otp:
-      return TagType.totp;
-    case EntityType.document:
-      return TagType.document;
-    case EntityType.contact:
-      return TagType.contact;
-    case EntityType.apiKey:
-      return TagType.apiKey;
-    case EntityType.sshKey:
-      return TagType.sshKey;
-    case EntityType.certificate:
-      return TagType.certificate;
-    case EntityType.cryptoWallet:
-      return TagType.cryptoWallet;
-    case EntityType.wifi:
-      return TagType.wifi;
-    case EntityType.identity:
-      return TagType.identity;
-    case EntityType.licenseKey:
-      return TagType.licenseKey;
-    case EntityType.recoveryCodes:
-      return TagType.recoveryCodes;
-    case EntityType.loyaltyCard:
-      return TagType.loyaltyCard;
   }
 }

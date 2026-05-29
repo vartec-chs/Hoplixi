@@ -1,33 +1,8 @@
-enum TagType {
-  note('note'),
-  password('password'),
-  totp('totp'),
-  bankCard('bankCard'),
-  file('file'),
-  document('document'),
-  contact('contact'),
-  apiKey('apiKey'),
-  sshKey('sshKey'),
-  certificate('certificate'),
-  cryptoWallet('cryptoWallet'),
-  wifi('wifi'),
-  identity('identity'),
-  licenseKey('licenseKey'),
-  recoveryCodes('recoveryCodes'),
-  loyaltyCard('loyaltyCard'),
-  mixed('mixed');
-
-  const TagType(this.value);
-
-  final String value;
-}
-
 enum TagsSortField { name, createdAt, modifiedAt }
 
 class TagPickerFilter {
   const TagPickerFilter({
     this.query = '',
-    this.types = const [],
     this.color,
     this.createdAfter,
     this.createdBefore,
@@ -37,7 +12,6 @@ class TagPickerFilter {
   });
 
   final String query;
-  final List<TagType?> types;
   final String? color;
   final DateTime? createdAfter;
   final DateTime? createdBefore;
@@ -47,7 +21,6 @@ class TagPickerFilter {
 
   TagPickerFilter copyWith({
     String? query,
-    List<TagType?>? types,
     String? color,
     DateTime? createdAfter,
     DateTime? createdBefore,
@@ -57,7 +30,6 @@ class TagPickerFilter {
   }) {
     return TagPickerFilter(
       query: query ?? this.query,
-      types: types ?? this.types,
       color: color ?? this.color,
       createdAfter: createdAfter ?? this.createdAfter,
       createdBefore: createdBefore ?? this.createdBefore,

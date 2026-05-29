@@ -7,11 +7,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/custom_icon_dto.dart';
+import 'package:hoplixi/vault_db/core/models/field_update.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/custom_icons.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:image/image.dart' as img;
+import 'package:drift/drift.dart' show Value;
 
 /// Экран для создания/редактирования иконки
 class IconFormScreen extends ConsumerStatefulWidget {
@@ -27,7 +29,7 @@ class IconFormScreen extends ConsumerStatefulWidget {
 class _IconFormScreenState extends ConsumerState<IconFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
-  late String _type;
+  CustomIconFormat _format = CustomIconFormat.png;
   Uint8List? _iconData;
   String? _fileName;
   bool _isLoading = false;
@@ -44,34 +46,22 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
     super.initState();
     // Инициализируем значения по умолчанию
     _name = '';
-    _type = '';
     _loadData();
   }
 
   Future<void> _loadData() async {
     if (_isEditMode) {
       try {
-        final iconDao = await ref.read(iconDaoProvider.future);
-        final icon = await iconDao.getIconByIdNotData(widget.iconId!);
-        logDebug('Loaded icon metadata: $icon');
+        final repos = await ref.read(vaultRepositories.future);
+        final iconResult = await repos.icon.getCustomIcon(widget.iconId!);
+        final icon = iconResult.getOrNull()?.getOrNull();
+        
         if (icon != null) {
-          // Загружаем данные иконки
-          final data = await iconDao.getIconData(widget.iconId!);
-
-          if (data == null || data.isEmpty) {
-            if (mounted) {
-              Toaster.error(
-                title: 'Ошибка загрузки данных иконки',
-                description: 'Не удалось загрузить данные иконки',
-              );
-            }
-          } else {
-            setState(() {
-              _name = icon.name;
-              _type = icon.type;
-              _iconData = data;
-            });
-          }
+          setState(() {
+            _name = icon.name;
+            _format = icon.format;
+            _iconData = icon.data;
+          });
         } else {
           if (mounted) {
             Toaster.error(
@@ -119,8 +109,8 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
   }
 
   /// Виджет для предпросмотра иконки
-  Widget _buildIconPreview(Uint8List data, String type) {
-    final isSvg = type == 'svg';
+  Widget _buildIconPreview(Uint8List data, CustomIconFormat format) {
+    final isSvg = format == CustomIconFormat.svg;
 
     if (isSvg) {
       return SvgPicture.memory(
@@ -152,7 +142,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['png', 'svg'],
+        allowedExtensions: ['png', 'svg', 'jpg', 'jpeg', 'webp', 'gif'],
         withData: true,
       );
 
@@ -176,14 +166,22 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
           return;
         }
 
-        String processedType = file.extension?.toLowerCase() ?? '';
+        final extension = file.extension?.toLowerCase() ?? '';
+        CustomIconFormat processedFormat = switch (extension) {
+          'png' => CustomIconFormat.png,
+          'svg' => CustomIconFormat.svg,
+          'jpg' || 'jpeg' => CustomIconFormat.jpeg,
+          'webp' => CustomIconFormat.webp,
+          'gif' => CustomIconFormat.gif,
+          _ => CustomIconFormat.png,
+        };
+        
         Uint8List processedData = data;
 
-        // Обрабатываем PNG
-        if (processedType == 'png') {
+        // Обрабатываем растровые изображения
+        if (processedFormat != CustomIconFormat.svg) {
           try {
             processedData = await _resizeImage(data);
-            processedType = 'png';
           } catch (e) {
             Toaster.error(
               title: 'Ошибка обработки изображения',
@@ -191,18 +189,16 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
             );
             return;
           }
-        } else if (processedType == 'svg') {
-          processedType = 'svg';
         }
 
         setState(() {
           _iconData = processedData;
-          _type = processedType;
+          _format = processedFormat;
           _fileName = file.name;
         });
 
         logDebug(
-          'File selected: ${file.name}, Size: ${processedData.length} bytes, Type: $processedType',
+          'File selected: ${file.name}, Size: ${processedData.length} bytes, Format: $processedFormat',
         );
       }
     } catch (e) {
@@ -239,107 +235,91 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Название иконки
-                      TextFormField(
-                        initialValue: _name,
-                        decoration: primaryInputDecoration(
-                          context,
-                          labelText: 'Название',
-                          hintText: 'Введите название иконки',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Пожалуйста, введите название';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) => _name = value,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Выбор файла
-                      OutlinedButton.icon(
-                        onPressed: _pickFile,
-                        icon: const Icon(Icons.upload_file),
-                        label: Text(
-                          _fileName ??
-                              (_isEditMode
-                                  ? 'Изменить файл (опционально)'
-                                  : 'Выбрать файл'),
-                        ),
-                      ),
-
-                      if (_fileName != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          '${_isEditMode ? 'Новый файл' : 'Выбран'}: $_fileName',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          'Поддерживаемые форматы: SVG, PNG (макс. 500 КБ)',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                      ] else ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Поддерживаемые форматы: SVG, PNG (макс. 500 КБ)',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                        Text(
-                          'PNG будет автоматически обрезан до 256x256 px',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                      ],
-
-                      if (_iconData != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(context).dividerColor,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: _buildIconPreview(_iconData!, _type),
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 24),
-                    ],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Название иконки
+                  TextFormField(
+                    initialValue: _name,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Название',
+                      hintText: 'Введите название иконки',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Пожалуйста, введите название';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) => _name = value,
                   ),
-                ),
+                  const SizedBox(height: 16),
+
+                  // Выбор файла
+                  OutlinedButton.icon(
+                    onPressed: _pickFile,
+                    icon: const Icon(Icons.upload_file),
+                    label: Text(
+                      _fileName ??
+                          (_isEditMode
+                              ? 'Изменить файл (опционально)'
+                              : 'Выбрать файл'),
+                    ),
+                  ),
+
+                  if (_fileName != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '${_isEditMode ? 'Новый файл' : 'Выбран'}: $_fileName',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Text(
+                    'Поддерживаемые форматы: SVG, PNG, JPG, WEBP (макс. 500 КБ)',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  Text(
+                    'Растровые изображения будут автоматически обрезаны до 256x256 px',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+
+                  if (_iconData != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context).dividerColor,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: _buildIconPreview(_iconData!, _format),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -360,19 +340,21 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final iconDao = await ref.read(iconDaoProvider.future);
+      final repos = await ref.read(vaultRepositories.future);
 
       if (_isEditMode) {
         // Режим редактирования
-        final dto = UpdateIconDto(
-          name: _name.trim(),
-          type: _iconData != null
-              ? _type
-              : null, // Обновляем тип только если файл изменен
-          data: _iconData,
+        final dto = PatchCustomIconDto(
+          id: widget.iconId!,
+          name: FieldUpdate.set(_name.trim()),
+          format: FieldUpdate.set(_format),
+          data: _iconData != null
+              ? FieldUpdate.set(_iconData!)
+              : const FieldUpdate.keep(),
         );
 
-        await iconDao.updateIcon(widget.iconId!, dto);
+        final result = await repos.icon.updateCustomIcon(dto);
+        result.getOrThrow();
 
         // Уведомляем об обновлении иконки
         ref.read(managerRefreshTriggerProvider.notifier).triggerIconRefresh();
@@ -384,13 +366,14 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
         }
       } else {
         // Режим создания
-        final dto = CreateIconDto(
+        final dto = CreateCustomIconDto(
           name: _name.trim(),
-          type: IconTypeX.fromString(_type),
+          format: _format,
           data: _iconData!,
         );
 
-        await iconDao.createIcon(dto);
+        final result = await repos.icon.createCustomIcon(dto);
+        result.getOrThrow();
 
         // Уведомляем о создании иконки
         ref.read(managerRefreshTriggerProvider.notifier).triggerIconRefresh();

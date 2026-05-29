@@ -10,19 +10,13 @@ import 'category_filter_provider.dart';
 
 /// Провайдер для получения отфильтрованного списка категорий с пагинацией
 final categoryPickerListProvider =
-    AsyncNotifierProvider.family<
-      CategoryListNotifier,
-      CategoryPaginationState,
-      List<CategoryType?>
-    >(CategoryListNotifier.new);
+    AsyncNotifierProvider<CategoryListNotifier, CategoryPaginationState>(
+      CategoryListNotifier.new,
+    );
 
 /// AsyncNotifier для управления списком категорий с пагинацией
 class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
   static const int _pageSize = 20;
-
-  CategoryListNotifier(this.initialTypes);
-
-  final List<CategoryType?> initialTypes;
 
   @override
   Future<CategoryPaginationState> build() async {
@@ -44,19 +38,14 @@ class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
       final repos = await ref.read(vaultRepositories.future);
 
       logDebug(
-        'Fetching categories with filter: types=${filter.types}, query="${filter.query}", page=$page',
+        'Fetching categories with filter:  query="${filter.query}", page=$page',
         tag: 'CategoryListNotifier',
       );
 
       final result = await repos.category.getAllCategories();
       final allCategories = result.getOrThrow();
-      final effectiveTypes = initialTypes.isNotEmpty
-          ? initialTypes
-          : filter.types;
-      final filteredCategories = _applyFilter(
-        allCategories,
-        filter.copyWith(types: effectiveTypes),
-      );
+
+      final filteredCategories = _applyFilter(allCategories, filter);
       final newItems = filteredCategories
           .skip(page * _pageSize)
           .take(_pageSize)

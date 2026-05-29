@@ -1,4 +1,4 @@
-import 'package:hoplixi/main_db/core/old/models/dto/category_tree_node.dart';
+import 'category_tree_node_ui.dart';
 
 class CategoryTreeState {
   const CategoryTreeState({
@@ -8,13 +8,13 @@ class CategoryTreeState {
     this.rootOffset = 0,
   });
 
-  final List<CategoryTreeNode> roots;
+  final List<CategoryTreeNodeUi> roots;
   final bool isLoadingMoreRoots;
   final bool hasMoreRoots;
   final int rootOffset;
 
   CategoryTreeState copyWith({
-    List<CategoryTreeNode>? roots,
+    List<CategoryTreeNodeUi>? roots,
     bool? isLoadingMoreRoots,
     bool? hasMoreRoots,
     int? rootOffset,

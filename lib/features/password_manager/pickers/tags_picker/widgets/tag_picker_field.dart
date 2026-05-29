@@ -19,7 +19,6 @@ class TagPickerField extends StatefulWidget {
     this.autofocus = false,
     this.isFilter = false,
     this.maxTagPicks,
-    this.filterByType,
   });
 
   /// Коллбэк при выборе тегов
@@ -51,9 +50,6 @@ class TagPickerField extends StatefulWidget {
 
   /// Максимальное количество выбираемых тегов (null = без ограничений)
   final int? maxTagPicks;
-
-  /// Тип тегов для фильтрации (только в режиме фильтра)
-  final List<TagType?>? filterByType;
 
   @override
   State<TagPickerField> createState() => _TagPickerFieldState();
@@ -107,7 +103,6 @@ class _TagPickerFieldState extends State<TagPickerField> {
       context: context,
       currentTagIds: widget.selectedTagIds,
       maxTagPicks: widget.maxTagPicks,
-      filterByType: widget.filterByType,
       onTagsSelected: (tagIds, tagNames) {
         widget.onTagsSelected?.call(tagIds, tagNames);
       },

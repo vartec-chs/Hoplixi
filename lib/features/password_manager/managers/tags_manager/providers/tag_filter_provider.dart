@@ -2,27 +2,26 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/tags_filter.dart';
+import '../models/tag_manager_filter.dart';
 
 /// Провайдер для управления состоянием фильтра тегов
-final tagFilterProvider = NotifierProvider<TagFilterNotifier, TagsFilter>(
+final tagFilterProvider = NotifierProvider<TagFilterNotifier, TagManagerFilter>(
   () => TagFilterNotifier(),
 );
 
 /// Notifier для управления фильтром тегов
-class TagFilterNotifier extends Notifier<TagsFilter> {
+class TagFilterNotifier extends Notifier<TagManagerFilter> {
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
   @override
-  TagsFilter build() {
+  TagManagerFilter build() {
     // Очищаем таймер при destroy провайдера
     ref.onDispose(() {
       _debounceTimer?.cancel();
     });
 
-    return TagsFilter.create(sortField: TagsSortField.name, limit: 30);
+    return const TagManagerFilter(sortField: TagManagerSortField.name, limit: 30);
   }
 
   /// Обновить поисковый запрос с дебаунсингом
@@ -33,13 +32,8 @@ class TagFilterNotifier extends Notifier<TagsFilter> {
     });
   }
 
-  /// Обновить тип тега
-  Future<void> updateType(List<TagType?> types) async {
-    state = state.copyWith(types: types);
-  }
-
   /// Обновить цвет
-  Future<void> updateColor(String? color) async {
+  Future<void> updateColor(int? color) async {
     state = state.copyWith(color: color);
   }
 
@@ -64,28 +58,28 @@ class TagFilterNotifier extends Notifier<TagsFilter> {
   }
 
   /// Обновить поле сортировки
-  Future<void> updateSortField(TagsSortField sortField) async {
+  Future<void> updateSortField(TagManagerSortField sortField) async {
     state = state.copyWith(sortField: sortField);
   }
 
   /// Обновить лимит
   Future<void> updateLimit(int? limit) async {
-    state = state.copyWith(limit: limit);
+    state = state.copyWith(limit: limit ?? 30);
   }
 
   /// Обновить offset
   Future<void> updateOffset(int? offset) async {
-    state = state.copyWith(offset: offset);
+    state = state.copyWith(offset: offset ?? 0);
   }
 
   /// Сбросить фильтр к начальному состоянию
   Future<void> reset() async {
     _debounceTimer?.cancel();
-    state = TagsFilter.create(sortField: TagsSortField.name, limit: 30);
+    state = const TagManagerFilter(sortField: TagManagerSortField.name, limit: 30);
   }
 
   /// Обновить весь фильтр сразу
-  Future<void> updateFilter(TagsFilter filter) async {
+  Future<void> updateFilter(TagManagerFilter filter) async {
     _debounceTimer?.cancel();
     state = filter;
   }

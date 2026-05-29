@@ -198,9 +198,7 @@ class _DocumentPickerMultiContentState
                         );
                       }
                       final doc = data.documents[index].card;
-                      final isSelected = _selectedIds.contains(
-                        doc.item.itemId,
-                      );
+                      final isSelected = _selectedIds.contains(doc.item.itemId);
                       return DocumentListTile(
                         document: doc,
                         onTap: () => _toggleSelection(doc),

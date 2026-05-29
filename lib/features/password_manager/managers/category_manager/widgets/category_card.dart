@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/icon_dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 /// Современная карточка категории с градиентным фоном и анимациями.
@@ -48,16 +50,6 @@ class _CategoryCardState extends State<CategoryCard>
     super.dispose();
   }
 
-  Color _parseColor(String? colorHex) {
-    if (colorHex == null || colorHex.isEmpty) {
-      return Theme.of(context).colorScheme.primary;
-    }
-    final colorValue = int.tryParse(colorHex.replaceFirst('#', ''), radix: 16);
-    return colorValue != null
-        ? Color(0xFF000000 | colorValue)
-        : Theme.of(context).colorScheme.primary;
-  }
-
   /// Корректирует цвет для обеспечения контрастности на текущем фоне.
   /// Светлые цвета затемняются на светлом фоне, тёмные осветляются на тёмном.
   Color _adjustColorForContrast(Color color, bool isDark) {
@@ -78,35 +70,11 @@ class _CategoryCardState extends State<CategoryCard>
     }
   }
 
-  String _getTypeDisplayName(String type) {
-    return switch (type) {
-      'notes' => 'Заметки',
-      'password' => 'Пароли',
-      'totp' => 'TOTP',
-      'bankCard' => 'Карты',
-      'files' => 'Файлы',
-      'mixed' => 'Смешанный',
-      _ => type,
-    };
-  }
-
-  IconData _getTypeIcon(String type) {
-    return switch (type) {
-      'notes' => Icons.note_alt_outlined,
-      'password' => Icons.lock_outline,
-      'totp' => Icons.qr_code_2,
-      'bankCard' => Icons.credit_card,
-      'files' => Icons.folder_outlined,
-      'mixed' => Icons.layers_outlined,
-      _ => Icons.category_outlined,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final rawColor = _parseColor(widget.category.color);
+    final rawColor = Color(0xFF000000 | widget.category.color);
     final isDark = theme.brightness == Brightness.dark;
 
     // Корректируем цвет для контрастности
@@ -208,14 +176,11 @@ class _CategoryCardState extends State<CategoryCard>
 
                       const SizedBox(height: 8),
 
-                      // Тип и количество элементов
+                      // Информация о типе (заглушка или удалена)
                       Row(
                         children: [
-                          // Тип категории с иконкой
-                          _buildTypeBadge(baseColor, isDark),
                           const Spacer(),
-                          // Счетчик элементов
-                          _buildItemsCounter(colorScheme),
+                          // Можно добавить счетчик элементов если будет реализован
                         ],
                       ),
                     ],
@@ -247,9 +212,12 @@ class _CategoryCardState extends State<CategoryCard>
         ],
       ),
       child: Center(
-        child: widget.category.effectiveIconRef != null
+        child: widget.category.iconRefId != null
             ? IconRefPreview(
-                iconRef: widget.category.effectiveIconRef,
+                iconRef: IconRefDto(
+                  id: widget.category.iconRefId,
+                  iconSourceType: IconSourceType.pack, // Заглушка, нужно грузить реальный IconRef
+                ),
                 fallbackIcon: Icons.folder,
                 size: 26,
                 color: baseColor,
@@ -307,61 +275,6 @@ class _CategoryCardState extends State<CategoryCard>
           widget.onDelete?.call();
         }
       },
-    );
-  }
-
-  Widget _buildTypeBadge(Color baseColor, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: baseColor.withOpacity(isDark ? 0.2 : 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: baseColor.withOpacity(0.2), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(_getTypeIcon(widget.category.type), size: 14, color: baseColor),
-          const SizedBox(width: 5),
-          Text(
-            _getTypeDisplayName(widget.category.type),
-            style: TextStyle(
-              color: baseColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemsCounter(ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.layers_outlined,
-            size: 14,
-            color: colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '${widget.category.itemsCount}',
-            style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

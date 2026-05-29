@@ -103,8 +103,9 @@ class DocumentPickerDataNotifier extends Notifier<DocumentPickerData> {
       ref.read(documentPickerFilterProvider.notifier).incrementOffset();
       final updatedFilter = ref.read(documentPickerFilterProvider);
 
-      final newDocuments = (await service.getDocuments(updatedFilter))
-          .getOrThrow();
+      final newDocuments = (await service.getDocuments(
+        updatedFilter,
+      )).getOrThrow();
       final total = (await service.countDocuments(updatedFilter)).getOrThrow();
 
       final filteredNew = state.excludeDocumentId != null

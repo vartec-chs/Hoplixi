@@ -32,15 +32,6 @@ class CategoryFilterNotifier extends Notifier<CategoryPickerFilter> {
     });
   }
 
-  /// Обновить тип категории
-  Future<void> updateType(List<CategoryType?> types) async {
-    logDebug(
-      'Updating category types filter: $types',
-      tag: 'CategoryFilterNotifier',
-    );
-    state = state.copyWith(types: types);
-  }
-
   /// Обновить цвет
   Future<void> updateColor(String? color) async {
     state = state.copyWith(color: color);

@@ -1,26 +1,26 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/icons_filter.dart';
+import '../models/icon_manager_filter.dart';
 
 /// Провайдер для управления состоянием фильтра иконок
-final iconFilterProvider = NotifierProvider<IconFilterNotifier, IconsFilter>(
+final iconFilterProvider = NotifierProvider<IconFilterNotifier, IconManagerFilter>(
   () {
     return IconFilterNotifier();
   },
 );
 
 /// Notifier для управления фильтром иконок
-class IconFilterNotifier extends Notifier<IconsFilter> {
+class IconFilterNotifier extends Notifier<IconManagerFilter> {
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
   @override
-  IconsFilter build() {
+  IconManagerFilter build() {
     // Очищаем таймер при destroy провайдера
     ref.onDispose(() {
       _debounceTimer?.cancel();
     });
-    return const IconsFilter();
+    return const IconManagerFilter(limit: 30);
   }
 
   /// Обновить поисковый запрос с дебаунсингом
@@ -62,32 +62,32 @@ class IconFilterNotifier extends Notifier<IconsFilter> {
   }
 
   /// Обновить поле сортировки
-  Future<void> updateSortField(IconsSortField sortField) async {
+  Future<void> updateSortField(IconManagerSortField sortField) async {
     state = state.copyWith(sortField: sortField);
     await Future.microtask(() {});
   }
 
   /// Обновить лимит
   Future<void> updateLimit(int? limit) async {
-    state = state.copyWith(limit: limit);
+    state = state.copyWith(limit: limit ?? 30);
     await Future.microtask(() {});
   }
 
   /// Обновить offset
   Future<void> updateOffset(int? offset) async {
-    state = state.copyWith(offset: offset);
+    state = state.copyWith(offset: offset ?? 0);
     await Future.microtask(() {});
   }
 
   /// Сбросить фильтр к начальному состоянию
   Future<void> reset() async {
     _debounceTimer?.cancel();
-    state = const IconsFilter();
+    state = const IconManagerFilter(limit: 30);
     await Future.microtask(() {});
   }
 
   /// Обновить весь фильтр сразу
-  Future<void> updateFilter(IconsFilter filter) async {
+  Future<void> updateFilter(IconManagerFilter filter) async {
     _debounceTimer?.cancel();
     state = filter;
     await Future.microtask(() {});

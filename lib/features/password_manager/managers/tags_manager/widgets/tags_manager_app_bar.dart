@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/tags_filter.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
+import '../models/tag_manager_filter.dart';
 import '../providers/tag_filter_provider.dart';
 
 class TagsManagerAppBar extends ConsumerStatefulWidget {
@@ -17,7 +16,7 @@ class TagsManagerAppBar extends ConsumerStatefulWidget {
 
 class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
   late final TextEditingController _searchController;
-  late final ProviderSubscription<TagsFilter> _filterSubscription;
+  late final ProviderSubscription<TagManagerFilter> _filterSubscription;
   bool _isSearchActive = false;
 
   @override
@@ -113,7 +112,7 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
           },
           icon: Icon(_isSearchActive ? Icons.close : Icons.search),
         ),
-        PopupMenuButton<TagsSortField>(
+        PopupMenuButton<TagManagerSortField>(
           icon: const Icon(Icons.sort),
           tooltip: 'Сортировка',
           onSelected: (sortField) async {
@@ -127,25 +126,19 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
             _sortItem(
               context: context,
               currentSortField: currentSortField,
-              value: TagsSortField.name,
+              value: TagManagerSortField.name,
               label: 'По названию',
             ),
             _sortItem(
               context: context,
               currentSortField: currentSortField,
-              value: TagsSortField.type,
-              label: 'По типу',
-            ),
-            _sortItem(
-              context: context,
-              currentSortField: currentSortField,
-              value: TagsSortField.createdAt,
+              value: TagManagerSortField.createdAt,
               label: 'По дате создания',
             ),
             _sortItem(
               context: context,
               currentSortField: currentSortField,
-              value: TagsSortField.modifiedAt,
+              value: TagManagerSortField.modifiedAt,
               label: 'По дате изменения',
             ),
           ],
@@ -163,10 +156,10 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
     );
   }
 
-  PopupMenuItem<TagsSortField> _sortItem({
+  PopupMenuItem<TagManagerSortField> _sortItem({
     required BuildContext context,
-    required TagsSortField currentSortField,
-    required TagsSortField value,
+    required TagManagerSortField currentSortField,
+    required TagManagerSortField value,
     required String label,
   }) {
     return PopupMenuItem(
@@ -181,18 +174,18 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
     );
   }
 
-  int _countActiveFilters(TagsFilter filter) {
+  int _countActiveFilters(TagManagerFilter filter) {
     var count = 0;
-    count += filter.types.whereType<TagType>().length;
-    if (filter.color != null && filter.color!.trim().isNotEmpty) {
+    if (filter.color != null) {
       count++;
     }
     return count;
   }
 
-  Future<void> _showFilterSheet(BuildContext context, TagsFilter filter) async {
-    final selectedTypes = filter.types.whereType<TagType>().toSet();
-    final colorController = TextEditingController(text: filter.color ?? '');
+  Future<void> _showFilterSheet(BuildContext context, TagManagerFilter filter) async {
+    final colorController = TextEditingController(
+      text: filter.color != null ? filter.color!.toRadixString(16).toUpperCase() : '',
+    );
 
     try {
       await WoltModalSheet.show<void>(
@@ -226,31 +219,6 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'Типы',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final type in TagType.values)
-                              FilterChip(
-                                label: Text(_tagTypeLabel(type)),
-                                selected: selectedTypes.contains(type),
-                                onSelected: (selected) {
-                                  setModalState(() {
-                                    if (selected) {
-                                      selectedTypes.add(type);
-                                    } else {
-                                      selectedTypes.remove(type);
-                                    }
-                                  });
-                                },
-                              ),
-                          ],
-                        ),
                         const SizedBox(height: 20),
                         TextField(
                           controller: colorController,
@@ -267,7 +235,6 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
                             Expanded(
                               child: SmoothButton(
                                 onPressed: () {
-                                  selectedTypes.clear();
                                   colorController.clear();
                                   setModalState(() {});
                                 },
@@ -279,19 +246,19 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
                             Expanded(
                               child: SmoothButton(
                                 onPressed: () async {
+                                  final colorText = colorController.text.trim();
+                                  int? color;
+                                  if (colorText.isNotEmpty) {
+                                    try {
+                                      color = int.parse(colorText, radix: 16);
+                                    } catch (_) {}
+                                  }
+
                                   await ref
                                       .read(tagFilterProvider.notifier)
                                       .updateFilter(
                                         filter.copyWith(
-                                          types: selectedTypes
-                                              .cast<TagType?>()
-                                              .toList(growable: false),
-                                          color:
-                                              colorController.text
-                                                  .trim()
-                                                  .isEmpty
-                                              ? null
-                                              : colorController.text.trim(),
+                                          color: color,
                                         ),
                                       );
                                   if (modalSheetContext.mounted) {
@@ -316,26 +283,4 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
       colorController.dispose();
     }
   }
-}
-
-String _tagTypeLabel(TagType type) {
-  return switch (type) {
-    TagType.note => 'Заметки',
-    TagType.password => 'Пароли',
-    TagType.totp => 'TOTP',
-    TagType.bankCard => 'Банковские карты',
-    TagType.file => 'Файлы',
-    TagType.document => 'Документы',
-    TagType.contact => 'Контакты',
-    TagType.apiKey => 'API ключи',
-    TagType.sshKey => 'SSH ключи',
-    TagType.certificate => 'Сертификаты',
-    TagType.cryptoWallet => 'Криптокошельки',
-    TagType.wifi => 'Wi-Fi',
-    TagType.identity => 'Профили',
-    TagType.licenseKey => 'Лицензионные ключи',
-    TagType.recoveryCodes => 'Коды восстановления',
-    TagType.loyaltyCard => 'Карты лояльности',
-    TagType.mixed => 'Смешанные',
-  };
 }

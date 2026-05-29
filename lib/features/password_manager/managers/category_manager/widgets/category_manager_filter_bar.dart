@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/categories_filter.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
-int countCategoryManagerFilters(CategoriesFilter filter) {
+import '../models/category_manager_filter.dart';
+
+int countCategoryManagerFilters(CategoryManagerFilter filter) {
   var count = 0;
-  count += filter.types.whereType<CategoryType>().length;
-  if (filter.color != null && filter.color!.trim().isNotEmpty) {
+  if (filter.color != null) {
     count++;
   }
   if (filter.hasIcon != null) {
@@ -26,10 +25,9 @@ int countCategoryManagerFilters(CategoriesFilter filter) {
 Future<void> showCategoryManagerFilterSheet(
   BuildContext context,
   WidgetRef ref,
-  CategoriesFilter filter,
+  CategoryManagerFilter filter,
 ) async {
-  final selectedTypes = filter.types.whereType<CategoryType>().toSet();
-  final colorController = TextEditingController(text: filter.color ?? '');
+  int? selectedColor = filter.color;
   var hasIcon = filter.hasIcon;
   var hasDescription = filter.hasDescription;
 
@@ -65,65 +63,60 @@ Future<void> showCategoryManagerFilterSheet(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'Типы',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final type in CategoryType.values)
-                            FilterChip(
-                              label: Text(categoryTypeLabel(type)),
-                              selected: selectedTypes.contains(type),
-                              onSelected: (selected) {
-                                setModalState(() {
-                                  if (selected) {
-                                    selectedTypes.add(type);
-                                  } else {
-                                    selectedTypes.remove(type);
-                                  }
-                                });
-                              },
-                            ),
-                        ],
-                      ),
                       const SizedBox(height: 20),
-                      TextField(
-                        controller: colorController,
-                        readOnly: true,
+                      InputDecorator(
                         decoration: primaryInputDecoration(
                           context,
                           labelText: 'Цвет',
                           hintText: 'Нажмите, чтобы выбрать',
                           prefixIcon: const Icon(Icons.palette_outlined),
-                          suffixIcon: colorController.text.trim().isNotEmpty
-                              ? IconButton(
-                                  tooltip: 'Сбросить цвет',
-                                  onPressed: () {
-                                    colorController.clear();
-                                    setModalState(() {});
-                                  },
-                                  icon: const Icon(Icons.close_rounded),
-                                )
-                              : null,
                         ),
-                        onTap: () async {
-                          final pickedColor = await _showCategoryColorPicker(
-                            context,
-                            initialColor:
-                                _parseFilterColor(colorController.text) ??
-                                Theme.of(context).colorScheme.primary,
-                          );
-                          if (pickedColor == null) {
-                            return;
-                          }
+                        child: InkWell(
+                          onTap: () async {
+                            final pickedColor = await _showCategoryColorPicker(
+                              context,
+                              initialColor: selectedColor != null
+                                  ? Color(0xFF000000 | selectedColor!)
+                                  : Theme.of(context).colorScheme.primary,
+                            );
+                            if (pickedColor == null) {
+                              return;
+                            }
 
-                          colorController.text = _colorToFilterHex(pickedColor);
-                          setModalState(() {});
-                        },
+                            setModalState(() {
+                              selectedColor = pickedColor.toARGB32() & 0xFFFFFF;
+                            });
+                          },
+                          child: Row(
+                            children: [
+                              if (selectedColor != null)
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF000000 | selectedColor!),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              Text(selectedColor != null
+                                  ? 'Выбран'
+                                  : 'Любой'),
+                              const Spacer(),
+                              if (selectedColor != null)
+                                IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  icon: const Icon(Icons.close, size: 16),
+                                  onPressed: () {
+                                    setModalState(() {
+                                      selectedColor = null;
+                                    });
+                                  },
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -191,11 +184,11 @@ Future<void> showCategoryManagerFilterSheet(
                           Expanded(
                             child: SmoothButton(
                               onPressed: () {
-                                selectedTypes.clear();
-                                colorController.clear();
-                                hasIcon = null;
-                                hasDescription = null;
-                                setModalState(() {});
+                                setModalState(() {
+                                  selectedColor = null;
+                                  hasIcon = null;
+                                  hasDescription = null;
+                                });
                               },
                               label: 'Сбросить',
                               type: SmoothButtonType.text,
@@ -209,13 +202,7 @@ Future<void> showCategoryManagerFilterSheet(
                                     .read(categoryFilterProvider.notifier)
                                     .updateFilter(
                                       filter.copyWith(
-                                        types: selectedTypes
-                                            .cast<CategoryType?>()
-                                            .toList(growable: false),
-                                        color:
-                                            colorController.text.trim().isEmpty
-                                            ? null
-                                            : colorController.text.trim(),
+                                        color: selectedColor,
                                         hasIcon: hasIcon,
                                         hasDescription: hasDescription,
                                       ),
@@ -236,9 +223,7 @@ Future<void> showCategoryManagerFilterSheet(
         ),
       ],
     );
-  } finally {
-    colorController.dispose();
-  }
+  } finally {}
 }
 
 Future<Color?> _showCategoryColorPicker(
@@ -260,56 +245,17 @@ Future<Color?> _showCategoryColorPicker(
           ),
         ),
         actions: [
-          TextButton(
+          SmoothButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Отмена'),
+            label: 'Отмена',
+            type: SmoothButtonType.text,
           ),
-          FilledButton(
+          SmoothButton(
             onPressed: () => Navigator.of(dialogContext).pop(pickerColor),
-            child: const Text('Выбрать'),
+            label: 'Выбрать',
           ),
         ],
       );
     },
   );
-}
-
-Color? _parseFilterColor(String? colorHex) {
-  final normalized = colorHex?.replaceAll('#', '').trim();
-  if (normalized == null || normalized.isEmpty) {
-    return null;
-  }
-
-  final value = int.tryParse(normalized, radix: 16);
-  if (value == null) {
-    return null;
-  }
-
-  return Color(0xFF000000 | value);
-}
-
-String _colorToFilterHex(Color color) {
-  return color.value.toRadixString(16).substring(2).toUpperCase();
-}
-
-String categoryTypeLabel(CategoryType type) {
-  return switch (type) {
-    CategoryType.note => 'Заметки',
-    CategoryType.password => 'Пароли',
-    CategoryType.totp => 'TOTP',
-    CategoryType.bankCard => 'Банковские карты',
-    CategoryType.file => 'Файлы',
-    CategoryType.document => 'Документы',
-    CategoryType.contact => 'Контакты',
-    CategoryType.apiKey => 'API ключи',
-    CategoryType.sshKey => 'SSH ключи',
-    CategoryType.certificate => 'Сертификаты',
-    CategoryType.cryptoWallet => 'Криптокошельки',
-    CategoryType.wifi => 'Wi-Fi',
-    CategoryType.identity => 'Профили',
-    CategoryType.licenseKey => 'Лицензионные ключи',
-    CategoryType.recoveryCodes => 'Коды восстановления',
-    CategoryType.loyaltyCard => 'Карты лояльности',
-    CategoryType.mixed => 'Смешанные',
-  };
 }

@@ -145,5 +145,4 @@ class CategoryPickerItem extends StatelessWidget {
       ),
     );
   }
-
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_filter_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/categories_filter.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
+import '../models/category_manager_filter.dart';
 import 'category_manager_filter_bar.dart';
 
 class CategoryManagerAppBar extends ConsumerStatefulWidget {
@@ -16,7 +16,7 @@ class CategoryManagerAppBar extends ConsumerStatefulWidget {
 
 class _CategoryManagerAppBarState extends ConsumerState<CategoryManagerAppBar> {
   late final TextEditingController _searchController;
-  late final ProviderSubscription<CategoriesFilter> _filterSubscription;
+  late final ProviderSubscription<CategoryManagerFilter> _filterSubscription;
   bool _isSearchActive = false;
 
   @override

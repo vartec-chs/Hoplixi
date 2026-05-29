@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../provider/icon_list_provider.dart';
 import 'icon_card.dart';
 
-/// Виджет для отображения списка иконок с пагинацией
+/// Виджет для отображения списка иконок
 class IconListView extends ConsumerStatefulWidget {
   final ScrollController scrollController;
   final VoidCallback onRefresh;
-  final Function(IconsData) onIconTap;
-  final Function(IconsData)? onIconLongPress;
+  final Function(CustomIconCardDto) onIconTap;
+  final Function(CustomIconCardDto)? onIconLongPress;
 
   const IconListView({
     super.key,
@@ -124,14 +122,7 @@ class _IconListViewState extends ConsumerState<IconListView> {
                   itemBuilder: (context, index) {
                     final item = items[index];
                     return IconCard(
-                      icon: IconCardDto(
-                        id: item.id,
-                        name: item.name,
-                        type: item.type.value,
-                        createdAt: item.createdAt,
-                        modifiedAt: item.modifiedAt,
-                      ),
-                      // iconData не передаем - IconCard загрузит асинхронно
+                      icon: item,
                       onTap: () {
                         widget.onIconTap(item);
                       },

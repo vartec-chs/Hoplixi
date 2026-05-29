@@ -12,7 +12,8 @@ class IconPickerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = icon.iconValue ?? icon.customIconId ?? icon.iconPackId ?? icon.id;
+    final label =
+        icon.iconValue ?? icon.customIconId ?? icon.iconPackId ?? icon.id;
 
     return Card(
       clipBehavior: Clip.antiAlias,

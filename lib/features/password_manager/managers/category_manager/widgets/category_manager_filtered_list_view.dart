@@ -5,8 +5,8 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_pagination_provider.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
@@ -129,8 +129,9 @@ class CategoryManagerFilteredListView extends ConsumerWidget {
     }
 
     try {
-      final dao = await ref.read(categoryDaoProvider.future);
-      await dao.deleteCategory(category.id);
+      final repos = await ref.read(vaultRepositories.future);
+      final result = await repos.category.deleteCategory(category.id);
+      result.getOrThrow();
 
       ref.read(managerRefreshTriggerProvider.notifier).triggerCategoryRefresh();
 

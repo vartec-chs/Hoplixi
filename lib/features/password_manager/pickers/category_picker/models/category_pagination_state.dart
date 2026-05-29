@@ -4,7 +4,6 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 part 'category_pagination_state.freezed.dart';
 
 @freezed
-@immutable
 sealed class CategoryPaginationState with _$CategoryPaginationState {
   const factory CategoryPaginationState({
     required List<CategoryCardDto> items,

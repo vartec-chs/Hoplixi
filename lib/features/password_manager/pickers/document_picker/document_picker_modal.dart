@@ -89,10 +89,7 @@ class _DocumentPickerContentState
 
   void _onDocumentSelected(DocumentCardDto document) {
     Navigator.of(context).pop(
-      DocumentPickerResult(
-        id: document.item.itemId,
-        name: document.item.name,
-      ),
+      DocumentPickerResult(id: document.item.itemId, name: document.item.name),
     );
   }
 

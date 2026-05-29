@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_tree_node.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
+import '../models/category_tree_node_ui.dart';
 import '../providers/category_tree_provider.dart';
 
 class CategoryTreeSection extends ConsumerWidget {
@@ -22,7 +22,7 @@ class CategoryTreeSection extends ConsumerWidget {
     required this.onRefresh,
   });
 
-  final CategoryTreeNode node;
+  final CategoryTreeNodeUi node;
   final EntityType entity;
   final int depth;
   final bool isLast;
@@ -31,7 +31,7 @@ class CategoryTreeSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final iconColor = _resolveIconColor(theme, node.category.color);
+    final iconColor = Color(0xFF000000 | node.category.color);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,23 +98,9 @@ class CategoryTreeSection extends ConsumerWidget {
     );
   }
 
-  Color _resolveIconColor(ThemeData theme, String? hex) {
-    final fallback = theme.colorScheme.onSurfaceVariant;
-    if (hex == null || hex.isEmpty) {
-      return fallback;
-    }
-
-    final value = int.tryParse(hex.replaceFirst('#', ''), radix: 16);
-    return value != null ? Color(0xFF000000 | value) : fallback;
-  }
-
-  String? _buildMetaText(CategoryTreeNode node) {
-    final itemsCount = node.category.itemsCount;
+  String? _buildMetaText(CategoryTreeNodeUi node) {
     if (node.isLoadingChildren) {
       return 'загрузка...';
-    }
-    if (itemsCount > 0) {
-      return '$itemsCount';
     }
     return null;
   }
@@ -368,8 +354,9 @@ class _CategoryActions extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       try {
-        final dao = await ref.read(categoryDaoProvider.future);
-        await dao.deleteCategory(category.id);
+        final repos = await ref.read(vaultRepositories.future);
+        final result = await repos.category.deleteCategory(category.id);
+        result.getOrThrow();
 
         ref
             .read(managerRefreshTriggerProvider.notifier)

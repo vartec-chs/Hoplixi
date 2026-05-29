@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/pickers/tags_picker/models/tag_picker_filter.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/providers/tag_picker_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_filters.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_item.dart';
@@ -17,7 +16,6 @@ class TagPickerModal {
     onTagsSelected,
     List<String>? currentTagIds,
     int? maxTagPicks,
-    List<TagType?>? filterByType,
   }) {
     return WoltModalSheet.show(
       context: context,
@@ -30,7 +28,6 @@ class TagPickerModal {
           currentTagIds: currentTagIds ?? [],
           maxTagPicks: maxTagPicks,
           isSingleMode: false,
-          filterByType: filterByType,
         ),
       ],
     );
@@ -41,7 +38,6 @@ class TagPickerModal {
     required BuildContext context,
     required Function(String? tagId, String? tagName) onTagSelected,
     String? currentTagId,
-    List<TagType?>? filterByType,
   }) {
     return WoltModalSheet.show(
       context: context,
@@ -66,7 +62,6 @@ class TagPickerModal {
     required List<String> currentTagIds,
     int? maxTagPicks,
     required bool isSingleMode,
-    List<TagType?>? filterByType,
   }) {
     return SliverWoltModalSheetPage(
       heroImage: null,
@@ -88,7 +83,6 @@ class TagPickerModal {
           initialTagIds: currentTagIds,
           maxTagPicks: maxTagPicks,
           isSingleMode: isSingleMode,
-          filterByType: filterByType,
         ),
       ],
     );
@@ -103,7 +97,6 @@ class _TagPickerContent extends ConsumerStatefulWidget {
     required this.initialTagIds,
     this.maxTagPicks,
     required this.isSingleMode,
-    this.filterByType,
   });
 
   final Function(List<String> tagIds, List<String> tagNames)? onTagsSelected;
@@ -111,7 +104,6 @@ class _TagPickerContent extends ConsumerStatefulWidget {
   final List<String> initialTagIds;
   final int? maxTagPicks;
   final bool isSingleMode;
-  final List<TagType?>? filterByType;
 
   @override
   ConsumerState<_TagPickerContent> createState() => _TagPickerContentState();
@@ -124,16 +116,11 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
   List<TagCardDto> _items = [];
 
   /// Кэшированный список типов для провайдера
-  late final List<TagType?> _cachedTypes;
 
   @override
   void initState() {
     super.initState();
     _selectedTagIds = List<String>.from(widget.initialTagIds);
-    // Преобразуем тип из String в List<TagType?>
-    _cachedTypes = widget.filterByType != null
-        ? widget.filterByType!
-        : <TagType?>[];
   }
 
   void _updateItems(List<TagCardDto> newItems) {
@@ -256,7 +243,7 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
 
   @override
   Widget build(BuildContext context) {
-    final tagsState = ref.watch(tagPickerListProvider(_cachedTypes));
+    final tagsState = ref.watch(tagPickerListProvider);
 
     return tagsState.when(
       data: (state) {
@@ -275,7 +262,6 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
             slivers: [
               SliverToBoxAdapter(
                 child: TagPickerFilters(
-                  filterByType: widget.filterByType,
                   selectedCount: _selectedTagIds.length,
                   maxCount: widget.maxTagPicks,
                 ),
@@ -309,7 +295,6 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
           slivers: [
             SliverToBoxAdapter(
               child: TagPickerFilters(
-                filterByType: widget.filterByType,
                 selectedCount: _selectedTagIds.length,
                 maxCount: widget.maxTagPicks,
               ),
@@ -338,11 +323,7 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
                           child: TextButton(
                             onPressed: () {
                               ref
-                                  .read(
-                                    tagPickerListProvider(
-                                      _cachedTypes,
-                                    ).notifier,
-                                  )
+                                  .read(tagPickerListProvider.notifier)
                                   .loadMore();
                             },
                             child: const Text('Загрузить еще'),
@@ -357,7 +338,6 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
         slivers: [
           SliverToBoxAdapter(
             child: TagPickerFilters(
-              filterByType: widget.filterByType,
               selectedCount: _selectedTagIds.length,
               maxCount: widget.maxTagPicks,
             ),
@@ -371,7 +351,6 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
         slivers: [
           SliverToBoxAdapter(
             child: TagPickerFilters(
-              filterByType: widget.filterByType,
               selectedCount: _selectedTagIds.length,
               maxCount: widget.maxTagPicks,
             ),

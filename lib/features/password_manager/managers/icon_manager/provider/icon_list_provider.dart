@@ -1,21 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/icon_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
 import '../../providers/manager_refresh_trigger_provider.dart';
+import '../models/icon_manager_filter.dart';
 import '../models/icon_pagination_state.dart';
 import 'icon_filter_provider.dart';
 
-/// Провайдер для получения отфильтрованного списка иконок с пагинацией
+/// Провайдер для получения отфильтрованного списка иконок
 final iconListProvider =
-    AsyncNotifierProvider<IconListNotifier, IconPaginationState>(() {
-      return IconListNotifier();
-    });
+    AsyncNotifierProvider<IconListNotifier, IconPaginationState>(
+  IconListNotifier.new,
+);
 
-/// AsyncNotifier для управления списком иконок с пагинацией
+/// AsyncNotifier для управления списком иконок
 class IconListNotifier extends AsyncNotifier<IconPaginationState> {
-  static const int _pageSize = 30;
-
   @override
   Future<IconPaginationState> build() async {
     // Слушаем изменения фильтра для автоматической перезагрузки
@@ -33,75 +32,67 @@ class IconListNotifier extends AsyncNotifier<IconPaginationState> {
       }
     });
 
-    // Загружаем первую страницу
-    return await _fetchIconsWithFilter(page: 0);
+    // Загружаем данные
+    return await _fetchIconsWithFilter();
   }
 
   /// Получить иконки с применением текущего фильтра
-  Future<IconPaginationState> _fetchIconsWithFilter({
-    required int page,
-    List<IconsData>? existingItems,
-  }) async {
+  Future<IconPaginationState> _fetchIconsWithFilter() async {
     try {
       final filter = ref.read(iconFilterProvider);
-      final iconDao = await ref.read(iconDaoProvider.future);
+      final repos = await ref.read(vaultRepositories.future);
 
-      // Создаем фильтр с пагинацией
-      final paginatedFilter = filter.copyWith(
-        offset: page * _pageSize,
-        limit: _pageSize,
-      );
+      final result = await repos.icon.getCustomIcons();
+      final allIcons = result.getOrThrow();
 
-      final newItems = await iconDao.getIconsFiltered(paginatedFilter);
-      final allItems = existingItems != null
-          ? [...existingItems, ...newItems]
-          : newItems;
+      // Фильтрация in-memory
+      var filtered = allIcons.where((icon) {
+        if (filter.query.isNotEmpty &&
+            !icon.name.toLowerCase().contains(filter.query.toLowerCase())) {
+          return false;
+        }
+        return true;
+      }).toList();
+
+      // Сортировка
+      switch (filter.sortField) {
+        case IconManagerSortField.name:
+          filtered.sort((a, b) => a.name.compareTo(b.name));
+        case IconManagerSortField.createdAt:
+          filtered.sort((a, b) => a.name.compareTo(b.name));
+        case IconManagerSortField.modifiedAt:
+          filtered.sort((a, b) => a.name.compareTo(b.name));
+      }
 
       return IconPaginationState(
-        items: allItems,
-        hasMore: newItems.length >= _pageSize,
+        items: filtered,
+        hasMore: false,
         isLoading: false,
         error: null,
-        currentPage: page,
-        totalCount: allItems.length,
+        currentPage: 0,
+        totalCount: filtered.length,
       );
     } catch (e) {
       return IconPaginationState(
-        items: existingItems ?? [],
+        items: const [],
         hasMore: false,
         isLoading: false,
         error: e,
-        currentPage: page,
-        totalCount: existingItems?.length ?? 0,
+        currentPage: 0,
+        totalCount: 0,
       );
     }
   }
 
   /// Загрузить следующую страницу иконок
   Future<void> loadMore() async {
-    final currentState = state.value;
-    if (currentState == null ||
-        currentState.isLoading ||
-        !currentState.hasMore) {
-      return;
-    }
-
-    // Устанавливаем флаг загрузки
-    state = AsyncValue.data(currentState.copyWith(isLoading: true));
-
-    // Загружаем следующую страницу
-    final nextPage = currentState.currentPage + 1;
-    final newState = await _fetchIconsWithFilter(
-      page: nextPage,
-      existingItems: currentState.items,
-    );
-
-    state = AsyncValue.data(newState);
+    // В текущей реализации манагера грузим всё сразу
   }
 
-  /// Обновить список иконок (сброс пагинации)
+  /// Обновить список иконок
   Future<void> refresh() async {
+    if (!ref.mounted) return;
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchIconsWithFilter(page: 0));
+    state = await AsyncValue.guard(() => _fetchIconsWithFilter());
   }
 }

@@ -2,19 +2,20 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/icon_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/icon_ref_dto.dart';
+import 'package:hoplixi/vault_db/core/models/field_update.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
+import 'package:go_router/go_router.dart';
 
 /// Экран для создания/редактирования категории
 class CategoryFormScreen extends ConsumerStatefulWidget {
@@ -39,7 +40,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   String? _description;
   Color? _selectedColor;
   IconRefDto? _iconRef;
-  late CategoryType _selectedType;
   String? _parentId;
   String? _parentName;
   bool _isLoading = false;
@@ -56,37 +56,44 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   Future<void> _loadData() async {
     if (_isEditMode) {
       try {
-        final categoryDao = await ref.read(categoryDaoProvider.future);
-        final category = await categoryDao.getCategoryById(widget.categoryId!);
+        final repos = await ref.read(vaultRepositories.future);
+        final categoryResult = await repos.category.getCategory(widget.categoryId!);
+        final category = categoryResult.getOrNull()?.getOrNull();
+
         if (category != null) {
-          // Если есть parentId, загружаем имя родителя
           String? parentName;
           if (category.parentId != null) {
-            final parent = await categoryDao.getCategoryById(
-              category.parentId!,
-            );
-            parentName = parent?.name;
+            final parentResult = await repos.category.getCategory(category.parentId!);
+            parentName = parentResult.getOrNull()?.getOrNull()?.name;
           }
+
+          IconRefDto? iconRef;
+          if (category.iconRefId != null) {
+            final iconResult =
+                await repos.icon.getIconRef(category.iconRefId!);
+            final viewDto = iconResult.getOrNull()?.getOrNull();
+            if (viewDto != null) {
+              iconRef = IconRefDto(
+                id: viewDto.id,
+                iconSourceType: viewDto.iconSourceType,
+                iconPackId: viewDto.iconPackId,
+                iconValue: viewDto.iconValue,
+                customIconId: viewDto.customIconId,
+                color: viewDto.color,
+                backgroundColor: viewDto.backgroundColor,
+                createdAt: viewDto.createdAt,
+                modifiedAt: viewDto.modifiedAt,
+              );
+            }
+          }
+
           setState(() {
             _name = category.name;
-            _description = category.description;
-            _iconRef = IconRefDto.fromFields(
-              iconSource: category.iconSource,
-              iconValue: category.iconValue,
-              legacyIconId: category.iconId,
-            );
-            _selectedType = category.type;
+            _description = null; // В CategoryViewDto нет описания? Проверим.
+            _iconRef = iconRef;
             _parentId = category.parentId;
             _parentName = parentName;
-
-            if (category.color.isNotEmpty) {
-              try {
-                final hexColor = category.color.replaceAll('#', '');
-                _selectedColor = Color(int.parse('FF$hexColor', radix: 16));
-              } catch (e) {
-                _selectedColor = null;
-              }
-            }
+            _selectedColor = Color(0xFF000000 | category.color);
           });
         }
       } catch (e) {
@@ -104,7 +111,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
       _selectedColor = null;
       _parentId = null;
       _parentName = null;
-      _selectedType = _convertEntityTypeToCategoryType(widget.forEntity);
     }
     setState(() {
       _isDataLoading = false;
@@ -153,10 +159,10 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 
   Future<bool> _handleBeforeIconPickerOpen(BuildContext context) async {
     try {
-      final iconDao = await ref.read(iconDaoProvider.future);
-      final icons = await iconDao.getIconCardsPaginated(limit: 1, offset: 0);
+      final repos = await ref.read(vaultRepositories.future);
+      final icons = await repos.icon.getCustomIcons();
 
-      if (icons.isNotEmpty) {
+      if (icons.getOrNull()?.isNotEmpty ?? false) {
         return true;
       }
 
@@ -243,7 +249,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
         ],
       ),
       body: SafeArea(
-        child: Center(
+        child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Form(
@@ -288,39 +294,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Тип категории
-                  if (_isEditMode)
-                    TextFormField(
-                      initialValue: _getCategoryTypeLabel(_selectedType),
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText: 'Тип категории',
-                      ),
-                      enabled: false,
-                    )
-                  else
-                    DropdownButtonFormField<CategoryType>(
-                      initialValue: _selectedType,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText: 'Тип категории',
-                      ),
-                      items: CategoryType.values.map((type) {
-                        return DropdownMenuItem(
-                          value: type,
-                          child: Text(_getCategoryTypeLabel(type)),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedType = value;
-                          });
-                        }
-                      },
-                    ),
-                  const SizedBox(height: 16),
-
                   // Родительская категория
                   CategoryPickerField(
                     label: 'Родительская категория',
@@ -336,20 +309,20 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Описание
-                  TextFormField(
-                    initialValue: _description,
-                    decoration: primaryInputDecoration(
-                      context,
-                      labelText: 'Описание',
-                      hintText: 'Введите описание категории (необязательно)',
-                    ),
-                    maxLines: 3,
-                    onChanged: (value) {
-                      _description = value.isEmpty ? null : value;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                  // Описание (если будет добавлено в DTO, пока пропустим или оставим для будущего)
+                  // TextFormField(
+                  //   initialValue: _description,
+                  //   decoration: primaryInputDecoration(
+                  //     context,
+                  //     labelText: 'Описание',
+                  //     hintText: 'Введите описание категории (необязательно)',
+                  //   ),
+                  //   maxLines: 3,
+                  //   onChanged: (value) {
+                  //     _description = value.isEmpty ? null : value;
+                  //   },
+                  // ),
+                  // const SizedBox(height: 16),
 
                   // Выбор цвета
                   InputDecorator(
@@ -405,29 +378,39 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final categoryDao = await ref.read(categoryDaoProvider.future);
+      final repos = await ref.read(vaultRepositories.future);
 
-      String? colorHex;
-      if (_selectedColor != null) {
-        colorHex = _selectedColor!
-            .toARGB32()
-            .toRadixString(16)
-            .substring(2)
-            .toUpperCase();
+      // Сначала разбираемся с IconRef
+      String? iconRefId;
+      if (_iconRef != null) {
+        // Если иконка выбрана, создаем IconRef если это новый
+        if (_iconRef!.id == null) {
+          final createIconRefDto = CreateIconRefDto(
+            iconSourceType: _iconRef!.iconSourceType,
+            iconPackId: _iconRef!.iconPackId,
+            iconValue: _iconRef!.iconValue,
+            customIconId: _iconRef!.customIconId,
+          );
+          final res = await repos.icon.createIconRef(createIconRefDto);
+          iconRefId = res.getOrThrow();
+        } else {
+          iconRefId = _iconRef!.id;
+        }
       }
 
+      final colorInt = _selectedColor?.toARGB32() ?? 0xFFFFFF;
+
       if (_isEditMode) {
-        final dto = UpdateCategoryDto(
-          name: _name.trim(),
-          description: _description,
-          color: colorHex,
-          iconId: null,
-          iconSource: _iconRef?.sourceValue,
-          iconValue: _iconRef?.value,
-          parentId: Value(_parentId),
+        final dto = PatchCategoryDto(
+          id: widget.categoryId!,
+          name: FieldUpdate.set(_name.trim()),
+          iconRefId: FieldUpdate.set(iconRefId),
+          color: FieldUpdate.set(colorInt),
+          parentId: FieldUpdate.set(_parentId),
         );
 
-        await categoryDao.updateCategory(widget.categoryId!, dto);
+        final result = await repos.category.updateCategory(dto);
+        result.getOrThrow();
 
         ref
             .read(managerRefreshTriggerProvider.notifier)
@@ -441,16 +424,13 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
       } else {
         final dto = CreateCategoryDto(
           name: _name.trim(),
-          type: _selectedType.value,
-          description: _description,
-          color: colorHex,
-          iconId: null,
-          iconSource: _iconRef?.sourceValue,
-          iconValue: _iconRef?.value,
+          iconRefId: iconRefId,
+          color: colorInt,
           parentId: _parentId,
         );
 
-        await categoryDao.createCategory(dto);
+        final result = await repos.category.createCategory(dto);
+        result.getOrThrow();
 
         ref
             .read(managerRefreshTriggerProvider.notifier)
@@ -468,83 +448,5 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
         Toaster.error(title: 'Ошибка', description: e.toString());
       }
     }
-  }
-}
-
-/// Получить человекочитаемое название типа категории
-String _getCategoryTypeLabel(CategoryType type) {
-  switch (type) {
-    case CategoryType.note:
-      return 'Заметки';
-    case CategoryType.password:
-      return 'Пароли';
-    case CategoryType.totp:
-      return 'TOTP коды';
-    case CategoryType.bankCard:
-      return 'Банковские карты';
-    case CategoryType.file:
-      return 'Файлы';
-    case CategoryType.document:
-      return 'Документы';
-    case CategoryType.contact:
-      return 'Контакты';
-    case CategoryType.apiKey:
-      return 'API-ключи';
-    case CategoryType.sshKey:
-      return 'SSH-ключи';
-    case CategoryType.certificate:
-      return 'Сертификаты';
-    case CategoryType.cryptoWallet:
-      return 'Криптокошельки';
-    case CategoryType.wifi:
-      return 'Wi-Fi';
-    case CategoryType.identity:
-      return 'Идентификация';
-    case CategoryType.licenseKey:
-      return 'Лицензии';
-    case CategoryType.recoveryCodes:
-      return 'Коды восстановления';
-    case CategoryType.loyaltyCard:
-      return 'Карты лояльности';
-    case CategoryType.mixed:
-      return 'Смешанная';
-  }
-}
-
-/// Преобразовать EntityType в CategoryType
-CategoryType _convertEntityTypeToCategoryType(EntityType entityType) {
-  switch (entityType) {
-    case EntityType.password:
-      return CategoryType.password;
-    case EntityType.note:
-      return CategoryType.note;
-    case EntityType.bankCard:
-      return CategoryType.bankCard;
-    case EntityType.file:
-      return CategoryType.file;
-    case EntityType.otp:
-      return CategoryType.totp;
-    case EntityType.document:
-      return CategoryType.document;
-    case EntityType.contact:
-      return CategoryType.contact;
-    case EntityType.apiKey:
-      return CategoryType.apiKey;
-    case EntityType.sshKey:
-      return CategoryType.sshKey;
-    case EntityType.certificate:
-      return CategoryType.certificate;
-    case EntityType.cryptoWallet:
-      return CategoryType.cryptoWallet;
-    case EntityType.wifi:
-      return CategoryType.wifi;
-    case EntityType.identity:
-      return CategoryType.identity;
-    case EntityType.licenseKey:
-      return CategoryType.licenseKey;
-    case EntityType.recoveryCodes:
-      return CategoryType.recoveryCodes;
-    case EntityType.loyaltyCard:
-      return CategoryType.loyaltyCard;
   }
 }

@@ -1,20 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_filter_provider.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/shared/ui/type_chip.dart';
 
 /// Панель фильтров для пикера категорий
 class CategoryPickerFilters extends ConsumerWidget {
-  const CategoryPickerFilters({
-    super.key,
-    this.hideTypeFilter = false,
-    this.selectedCount = 0,
-  });
-
-  /// Скрыть фильтр по типу (используется когда тип уже задан извне)
-  final bool hideTypeFilter;
+  const CategoryPickerFilters({super.key, this.selectedCount = 0});
 
   /// Количество выбранных категорий
   final int selectedCount;
@@ -76,70 +67,6 @@ class CategoryPickerFilters extends ConsumerWidget {
               ],
             ],
           ),
-
-          // Фильтр по типу (скрываем если hideTypeFilter = true)
-          if (!hideTypeFilter) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        TypeChip(
-                          label: 'Все',
-                          isSelected: filter.types.isEmpty,
-                          onTap: () => filterNotifier.updateType([]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Пароли',
-                          isSelected: filter.types.contains(
-                            CategoryType.password,
-                          ),
-                          onTap: () => filterNotifier.updateType([
-                            CategoryType.password,
-                          ]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Банковские карты',
-                          isSelected: filter.types.contains(
-                            CategoryType.bankCard,
-                          ),
-                          onTap: () => filterNotifier.updateType([
-                            CategoryType.bankCard,
-                          ]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Заметки',
-                          isSelected: filter.types.contains(CategoryType.note),
-                          onTap: () =>
-                              filterNotifier.updateType([CategoryType.note]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Файлы',
-                          isSelected: filter.types.contains(CategoryType.file),
-                          onTap: () =>
-                              filterNotifier.updateType([CategoryType.file]),
-                        ),
-                        const SizedBox(width: 8),
-                        TypeChip(
-                          label: 'Mixed',
-                          isSelected: filter.types.contains(CategoryType.mixed),
-                          onTap: () =>
-                              filterNotifier.updateType([CategoryType.mixed]),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );

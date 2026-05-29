@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/icons_filter.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/custom_icons.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
+import '../models/icon_manager_filter.dart';
 import '../provider/icon_filter_provider.dart';
 
 /// SliverAppBar для экрана управления иконками
@@ -17,7 +17,7 @@ class IconManagerAppBar extends ConsumerStatefulWidget {
 
 class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
   late final TextEditingController _searchController;
-  late final ProviderSubscription<IconsFilter> _filterSubscription;
+  late final ProviderSubscription<IconManagerFilter> _filterSubscription;
   bool _isSearchActive = false;
 
   @override
@@ -127,11 +127,10 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
               iconFilterProvider.select((filter) => filter.sortField),
             );
 
-            return PopupMenuButton<IconsSortField>(
+            return PopupMenuButton<IconManagerSortField>(
               icon: const Icon(Icons.sort),
               tooltip: 'Сортировка',
               onSelected: (sortField) async {
-                // Избегаем ненужного обновления если значение не изменилось
                 if (sortField != currentSortField) {
                   await ref
                       .read(iconFilterProvider.notifier)
@@ -140,48 +139,36 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
               },
               itemBuilder: (context) => [
                 PopupMenuItem(
-                  value: IconsSortField.name,
+                  value: IconManagerSortField.name,
                   child: Row(
                     children: [
-                      if (currentSortField == IconsSortField.name)
+                      if (currentSortField == IconManagerSortField.name)
                         const Icon(Icons.check, size: 20),
-                      if (currentSortField == IconsSortField.name)
+                      if (currentSortField == IconManagerSortField.name)
                         const SizedBox(width: 8),
                       const Text('По названию'),
                     ],
                   ),
                 ),
                 PopupMenuItem(
-                  value: IconsSortField.type,
+                  value: IconManagerSortField.createdAt,
                   child: Row(
                     children: [
-                      if (currentSortField == IconsSortField.type)
+                      if (currentSortField == IconManagerSortField.createdAt)
                         const Icon(Icons.check, size: 20),
-                      if (currentSortField == IconsSortField.type)
-                        const SizedBox(width: 8),
-                      const Text('По типу'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: IconsSortField.createdAt,
-                  child: Row(
-                    children: [
-                      if (currentSortField == IconsSortField.createdAt)
-                        const Icon(Icons.check, size: 20),
-                      if (currentSortField == IconsSortField.createdAt)
+                      if (currentSortField == IconManagerSortField.createdAt)
                         const SizedBox(width: 8),
                       const Text('По дате создания'),
                     ],
                   ),
                 ),
                 PopupMenuItem(
-                  value: IconsSortField.modifiedAt,
+                  value: IconManagerSortField.modifiedAt,
                   child: Row(
                     children: [
-                      if (currentSortField == IconsSortField.modifiedAt)
+                      if (currentSortField == IconManagerSortField.modifiedAt)
                         const Icon(Icons.check, size: 20),
-                      if (currentSortField == IconsSortField.modifiedAt)
+                      if (currentSortField == IconManagerSortField.modifiedAt)
                         const SizedBox(width: 8),
                       const Text('По дате изменения'),
                     ],
@@ -206,7 +193,7 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
     );
   }
 
-  int _countActiveFilters(IconsFilter filter) {
+  int _countActiveFilters(IconManagerFilter filter) {
     var count = 0;
     if (filter.type != null && filter.type!.trim().isNotEmpty) {
       count++;
@@ -265,10 +252,10 @@ class _IconManagerAppBarState extends ConsumerState<IconManagerAppBar> {
                           value: null,
                           child: Text('Любой'),
                         ),
-                        for (final type in const [IconType.svg, IconType.png])
+                        for (final format in CustomIconFormat.values)
                           DropdownMenuItem<String?>(
-                            value: type.value,
-                            child: Text(type.value.toUpperCase()),
+                            value: format.name,
+                            child: Text(format.name.toUpperCase()),
                           ),
                       ],
                       onChanged: (value) {
