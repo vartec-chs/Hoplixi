@@ -22,15 +22,6 @@ class CryptoWalletService
         // 1. Создаем запись в репозитории
         final itemId = (await repository.create(dto)).getOrThrow();
 
-        // 2. Привязываем теги
-        if (dto.tagIds.isNotEmpty) {
-          final res = await relationsService.replaceTags(
-            itemId: itemId,
-            tagIds: dto.tagIds,
-          );
-          if (res.isError()) throw res.exceptionOrNull()!;
-        }
-
         // 3. Получаем созданное состояние для snapshot
         final createdViewResult = await repository.getViewById(itemId);
         final createdView = createdViewResult.getOrThrow().fold(
@@ -95,16 +86,6 @@ class CryptoWalletService
 
         // 3. Обновляем данные в репозитории
         (await repository.update(dto)).getOrThrow();
-
-        // 4. Обновляем теги если переданы
-        final tagsUpdate = dto.tags;
-        if (tagsUpdate is FieldUpdateSet<List<String>>) {
-          final res = await relationsService.replaceTags(
-            itemId: itemId,
-            tagIds: tagsUpdate.value ?? const [],
-          );
-          if (res.isError()) throw res.exceptionOrNull()!;
-        }
 
         // 5. Пишем event updated
         final eventRes = await historyService.writeEvent(

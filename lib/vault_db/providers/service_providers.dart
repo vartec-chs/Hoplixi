@@ -61,9 +61,7 @@ final vaultItemsStateServiceProvider = FutureProvider<VaultItemsStateService>((
 final vaultEntityServices = FutureProvider<VaultEntityServices>((ref) async {
   final db = await ref.watch(vaultDBProvider.future);
   final repositories = await ref.watch(vaultRepositories.future);
-  final relationsService = await ref.watch(
-    vaultItemRelationsServiceProvider.future,
-  );
+ 
   final vaultHistoryServiceAssembly = await ref.watch(
     vaultHistoryServiceAssemblyProvider.future,
   );
@@ -73,7 +71,6 @@ final vaultEntityServices = FutureProvider<VaultEntityServices>((ref) async {
   return VaultEntityServices(
     db: db,
     repositories: repositories,
-    relationsService: relationsService,
     historyService: vaultHistoryServiceAssembly.historyService,
     vaultItemsStateService: vaultItemsStateService,
   );

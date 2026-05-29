@@ -17,7 +17,6 @@ import 'package:hoplixi/vault_db/core/services/entities/recovery_codes_service.d
 import 'package:hoplixi/vault_db/core/services/entities/ssh_key_service.dart';
 import 'package:hoplixi/vault_db/core/services/entities/wifi_service.dart';
 import 'package:hoplixi/vault_db/core/services/history/facades/vault_history_service.dart';
-import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
 import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
@@ -26,13 +25,11 @@ class VaultEntityServices {
   VaultEntityServices({
     required VaultDB db,
     required VaultRepositories repositories,
-    required VaultItemRelationsService relationsService,
     required VaultHistoryService historyService,
     required VaultItemsStateService vaultItemsStateService,
   }) : _deps = VaultEntityServiceDeps(
          db: db,
          repositories: repositories,
-         relationsService: relationsService,
          historyService: historyService,
          vaultItemsStateService: vaultItemsStateService,
        );

@@ -735,6 +735,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
 
     try {
+      
       final repos = await ref.read(vaultRepositories.future);
       final storeMeta = repos.storeMeta;
       final metaResult = await storeMeta.getStoreMeta();

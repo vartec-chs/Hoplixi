@@ -52,6 +52,13 @@ class SshKeyRepository {
               ),
             );
 
+        
+        if (dto.tagIds.isNotEmpty) {
+          for (final tagId in dto.tagIds) {
+            await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+          }
+        }
+
         return itemId;
       }),
       (e, st) => e is DBCoreError
@@ -100,6 +107,15 @@ class SshKeyRepository {
             keySize: dto.sshKey.keySize.toNullableValue(),
           ),
         );
+        
+        final tagsUpdate = dto.tags;
+        if (tagsUpdate is FieldUpdateSet<List<String>>) {
+          await db.itemTagsDao.removeAllTagsFromItem(itemId);
+          for (final tagId in tagsUpdate.value ?? []) {
+            await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+          }
+        }
+
         return unit;
       }),
       (e, st) => e is DBCoreError

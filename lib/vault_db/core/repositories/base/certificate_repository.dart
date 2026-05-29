@@ -64,6 +64,13 @@ class CertificateRepository {
               ),
             );
 
+        
+        if (dto.tagIds.isNotEmpty) {
+          for (final tagId in dto.tagIds) {
+            await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+          }
+        }
+
         return itemId;
       }),
       (e, st) => e is DBCoreError
