@@ -97,6 +97,22 @@ class StoreMetaRepository {
     );
   }
 
+  /// Сменить пароль базы данных через PRAGMA rekey.
+  AsyncDBResult<Unit> changePassword(String newPragmaKey) {
+    return db.storeMetaDao.changePassword(newPragmaKey);
+  }
+
+  /// Обновить хэш пароля и соль в метаданных.
+  AsyncDBResult<Unit> updatePasswordHash({
+    required String newPasswordHash,
+    required String newSalt,
+  }) {
+    return db.storeMetaDao.updatePasswordHash(
+      newPasswordHash: newPasswordHash,
+      newSalt: newSalt,
+    );
+  }
+
   /// Обновить время последнего открытия (вызывается при входе).
   AsyncDBResult<Unit> updateLastOpened() {
     return tryCatchAsync(

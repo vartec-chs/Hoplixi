@@ -1,6 +1,10 @@
 import 'package:drift/drift.dart';
+import 'package:hoplixi/vault_db/core/errors/db_error.dart';
+import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
+import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/store_meta_dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:result_dart/result_dart.dart';
 
 import '../../../scheme/tables/system/store/store_meta_table.dart';
 
@@ -43,6 +47,7 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
               storeMetaTable.name,
               storeMetaTable.description,
               storeMetaTable.passwordHash,
+              storeMetaTable.passwordSalt,
               storeMetaTable.attachmentKey,
               storeMetaTable.createdAt,
               storeMetaTable.modifiedAt,
@@ -57,6 +62,7 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
       name: row.name,
       description: row.description,
       passwordHash: row.passwordHash,
+      passwordSalt: row.passwordSalt,
       attachmentKey: row.attachmentKey,
       createdAt: row.createdAt,
       modifiedAt: row.modifiedAt,
@@ -74,6 +80,7 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
         name: dto.name,
         description: Value(dto.description),
         passwordHash: dto.passwordHash,
+        passwordSalt: dto.passwordSalt,
         attachmentKey: dto.attachmentKey,
         createdAt: Value(now),
         modifiedAt: Value(now),
@@ -119,6 +126,7 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
     String? name,
     Value<String?> description = const Value.absent(),
     String? passwordHash,
+    String? passwordSalt,
     DateTime? modifiedAt,
   }) {
     return (update(storeMetaTable)).write(
@@ -128,10 +136,57 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
         passwordHash: passwordHash == null
             ? const Value.absent()
             : Value(passwordHash),
+        passwordSalt: passwordSalt == null
+            ? const Value.absent()
+            : Value(passwordSalt),
         modifiedAt: modifiedAt == null
             ? const Value.absent()
             : Value(modifiedAt),
       ),
+    );
+  }
+
+  /// Сменить пароль базы данных через PRAGMA rekey.
+  AsyncDBResult<Unit> changePassword(String newPragmaKey) {
+    return tryCatchAsync(
+      () async {
+        if (newPragmaKey.startsWith("x'")) {
+          await customStatement('PRAGMA rekey = "$newPragmaKey";');
+        } else {
+          final escaped = newPragmaKey.replaceAll("'", "''");
+          await customStatement("PRAGMA rekey = '$escaped';");
+        }
+        return unit;
+      },
+      (e, st) => DBCoreError.sqlite(
+        message: 'Не удалось сменить пароль БД: $e',
+        cause: e,
+        stackTrace: st,
+      ),
+    );
+  }
+
+  /// Обновить хэш пароля и соль в метаданных.
+  AsyncDBResult<Unit> updatePasswordHash({
+    required String newPasswordHash,
+    required String newSalt,
+  }) {
+    return tryCatchAsync(
+      () async {
+        await patchStoreMeta(
+          passwordHash: newPasswordHash,
+          passwordSalt: newSalt,
+          modifiedAt: DateTime.now(),
+        );
+        return unit;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при обновлении хэша пароля',
+              cause: e,
+              stackTrace: st,
+            ),
     );
   }
 }

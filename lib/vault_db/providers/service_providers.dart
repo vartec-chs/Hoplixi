@@ -4,6 +4,7 @@ import 'package:hoplixi/vault_db/core/services/document_versions/document_versio
 import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
 import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
 import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
+import 'package:hoplixi/vault_db/core/services/system/store_meta_service.dart';
 import 'package:hoplixi/vault_db/core/services/vault_entity_services.dart';
 import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
@@ -15,6 +16,12 @@ import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
 
 final iconPackCatalogServiceProvider = Provider<IconPackCatalogService>((ref) {
   return const IconPackCatalogService();
+});
+
+final storeMetaServiceProvider = FutureProvider<StoreMetaService>((ref) async {
+  final db = await ref.watch(vaultDBProvider.future);
+  final repos = await ref.watch(vaultRepositories.future);
+  return StoreMetaService(db: db, repository: repos.storeMeta);
 });
 
 final documentVersionServiceProvider = FutureProvider<DocumentVersionService>((

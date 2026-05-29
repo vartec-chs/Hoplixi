@@ -223,6 +223,7 @@ class CreateVaultDB {
       name: dto.name,
       description: dto.description,
       passwordHash: passwordHash,
+      passwordSalt: passwordSalt,
       attachmentKey: attachmentKey,
     );
 

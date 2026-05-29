@@ -23,6 +23,9 @@ class StoreMetaTable extends Table {
   /// Хэш/верификатор мастер-пароля.
   TextColumn get passwordHash => text()();
 
+  /// Соль для хэширования пароля.
+  TextColumn get passwordSalt => text()();
+
   /// Ключ для attachments.
   TextColumn get attachmentKey => text()();
 
@@ -80,6 +83,13 @@ class StoreMetaTable extends Table {
     ''',
 
     '''
+    CONSTRAINT ${StoreMetaConstraint.passwordSaltNotBlank.constraintName}
+    CHECK (
+      length(trim(password_salt)) > 0
+    )
+    ''',
+
+    '''
     CONSTRAINT ${StoreMetaConstraint.attachmentKeyNotBlank.constraintName}
     CHECK (
       length(trim(attachment_key)) > 0
@@ -98,6 +108,8 @@ enum StoreMetaConstraint {
   descriptionNotBlank('chk_store_meta_description_not_blank'),
 
   passwordHashNotBlank('chk_store_meta_password_hash_not_blank'),
+
+  passwordSaltNotBlank('chk_store_meta_password_salt_not_blank'),
 
   attachmentKeyNotBlank('chk_store_meta_attachment_key_not_blank');
 

@@ -10,7 +10,7 @@ import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
 import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
-import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/services/db_key_derivation_service.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
@@ -101,7 +101,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         StoreSettingsKey.pinnedEntityTypes,
       )).getOrThrow();
 
-      final dbState = await ref.read(vaultDBProvider.future);
+      final dbState = await ref.read(vaultDBStateProvider.future);
       final manifest = dbState.path == null
           ? null
           : await StoreManifestService.readFrom(dbState.path!);
@@ -230,37 +230,23 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
 
     try {
       final repos = await ref.read(vaultRepositories.future);
-      final storeMeta = repos.storeMeta;
+      final storeMetaService = await ref.read(storeMetaServiceProvider.future);
       final storeSettings = repos.storeSettings;
       var settingsChanged = false;
 
-      // Обновляем имя если изменилось
-      if (state.newName.trim() != state.name) {
-        final result = await storeMeta.updateInfo(
+      // Обновляем имя или описание если изменилось
+      if (state.newName.trim() != state.name ||
+          state.newDescription != state.description) {
+        final result = await storeMetaService.updateInfo(
           name: state.newName.trim(),
           description: state.newDescription,
         );
         if (result.isError()) {
           state = state.copyWith(
             isSaving: false,
-            saveError: 'Не удалось обновить имя хранилища',
+            saveError: 'Не удалось обновить информацию о хранилище',
           );
-          return const Failure('Не удалось обновить имя хранилища');
-        }
-      }
-
-      // Обновляем описание если изменилось
-      if (state.newDescription != state.description) {
-        final result = await storeMeta.updateInfo(
-          name: state.newName.trim(),
-          description: state.newDescription,
-        );
-        if (result.isError()) {
-          state = state.copyWith(
-            isSaving: false,
-            saveError: 'Не удалось обновить описание хранилища',
-          );
-          return const Failure('Не удалось обновить описание хранилища');
+          return const Failure('Не удалось обновить информацию о хранилище');
         }
       }
 
@@ -334,12 +320,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         ref.invalidate(pinnedEntityTypesProvider);
       }
 
-      if (settingsChanged) {
-        final touchResult = await repos.db.storeMetaDao.touchModifiedAt();
-        if (touchResult.isError()) {
-          logWarning('Failed to touchModifiedAt: ${touchResult.exceptionOrNull()}');
-        }
-      }
+ 
 
       if (shouldCleanupHistory) {
         final cleanup = await ref.read(performStoreCleanupProvider.future);
@@ -454,8 +435,8 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
 
     try {
-      final repos = await ref.read(vaultRepositories.future);
-      final dbState = await ref.read(vaultDBProvider.future);
+      final storeMetaService = await ref.read(storeMetaServiceProvider.future);
+      final dbState = await ref.read(vaultDBStateProvider.future);
       final currentPath = dbState.path;
 
       if (currentPath == null) {
@@ -509,24 +490,13 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         kdfVersion: keyConfig.kdfVersion,
       );
 
-      final result = await repos.db.storeMetaDao.changePassword(newPragmaKey);
-
-      final resultException = result.exceptionOrNull();
-
-      if (resultException != null) {
-        throw Exception(resultException);
-      }
-
-      // Генерируем новую соль и вычисляем хеш пароля
-      final newSalt = const Uuid().v4();
-      final newPasswordHash = _hashPassword(state.newPassword, newSalt);
-
-      final updateHashResult = await repos.db.storeMetaDao.updatePasswordHash(
-        newPasswordHash: newPasswordHash,
-        newSalt: newSalt,
+      final result = await storeMetaService.changePassword(
+        newPassword: state.newPassword,
+        newPragmaKey: newPragmaKey,
       );
-      if (updateHashResult.isError()) {
-        throw Exception(updateHashResult.exceptionOrNull());
+
+      if (result.isError()) {
+        throw Exception(result.exceptionOrNull()?.message);
       }
 
       // Обновляем пароль в истории, если он был сохранён
@@ -735,20 +705,19 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
 
     try {
-      
-      final repos = await ref.read(vaultRepositories.future);
-      final storeMeta = repos.storeMeta;
-      final metaResult = await storeMeta.getStoreMeta();
+      final storeMetaService = await ref.read(storeMetaServiceProvider.future);
+      final metaResult = await storeMetaService.getStoreMeta();
       final meta = metaResult.getOrNull();
 
       if (meta == null) {
         throw StateError('Метаданные хранилища не найдены');
       }
-      if (_hashPassword(masterPassword, meta.salt) != meta.passwordHash) {
+      if (storeMetaService.hashPassword(masterPassword, meta.passwordSalt) !=
+          meta.passwordHash) {
         throw StateError('Текущий мастер пароль неверен');
       }
 
-      final dbState = await ref.read(vaultDBProvider.future);
+      final dbState = await ref.read(vaultDBStateProvider.future);
       final currentPath = dbState.path;
       if (currentPath == null) {
         throw StateError('Не удалось определить текущее хранилище');
@@ -769,10 +738,12 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         kdfVersion: keyConfig.kdfVersion,
       );
 
-      final result = await repos.db.storeMetaDao.changePassword(newPragmaKey);
-      final resultException = result.exceptionOrNull();
-      if (resultException != null) {
-        throw Exception(resultException);
+      final result = await storeMetaService.changePassword(
+        newPassword: masterPassword,
+        newPragmaKey: newPragmaKey,
+      );
+      if (result.isError()) {
+        throw Exception(result.exceptionOrNull()?.message);
       }
 
       final updatedManifest = manifest.copyWith(
@@ -819,19 +790,19 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     );
 
     try {
-      final repos = await ref.read(vaultRepositories.future);
-      final storeMeta = repos.storeMeta;
-      final metaResult = await storeMeta.getStoreMeta();
+      final storeMetaService = await ref.read(storeMetaServiceProvider.future);
+      final metaResult = await storeMetaService.getStoreMeta();
       final meta = metaResult.getOrNull();
       
       if (meta == null) {
         throw StateError('Метаданные хранилища не найдены');
       }
-      if (_hashPassword(masterPassword, meta.salt) != meta.passwordHash) {
+      if (storeMetaService.hashPassword(masterPassword, meta.passwordSalt) !=
+          meta.passwordHash) {
         throw StateError('Текущий мастер пароль неверен');
       }
 
-      final dbState = await ref.read(vaultDBProvider.future);
+      final dbState = await ref.read(vaultDBStateProvider.future);
       final currentPath = dbState.path;
       if (currentPath == null) {
         throw StateError('Не удалось определить текущее хранилище');
@@ -852,10 +823,12 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         kdfVersion: keyConfig.kdfVersion,
       );
 
-      final result = await repos.db.storeMetaDao.changePassword(newPragmaKey);
-      final resultException = result.exceptionOrNull();
-      if (resultException != null) {
-        throw Exception(resultException);
+      final result = await storeMetaService.changePassword(
+        newPassword: masterPassword,
+        newPragmaKey: newPragmaKey,
+      );
+      if (result.isError()) {
+        throw Exception(result.exceptionOrNull()?.message);
       }
 
       final updatedManifest = enable
@@ -897,7 +870,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
   Future<void> _updateDatabaseHistory() async {
     try {
       // Получаем текущее состояние базы данных
-      final dbState = await ref.read(vaultDBProvider.future);
+      final dbState = await ref.read(vaultDBStateProvider.future);
       final currentPath = dbState.path;
 
       if (currentPath == null) {
@@ -1022,12 +995,5 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       return 'Пароли не совпадают';
     }
     return null;
-  }
-
-  /// Хешировать пароль с солью (аналогично VaultDBManager)
-  String _hashPassword(String password, String salt) {
-    final bytes = utf8.encode(password + salt);
-    final digest = sha512.convert(bytes);
-    return digest.toString();
   }
 }

@@ -11,6 +11,7 @@ sealed class StoreMetaDto with _$StoreMetaDto {
     required String name,
     String? description,
     required String passwordHash,
+    required String passwordSalt,
     required String attachmentKey,
     required DateTime createdAt,
     required DateTime modifiedAt,
@@ -27,6 +28,7 @@ sealed class CreateStoreMetaDto with _$CreateStoreMetaDto {
     required String name,
     String? description,
     required String passwordHash,
+    required String passwordSalt,
     required String attachmentKey,
     String? id,
   }) = _CreateStoreMetaDto;
@@ -58,6 +60,7 @@ sealed class PatchStoreMetaDto with _$PatchStoreMetaDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> name,
     @Default(FieldUpdate.keep()) FieldUpdate<String> description,
     @Default(FieldUpdate.keep()) FieldUpdate<String> passwordHash,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> passwordSalt,
     @Default(FieldUpdate.keep()) FieldUpdate<String> attachmentKey,
   }) = _PatchStoreMetaDto;
 }

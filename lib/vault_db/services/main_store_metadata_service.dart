@@ -30,6 +30,7 @@ class VaultDBMetadataService {
     final createDto = CreateStoreMetaDto(
       name: name,
       description: description,
+      passwordSalt: salt,
       passwordHash: passwordHash,
       attachmentKey: attachmentKey,
     );
