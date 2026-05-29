@@ -49,6 +49,10 @@ class VaultSnapshotsHistory extends Table {
   /// Не FK: icon_ref может быть удалён.
   TextColumn get iconRefId => text().nullable()();
 
+  /// JSON snapshot тегов item на момент создания snapshot.
+  /// Nullable: если тегов не было, хранится NULL.
+  TextColumn get tagsSnapshotJson => text().nullable()();
+
   /// Количество использований snapshot.
   IntColumn get usedCount => integer().withDefault(const Constant(0))();
 

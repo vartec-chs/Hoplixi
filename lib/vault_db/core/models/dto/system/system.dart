@@ -8,6 +8,5 @@ export 'store_dto.dart';
 export 'store_meta_dto.dart';
 export 'store_settings_dto.dart';
 export 'tag_dto.dart';
-export 'item_tag_history_dto.dart';
 export 'icon_dto.dart';
 export 'custom_field_dto.dart';

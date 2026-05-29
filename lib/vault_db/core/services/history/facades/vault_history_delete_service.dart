@@ -42,7 +42,6 @@ class VaultHistoryDeleteService {
     // 2. Delete relation history
     await db.vaultItemCustomFieldsHistoryDao
         .deleteCustomFieldsHistoryBySnapshotHistoryId(historyId);
-    await db.itemTagHistoryDao.deleteTagsBySnapshotHistoryId(historyId);
 
     await db.itemLinkHistoryDao.deleteLinksBySnapshotHistoryId(historyId);
 

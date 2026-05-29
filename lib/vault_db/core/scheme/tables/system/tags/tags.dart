@@ -1,26 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-enum TagType {
-  note,
-  password,
-  otp,
-  bankCard,
-  file,
-  document,
-  contact,
-  apiKey,
-  sshKey,
-  certificate,
-  cryptoWallet,
-  wifi,
-  identity,
-  licenseKey,
-  recoveryCodes,
-  loyaltyCard,
-  mixed,
-}
-
 @DataClassName('TagsData')
 class Tags extends Table {
   /// UUID v4.
@@ -31,9 +11,6 @@ class Tags extends Table {
 
   /// Цвет тега в формате RGB.
   IntColumn get color => integer().withDefault(const Constant(0xFFFFFF))();
-
-  /// Тип тега: password, note, otp, mixed и т.д.
-  TextColumn get type => textEnum<TagType>()();
 
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
@@ -46,7 +23,7 @@ class Tags extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {name, type},
+    {name},
   ];
 
   @override
@@ -109,7 +86,6 @@ enum TagConstraint {
 
 enum TagIndex {
   name('idx_tags_name'),
-  type('idx_tags_type'),
   color('idx_tags_color'),
   createdAt('idx_tags_created_at'),
   modifiedAt('idx_tags_modified_at');
@@ -121,7 +97,6 @@ enum TagIndex {
 
 final List<String> tagsTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${TagIndex.name.indexName} ON tags(name);',
-  'CREATE INDEX IF NOT EXISTS ${TagIndex.type.indexName} ON tags(type);',
   'CREATE INDEX IF NOT EXISTS ${TagIndex.color.indexName} ON tags(color);',
   'CREATE INDEX IF NOT EXISTS ${TagIndex.createdAt.indexName} ON tags(created_at);',
   'CREATE INDEX IF NOT EXISTS ${TagIndex.modifiedAt.indexName} ON tags(modified_at);',

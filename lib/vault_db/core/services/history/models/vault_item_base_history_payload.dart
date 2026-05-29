@@ -25,6 +25,7 @@ class VaultItemBaseHistoryPayload {
     this.deletedAt,
     this.recentScore,
     required this.historyCreatedAt,
+    this.tagsSnapshotJson,
   });
 
   final String historyId;
@@ -36,6 +37,7 @@ class VaultItemBaseHistoryPayload {
   final String? categoryId;
   final String? categoryRevisionId;
   final String? iconRefId;
+  final String? tagsSnapshotJson;
   final int usedCount;
   final bool isFavorite;
   final bool isArchived;
@@ -66,6 +68,11 @@ class VaultItemBaseHistoryPayload {
         key: 'iconRefId',
         label: 'Icon',
         value: iconRefId,
+      ),
+      HistoryFieldSnapshot<String>(
+        key: 'tagsSnapshotJson',
+        label: 'Tags snapshot',
+        value: tagsSnapshotJson,
       ),
       HistoryFieldSnapshot<int>(
         key: 'usedCount',

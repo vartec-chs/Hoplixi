@@ -43,7 +43,6 @@ final List<String> allTableIndexes = [
   ...itemTagsTableIndexes,
   ...storeSettingsTableIndexes,
   ...tagsTableIndexes,
-  ...itemTagHistoryTableIndexes,
   ...vaultEventsHistoryTableIndexes,
   ...vaultItemCustomFieldsTableIndexes,
   ...vaultItemCustomFieldsHistoryTableIndexes,

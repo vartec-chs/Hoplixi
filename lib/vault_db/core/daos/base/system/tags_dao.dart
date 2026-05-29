@@ -21,6 +21,10 @@ class TagsDao extends DatabaseAccessor<VaultDB> with _$TagsDaoMixin {
     return (select(tags)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
+  Future<TagsData?> getTagByName(String name) {
+    return (select(tags)..where((t) => t.name.equals(name))).getSingleOrNull();
+  }
+
   Future<List<TagsData>> getAllTags() {
     return select(tags).get();
   }
@@ -35,10 +39,6 @@ class TagsDao extends DatabaseAccessor<VaultDB> with _$TagsDaoMixin {
 
   Future<int> deleteTagById(String id) {
     return (delete(tags)..where((t) => t.id.equals(id))).go();
-  }
-
-  Future<List<TagsData>> getTagsByType(TagType type) {
-    return (select(tags)..where((t) => t.type.equals(type.name))).get();
   }
 
   Future<List<TagsData>> searchTagsByName(String query) {

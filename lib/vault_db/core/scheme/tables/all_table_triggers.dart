@@ -43,7 +43,6 @@ final List<String> allTableTriggers = [
   ...itemLinksTableTriggers,
   ...itemTagsTableTriggers,
   ...tagsTableTriggers,
-  ...itemTagHistoryTableTriggers,
   ...vaultEventsHistoryTableTriggers,
   ...vaultItemCustomFieldsTableTriggers,
   ...vaultItemCustomFieldsHistoryTableTriggers,

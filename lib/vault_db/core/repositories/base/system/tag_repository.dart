@@ -32,7 +32,6 @@ class TagRepository {
             id: drift.Value(id),
             name: name,
             color: drift.Value(dto.color),
-            type: dto.type,
             createdAt: drift.Value(now),
             modifiedAt: drift.Value(now),
           ),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:hoplixi/vault_db/core/models/dto_history/vault_item_tags_snapshot_dto.dart';
 import 'package:result_dart/result_dart.dart';
 import '../../daos/daos.dart';
 import '../../errors/db_result.dart';
@@ -16,12 +18,12 @@ class TagsRestoreResult {
 class TagsRestoreService {
   TagsRestoreService({
     required this.itemTagsDao,
-    required this.itemTagHistoryDao,
+    required this.vaultSnapshotsHistoryDao,
     required this.tagsDao,
   });
 
   final ItemTagsDao itemTagsDao;
-  final ItemTagHistoryDao itemTagHistoryDao;
+  final VaultSnapshotsHistoryDao vaultSnapshotsHistoryDao;
   final TagsDao tagsDao;
 
   Future<DBResult<TagsRestoreResult>> restoreTagsForSnapshot({
@@ -29,7 +31,7 @@ class TagsRestoreService {
     required String snapshotHistoryId,
   }) async {
     try {
-      final tagHistoryList = await itemTagHistoryDao.getTagsBySnapshotHistoryId(
+      final snapshot = await vaultSnapshotsHistoryDao.getSnapshotById(
         snapshotHistoryId,
       );
 
@@ -38,18 +40,20 @@ class TagsRestoreService {
       int restoredCount = 0;
       final skippedMissingTagIds = <String>[];
 
-      for (final tagHistory in tagHistoryList) {
-        final tagId = tagHistory.tagId;
-        if (tagId == null) {
-          continue; // Missing original ID
-        }
+      if (snapshot != null && snapshot.tagsSnapshotJson != null) {
+        final tagsSnapshot = VaultItemTagsSnapshotDto.fromJson(
+          jsonDecode(snapshot.tagsSnapshotJson!) as Map<String, dynamic>,
+        );
+        for (final tagItem in tagsSnapshot.tags) {
+          final tagName = tagItem.name;
 
-        final exists = await tagsDao.existsTag(tagId);
-        if (exists) {
-          await itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
-          restoredCount++;
-        } else {
-          skippedMissingTagIds.add(tagId);
+          final tag = await tagsDao.getTagByName(tagName);
+          if (tag != null) {
+            await itemTagsDao.assignTagToItem(itemId: itemId, tagId: tag.id);
+            restoredCount++;
+          } else {
+            skippedMissingTagIds.add(tagName);
+          }
         }
       }
 

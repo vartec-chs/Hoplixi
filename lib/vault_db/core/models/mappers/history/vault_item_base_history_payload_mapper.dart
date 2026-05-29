@@ -28,6 +28,7 @@ extension VaultSnapshotHistoryBasePayloadMapper on VaultSnapshotHistoryData {
       deletedAt: deletedAt,
       recentScore: recentScore,
       historyCreatedAt: historyCreatedAt,
+      tagsSnapshotJson: tagsSnapshotJson,
     );
   }
 }
@@ -56,6 +57,7 @@ extension VaultItemsDataBasePayloadMapper on VaultItemsData {
       deletedAt: deletedAt,
       recentScore: recentScore,
       historyCreatedAt: DateTime.now(),
+      tagsSnapshotJson: null, // current tags are loaded via different mechanism
     );
   }
 }
@@ -72,6 +74,7 @@ extension VaultItemBaseHistoryPayloadMapper on VaultItemBaseHistoryPayload {
       categoryId: categoryId,
       categoryRevisionId: categoryRevisionId,
       iconRefId: iconRefId,
+      tagsSnapshotJson: tagsSnapshotJson,
       usedCount: usedCount,
       isFavorite: isFavorite,
       isArchived: isArchived,

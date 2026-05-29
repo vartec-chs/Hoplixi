@@ -40,46 +40,6 @@ class SnapshotRelationsRepository {
     );
   }
 
-  AsyncDBResult<Unit> snapshotTagsForItem({
-    required String historyId,
-    required String itemId,
-  }) {
-    return tryCatchAsync(
-      () async {
-        final now = DateTime.now();
-        final itemTags = await db.itemTagsDao.getTagsForItem(itemId);
-        if (itemTags.isEmpty) return unit;
-
-        final tagIds = itemTags.map((it) => it.tagId).toList();
-        final tags = await db.tagsDao.getTagsByIds(tagIds);
-
-        for (final tag in tags) {
-          await db.itemTagHistoryDao.insertTagHistory(
-            ItemTagHistoryCompanion.insert(
-              id: drift.Value(const Uuid().v4()),
-              historyId: drift.Value(historyId),
-              tagId: drift.Value(tag.id),
-              name: tag.name,
-              color: tag.color,
-              type: tag.type,
-              tagCreatedAt: drift.Value(tag.createdAt),
-              tagModifiedAt: drift.Value(tag.modifiedAt),
-              snapshotCreatedAt: drift.Value(now),
-            ),
-          );
-        }
-        return unit;
-      },
-      (e, st) => e is DBCoreError
-          ? e
-          : DBCoreError.unknown(
-              message: 'Ошибка при создании снимка тегов',
-              cause: e,
-              stackTrace: st,
-            ),
-    );
-  }
-
   AsyncDBResult<Unit> snapshotLinksForItem({
     required String historyId,
     required String itemId,

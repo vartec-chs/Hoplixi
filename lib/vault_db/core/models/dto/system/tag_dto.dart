@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../scheme/tables/system/tags/tags.dart';
 import '../../field_update.dart';
 
 part 'tag_dto.freezed.dart';
@@ -11,7 +10,6 @@ sealed class CreateTagDto with _$CreateTagDto {
   const factory CreateTagDto({
     required String name,
     @Default(0xFFFFFF) int color,
-    required TagType type,
   }) = _CreateTagDto;
 
   factory CreateTagDto.fromJson(Map<String, dynamic> json) =>
@@ -24,7 +22,6 @@ sealed class TagViewDto with _$TagViewDto {
     required String id,
     required String name,
     required int color,
-    required TagType type,
     required DateTime createdAt,
     required DateTime modifiedAt,
   }) = _TagViewDto;
@@ -39,7 +36,6 @@ sealed class TagCardDto with _$TagCardDto {
     required String id,
     required String name,
     required int color,
-    required TagType type,
   }) = _TagCardDto;
 
   factory TagCardDto.fromJson(Map<String, dynamic> json) =>

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/categories_dao.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/category_revisions_dao.dart';
@@ -5,9 +6,8 @@ import 'package:hoplixi/vault_db/core/daos/base/system/item_link_history_dao.dar
 import 'package:hoplixi/vault_db/core/daos/base/system/item_links_dao.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/item_tags_dao.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/tags_dao.dart';
-import 'package:hoplixi/vault_db/core/daos/base/system/item_tag_history_dao.dart';
+import 'package:hoplixi/vault_db/core/models/dto_history/vault_item_tags_snapshot_dto.dart';
 import 'package:result_dart/result_dart.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import '../../errors/db_error.dart';
@@ -20,7 +20,6 @@ class SnapshotRelationsService {
       itemTagsDao = db.itemTagsDao,
       itemLinksDao = db.itemLinksDao,
       categoryRevisionsDao = db.categoryRevisionsDao,
-      itemTagHistoryDao = db.itemTagHistoryDao,
       itemLinkHistoryDao = db.itemLinkHistoryDao;
 
   final VaultDB db;
@@ -30,7 +29,6 @@ class SnapshotRelationsService {
   final ItemTagsDao itemTagsDao;
   final ItemLinksDao itemLinksDao;
   final CategoryRevisionsDao categoryRevisionsDao;
-  final ItemTagHistoryDao itemTagHistoryDao;
   final ItemLinkHistoryDao itemLinkHistoryDao;
 
   AsyncDBResult<Optional<String>> snapshotCategoryForItem({
@@ -66,33 +64,31 @@ class SnapshotRelationsService {
     );
   }
 
-  AsyncDBResult<Unit> snapshotTagsForItem({
-    required String historyId,
+  AsyncDBResult<Optional<String>> snapshotTagsForItem({
     required String itemId,
   }) {
     return tryCatchAsync(
       () async {
         final itemTags = await itemTagsDao.getTagsForItem(itemId);
-        if (itemTags.isEmpty) return unit;
+        if (itemTags.isEmpty) return const None();
 
         final tagIds = itemTags.map((t) => t.tagId).toList();
         final tags = await tagsDao.getTagsByIds(tagIds);
 
-        for (final tag in tags) {
-          await itemTagHistoryDao.insertTagHistory(
-            ItemTagHistoryCompanion.insert(
-              historyId: Value(historyId),
-              itemId: Value(itemId),
-              tagId: Value(tag.id),
-              name: tag.name,
-              color: tag.color,
-              type: tag.type,
-              tagCreatedAt: Value(tag.createdAt),
-              tagModifiedAt: Value(tag.modifiedAt),
-            ),
-          );
-        }
-        return unit;
+        if (tags.isEmpty) return const None();
+
+        final snapshot = VaultItemTagsSnapshotDto(
+          tags: tags
+              .map(
+                (tag) => VaultItemTagSnapshotItemDto(
+                  name: tag.name,
+                  color: tag.color,
+                ),
+              )
+              .toList(),
+        );
+
+        return Some(jsonEncode(snapshot.toJson()));
       },
       (e, st) => e is DBCoreError
           ? e

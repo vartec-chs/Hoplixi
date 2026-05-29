@@ -68,7 +68,6 @@ part 'vault_db.g.dart';
     // --- История (Event Sourcing) ---
     VaultEventsHistory,
     VaultSnapshotsHistory,
-    ItemTagHistory,
     ItemLinkHistory,
     // --- История (Table-Per-Type) ---
     ApiKeyHistory,
@@ -96,7 +95,6 @@ part 'vault_db.g.dart';
     StoreSettingsDao,
     StoreMetaDao,
     CategoryRevisionsDao,
-    ItemTagHistoryDao,
     ItemLinkHistoryDao,
     VaultItemsDao,
     PasswordItemsDao,

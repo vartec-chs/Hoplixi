@@ -313,8 +313,8 @@ class VaultHistoryServiceAssembly {
         ),
         tagsRestoreService: TagsRestoreService(
           itemTagsDao: db.itemTagsDao,
+          vaultSnapshotsHistoryDao: db.vaultSnapshotsHistoryDao,
           tagsDao: db.tagsDao,
-          itemTagHistoryDao: db.itemTagHistoryDao,
         ),
         itemLinksRestoreService: ItemLinksRestoreService(
           itemLinkHistoryDao: db.itemLinkHistoryDao,

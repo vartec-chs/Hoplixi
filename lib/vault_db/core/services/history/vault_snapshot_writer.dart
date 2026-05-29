@@ -57,11 +57,6 @@ class VaultSnapshotWriter {
       )).getOrThrow();
 
       if (includeRelations) {
-        (await snapshotRelationsService.snapshotTagsForItem(
-          historyId: historyId,
-          itemId: item.itemId,
-        )).getOrThrow();
-
         (await snapshotRelationsService.snapshotLinksForItem(
           historyId: historyId,
           itemId: item.itemId,
@@ -80,11 +75,16 @@ class VaultSnapshotWriter {
       final historyId = const Uuid().v4();
       final now = DateTime.now();
 
-      final categoryHistoryIdOpt =
+      final categoryRevisionIdOpt =
           (await snapshotRelationsService.snapshotCategoryForItem(
             categoryId: item.categoryId,
             itemId: item.itemId,
             snapshotId: historyId,
+          )).getOrThrow();
+
+      final tagsSnapshotJsonOpt =
+          (await snapshotRelationsService.snapshotTagsForItem(
+            itemId: item.itemId,
           )).getOrThrow();
 
       await vaultSnapshotsHistoryDao.insertVaultSnapshot(
@@ -96,8 +96,9 @@ class VaultSnapshotWriter {
           name: item.name,
           description: Value(item.description),
           categoryId: Value(item.categoryId),
-          categoryRevisionId: Value(categoryHistoryIdOpt.getOrNull()),
+          categoryRevisionId: Value(categoryRevisionIdOpt.getOrNull()),
           iconRefId: Value(item.iconRefId),
+          tagsSnapshotJson: Value(tagsSnapshotJsonOpt.getOrNull()),
           usedCount: Value(item.usedCount),
           isFavorite: Value(item.isFavorite),
           isArchived: Value(item.isArchived),
