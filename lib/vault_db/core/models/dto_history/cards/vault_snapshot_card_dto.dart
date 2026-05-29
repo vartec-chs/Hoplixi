@@ -16,7 +16,7 @@ sealed class VaultSnapshotCardDto with _$VaultSnapshotCardDto {
     required String name,
     String? description,
     String? categoryId,
-    String? categoryHistoryId,
+    String? categoryRevisionId,
     String? iconRefId,
     required int usedCount,
     required bool isFavorite,

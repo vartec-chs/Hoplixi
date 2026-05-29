@@ -5,7 +5,7 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 part 'contact_items_dao.g.dart';
 
-@DriftAccessor(tables: [ContactItemConstraint])
+@DriftAccessor(tables: [ContactItems])
 class ContactItemsDao extends DatabaseAccessor<VaultDB>
     with _$ContactItemsDaoMixin {
   ContactItemsDao(super.db);

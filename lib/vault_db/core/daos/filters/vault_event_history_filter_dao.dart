@@ -28,7 +28,7 @@ class VaultEventHistoryFilterDao extends DatabaseAccessor<VaultDB>
       ..orderBy([
         (t) => switch (filter.sortBy) {
           EventHistorySortBy.eventCreatedAt => OrderingTerm(
-            expression: t.eventCreatedAt,
+            expression: t.createdAt,
             mode: mode,
           ),
           EventHistorySortBy.name => OrderingTerm(
@@ -111,12 +111,12 @@ class VaultEventHistoryFilterDao extends DatabaseAccessor<VaultDB>
     }
 
     if (filter.eventCreatedAfter != null) {
-      whereExpr &= vaultEventsHistory.eventCreatedAt.isBiggerOrEqualValue(
+      whereExpr &= vaultEventsHistory.createdAt.isBiggerOrEqualValue(
         filter.eventCreatedAfter!,
       );
     }
     if (filter.eventCreatedBefore != null) {
-      whereExpr &= vaultEventsHistory.eventCreatedAt.isSmallerOrEqualValue(
+      whereExpr &= vaultEventsHistory.createdAt.isSmallerOrEqualValue(
         filter.eventCreatedBefore!,
       );
     }

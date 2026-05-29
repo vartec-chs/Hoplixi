@@ -1,7 +1,6 @@
 export 'category_dto.dart';
 export 'custom_icon_dto.dart';
 export 'icon_ref_dto.dart';
-export 'item_category_history_dto.dart';
 export 'item_link_dto.dart';
 export 'item_link_history_dto.dart';
 export 'item_tag_dto.dart';

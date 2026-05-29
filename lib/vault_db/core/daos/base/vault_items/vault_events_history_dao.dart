@@ -17,7 +17,7 @@ class VaultEventsHistoryDao extends DatabaseAccessor<VaultDB>
   Future<List<VaultEventHistoryData>> getEventsByItemId(String itemId) {
     return (select(vaultEventsHistory)
           ..where((t) => t.itemId.equals(itemId))
-          ..orderBy([(t) => OrderingTerm.desc(t.eventCreatedAt)]))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .get();
   }
 

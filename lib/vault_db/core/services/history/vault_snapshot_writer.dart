@@ -96,7 +96,7 @@ class VaultSnapshotWriter {
           name: item.name,
           description: Value(item.description),
           categoryId: Value(item.categoryId),
-          categoryHistoryId: Value(categoryHistoryIdOpt.getOrNull()),
+          categoryRevisionId: Value(categoryHistoryIdOpt.getOrNull()),
           iconRefId: Value(item.iconRefId),
           usedCount: Value(item.usedCount),
           isFavorite: Value(item.isFavorite),

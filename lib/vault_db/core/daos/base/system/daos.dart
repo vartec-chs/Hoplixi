@@ -1,7 +1,7 @@
 export 'categories_dao.dart';
 export 'custom_icons_dao.dart';
 export 'icon_refs_dao.dart';
-export 'item_category_history_dao.dart';
+export 'category_revisions_dao.dart';
 export 'item_link_history_dao.dart';
 export 'item_links_dao.dart';
 export 'item_tags_dao.dart';

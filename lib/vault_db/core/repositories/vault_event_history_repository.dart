@@ -36,7 +36,7 @@ class VaultEventHistoryRepository {
             description: Value(description),
             snapshotHistoryId: Value(snapshotHistoryId),
             actorType: Value(actorType),
-            eventCreatedAt: Value(DateTime.now()),
+            createdAt: Value(DateTime.now()),
           ),
         );
         return unit;

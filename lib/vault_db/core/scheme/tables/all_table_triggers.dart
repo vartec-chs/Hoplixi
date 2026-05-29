@@ -40,7 +40,7 @@ final List<String> allTableTriggers = [
   ...categoriesTableTriggers,
   ...customIconsTableTriggers,
   ...iconRefsTableTriggers,
-  ...itemCategoryHistoryTableTriggers,
+  ...categoryRevisionsTableTriggers,
   ...itemLinkHistoryTableTriggers,
   ...itemLinksTableTriggers,
   ...itemTagsTableTriggers,

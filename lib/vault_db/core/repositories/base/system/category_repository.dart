@@ -45,10 +45,8 @@ class CategoryRepository {
           CategoriesCompanion.insert(
             id: drift.Value(id),
             name: name,
-            description: drift.Value(dto.description),
             iconRefId: drift.Value(dto.iconRefId),
             color: drift.Value(dto.color),
-            type: dto.type,
             parentId: drift.Value(dto.parentId),
             createdAt: drift.Value(now),
             modifiedAt: drift.Value(now),
@@ -122,10 +120,8 @@ class CategoryRepository {
           dto.id,
           CategoriesCompanion(
             name: dto.name.toRequiredValue(),
-            description: dto.description.toNullableValue(),
             iconRefId: dto.iconRefId.toNullableValue(),
             color: dto.color.toRequiredValue(),
-            type: dto.type.toRequiredValue(),
             parentId: dto.parentId.toNullableValue(),
             modifiedAt: drift.Value(DateTime.now()),
           ),

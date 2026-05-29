@@ -111,7 +111,7 @@ class VaultSnapshotHistoryFilterDao extends DatabaseAccessor<VaultDB>
       whereExpr &= vaultSnapshotsHistory.categoryId.isIn(filter.categoryIds);
     }
     if (filter.categoryHistoryIds.isNotEmpty) {
-      whereExpr &= vaultSnapshotsHistory.categoryHistoryId.isIn(
+      whereExpr &= vaultSnapshotsHistory.categoryRevisionId.isIn(
         filter.categoryHistoryIds,
       );
     }

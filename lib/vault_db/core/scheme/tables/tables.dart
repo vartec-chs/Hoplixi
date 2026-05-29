@@ -39,7 +39,7 @@ export 'ssh_key/ssh_key_items.dart';
 export 'system/categories/categories.dart';
 export 'system/icons/custom_icons.dart';
 export 'system/icons/icon_refs.dart';
-export 'system/categories/item_category_history.dart';
+export 'system/categories/category_revisions.dart';
 export 'system/item_link/item_link_history.dart';
 export 'system/item_link/item_links.dart';
 export 'system/item_tags.dart';

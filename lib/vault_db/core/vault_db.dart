@@ -64,7 +64,7 @@ part 'vault_db.g.dart';
     // --- Иконки ---
     CustomIcons,
     IconRefs,
-    ItemCategoryHistory,
+    CategoryRevisions,
     // --- История (Event Sourcing) ---
     VaultEventsHistory,
     VaultSnapshotsHistory,
@@ -96,7 +96,7 @@ part 'vault_db.g.dart';
     IconRefsDao,
     StoreSettingsDao,
     StoreMetaDao,
-    ItemCategoryHistoryDao,
+    CategoryRevisionsDao,
     VaultItemTagHistoryDao,
     ItemLinkHistoryDao,
     VaultItemsDao,

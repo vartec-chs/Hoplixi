@@ -8,7 +8,7 @@ sealed class CategoryInCardDto with _$CategoryInCardDto {
   const factory CategoryInCardDto({
     required String id,
     required String name,
-    String? color,
+    int? color,
     String? iconRefId,
   }) = _CategoryInCardDto;
 

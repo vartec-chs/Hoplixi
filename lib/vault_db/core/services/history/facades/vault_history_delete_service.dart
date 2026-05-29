@@ -112,12 +112,7 @@ class VaultHistoryDeleteService {
         break;
     }
 
-    // 4. Delete item category history snapshot if it exists
-    if (snapshot.categoryHistoryId != null) {
-      await db.itemCategoryHistoryDao.deleteCategoryHistoryById(
-        snapshot.categoryHistoryId!,
-      );
-    }
+    // 4. (Removed item category history deletion because CategoryRevisions should not be deleted when a vault snapshot history is deleted)
 
     // 5. Delete vault snapshot row
     await db.vaultSnapshotsHistoryDao.deleteSnapshotById(historyId);

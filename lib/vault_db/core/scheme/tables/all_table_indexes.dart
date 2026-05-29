@@ -39,7 +39,7 @@ final List<String> allTableIndexes = [
   ...categoriesTableIndexes,
   ...customIconsTableIndexes,
   ...iconRefsTableIndexes,
-  ...itemCategoryHistoryTableIndexes,
+  ...categoryRevisionsTableIndexes,
   ...itemLinkHistoryTableIndexes,
   ...itemLinksTableIndexes,
   ...itemTagsTableIndexes,

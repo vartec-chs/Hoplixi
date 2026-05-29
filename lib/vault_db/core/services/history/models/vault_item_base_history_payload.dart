@@ -11,7 +11,7 @@ class VaultItemBaseHistoryPayload {
     required this.name,
     this.description,
     this.categoryId,
-    this.categoryHistoryId,
+    this.categoryRevisionId,
     this.iconRefId,
     required this.usedCount,
     required this.isFavorite,
@@ -34,7 +34,7 @@ class VaultItemBaseHistoryPayload {
   final String name;
   final String? description;
   final String? categoryId;
-  final String? categoryHistoryId;
+  final String? categoryRevisionId;
   final String? iconRefId;
   final int usedCount;
   final bool isFavorite;

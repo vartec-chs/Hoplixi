@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../system/categories/item_category_history.dart';
+import '../system/categories/category_revisions.dart';
 import 'vault_events_history.dart';
 import 'vault_items.dart';
 
@@ -38,10 +38,10 @@ class VaultSnapshotsHistory extends Table {
   TextColumn get categoryId => text().nullable()();
 
   /// Snapshot категории, связанный с этой историей item.
-  TextColumn get categoryHistoryId => text().nullable().references(
-    ItemCategoryHistory,
+  TextColumn get categoryRevisionId => text().nullable().references(
+    CategoryRevisions,
     #id,
-    onDelete: KeyAction.setNull,
+    onDelete: KeyAction.restrict,
   )();
 
   /// ID icon_ref на момент snapshot.
@@ -347,7 +347,7 @@ enum VaultSnapshotHistoryIndex {
     'idx_vault_snapshots_history_category_id_history_created_at',
   ),
 
-  categoryHistoryId('idx_vault_snapshots_history_category_history_id'),
+  categoryRevisionId('idx_vault_snapshots_history_category_revision_id'),
 
   deletedHistory('idx_vault_snapshots_history_deleted_history'),
 
@@ -388,9 +388,9 @@ final List<String> vaultSnapshotsHistoryTableIndexes = [
   ''',
 
   '''
-  CREATE INDEX IF NOT EXISTS ${VaultSnapshotHistoryIndex.categoryHistoryId.indexName}
-  ON vault_snapshots_history(category_history_id)
-  WHERE category_history_id IS NOT NULL;
+  CREATE INDEX IF NOT EXISTS ${VaultSnapshotHistoryIndex.categoryRevisionId.indexName}
+  ON vault_snapshots_history(category_revision_id)
+  WHERE category_revision_id IS NOT NULL;
   ''',
 
   '''

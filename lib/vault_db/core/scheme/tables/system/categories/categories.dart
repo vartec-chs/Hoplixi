@@ -3,26 +3,6 @@ import 'package:uuid/uuid.dart';
 
 import '../icons/icon_refs.dart';
 
-enum CategoryType {
-  note,
-  password,
-  otp,
-  bankCard,
-  file,
-  document,
-  contact,
-  apiKey,
-  sshKey,
-  certificate,
-  cryptoWallet,
-  wifi,
-  identity,
-  licenseKey,
-  recoveryCodes,
-  loyaltyCard,
-  mixed,
-}
-
 @DataClassName('CategoriesData')
 class Categories extends Table {
   /// UUID v4.
@@ -31,9 +11,6 @@ class Categories extends Table {
   /// Название категории.
   TextColumn get name => text().withLength(min: 1, max: 100)();
 
-  /// Описание категории.
-  TextColumn get description => text().nullable()();
-
   /// Ссылка на иконку категории.
   TextColumn get iconRefId => text().nullable().references(
     IconRefs,
@@ -41,13 +18,8 @@ class Categories extends Table {
     onDelete: KeyAction.setNull,
   )();
 
-  /// Цвет категории в формате AARRGGBB.
-  TextColumn get color => text()
-      .withLength(min: 8, max: 8)
-      .withDefault(const Constant('FFFFFFFF'))();
-
-  /// Тип категории: password, note, mixed и т.д.
-  TextColumn get type => textEnum<CategoryType>()();
+  /// Цвет категории в формате RGB.
+  IntColumn get color => integer().withDefault(const Constant(0xFFFFFF))();
 
   /// Родительская категория.
   TextColumn get parentId => text().nullable().references(
@@ -64,11 +36,6 @@ class Categories extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
-
-  @override
-  List<Set<Column>> get uniqueKeys => [
-    {name, type},
-  ];
 
   @override
   String get tableName => 'categories';
@@ -97,14 +64,6 @@ class Categories extends Table {
     ''',
 
     '''
-    CONSTRAINT ${CategoryConstraint.descriptionNotBlank.constraintName}
-    CHECK (
-      description IS NULL
-      OR length(trim(description)) > 0
-    )
-    ''',
-
-    '''
     CONSTRAINT ${CategoryConstraint.parentIdNotBlank.constraintName}
     CHECK (
       parent_id IS NULL
@@ -113,18 +72,9 @@ class Categories extends Table {
     ''',
 
     '''
-    CONSTRAINT ${CategoryConstraint.colorNotBlank.constraintName}
+    CONSTRAINT ${CategoryConstraint.colorRange.constraintName}
     CHECK (
-      color IS NULL
-      OR length(trim(color)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${CategoryConstraint.colorNoOuterWhitespace.constraintName}
-    CHECK (
-      color IS NULL
-      OR color = trim(color)
+      color BETWEEN 0 AND 16777215
     )
     ''',
 
@@ -160,13 +110,9 @@ enum CategoryConstraint {
 
   nameNoOuterWhitespace('chk_categories_name_no_outer_whitespace'),
 
-  descriptionNotBlank('chk_categories_description_not_blank'),
-
   parentIdNotBlank('chk_categories_parent_id_not_blank'),
 
-  colorNotBlank('chk_categories_color_not_blank'),
-
-  colorNoOuterWhitespace('chk_categories_color_no_outer_whitespace'),
+  colorRange('chk_categories_color_range'),
 
   iconRefIdNotBlank('chk_categories_icon_ref_id_not_blank'),
 
@@ -181,15 +127,12 @@ enum CategoryConstraint {
 
 enum CategoryIndex {
   name('idx_categories_name'),
-  type('idx_categories_type'),
   parentId('idx_categories_parent_id'),
   iconRefId('idx_categories_icon_ref_id'),
   createdAt('idx_categories_created_at'),
   modifiedAt('idx_categories_modified_at'),
-  typeParent('idx_categories_type_parent_id'),
-  parentName('idx_categories_parent_id_name'),
-  rootUniqueNameType('uq_categories_root_name_type'),
-  childUniqueNameTypeParent('uq_categories_child_name_type_parent');
+  rootUniqueName('uq_categories_root_name'),
+  childUniqueName('uq_categories_child_name_parent');
 
   const CategoryIndex(this.indexName);
 
@@ -198,7 +141,6 @@ enum CategoryIndex {
 
 final List<String> categoriesTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${CategoryIndex.name.indexName} ON categories(name);',
-  'CREATE INDEX IF NOT EXISTS ${CategoryIndex.type.indexName} ON categories(type);',
   '''
   CREATE INDEX IF NOT EXISTS ${CategoryIndex.parentId.indexName}
   ON categories(parent_id)
@@ -207,16 +149,14 @@ final List<String> categoriesTableIndexes = [
   'CREATE INDEX IF NOT EXISTS ${CategoryIndex.iconRefId.indexName} ON categories(icon_ref_id);',
   'CREATE INDEX IF NOT EXISTS ${CategoryIndex.createdAt.indexName} ON categories(created_at);',
   'CREATE INDEX IF NOT EXISTS ${CategoryIndex.modifiedAt.indexName} ON categories(modified_at);',
-  'CREATE INDEX IF NOT EXISTS ${CategoryIndex.typeParent.indexName} ON categories(type, parent_id);',
-  'CREATE INDEX IF NOT EXISTS ${CategoryIndex.parentName.indexName} ON categories(parent_id, name);',
 
   // Уникальность root-категорий: parent_id IS NULL.
-  'CREATE UNIQUE INDEX IF NOT EXISTS ${CategoryIndex.rootUniqueNameType.indexName} '
-      'ON categories(name, type) WHERE parent_id IS NULL;',
+  'CREATE UNIQUE INDEX IF NOT EXISTS ${CategoryIndex.rootUniqueName.indexName} '
+      'ON categories(name) WHERE parent_id IS NULL;',
 
   // Уникальность дочерних категорий внутри одного parent_id.
-  'CREATE UNIQUE INDEX IF NOT EXISTS ${CategoryIndex.childUniqueNameTypeParent.indexName} '
-      'ON categories(parent_id, name, type) WHERE parent_id IS NOT NULL;',
+  'CREATE UNIQUE INDEX IF NOT EXISTS ${CategoryIndex.childUniqueName.indexName} '
+      'ON categories(parent_id, name) WHERE parent_id IS NOT NULL;',
 ];
 
 enum CategoryTrigger {

@@ -50,10 +50,6 @@ class CategoriesDao extends DatabaseAccessor<VaultDB>
     return (delete(categories)..where((t) => t.id.equals(id))).go();
   }
 
-  Future<List<CategoriesData>> getCategoriesByType(CategoryType type) {
-    return (select(categories)..where((t) => t.type.equals(type.name))).get();
-  }
-
   Future<List<CategoriesData>> getChildrenOrdered(String? parentId) {
     final query = select(categories);
     if (parentId == null) {

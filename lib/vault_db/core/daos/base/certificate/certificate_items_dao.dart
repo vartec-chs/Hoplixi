@@ -4,7 +4,7 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 part 'certificate_items_dao.g.dart';
 
-@DriftAccessor(tables: [CertificateItemConstraint])
+@DriftAccessor(tables: [CertificateItems])
 class CertificateItemsDao extends DatabaseAccessor<VaultDB>
     with _$CertificateItemsDaoMixin {
   CertificateItemsDao(super.db);

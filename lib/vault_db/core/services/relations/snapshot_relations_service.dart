@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/categories_dao.dart';
-import 'package:hoplixi/vault_db/core/daos/base/system/item_category_history_dao.dart';
+import 'package:hoplixi/vault_db/core/daos/base/system/category_revisions_dao.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/item_link_history_dao.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/item_links_dao.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/item_tags_dao.dart';
@@ -19,7 +19,7 @@ class SnapshotRelationsService {
       tagsDao = db.tagsDao,
       itemTagsDao = db.itemTagsDao,
       itemLinksDao = db.itemLinksDao,
-      itemCategoryHistoryDao = db.itemCategoryHistoryDao,
+      categoryRevisionsDao = db.categoryRevisionsDao,
       vaultItemTagHistoryDao = db.vaultItemTagHistoryDao,
       itemLinkHistoryDao = db.itemLinkHistoryDao;
 
@@ -29,7 +29,7 @@ class SnapshotRelationsService {
   final TagsDao tagsDao;
   final ItemTagsDao itemTagsDao;
   final ItemLinksDao itemLinksDao;
-  final ItemCategoryHistoryDao itemCategoryHistoryDao;
+  final CategoryRevisionsDao categoryRevisionsDao;
   final VaultItemTagHistoryDao vaultItemTagHistoryDao;
   final ItemLinkHistoryDao itemLinkHistoryDao;
 
@@ -44,35 +44,22 @@ class SnapshotRelationsService {
           return const None();
         }
 
-        final category = await categoriesDao.getCategoryById(categoryId);
-        if (category == null) {
-          return const None();
+        final revisions = await categoryRevisionsDao
+            .getCategoryRevisionsByOriginalCategoryId(categoryId);
+            
+        if (revisions.isEmpty) {
+          throw DBCoreError.validation(
+            code: 'category_revision_not_found',
+            message: 'Category revision not found for category $categoryId',
+          );
         }
 
-        final id = const Uuid().v4();
-        await itemCategoryHistoryDao.insertCategoryHistory(
-          ItemCategoryHistoryCompanion.insert(
-            id: Value(id),
-            snapshotId: Value(snapshotId),
-            itemId: Value(itemId),
-            categoryId: Value(category.id),
-            name: category.name,
-            description: Value(category.description),
-            iconRefId: Value(category.iconRefId),
-            color: category.color,
-            type: category.type,
-            parentId: Value(category.parentId),
-            categoryCreatedAt: Value(category.createdAt),
-            categoryModifiedAt: Value(category.modifiedAt),
-          ),
-        );
-
-        return Some(id);
+        return Some(revisions.first.id);
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при создании снимка категории',
+              message: 'Ошибка при получении снимка категории',
               cause: e,
               stackTrace: st,
             ),

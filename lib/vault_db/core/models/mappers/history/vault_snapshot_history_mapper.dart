@@ -11,7 +11,7 @@ extension VaultSnapshotHistoryDataMapper on VaultSnapshotHistoryData {
       name: name,
       description: description,
       categoryId: categoryId,
-      categoryHistoryId: categoryHistoryId,
+      categoryRevisionId: categoryRevisionId,
       iconRefId: iconRefId,
       usedCount: usedCount,
       isFavorite: isFavorite,

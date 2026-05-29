@@ -7,10 +7,8 @@ extension CategoryDataMapper on CategoriesData {
     return CategoryViewDto(
       id: id,
       name: name,
-      description: description,
       iconRefId: iconRefId,
       color: color,
-      type: type,
       parentId: parentId,
       createdAt: createdAt,
       modifiedAt: modifiedAt,
@@ -23,7 +21,6 @@ extension CategoryDataMapper on CategoriesData {
       name: name,
       iconRefId: iconRefId,
       color: color,
-      type: type,
       parentId: parentId,
     );
   }

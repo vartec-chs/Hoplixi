@@ -18,34 +18,22 @@ class SnapshotRelationsRepository {
       () async {
         if (categoryId == null) return const None();
 
-        final category = await db.categoriesDao.getCategoryById(categoryId);
-        if (category == null) return const None();
+        final revisions = await db.categoryRevisionsDao
+            .getCategoryRevisionsByOriginalCategoryId(categoryId);
+            
+        if (revisions.isEmpty) {
+          throw DBCoreError.validation(
+            code: 'category_revision_not_found',
+            message: 'Category revision not found for category $categoryId',
+          );
+        }
 
-        final categoryHistoryId = const Uuid().v4();
-        final now = DateTime.now();
-
-        await db.itemCategoryHistoryDao.insertCategoryHistory(
-          ItemCategoryHistoryCompanion.insert(
-            id: drift.Value(categoryHistoryId),
-            categoryId: drift.Value(category.id),
-            name: category.name,
-            description: drift.Value(category.description),
-            iconRefId: drift.Value(category.iconRefId),
-            color: category.color,
-            type: category.type,
-            parentId: drift.Value(category.parentId),
-            categoryCreatedAt: drift.Value(category.createdAt),
-            categoryModifiedAt: drift.Value(category.modifiedAt),
-            snapshotCreatedAt: drift.Value(now),
-          ),
-        );
-
-        return Some(categoryHistoryId);
+        return Some(revisions.first.id);
       },
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при создании снимка категории',
+              message: 'Ошибка при получении снимка категории',
               cause: e,
               stackTrace: st,
             ),

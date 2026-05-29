@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../scheme/tables/system/categories/categories.dart';
 import '../../field_update.dart';
 
 part 'category_dto.freezed.dart';
@@ -10,10 +9,8 @@ part 'category_dto.g.dart';
 sealed class CreateCategoryDto with _$CreateCategoryDto {
   const factory CreateCategoryDto({
     required String name,
-    String? description,
     String? iconRefId,
-    @Default('FFFFFFFF') String color,
-    required CategoryType type,
+    @Default(0xFFFFFF) int color,
     String? parentId,
   }) = _CreateCategoryDto;
 
@@ -26,10 +23,8 @@ sealed class CategoryViewDto with _$CategoryViewDto {
   const factory CategoryViewDto({
     required String id,
     required String name,
-    String? description,
     String? iconRefId,
-    required String color,
-    required CategoryType type,
+    required int color,
     String? parentId,
     required DateTime createdAt,
     required DateTime modifiedAt,
@@ -45,8 +40,7 @@ sealed class CategoryCardDto with _$CategoryCardDto {
     required String id,
     required String name,
     String? iconRefId,
-    required String color,
-    required CategoryType type,
+    required int color,
     String? parentId,
   }) = _CategoryCardDto;
 
@@ -70,10 +64,8 @@ sealed class PatchCategoryDto with _$PatchCategoryDto {
   const factory PatchCategoryDto({
     required String id,
     @Default(FieldUpdate.keep()) FieldUpdate<String> name,
-    @Default(FieldUpdate.keep()) FieldUpdate<String> description,
     @Default(FieldUpdate.keep()) FieldUpdate<String> iconRefId,
-    @Default(FieldUpdate.keep()) FieldUpdate<String> color,
-    @Default(FieldUpdate.keep()) FieldUpdate<CategoryType> type,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> color,
     @Default(FieldUpdate.keep()) FieldUpdate<String> parentId,
   }) = _PatchCategoryDto;
 }

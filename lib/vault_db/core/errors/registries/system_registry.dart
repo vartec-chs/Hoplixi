@@ -1,7 +1,7 @@
-import '../db_constraint_descriptor.dart';
 import '../../scheme/tables/system/categories/categories.dart';
-import '../../scheme/tables/system/tags.dart';
 import '../../scheme/tables/system/item_link/item_links.dart';
+import '../../scheme/tables/system/tags.dart';
+import '../db_constraint_descriptor.dart';
 
 final Map<String, DbConstraintDescriptor> systemRegistry = {
   // --- Categories ---
@@ -32,15 +32,7 @@ final Map<String, DbConstraintDescriptor> systemRegistry = {
     message:
         'Название категории не должно начинаться или заканчиваться пробелами',
   ),
-  CategoryConstraint.descriptionNotBlank.constraintName:
-      const DbConstraintDescriptor(
-        constraint: 'chk_categories_description_not_blank',
-        entity: 'category',
-        table: 'categories',
-        field: 'description',
-        code: 'category.description.not_blank',
-        message: 'Описание не может состоять из одних пробелов',
-      ),
+
   CategoryConstraint.parentIdNotBlank.constraintName:
       const DbConstraintDescriptor(
         constraint: 'chk_categories_parent_id_not_blank',
@@ -50,23 +42,15 @@ final Map<String, DbConstraintDescriptor> systemRegistry = {
         code: 'category.parent_id.not_blank',
         message: 'ID родительской категории не может быть пустым',
       ),
-  CategoryConstraint.colorNotBlank.constraintName: const DbConstraintDescriptor(
-    constraint: 'chk_categories_color_not_blank',
+
+  CategoryConstraint.colorRange.constraintName: const DbConstraintDescriptor(
+    constraint: 'chk_categories_color_range',
     entity: 'category',
     table: 'categories',
     field: 'color',
-    code: 'category.color.not_blank',
-    message: 'Цвет не может быть пустым',
+    code: 'category.color.range',
+    message: 'Цвет должен быть в допустимом диапазоне',
   ),
-  CategoryConstraint.colorNoOuterWhitespace.constraintName:
-      const DbConstraintDescriptor(
-        constraint: 'chk_categories_color_no_outer_whitespace',
-        entity: 'category',
-        table: 'categories',
-        field: 'color',
-        code: 'category.color.no_outer_whitespace',
-        message: 'Цвет не должен содержать пробелов',
-      ),
   CategoryConstraint.iconRefIdNotBlank.constraintName:
       const DbConstraintDescriptor(
         constraint: 'chk_categories_icon_ref_id_not_blank',

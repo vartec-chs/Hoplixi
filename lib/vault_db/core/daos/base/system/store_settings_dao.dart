@@ -101,7 +101,7 @@ class StoreSettingsDao extends DatabaseAccessor<VaultDB>
       // Удаляем старые события
       await (delete(
         db.vaultEventsHistory,
-      )..where((t) => t.eventCreatedAt.isSmallerThanValue(cutOffDate))).go();
+      )..where((t) => t.createdAt.isSmallerThanValue(cutOffDate))).go();
     }
 
     // 2. Очистка по количеству (count-based)

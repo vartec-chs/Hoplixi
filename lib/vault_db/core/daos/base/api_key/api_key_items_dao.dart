@@ -4,7 +4,7 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 
 part 'api_key_items_dao.g.dart';
 
-@DriftAccessor(tables: [ApiKeyItemConstraint])
+@DriftAccessor(tables: [ApiKeyItems])
 class ApiKeyItemsDao extends DatabaseAccessor<VaultDB>
     with _$ApiKeyItemsDaoMixin {
   ApiKeyItemsDao(super.db);
