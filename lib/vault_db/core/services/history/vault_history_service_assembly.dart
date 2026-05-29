@@ -314,7 +314,7 @@ class VaultHistoryServiceAssembly {
         tagsRestoreService: TagsRestoreService(
           itemTagsDao: db.itemTagsDao,
           tagsDao: db.tagsDao,
-          vaultItemTagHistoryDao: db.vaultItemTagHistoryDao,
+          itemTagHistoryDao: db.itemTagHistoryDao,
         ),
         itemLinksRestoreService: ItemLinksRestoreService(
           itemLinkHistoryDao: db.itemLinkHistoryDao,

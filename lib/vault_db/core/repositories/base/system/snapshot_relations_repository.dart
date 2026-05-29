@@ -20,7 +20,7 @@ class SnapshotRelationsRepository {
 
         final revisions = await db.categoryRevisionsDao
             .getCategoryRevisionsByOriginalCategoryId(categoryId);
-            
+
         if (revisions.isEmpty) {
           throw DBCoreError.validation(
             code: 'category_revision_not_found',
@@ -54,8 +54,8 @@ class SnapshotRelationsRepository {
         final tags = await db.tagsDao.getTagsByIds(tagIds);
 
         for (final tag in tags) {
-          await db.vaultItemTagHistoryDao.insertTagHistory(
-            VaultItemTagHistoryCompanion.insert(
+          await db.itemTagHistoryDao.insertTagHistory(
+            ItemTagHistoryCompanion.insert(
               id: drift.Value(const Uuid().v4()),
               historyId: drift.Value(historyId),
               tagId: drift.Value(tag.id),

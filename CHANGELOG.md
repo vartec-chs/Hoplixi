@@ -1,30 +1,75 @@
 # CHANGELOG
 
+## 2026-05-29
+
+### docs
+
+- Обновлён [AGENTS.md](AGENTS.md): добавлено обязательное правило сначала искать
+  и читать локальные `README.md` в папке работы и соседних релевантных модулях,
+  чтобы не пропускать папочные инструкции и документацию.
+
 ## 2026-05-27
 
 ### vault_db
 
-- Выполнен комплексный архитектурный рефакторинг `VaultDBManager` по принципам Clean Architecture, SRP и DIP:
-  - Выделено реактивное управление состоянием сессии в [IVaultSessionHolder](lib/vault_db/services/session/ivault_session_holder.dart) и [VaultSessionHolder](lib/vault_db/services/session/vault_session_holder.dart).
-  - Изолированы файловые операции хранилища в [IVaultStorageManager](lib/vault_db/services/storage/ivault_storage_manager.dart) и [VaultStorageManager](lib/vault_db/services/storage/vault_storage_manager.dart).
-  - Выделена типизированная очистка хранилища в [VaultCleanupService](lib/vault_db/services/cleanup/vault_cleanup_service.dart).
-  - Вынесено управление жизненным циклом и транзакционная оркестрация операций в [IVaultLifecycleService](lib/vault_db/services/lifecycle/ivault_lifecycle_service.dart) and [VaultLifecycleService](lib/vault_db/services/lifecycle/vault_lifecycle_service.dart).
-  - Класс `VaultDBManager` в [main_store_manager.dart](lib/vault_db/services/main_store_manager.dart) превращен в ультра-тонкий фасад `VaultDBFacade` с сохранением полной обратной совместимости через `typedef`.
-  - Покрыты модульными тестами новые сервисы в [vault_db_services_test.dart](test/vault_db/vault_db_services_test.dart).
-- Проведена полная декомпозиция и рефакторинг слоя Riverpod-провайдеров для `VaultDBManager`:
-  - Изолированы провайдеры данных сессии `vaultDBSessionProvider` и базы данных `vaultDBProvider`, сделав их полностью реактивными и независимыми от UI-состояния.
-  - Фоновые побочные эффекты очистки, облачной синхронизации и сброса облачных блокировок вынесены в реактивные слушатели `vaultCleanupEffectProvider` и `vaultCloseSyncEffectProvider`.
-  - Разрушена циклическая зависимость между `PerformStoreCleanup` и провайдером сессии.
-  - `VaultDBManagerNotifier` упрощен до тонкого презентационного контроллера, управляющего только `DatabaseState`.
-  - Выделенные провайдеры и эффекты распределены по независимым файлам в папке `lib/vault_db/providers/`: [session_providers.dart](lib/vault_db/providers/session_providers.dart), [vault_ui_state_provider.dart](lib/vault_db/providers/vault_ui_state_provider.dart), [effects/vault_cleanup_effect.dart](lib/vault_db/providers/effects/vault_cleanup_effect.dart) и [effects/vault_close_sync_effect.dart](lib/vault_db/providers/effects/vault_close_sync_effect.dart).
-  - Файл [main_store_manager_provider.dart](lib/vault_db/providers/main_store_manager_provider.dart) превращен в barrel-экспорт для сохранения 100% обратной совместимости.
+- Выполнен комплексный архитектурный рефакторинг `VaultDBManager` по принципам
+  Clean Architecture, SRP и DIP:
+  - Выделено реактивное управление состоянием сессии в
+    [IVaultSessionHolder](lib/vault_db/services/session/ivault_session_holder.dart)
+    и
+    [VaultSessionHolder](lib/vault_db/services/session/vault_session_holder.dart).
+  - Изолированы файловые операции хранилища в
+    [IVaultStorageManager](lib/vault_db/services/storage/ivault_storage_manager.dart)
+    и
+    [VaultStorageManager](lib/vault_db/services/storage/vault_storage_manager.dart).
+  - Выделена типизированная очистка хранилища в
+    [VaultCleanupService](lib/vault_db/services/cleanup/vault_cleanup_service.dart).
+  - Вынесено управление жизненным циклом и транзакционная оркестрация операций в
+    [IVaultLifecycleService](lib/vault_db/services/lifecycle/ivault_lifecycle_service.dart)
+    and
+    [VaultLifecycleService](lib/vault_db/services/lifecycle/vault_lifecycle_service.dart).
+  - Класс `VaultDBManager` в
+    [main_store_manager.dart](lib/vault_db/services/main_store_manager.dart)
+    превращен в ультра-тонкий фасад `VaultDBFacade` с сохранением полной
+    обратной совместимости через `typedef`.
+  - Покрыты модульными тестами новые сервисы в
+    [vault_db_services_test.dart](test/vault_db/vault_db_services_test.dart).
+- Проведена полная декомпозиция и рефакторинг слоя Riverpod-провайдеров для
+  `VaultDBManager`:
+  - Изолированы провайдеры данных сессии `vaultDBSessionProvider` и базы данных
+    `vaultDBProvider`, сделав их полностью реактивными и независимыми от
+    UI-состояния.
+  - Фоновые побочные эффекты очистки, облачной синхронизации и сброса облачных
+    блокировок вынесены в реактивные слушатели `vaultCleanupEffectProvider` и
+    `vaultCloseSyncEffectProvider`.
+  - Разрушена циклическая зависимость между `PerformStoreCleanup` и провайдером
+    сессии.
+  - `VaultDBManagerNotifier` упрощен до тонкого презентационного контроллера,
+    управляющего только `DatabaseState`.
+  - Выделенные провайдеры и эффекты распределены по независимым файлам в папке
+    `lib/vault_db/providers/`:
+    [session_providers.dart](lib/vault_db/providers/session_providers.dart),
+    [vault_ui_state_provider.dart](lib/vault_db/providers/vault_ui_state_provider.dart),
+    [effects/vault_cleanup_effect.dart](lib/vault_db/providers/effects/vault_cleanup_effect.dart)
+    и
+    [effects/vault_close_sync_effect.dart](lib/vault_db/providers/effects/vault_close_sync_effect.dart).
+  - Файл
+    [main_store_manager_provider.dart](lib/vault_db/providers/main_store_manager_provider.dart)
+    превращен в barrel-экспорт для сохранения 100% обратной совместимости.
 
 ## 2026-05-26
 
 ### vault_db
 
-- Интегрирован автоматический запуск обслуживания и очистки хранилища (`PerformStoreCleanup`) при его успешном открытии (`openStore`) и создании (`createStore`) в `VaultDBManager`.
-- Реализована безопасная передача функции обратного вызова `performStoreCleanup` в `VaultDBManagerFactory` и `VaultDBManager`, которая динамически разрешает зависимости (`VaultRepositories`, `VaultItemRelationsService`, `VaultHistoryServiceAssembly`, `VaultItemsStateService`, `VaultEntityServices`, `FileStorageService` и `PerformStoreCleanup`) без риска взаимных блокировок (deadlocks) в провайдерах.
+- Интегрирован автоматический запуск обслуживания и очистки хранилища
+  (`PerformStoreCleanup`) при его успешном открытии (`openStore`) и создании
+  (`createStore`) в `VaultDBManager`.
+- Реализована безопасная передача функции обратного вызова `performStoreCleanup`
+  в `VaultDBManagerFactory` и `VaultDBManager`, которая динамически разрешает
+  зависимости (`VaultRepositories`, `VaultItemRelationsService`,
+  `VaultHistoryServiceAssembly`, `VaultItemsStateService`,
+  `VaultEntityServices`, `FileStorageService` и `PerformStoreCleanup`) без риска
+  взаимных блокировок (deadlocks) в провайдерах.
 
 ## 2026-05-24
 

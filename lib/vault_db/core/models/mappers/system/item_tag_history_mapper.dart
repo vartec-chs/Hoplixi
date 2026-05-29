@@ -1,10 +1,10 @@
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
-import '../../dto/system/vault_item_tag_history_dto.dart';
+import '../../dto/system/item_tag_history_dto.dart';
 
-extension VaultItemTagHistoryDataMapper on VaultItemTagHistoryData {
-  VaultItemTagHistoryViewDto toVaultItemTagHistoryViewDto() {
-    return VaultItemTagHistoryViewDto(
+extension ItemTagHistoryDataMapper on ItemTagHistoryData {
+  ItemTagHistoryViewDto toItemTagHistoryViewDto() {
+    return ItemTagHistoryViewDto(
       id: id,
       historyId: historyId,
       snapshotId: snapshotId,
@@ -19,8 +19,8 @@ extension VaultItemTagHistoryDataMapper on VaultItemTagHistoryData {
     );
   }
 
-  VaultItemTagHistoryCardDto toVaultItemTagHistoryCardDto() {
-    return VaultItemTagHistoryCardDto(
+  ItemTagHistoryCardDto toItemTagHistoryCardDto() {
+    return ItemTagHistoryCardDto(
       id: id,
       historyId: historyId,
       name: name,

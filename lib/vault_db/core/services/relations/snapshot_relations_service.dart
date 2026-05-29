@@ -5,7 +5,7 @@ import 'package:hoplixi/vault_db/core/daos/base/system/item_link_history_dao.dar
 import 'package:hoplixi/vault_db/core/daos/base/system/item_links_dao.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/item_tags_dao.dart';
 import 'package:hoplixi/vault_db/core/daos/base/system/tags_dao.dart';
-import 'package:hoplixi/vault_db/core/daos/base/system/vault_item_tag_history_dao.dart';
+import 'package:hoplixi/vault_db/core/daos/base/system/item_tag_history_dao.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
 
@@ -20,7 +20,7 @@ class SnapshotRelationsService {
       itemTagsDao = db.itemTagsDao,
       itemLinksDao = db.itemLinksDao,
       categoryRevisionsDao = db.categoryRevisionsDao,
-      vaultItemTagHistoryDao = db.vaultItemTagHistoryDao,
+      itemTagHistoryDao = db.itemTagHistoryDao,
       itemLinkHistoryDao = db.itemLinkHistoryDao;
 
   final VaultDB db;
@@ -30,7 +30,7 @@ class SnapshotRelationsService {
   final ItemTagsDao itemTagsDao;
   final ItemLinksDao itemLinksDao;
   final CategoryRevisionsDao categoryRevisionsDao;
-  final VaultItemTagHistoryDao vaultItemTagHistoryDao;
+  final ItemTagHistoryDao itemTagHistoryDao;
   final ItemLinkHistoryDao itemLinkHistoryDao;
 
   AsyncDBResult<Optional<String>> snapshotCategoryForItem({
@@ -46,7 +46,7 @@ class SnapshotRelationsService {
 
         final revisions = await categoryRevisionsDao
             .getCategoryRevisionsByOriginalCategoryId(categoryId);
-            
+
         if (revisions.isEmpty) {
           throw DBCoreError.validation(
             code: 'category_revision_not_found',
@@ -79,8 +79,8 @@ class SnapshotRelationsService {
         final tags = await tagsDao.getTagsByIds(tagIds);
 
         for (final tag in tags) {
-          await vaultItemTagHistoryDao.insertTagHistory(
-            VaultItemTagHistoryCompanion.insert(
+          await itemTagHistoryDao.insertTagHistory(
+            ItemTagHistoryCompanion.insert(
               historyId: Value(historyId),
               itemId: Value(itemId),
               tagId: Value(tag.id),

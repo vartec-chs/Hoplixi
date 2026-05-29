@@ -122,7 +122,7 @@ Snapshot категории vault item. Columns: `id`, `snapshotId`, `itemId`,
 `categoryCreatedAt`, `categoryModifiedAt`, `snapshotCreatedAt`. Notes:
 `vault_snapshots_history.categoryHistoryId` указывает на эту запись.
 
-### vault_item_tag_history
+### item_tag_history
 
 Snapshot тегов vault item. Columns: `id`, `historyId`, `snapshotId`, `itemId`,
 `tagId`, `name`, `color`, `type`, `tagCreatedAt`, `tagModifiedAt`,

@@ -7,17 +7,21 @@ context.
 ## 1) Read Order (Mandatory)
 
 1. This file (`AGENTS.md`)
-2. `docs-ai/agent-task-router.md`
-3. Task-specific docs from the router
-4. Always use Context7 when I need library/API documentation, code generation,
+2. `README.md` in the folder being worked on, plus any nearest relevant
+   module/folder `README.md` files that describe local instructions or docs.
+3. `docs-ai/agent-task-router.md`
+4. Task-specific docs from the router
+5. Always use Context7 when I need library/API documentation, code generation,
    setup or configuration steps without me having to explicitly ask.
-5. MCP tools for implementation workflows (Dart/Flutter MCP, Serena MCP,
+6. MCP tools for implementation workflows (Dart/Flutter MCP, Serena MCP,
    rust-mcp-server, desktop-commander).
-6. Existing project code patterns.
+7. Existing project code patterns.
 
 ## 2) Non-Negotiable Rules
 
 - Follow project docs first. Do not invent architecture, APIs, or behavior.
+- Before working in any folder, find and read its local `README.md` files first;
+  they often contain folder-specific instructions or documentation.
 - Security first:
   - never log or store sensitive data in plain text
   - never bypass encryption/auth/secure storage flows

@@ -45,7 +45,7 @@ export 'system/tags/item_tags.dart';
 export 'system/store/store_meta_table.dart';
 export 'system/store/store_settings.dart';
 export 'system/tags/tags.dart';
-export 'system/tags/vault_item_tag_history.dart';
+export 'system/tags/item_tag_history.dart';
 export 'vault_items/vault_events_history.dart';
 export 'system/custom_fields/vault_item_custom_fields.dart';
 export 'system/custom_fields/vault_item_custom_fields_history.dart';

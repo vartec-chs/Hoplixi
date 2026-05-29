@@ -16,12 +16,12 @@ class TagsRestoreResult {
 class TagsRestoreService {
   TagsRestoreService({
     required this.itemTagsDao,
-    required this.vaultItemTagHistoryDao,
+    required this.itemTagHistoryDao,
     required this.tagsDao,
   });
 
   final ItemTagsDao itemTagsDao;
-  final VaultItemTagHistoryDao vaultItemTagHistoryDao;
+  final ItemTagHistoryDao itemTagHistoryDao;
   final TagsDao tagsDao;
 
   Future<DBResult<TagsRestoreResult>> restoreTagsForSnapshot({
@@ -29,8 +29,9 @@ class TagsRestoreService {
     required String snapshotHistoryId,
   }) async {
     try {
-      final tagHistoryList = await vaultItemTagHistoryDao
-          .getTagsBySnapshotHistoryId(snapshotHistoryId);
+      final tagHistoryList = await itemTagHistoryDao.getTagsBySnapshotHistoryId(
+        snapshotHistoryId,
+      );
 
       await itemTagsDao.removeAllTagsFromItem(itemId);
 
