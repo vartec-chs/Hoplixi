@@ -1,4 +1,4 @@
-import '../../../scheme/tables/vault_items/vault_item_custom_fields.dart';
+import '../../../scheme/tables/custom_fields/vault_item_custom_fields.dart';
 import 'history_field_snapshot.dart';
 
 class NormalizedCustomField {

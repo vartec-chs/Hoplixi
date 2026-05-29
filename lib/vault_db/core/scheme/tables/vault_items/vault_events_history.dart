@@ -87,7 +87,7 @@ class VaultEventsHistory extends Table {
       textEnum<VaultHistoryActorType>().withDefault(const Constant('user'))();
 
   /// Когда создана запись event history.
-  DateTimeColumn get eventCreatedAt =>
+  DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
 
   @override
@@ -194,23 +194,23 @@ enum VaultEventHistoryConstraint {
 }
 
 enum VaultEventHistoryIndex {
-  itemEventCreatedAt('idx_vault_events_history_item_id_event_created_at'),
+  itemEventCreatedAt('idx_vault_events_history_item_id_created_at'),
 
   itemActionEventCreatedAt(
-    'idx_vault_events_history_item_id_action_event_created_at',
+    'idx_vault_events_history_item_id_action_created_at',
   ),
 
-  actionEventCreatedAt('idx_vault_events_history_action_event_created_at'),
+  actionEventCreatedAt('idx_vault_events_history_action_created_at'),
 
-  typeEventCreatedAt('idx_vault_events_history_type_event_created_at'),
+  typeEventCreatedAt('idx_vault_events_history_type_created_at'),
 
   snapshotHistoryId('idx_vault_events_history_snapshot_history_id'),
 
   actorTypeEventCreatedAt(
-    'idx_vault_events_history_actor_type_event_created_at',
+    'idx_vault_events_history_actor_type_created_at',
   ),
 
-  eventCreatedAt('idx_vault_events_history_event_created_at');
+  eventCreatedAt('idx_vault_events_history_created_at');
 
   const VaultEventHistoryIndex(this.indexName);
 
@@ -220,22 +220,22 @@ enum VaultEventHistoryIndex {
 final List<String> vaultEventsHistoryTableIndexes = [
   '''
   CREATE INDEX IF NOT EXISTS ${VaultEventHistoryIndex.itemEventCreatedAt.indexName}
-  ON vault_events_history(item_id, event_created_at DESC);
+  ON vault_events_history(item_id, created_at DESC);
   ''',
 
   '''
   CREATE INDEX IF NOT EXISTS ${VaultEventHistoryIndex.itemActionEventCreatedAt.indexName}
-  ON vault_events_history(item_id, action, event_created_at DESC);
+  ON vault_events_history(item_id, action, created_at DESC);
   ''',
 
   '''
   CREATE INDEX IF NOT EXISTS ${VaultEventHistoryIndex.actionEventCreatedAt.indexName}
-  ON vault_events_history(action, event_created_at DESC);
+  ON vault_events_history(action, created_at DESC);
   ''',
 
   '''
   CREATE INDEX IF NOT EXISTS ${VaultEventHistoryIndex.typeEventCreatedAt.indexName}
-  ON vault_events_history(type, event_created_at DESC);
+  ON vault_events_history(type, created_at DESC);
   ''',
 
   '''
@@ -246,12 +246,12 @@ final List<String> vaultEventsHistoryTableIndexes = [
 
   '''
   CREATE INDEX IF NOT EXISTS ${VaultEventHistoryIndex.actorTypeEventCreatedAt.indexName}
-  ON vault_events_history(actor_type, event_created_at DESC);
+  ON vault_events_history(actor_type, created_at DESC);
   ''',
 
   '''
   CREATE INDEX IF NOT EXISTS ${VaultEventHistoryIndex.eventCreatedAt.indexName}
-  ON vault_events_history(event_created_at DESC);
+  ON vault_events_history(created_at DESC);
   ''',
 ];
 
