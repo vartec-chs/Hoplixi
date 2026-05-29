@@ -2,6 +2,11 @@
 
 ## 2026-05-30
 
+### docs
+
+- Добавлено ТЗ для AI-агентов по переводу `vault_db/core` на API-формат:
+  [docs-ai/vault-db-api-format-agent-tz.md](docs-ai/vault-db-api-format-agent-tz.md).
+
 ### password_manager
 
 - Вынес общий маппинг иконок для custom fields в
