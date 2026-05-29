@@ -10,7 +10,7 @@ part 'tag_dto.g.dart';
 sealed class CreateTagDto with _$CreateTagDto {
   const factory CreateTagDto({
     required String name,
-    @Default('FFFFFFFF') String color,
+    @Default(0xFFFFFF) int color,
     required TagType type,
   }) = _CreateTagDto;
 
@@ -23,7 +23,7 @@ sealed class TagViewDto with _$TagViewDto {
   const factory TagViewDto({
     required String id,
     required String name,
-    required String color,
+    required int color,
     required TagType type,
     required DateTime createdAt,
     required DateTime modifiedAt,
@@ -38,7 +38,7 @@ sealed class TagCardDto with _$TagCardDto {
   const factory TagCardDto({
     required String id,
     required String name,
-    required String color,
+    required int color,
     required TagType type,
   }) = _TagCardDto;
 
@@ -51,6 +51,6 @@ sealed class PatchTagDto with _$PatchTagDto {
   const factory PatchTagDto({
     required String id,
     @Default(FieldUpdate.keep()) FieldUpdate<String> name,
-    @Default(FieldUpdate.keep()) FieldUpdate<String> color,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> color,
   }) = _PatchTagDto;
 }

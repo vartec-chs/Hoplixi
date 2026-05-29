@@ -96,23 +96,14 @@ final Map<String, DbConstraintDescriptor> systemRegistry = {
     code: 'tag.name.no_outer_whitespace',
     message: 'Название тега не должно начинаться или заканчиваться пробелами',
   ),
-  TagConstraint.colorNotBlank.constraintName: const DbConstraintDescriptor(
-    constraint: 'chk_tags_color_not_blank',
+  TagConstraint.colorRange.constraintName: const DbConstraintDescriptor(
+    constraint: 'chk_tags_color_range',
     entity: 'tag',
     table: 'tags',
     field: 'color',
-    code: 'tag.color.not_blank',
-    message: 'Цвет тега не может быть пустым',
+    code: 'tag.color.range',
+    message: 'Цвет тега должен быть в допустимом диапазоне',
   ),
-  TagConstraint.colorNoOuterWhitespace.constraintName:
-      const DbConstraintDescriptor(
-        constraint: 'chk_tags_color_no_outer_whitespace',
-        entity: 'tag',
-        table: 'tags',
-        field: 'color',
-        code: 'tag.color.no_outer_whitespace',
-        message: 'Цвет тега не должен содержать пробелов',
-      ),
 
   // --- Item Links ---
   ItemLinkConstraint.idNotBlank.constraintName: const DbConstraintDescriptor(

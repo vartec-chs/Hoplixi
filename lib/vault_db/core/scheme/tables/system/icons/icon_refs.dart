@@ -30,12 +30,11 @@ class IconRefs extends Table {
     onDelete: KeyAction.restrict,
   )();
 
-  /// Цвет иконки в формате AARRGGBB.
-  TextColumn get color => text().withLength(min: 8, max: 8).nullable()();
+  /// Цвет иконки в формате RGB.
+  IntColumn get color => integer().nullable()();
 
-  /// Цвет фона в формате AARRGGBB.
-  TextColumn get backgroundColor =>
-      text().withLength(min: 8, max: 8).nullable()();
+  /// Цвет фона в формате RGB.
+  IntColumn get backgroundColor => integer().nullable()();
 
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateTime.now())();
@@ -79,28 +78,7 @@ class IconRefs extends Table {
         CONSTRAINT ${IconRefConstraint.customIconIdNoOuterWhitespace.constraintName}
         CHECK (custom_icon_id IS NULL OR custom_icon_id = trim(custom_icon_id))
         ''',
-    '''
-        CONSTRAINT ${IconRefConstraint.colorNotBlank.constraintName}
-        CHECK (color IS NULL OR length(trim(color)) > 0)
-        ''',
-    '''
-        CONSTRAINT ${IconRefConstraint.colorNoOuterWhitespace.constraintName}
-        CHECK (color IS NULL OR color = trim(color))
-        ''',
-    '''
-        CONSTRAINT ${IconRefConstraint.backgroundColorNotBlank.constraintName}
-        CHECK (
-          background_color IS NULL
-          OR length(trim(background_color)) > 0
-        )
-        ''',
-    '''
-        CONSTRAINT ${IconRefConstraint.backgroundColorNoOuterWhitespace.constraintName}
-        CHECK (
-          background_color IS NULL
-          OR background_color = trim(background_color)
-        )
-        ''',
+    
     '''
         CONSTRAINT ${IconRefConstraint.validIconSource.constraintName}
         CHECK (
@@ -130,20 +108,8 @@ class IconRefs extends Table {
         )
         ''',
 
-    '''
-        CONSTRAINT ${IconRefConstraint.colorArgbHex.constraintName}
-        CHECK (
-          color IS NULL
-          OR color GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
-        )
-        ''',
-    '''
-        CONSTRAINT ${IconRefConstraint.backgroundColorArgbHex.constraintName}
-        CHECK (
-          background_color IS NULL
-          OR background_color GLOB '[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'
-        )
-        ''',
+ 
+  
     '''
         CONSTRAINT ${IconRefConstraint.modifiedAtAfterCreatedAt.constraintName}
         CHECK (modified_at >= created_at)
@@ -161,19 +127,10 @@ enum IconRefConstraint {
   customIconIdNoOuterWhitespace(
     'chk_icon_refs_custom_icon_id_no_outer_whitespace',
   ),
-  colorNotBlank('chk_icon_refs_color_not_blank'),
-  colorNoOuterWhitespace('chk_icon_refs_color_no_outer_whitespace'),
-  backgroundColorNotBlank('chk_icon_refs_background_color_not_blank'),
-  backgroundColorNoOuterWhitespace(
-    'chk_icon_refs_background_color_no_outer_whitespace',
-  ),
+  colorRange('chk_icon_refs_color_range'),
+  backgroundColorRange('chk_icon_refs_background_color_range'),
 
   validIconSource('chk_icon_refs_valid_icon_source'),
-
-  colorArgbHex('chk_icon_refs_color_argb_hex'),
-
-  backgroundColorArgbHex('chk_icon_refs_background_color_argb_hex'),
-
   modifiedAtAfterCreatedAt('chk_icon_refs_modified_at_after_created_at');
 
   const IconRefConstraint(this.constraintName);

@@ -29,10 +29,8 @@ class Tags extends Table {
   /// Название тега.
   TextColumn get name => text().withLength(min: 1, max: 100)();
 
-  /// Цвет тега в формате AARRGGBB.
-  TextColumn get color => text()
-      .withLength(min: 8, max: 8)
-      .withDefault(const Constant('FFFFFFFF'))();
+  /// Цвет тега в формате RGB.
+  IntColumn get color => integer().withDefault(const Constant(0xFFFFFF))();
 
   /// Тип тега: password, note, otp, mixed и т.д.
   TextColumn get type => textEnum<TagType>()();
@@ -78,18 +76,9 @@ class Tags extends Table {
     ''',
 
     '''
-    CONSTRAINT ${TagConstraint.colorNotBlank.constraintName}
+    CONSTRAINT ${TagConstraint.colorRange.constraintName}
     CHECK (
-      color IS NULL
-      OR length(trim(color)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${TagConstraint.colorNoOuterWhitespace.constraintName}
-    CHECK (
-      color IS NULL
-      OR color = trim(color)
+      color BETWEEN 0 AND 16777215
     )
     ''',
 
@@ -109,9 +98,7 @@ enum TagConstraint {
 
   nameNoOuterWhitespace('chk_tags_name_no_outer_whitespace'),
 
-  colorNotBlank('chk_tags_color_not_blank'),
-
-  colorNoOuterWhitespace('chk_tags_color_no_outer_whitespace'),
+  colorRange('chk_tags_color_range'),
 
   modifiedAtAfterCreatedAt('chk_tags_modified_at_after_created_at');
 

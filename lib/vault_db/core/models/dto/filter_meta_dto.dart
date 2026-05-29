@@ -21,7 +21,7 @@ sealed class TagInCardDto with _$TagInCardDto {
   const factory TagInCardDto({
     required String id,
     required String name,
-    String? color,
+    int? color,
   }) = _TagInCardDto;
 
   factory TagInCardDto.fromJson(Map<String, dynamic> json) =>

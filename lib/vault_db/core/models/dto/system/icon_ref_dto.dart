@@ -14,8 +14,8 @@ sealed class PatchIconRefDto with _$PatchIconRefDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> iconPackId,
     @Default(FieldUpdate.keep()) FieldUpdate<String> iconValue,
     @Default(FieldUpdate.keep()) FieldUpdate<String> customIconId,
-    @Default(FieldUpdate.keep()) FieldUpdate<String> color,
-    @Default(FieldUpdate.keep()) FieldUpdate<String> backgroundColor,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> color,
+    @Default(FieldUpdate.keep()) FieldUpdate<int> backgroundColor,
   }) = _PatchIconRefDto;
 }
 
@@ -26,8 +26,8 @@ sealed class CreateIconRefDto with _$CreateIconRefDto {
     String? iconPackId,
     String? iconValue,
     String? customIconId,
-    String? color,
-    String? backgroundColor,
+    int? color,
+    int? backgroundColor,
   }) = _CreateIconRefDto;
 
   factory CreateIconRefDto.fromJson(Map<String, dynamic> json) =>
@@ -42,8 +42,8 @@ sealed class IconRefViewDto with _$IconRefViewDto {
     String? iconPackId,
     String? iconValue,
     String? customIconId,
-    String? color,
-    String? backgroundColor,
+    int? color,
+    int? backgroundColor,
     required DateTime createdAt,
     required DateTime modifiedAt,
   }) = _IconRefViewDto;

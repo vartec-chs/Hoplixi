@@ -14,7 +14,7 @@ sealed class VaultItemTagHistoryViewDto with _$VaultItemTagHistoryViewDto {
     String? itemId,
     String? tagId,
     required String name,
-    required String color,
+    required int color,
     required TagType type,
     DateTime? tagCreatedAt,
     DateTime? tagModifiedAt,
@@ -31,7 +31,7 @@ sealed class VaultItemTagHistoryCardDto with _$VaultItemTagHistoryCardDto {
     required String id,
     String? historyId,
     required String name,
-    required String color,
+    required int color,
     required TagType type,
     required DateTime snapshotCreatedAt,
   }) = _VaultItemTagHistoryCardDto;

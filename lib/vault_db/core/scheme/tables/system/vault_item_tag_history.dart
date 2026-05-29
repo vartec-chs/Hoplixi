@@ -26,7 +26,7 @@ class VaultItemTagHistory extends Table {
 
   TextColumn get name => text().withLength(min: 1, max: 100)();
 
-  TextColumn get color => text().withLength(min: 8, max: 8)();
+  IntColumn get color => integer()();
 
   TextColumn get type => textEnum<TagType>()();
 
@@ -91,18 +91,9 @@ class VaultItemTagHistory extends Table {
     ''',
 
     '''
-    CONSTRAINT ${VaultItemTagHistoryConstraint.colorNotBlank.constraintName}
+    CONSTRAINT ${VaultItemTagHistoryConstraint.colorRange.constraintName}
     CHECK (
-      color IS NULL
-      OR length(trim(color)) > 0
-    )
-    ''',
-
-    '''
-    CONSTRAINT ${VaultItemTagHistoryConstraint.colorNoOuterWhitespace.constraintName}
-    CHECK (
-      color IS NULL
-      OR color = trim(color)
+      color BETWEEN 0 AND 16777215
     )
     ''',
 
@@ -138,11 +129,7 @@ enum VaultItemTagHistoryConstraint {
 
   nameNoOuterWhitespace('chk_vault_item_tag_history_name_no_outer_whitespace'),
 
-  colorNotBlank('chk_vault_item_tag_history_color_not_blank'),
-
-  colorNoOuterWhitespace(
-    'chk_vault_item_tag_history_color_no_outer_whitespace',
-  ),
+  colorRange('chk_vault_item_tag_history_color_range'),
 
   tagModifiedAtRange('chk_vault_item_tag_history_tag_modified_at_range'),
 
