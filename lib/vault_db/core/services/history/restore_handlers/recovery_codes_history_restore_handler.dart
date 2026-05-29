@@ -15,12 +15,10 @@ class RecoveryCodesHistoryRestoreHandler implements VaultHistoryRestoreHandler {
   RecoveryCodesHistoryRestoreHandler({
     required this.recoveryCodesItemsDao,
     required this.recoveryCodesDao,
-    required this.recoveryCodeValuesHistoryDao,
   });
 
   final RecoveryCodesItemsDao recoveryCodesItemsDao;
   final RecoveryCodesDao recoveryCodesDao;
-  final RecoveryCodeValuesHistoryDao recoveryCodeValuesHistoryDao;
 
   @override
   VaultItemType get type => VaultItemType.recoveryCodes;
@@ -40,56 +38,12 @@ class RecoveryCodesHistoryRestoreHandler implements VaultHistoryRestoreHandler {
       );
     }
 
-    final historyValues = await recoveryCodeValuesHistoryDao
-        .getRecoveryCodeValuesByHistoryId(base.historyId);
-
-    if (payload.codesCount != null &&
-        payload.codesCount! > 0 &&
-        historyValues.isEmpty) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.restore.missing_recovery_code_value',
-          message:
-              'Нельзя восстановить recovery codes: в снимке отсутствуют значения кодов',
-          entity: 'recoveryCodes',
-        ),
-      );
-    }
-
-    if (historyValues.any((v) => v.code == null)) {
-      return const Failure(
-        DBCoreError.conflict(
-          code: 'history.restore.missing_recovery_code_value',
-          message:
-              'Нельзя восстановить recovery codes: в снимке отсутствуют значения кодов',
-          entity: 'recoveryCodes',
-        ),
-      );
-    }
-
     await recoveryCodesItemsDao.upsertRecoveryCodesItem(
       RecoveryCodesItemsCompanion(
         itemId: Value(base.itemId),
         generatedAt: Value(payload.generatedAt),
         oneTime: Value(payload.oneTime ?? false),
       ),
-    );
-
-    final liveValues = historyValues
-        .map(
-          (h) => RecoveryCodesCompanion(
-            itemId: Value(base.itemId),
-            code: Value(h.code!),
-            used: Value(h.used),
-            usedAt: Value(h.usedAt),
-            position: Value(h.position),
-          ),
-        )
-        .toList();
-
-    await recoveryCodesDao.replaceRecoveryCodesForItem(
-      itemId: base.itemId,
-      codes: liveValues,
     );
 
     return const Success(unit);

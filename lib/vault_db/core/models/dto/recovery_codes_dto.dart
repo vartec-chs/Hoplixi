@@ -9,8 +9,6 @@ part 'recovery_codes_dto.g.dart';
 @freezed
 sealed class RecoveryCodesDataDto with _$RecoveryCodesDataDto {
   const factory RecoveryCodesDataDto({
-    @Default(0) int codesCount,
-    @Default(0) int usedCount,
     DateTime? generatedAt,
     @Default(false) bool oneTime,
   }) = _RecoveryCodesDataDto;
@@ -50,8 +48,6 @@ sealed class RecoveryCodeValueCardDto with _$RecoveryCodeValueCardDto {
 @freezed
 sealed class RecoveryCodesCardDataDto with _$RecoveryCodesCardDataDto {
   const factory RecoveryCodesCardDataDto({
-    @Default(0) int codesCount,
-    @Default(0) int usedCount,
     DateTime? generatedAt,
     @Default(false) bool oneTime,
     required bool hasCodes,

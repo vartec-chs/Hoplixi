@@ -36,7 +36,7 @@ class RecoveryCodesHistoryCardReader implements VaultHistoryTypeReader {
           ? GenericHistoryCardDto(snapshot: snapshotDto)
           : RecoveryCodesHistoryCardDto(
               snapshot: snapshotDto,
-              recoverycodes: data,
+              recoveryCodes: data,
             );
     }
 

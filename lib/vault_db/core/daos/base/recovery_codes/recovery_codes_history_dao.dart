@@ -67,15 +67,11 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<VaultDB>
   getRecoveryCodesHistoryCardDataByHistoryIds(List<String> historyIds) async {
     if (historyIds.isEmpty) return const {};
 
-    // Specialized for RecoveryCodes: no direct secret column, maybe count handled differently
     final query = selectOnly(recoveryCodesHistory)
       ..addColumns([
         recoveryCodesHistory.historyId,
-        recoveryCodesHistory.codesCount,
-        recoveryCodesHistory.usedCount,
         recoveryCodesHistory.generatedAt,
         recoveryCodesHistory.oneTime,
-        // hasCodeValues computed later
       ])
       ..where(recoveryCodesHistory.historyId.isIn(historyIds));
 
@@ -86,19 +82,9 @@ class RecoveryCodesHistoryDao extends DatabaseAccessor<VaultDB>
         row.read(
           recoveryCodesHistory.historyId,
         )!: RecoveryCodesHistoryCardDataDto(
-          codesCount: row.read(recoveryCodesHistory.codesCount),
-          usedCount: row.read(recoveryCodesHistory.usedCount),
           generatedAt: row.read(recoveryCodesHistory.generatedAt),
           oneTime: row.read(recoveryCodesHistory.oneTime),
-          hasCodeValues: (row.read(recoveryCodesHistory.codesCount) ?? 0) > 0,
         ),
     };
-  }
-
-  Future<List<int>> getRecoveryCodeValueHistoryIdsByHistoryId(
-    String historyId,
-  ) async {
-    // Needs explicit implementation if using joined table
-    return const [];
   }
 }

@@ -9,31 +9,12 @@ part 'recovery_codes_history_card_dto.g.dart';
 sealed class RecoveryCodesHistoryCardDataDto
     with _$RecoveryCodesHistoryCardDataDto {
   const factory RecoveryCodesHistoryCardDataDto({
-    int? codesCount,
-    int? usedCount,
     DateTime? generatedAt,
     bool? oneTime,
-    @Default(false) bool hasCodeValues,
   }) = _RecoveryCodesHistoryCardDataDto;
 
   factory RecoveryCodesHistoryCardDataDto.fromJson(Map<String, dynamic> json) =>
       _$RecoveryCodesHistoryCardDataDtoFromJson(json);
-}
-
-@freezed
-sealed class RecoveryCodeValueHistorySecretDto
-    with _$RecoveryCodeValueHistorySecretDto {
-  const factory RecoveryCodeValueHistorySecretDto({
-    required int id,
-    required String code,
-    required bool used,
-    DateTime? usedAt,
-    int? position,
-  }) = _RecoveryCodeValueHistorySecretDto;
-
-  factory RecoveryCodeValueHistorySecretDto.fromJson(
-    Map<String, dynamic> json,
-  ) => _$RecoveryCodeValueHistorySecretDtoFromJson(json);
 }
 
 @freezed
@@ -42,7 +23,7 @@ sealed class RecoveryCodesHistoryCardDto
     implements VaultHistoryCardDto {
   const factory RecoveryCodesHistoryCardDto({
     required VaultSnapshotCardDto snapshot,
-    required RecoveryCodesHistoryCardDataDto recoverycodes,
+    required RecoveryCodesHistoryCardDataDto recoveryCodes,
   }) = _RecoveryCodesHistoryCardDto;
 
   factory RecoveryCodesHistoryCardDto.fromJson(Map<String, dynamic> json) =>

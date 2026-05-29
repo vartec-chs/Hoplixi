@@ -5,8 +5,6 @@ import 'package:hoplixi/vault_db/core/models/dto_history/recovery_codes_history_
 extension RecoveryCodesItemsDataMapper on RecoveryCodesItemsData {
   RecoveryCodesDataDto toRecoveryCodesDataDto() {
     return RecoveryCodesDataDto(
-      codesCount: codesCount,
-      usedCount: usedCount,
       generatedAt: generatedAt,
       oneTime: oneTime,
     );
@@ -14,11 +12,9 @@ extension RecoveryCodesItemsDataMapper on RecoveryCodesItemsData {
 
   RecoveryCodesCardDataDto toRecoveryCodesCardDataDto() {
     return RecoveryCodesCardDataDto(
-      codesCount: codesCount,
-      usedCount: usedCount,
       generatedAt: generatedAt,
       oneTime: oneTime,
-      hasCodes: codesCount > 0,
+      hasCodes: false,
     );
   }
 }
@@ -48,35 +44,15 @@ extension RecoveryCodeDataMapper on RecoveryCodeData {
 extension RecoveryCodesHistoryDataMapper on RecoveryCodesHistoryData {
   RecoveryCodesHistoryDataDto toRecoveryCodesHistoryDataDto() {
     return RecoveryCodesHistoryDataDto(
-      codesCount: codesCount,
-      usedCount: usedCount,
       generatedAt: generatedAt,
       oneTime: oneTime,
     );
   }
 
-  RecoveryCodesHistoryCardDataDto toRecoveryCodesHistoryCardDataDto({
-    required bool hasCodeValues,
-  }) {
+  RecoveryCodesHistoryCardDataDto toRecoveryCodesHistoryCardDataDto() {
     return RecoveryCodesHistoryCardDataDto(
-      codesCount: codesCount,
-      usedCount: usedCount,
       generatedAt: generatedAt,
       oneTime: oneTime,
-      hasCodeValues: hasCodeValues,
-    );
-  }
-}
-
-extension RecoveryCodeValuesHistoryDataMapper on RecoveryCodeValuesHistoryData {
-  RecoveryCodeValueHistoryDataDto toRecoveryCodeValueHistoryDataDto() {
-    return RecoveryCodeValueHistoryDataDto(
-      id: id,
-      originalCodeId: originalCodeId,
-      code: code,
-      used: used,
-      usedAt: usedAt,
-      position: position,
     );
   }
 }

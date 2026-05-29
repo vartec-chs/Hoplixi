@@ -10,16 +10,6 @@ class VaultHistoryRestorePolicyService {
       case VaultItemType.document:
         return false;
       case VaultItemType.recoveryCodes:
-        if (snapshot.payload is! RecoveryCodesHistoryPayload) return true;
-        final p = snapshot.payload as RecoveryCodesHistoryPayload;
-
-        final codesCount = p.codesCount ?? 0;
-        final valuesCount = p.valuesCount ?? 0;
-        final missingCount = p.missingValuesCount ?? 0;
-
-        if (codesCount > 0 && valuesCount == 0) return false;
-        if (missingCount > 0) return false;
-
         return true;
       default:
         return true;
@@ -46,7 +36,7 @@ class VaultHistoryRestorePolicyService {
       ];
     } else if (type == VaultItemType.recoveryCodes) {
       return [
-        'Recovery codes будут восстановлены только если значения кодов сохранены в снимке',
+        'Сами значения кодов восстановления не сохраняются в истории',
       ];
     }
     return const [];
@@ -80,16 +70,6 @@ class VaultHistoryRestorePolicyService {
       }
     } else if (type == VaultItemType.document) {
       warnings.add('Восстановление документов пока не поддерживается.');
-    } else if (type == VaultItemType.recoveryCodes) {
-      if (snapshot.payload is RecoveryCodesHistoryPayload) {
-        final p = snapshot.payload as RecoveryCodesHistoryPayload;
-        final usedValuesCount = p.usedValuesCount ?? 0;
-        if (usedValuesCount > 0) {
-          warnings.add(
-            'Будет восстановлен статус использованных кодов ($usedValuesCount шт.).',
-          );
-        }
-      }
     }
 
     // Check for missing secrets in type-specific payload

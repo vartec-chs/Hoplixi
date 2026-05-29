@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../vault_items/vault_snapshots_history.dart';
+import '../../vault_items/vault_snapshots_history.dart';
 import 'tags.dart';
 
 /// Snapshot тегов vault item для восстановления по snapshotId.

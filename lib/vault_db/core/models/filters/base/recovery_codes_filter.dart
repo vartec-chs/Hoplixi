@@ -11,7 +11,6 @@ enum RecoveryCodesSortField {
   createdAt,
   modifiedAt,
   lastUsedAt,
-  usedCount,
   recentScore,
 }
 
@@ -25,12 +24,6 @@ sealed class RecoveryCodesFilter with _$RecoveryCodesFilter {
 
     bool? oneTime,
 
-    int? minCodesCount,
-    int? maxCodesCount,
-
-    int? minUsedCount,
-    int? maxUsedCount,
-
     bool? hasCodes,
 
     RecoveryCodesSortField? sortField,
@@ -41,10 +34,6 @@ sealed class RecoveryCodesFilter with _$RecoveryCodesFilter {
     DateTime? generatedAfter,
     DateTime? generatedBefore,
     bool? oneTime,
-    int? minCodesCount,
-    int? maxCodesCount,
-    int? minUsedCount,
-    int? maxUsedCount,
     bool? hasCodes,
     RecoveryCodesSortField? sortField,
   }) {
@@ -53,10 +42,6 @@ sealed class RecoveryCodesFilter with _$RecoveryCodesFilter {
       generatedAfter: generatedAfter,
       generatedBefore: generatedBefore,
       oneTime: oneTime,
-      minCodesCount: minCodesCount,
-      maxCodesCount: maxCodesCount,
-      minUsedCount: minUsedCount,
-      maxUsedCount: maxUsedCount,
       hasCodes: hasCodes,
       sortField: sortField,
     );
@@ -71,8 +56,6 @@ extension RecoveryCodesFilterHelpers on RecoveryCodesFilter {
     if (base.hasActiveConstraints) return true;
     if (generatedAfter != null || generatedBefore != null) return true;
     if (oneTime != null) return true;
-    if (minCodesCount != null || maxCodesCount != null) return true;
-    if (minUsedCount != null || maxUsedCount != null) return true;
     if (hasCodes != null) return true;
     return false;
   }

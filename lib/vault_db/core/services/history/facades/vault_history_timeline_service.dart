@@ -261,7 +261,7 @@ class VaultHistoryTimelineService {
       return card.otp.issuer ?? card.otp.accountName;
     }
     if (card is RecoveryCodesHistoryCardDto) {
-      return '${card.recoverycodes.codesCount} кодов';
+      return '';
     }
     if (card is SshKeyHistoryCardDto) return card.sshkey.keyType?.name;
     if (card is WifiHistoryCardDto) return card.wifi.ssid;

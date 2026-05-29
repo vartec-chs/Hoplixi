@@ -1,6 +1,6 @@
 import '../../scheme/tables/system/categories/categories.dart';
 import '../../scheme/tables/system/item_link/item_links.dart';
-import '../../scheme/tables/system/tags.dart';
+import '../../scheme/tables/system/tags/tags.dart';
 import '../db_constraint_descriptor.dart';
 
 final Map<String, DbConstraintDescriptor> systemRegistry = {

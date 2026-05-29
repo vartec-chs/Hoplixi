@@ -5,8 +5,8 @@ import '../../models/dto/dto.dart';
 import '../../models/filters/filters.dart';
 import '../../scheme/tables/recovery_codes/recovery_codes_items.dart';
 import '../../scheme/tables/system/categories/categories.dart';
-import '../../scheme/tables/system/item_tags.dart';
-import '../../scheme/tables/system/tags.dart';
+import '../../scheme/tables/system/tags/item_tags.dart';
+import '../../scheme/tables/system/tags/tags.dart';
 import '../../scheme/tables/vault_items/vault_items.dart';
 import 'base_filter_query_mixin.dart';
 import 'filter_dao.dart';
@@ -27,7 +27,7 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<VaultDB>
     RecoveryCodesFilter filter,
   ) async {
     final whereExpr = _buildWhere(filter);
-    final hasCodesExpr = db.recoveryCodesItems.codesCount.isBiggerThanValue(0);
+    final hasCodesExpr = const Constant(true); // removed codesCount
 
     final query =
         selectOnly(vaultItems).join([
@@ -53,8 +53,6 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<VaultDB>
             vaultItems.archivedAt,
             vaultItems.deletedAt,
             vaultItems.recentScore,
-            recoveryCodesItems.codesCount,
-            recoveryCodesItems.usedCount,
             recoveryCodesItems.generatedAt,
             recoveryCodesItems.oneTime,
             hasCodesExpr,
@@ -94,11 +92,6 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<VaultDB>
         case RecoveryCodesSortField.lastUsedAt:
           orderingTerms.add(
             OrderingTerm(expression: vaultItems.lastUsedAt, mode: mode),
-          );
-          break;
-        case RecoveryCodesSortField.usedCount:
-          orderingTerms.add(
-            OrderingTerm(expression: recoveryCodesItems.usedCount, mode: mode),
           );
           break;
         case RecoveryCodesSortField.recentScore:
@@ -150,8 +143,6 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<VaultDB>
           recentScore: row.read(vaultItems.recentScore),
         ),
         recoveryCodes: RecoveryCodesCardDataDto(
-          codesCount: row.read(recoveryCodesItems.codesCount)!,
-          usedCount: row.read(recoveryCodesItems.usedCount)!,
           generatedAt: row.read(recoveryCodesItems.generatedAt),
           oneTime: row.read(recoveryCodesItems.oneTime) ?? false,
           hasCodes: row.read(hasCodesExpr) ?? false,
@@ -199,35 +190,6 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<VaultDB>
     }
     if (filter.oneTime != null) {
       whereExpr &= recoveryCodesItems.oneTime.equals(filter.oneTime!);
-    }
-
-    if (filter.minCodesCount != null) {
-      whereExpr &= recoveryCodesItems.codesCount.isBiggerOrEqualValue(
-        filter.minCodesCount!,
-      );
-    }
-    if (filter.maxCodesCount != null) {
-      whereExpr &= recoveryCodesItems.codesCount.isSmallerOrEqualValue(
-        filter.maxCodesCount!,
-      );
-    }
-    if (filter.minUsedCount != null) {
-      whereExpr &= recoveryCodesItems.usedCount.isBiggerOrEqualValue(
-        filter.minUsedCount!,
-      );
-    }
-    if (filter.maxUsedCount != null) {
-      whereExpr &= recoveryCodesItems.usedCount.isSmallerOrEqualValue(
-        filter.maxUsedCount!,
-      );
-    }
-
-    if (filter.hasCodes != null) {
-      if (filter.hasCodes!) {
-        whereExpr &= recoveryCodesItems.codesCount.isBiggerThanValue(0);
-      } else {
-        whereExpr &= recoveryCodesItems.codesCount.equals(0);
-      }
     }
 
     if (filter.base.query.isNotEmpty) {

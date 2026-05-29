@@ -7,16 +7,6 @@ class RecoveryCodesItems extends Table {
   TextColumn get itemId =>
       text().references(VaultItems, #id, onDelete: KeyAction.cascade)();
 
-  /// Кэш: общее количество кодов.
-  ///
-  /// Обновляется триггерами при изменении recovery_codes.
-  IntColumn get codesCount => integer().withDefault(const Constant(0))();
-
-  /// Кэш: количество использованных кодов.
-  ///
-  /// Обновляется триггерами при изменении recovery_codes.
-  IntColumn get usedCount => integer().withDefault(const Constant(0))();
-
   /// Дата генерации набора recovery codes.
   DateTimeColumn get generatedAt => dateTime().nullable()();
 
@@ -34,37 +24,11 @@ class RecoveryCodesItems extends Table {
     CONSTRAINT ${RecoveryCodesItemConstraint.itemIdNotBlank.constraintName}
     CHECK (length(trim(item_id)) > 0)
     ''',
-    '''
-    CONSTRAINT ${RecoveryCodesItemConstraint.codesCountNonNegative.constraintName}
-    CHECK (
-      codes_count >= 0
-    )
-    ''',
-    '''
-    CONSTRAINT ${RecoveryCodesItemConstraint.usedCountNonNegative.constraintName}
-    CHECK (
-      used_count >= 0
-    )
-    ''',
-    '''
-    CONSTRAINT ${RecoveryCodesItemConstraint.usedCountNotGreaterThanCodesCount.constraintName}
-    CHECK (
-      used_count <= codes_count
-    )
-    ''',
   ];
 }
 
 enum RecoveryCodesItemConstraint {
-  itemIdNotBlank('chk_recovery_codes_items_item_id_not_blank'),
-
-  codesCountNonNegative('chk_recovery_codes_items_codes_count_non_negative'),
-
-  usedCountNonNegative('chk_recovery_codes_items_used_count_non_negative'),
-
-  usedCountNotGreaterThanCodesCount(
-    'chk_recovery_codes_items_used_count_not_greater_than_codes_count',
-  );
+  itemIdNotBlank('chk_recovery_codes_items_item_id_not_blank'),;
 
   const RecoveryCodesItemConstraint(this.constraintName);
 

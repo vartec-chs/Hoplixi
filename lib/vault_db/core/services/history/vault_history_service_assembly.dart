@@ -206,17 +206,14 @@ class VaultHistoryServiceAssembly {
       type: VaultItemType.recoveryCodes,
       normalizer: RecoveryCodesHistoryNormalizer(
         recoveryCodesHistoryDao: db.recoveryCodesHistoryDao,
-        recoveryCodeValuesHistoryDao: db.recoveryCodeValuesHistoryDao,
         recoveryCodesRepository: repos.recoveryCodes,
       ),
       restoreHandler: RecoveryCodesHistoryRestoreHandler(
         recoveryCodesItemsDao: db.recoveryCodesItemsDao,
         recoveryCodesDao: db.recoveryCodesDao,
-        recoveryCodeValuesHistoryDao: db.recoveryCodeValuesHistoryDao,
       ),
       snapshotHandler: RecoveryCodesSnapshotHandler(
         recoveryCodesHistoryDao: db.recoveryCodesHistoryDao,
-        recoveryCodeValuesHistoryDao: db.recoveryCodeValuesHistoryDao,
       ),
       cardReader: RecoveryCodesHistoryCardReader(
         recoveryCodesHistoryDao: db.recoveryCodesHistoryDao,

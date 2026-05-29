@@ -41,8 +41,7 @@ class RecoveryCodesRepository {
             itemId: itemId,
             generatedAt: Value(dto.recoveryCodes.generatedAt),
             oneTime: Value(dto.recoveryCodes.oneTime),
-            codesCount: const Value(0),
-            usedCount: const Value(0),
+          
           ),
         );
 
@@ -436,8 +435,7 @@ class RecoveryCodesRepository {
       db.vaultItems.archivedAt,
       db.vaultItems.deletedAt,
       db.vaultItems.recentScore,
-      db.recoveryCodesItems.codesCount,
-      db.recoveryCodesItems.usedCount,
+  
       db.recoveryCodesItems.generatedAt,
       db.recoveryCodesItems.oneTime,
     ]);
@@ -464,11 +462,9 @@ class RecoveryCodesRepository {
         recentScore: row.read(db.vaultItems.recentScore),
       ),
       recoveryCodes: RecoveryCodesCardDataDto(
-        codesCount: row.read(db.recoveryCodesItems.codesCount)!,
-        usedCount: row.read(db.recoveryCodesItems.usedCount)!,
         generatedAt: row.read(db.recoveryCodesItems.generatedAt),
         oneTime: row.read(db.recoveryCodesItems.oneTime)!,
-        hasCodes: (row.read(db.recoveryCodesItems.codesCount) ?? 0) > 0,
+        hasCodes: false,
       ),
     );
   }

@@ -11,12 +11,10 @@ import 'vault_history_type_normalizer.dart';
 class RecoveryCodesHistoryNormalizer implements VaultHistoryTypeNormalizer {
   RecoveryCodesHistoryNormalizer({
     required this.recoveryCodesHistoryDao,
-    required this.recoveryCodeValuesHistoryDao,
     required this.recoveryCodesRepository,
   });
 
   final RecoveryCodesHistoryDao recoveryCodesHistoryDao;
-  final RecoveryCodeValuesHistoryDao recoveryCodeValuesHistoryDao;
   final RecoveryCodesRepository recoveryCodesRepository;
 
   @override
@@ -34,18 +32,10 @@ class RecoveryCodesHistoryNormalizer implements VaultHistoryTypeNormalizer {
 
         final item = rows.first;
 
-        final values = await recoveryCodeValuesHistoryDao
-            .getRecoveryCodeValuesByHistoryId(historyId);
-
         return Some(
           RecoveryCodesHistoryPayload(
-            codesCount: item.codesCount,
-            usedCount: item.usedCount,
             generatedAt: item.generatedAt,
             oneTime: item.oneTime,
-            valuesCount: values.length,
-            missingValuesCount: values.where((v) => v.code == null).length,
-            usedValuesCount: values.where((v) => v.used).length,
           ),
         );
       },
@@ -70,17 +60,11 @@ class RecoveryCodesHistoryNormalizer implements VaultHistoryTypeNormalizer {
         )).getOrThrow();
         return viewOpt.fold((view) {
           final item = view.recoveryCodes;
-          final codes = view.codes;
 
           return Some(
             RecoveryCodesHistoryPayload(
-              codesCount: codes.length,
-              usedCount: codes.where((c) => c.used).length,
               generatedAt: item.generatedAt,
               oneTime: item.oneTime,
-              valuesCount: codes.length,
-              missingValuesCount: 0,
-              usedValuesCount: codes.where((c) => c.used).length,
             ),
           );
         }, () => const None());

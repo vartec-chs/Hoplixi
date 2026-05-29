@@ -12,11 +12,9 @@ import 'vault_snapshot_type_handler.dart';
 class RecoveryCodesSnapshotHandler implements VaultSnapshotTypeHandler {
   RecoveryCodesSnapshotHandler({
     required this.recoveryCodesHistoryDao,
-    required this.recoveryCodeValuesHistoryDao,
   });
 
   final RecoveryCodesHistoryDao recoveryCodesHistoryDao;
-  final RecoveryCodeValuesHistoryDao recoveryCodeValuesHistoryDao;
 
   @override
   VaultItemType get type => VaultItemType.recoveryCodes;
@@ -42,29 +40,10 @@ class RecoveryCodesSnapshotHandler implements VaultSnapshotTypeHandler {
         await recoveryCodesHistoryDao.insertRecoveryCodesHistory(
           RecoveryCodesHistoryCompanion.insert(
             historyId: historyId,
-            codesCount: Value(rc.codesCount),
-            usedCount: Value(rc.usedCount),
             generatedAt: Value(rc.generatedAt),
             oneTime: Value(rc.oneTime),
           ),
         );
-
-        if (view.codes.isNotEmpty) {
-          final codeCompanions = view.codes
-              .map(
-                (c) => RecoveryCodeValuesHistoryCompanion.insert(
-                  historyId: historyId,
-                  originalCodeId: Value(c.id),
-                  code: Value(includeSecrets ? c.code : null),
-                  used: Value(c.used),
-                  usedAt: Value(c.usedAt),
-                  position: Value(c.position),
-                ),
-              )
-              .toList();
-          await recoveryCodeValuesHistoryDao
-              .insertRecoveryCodeValuesHistoryBatch(codeCompanions);
-        }
 
         return unit;
       },

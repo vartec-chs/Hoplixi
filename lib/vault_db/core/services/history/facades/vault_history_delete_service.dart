@@ -82,8 +82,6 @@ class VaultHistoryDeleteService {
         await db.otpHistoryDao.deleteOtpHistoryByHistoryId(historyId);
         break;
       case VaultItemType.recoveryCodes:
-        await db.recoveryCodeValuesHistoryDao
-            .deleteRecoveryCodeValuesHistoryByHistoryId(historyId);
         await db.recoveryCodesHistoryDao.deleteRecoveryCodesHistoryByHistoryId(
           historyId,
         );

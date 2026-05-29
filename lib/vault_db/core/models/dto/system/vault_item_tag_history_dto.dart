@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../scheme/tables/system/tags.dart';
+import '../../../scheme/tables/system/tags/tags.dart';
 
 part 'vault_item_tag_history_dto.freezed.dart';
 part 'vault_item_tag_history_dto.g.dart';
