@@ -9,7 +9,7 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/share_field
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 class CertificateViewScreen extends ConsumerStatefulWidget {
@@ -35,11 +35,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
   String? _serialNumber;
   String? _issuer;
   String? _subject;
-  String? _fingerprint;
-  String? _ocspUrl;
-  String? _crlUrl;
   String? _description;
-  bool _autoRenew = false;
 
   @override
   void initState() {
@@ -50,131 +46,74 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final dao = await ref.read(certificateDaoProvider.future);
-      final row = await dao.getById(widget.certificateId);
-      if (row == null) {
-        Toaster.error(title: context.t.dashboard_forms.certificate_not_found);
-        if (mounted) context.pop();
+      final repos = await ref.read(vaultRepositories.future);
+      if (!mounted) return;
+      final viewResult = await repos.certificate.getViewById(widget.certificateId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view == null) {
+        if (mounted) {
+          Toaster.error(title: context.t.dashboard_forms.certificate_not_found);
+          context.pop();
+        }
         return;
       }
-      final item = row.$1;
-      final cert = row.$2;
+      final item = view.item;
+      final certificate = view.certificate;
       setState(() {
         _isDeleted = item.isDeleted;
         _name = item.name;
-        _certificatePem = cert.certificatePem;
-        _serialNumber = cert.serialNumber;
-        _issuer = cert.issuer;
-        _subject = cert.subject;
-        _fingerprint = cert.fingerprint;
-        _ocspUrl = cert.ocspUrl;
-        _crlUrl = cert.crlUrl;
+        _certificatePem = certificate.certificatePem ?? '';
+        _serialNumber = certificate.serialNumber;
+        _issuer = certificate.issuer;
+        _subject = certificate.subject;
         _description = item.description;
-        _autoRenew = cert.autoRenew;
+        _privateKey = certificate.privateKey;
+        _pfxPassword = certificate.passwordForPfx;
       });
     } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_load_error,
-        description: '$e',
-      );
+      if (mounted) {
+        Toaster.error(
+          title: context.t.dashboard_forms.common_load_error,
+          description: '$e',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _revealPrivateKey() async {
-    if (_privateKey != null) {
-      setState(() => _showPrivateKey = !_showPrivateKey);
-      return;
-    }
-
-    try {
-      final dao = await ref.read(certificateDaoProvider.future);
-      final value = await dao.getPrivateKeyFieldById(widget.certificateId);
-      if (value == null || value.isEmpty) {
-        Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(
-            Field: context.t.dashboard_forms.private_key_label,
-          ),
-        );
-        return;
-      }
-      setState(() {
-        _privateKey = value;
-        _showPrivateKey = true;
-      });
-    } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(
-          Field: context.t.dashboard_forms.private_key_label,
-        ),
-        description: '$e',
-      );
-    }
+  void _revealPrivateKey() {
+    setState(() => _showPrivateKey = !_showPrivateKey);
   }
 
-  Future<void> _revealPfxPassword() async {
-    if (_pfxPassword != null) {
-      setState(() => _showPfxPassword = !_showPfxPassword);
-      return;
-    }
-
-    try {
-      final dao = await ref.read(certificateDaoProvider.future);
-      final value = await dao.getPasswordForPfxFieldById(widget.certificateId);
-      if (value == null || value.isEmpty) {
-        Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(
-            Field: context.t.dashboard_forms.pfx_password_label,
-          ),
-        );
-        return;
-      }
-      setState(() {
-        _pfxPassword = value;
-        _showPfxPassword = true;
-      });
-    } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(
-          Field: context.t.dashboard_forms.pfx_password_label,
-        ),
-        description: '$e',
-      );
-    }
+  void _revealPfxPassword() {
+    setState(() => _showPfxPassword = !_showPfxPassword);
   }
 
   Future<void> _copyText(String title, String? value) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(
-        title: context.t.dashboard_forms.common_field_empty(Field: title),
-      );
+      if (mounted) {
+        Toaster.warning(
+          title: context.t.dashboard_forms.common_field_empty(Field: title),
+        );
+      }
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(
-      title: context.t.dashboard_forms.common_field_copied(Field: title),
-    );
+    if (mounted) {
+      Toaster.success(
+        title: context.t.dashboard_forms.common_field_copied(Field: title),
+      );
+    }
   }
 
   Future<void> _share() async {
     final l10n = context.t.dashboard_forms;
-    String? privateKey = _privateKey;
-    String? pfxPassword = _pfxPassword;
-    try {
-      final dao = await ref.read(certificateDaoProvider.future);
-      privateKey ??= await dao.getPrivateKeyFieldById(widget.certificateId);
-      pfxPassword ??= await dao.getPasswordForPfxFieldById(
-        widget.certificateId,
-      );
-    } catch (e) {
-      Toaster.error(title: l10n.common_load_error, description: '$e');
-    }
-
     final customFields = await loadCustomShareableFields(
       ref,
       widget.certificateId,
     );
+    if (!mounted) return;
     final fields = [
       ...compactShareableFields([
         shareableField(id: 'name', label: l10n.share_name_label, value: _name),
@@ -186,13 +125,13 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
         shareableField(
           id: 'private_key',
           label: l10n.private_key_label,
-          value: privateKey,
+          value: _privateKey,
           isSensitive: true,
         ),
         shareableField(
           id: 'pfx_password',
           label: l10n.pfx_password_label,
-          value: pfxPassword,
+          value: _pfxPassword,
           isSensitive: true,
         ),
         shareableField(id: 'issuer', label: l10n.issuer_label, value: _issuer),
@@ -205,26 +144,6 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
           id: 'serial_number',
           label: l10n.serial_number_label,
           value: _serialNumber,
-        ),
-        shareableField(
-          id: 'fingerprint',
-          label: l10n.fingerprint_label,
-          value: _fingerprint,
-        ),
-        shareableField(
-          id: 'ocsp_url',
-          label: l10n.ocsp_url_label,
-          value: _ocspUrl,
-        ),
-        shareableField(
-          id: 'crl_url',
-          label: l10n.crl_url_label,
-          value: _crlUrl,
-        ),
-        shareableField(
-          id: 'auto_renew',
-          label: l10n.auto_renew_label,
-          value: _autoRenew ? l10n.common_enabled : l10n.common_disabled,
         ),
         shareableField(
           id: 'description',
@@ -362,27 +281,7 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
                       title: Text(l10n.serial_number_label),
                       subtitle: Text(_serialNumber!),
                     ),
-                  if (_fingerprint?.isNotEmpty == true)
-                    ListTile(
-                      title: Text(l10n.fingerprint_label),
-                      subtitle: Text(_fingerprint!),
-                    ),
-                  if (_ocspUrl?.isNotEmpty == true)
-                    ListTile(
-                      title: Text(l10n.ocsp_url_label),
-                      subtitle: Text(_ocspUrl!),
-                    ),
-                  if (_crlUrl?.isNotEmpty == true)
-                    ListTile(
-                      title: Text(l10n.crl_url_label),
-                      subtitle: Text(_crlUrl!),
-                    ),
-                  ListTile(
-                    title: Text(l10n.auto_renew_label),
-                    subtitle: Text(
-                      _autoRenew ? l10n.common_enabled : l10n.common_disabled,
-                    ),
-                  ),
+
                   if (_description?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,

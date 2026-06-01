@@ -10,10 +10,10 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_f
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -28,7 +28,8 @@ class DocumentViewScreen extends ConsumerStatefulWidget {
 }
 
 class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
-  (VaultItemsData, DocumentItemsData)? _document;
+  DocumentViewDto? _document;
+  DocumentVersionViewDto? _currentVersion;
   bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
@@ -42,15 +43,22 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
 
   Future<void> _loadDocument() async {
     try {
-      final dao = await ref.read(documentDaoProvider.future);
-      final record = await dao.getById(widget.documentId);
-      if (record != null && mounted) {
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.document.getViewById(
+        widget.documentId,
+      );
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view != null && mounted) {
         setState(() {
-          _document = record;
-          _isDeleted = record.$1.isDeleted;
-          _isLoading = false;
+          _document = view;
+          _isDeleted = view.item.isDeleted;
         });
-        await _loadRelatedData(record);
+        await _loadRelatedData(view, repositories);
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -60,21 +68,38 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
   }
 
   Future<void> _loadRelatedData(
-    (VaultItemsData, DocumentItemsData) record,
+    DocumentViewDto view,
+    VaultRepositories repositories,
   ) async {
-    final vault = record.$1;
-    if (vault.categoryId != null) {
-      final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(vault.categoryId!);
+    if (view.item.categoryId != null) {
+      final cat = (await repositories.category.getCategory(
+        view.item.categoryId!,
+      )).getOrNull()?.getOrNull();
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(widget.documentId);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final tagIds =
+        (await relationsService.getTagIdsForItem(
+          widget.documentId,
+        )).getOrNull() ??
+        [];
     if (tagIds.isNotEmpty) {
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tags = await tagDao.getTagsByIds(tagIds);
+      final tags =
+          (await repositories.tag.getTagsByIds(tagIds)).getOrNull() ?? [];
       if (mounted) setState(() => _tagNames = tags.map((t) => t.name).toList());
+    }
+
+    final verService = await ref.read(documentVersionServiceProvider.future);
+    final verRes = await verService.getCurrentVersion(
+      documentId: widget.documentId,
+    );
+    if (mounted) {
+      setState(() {
+        _currentVersion = verRes.getOrNull();
+      });
     }
   }
 
@@ -93,20 +118,37 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
   );
 
   DocumentCardDto _createDocumentDto() {
+    final item = _document!.item;
+    final curVer = _currentVersion;
     return DocumentCardDto(
-      id: _document!.$1.id,
-      title: _document!.$1.name,
-      documentType: _document!.$2.documentType,
-      description: _document!.$1.description,
-      pageCount: _document!.$2.pageCount,
-      isFavorite: _document!.$1.isFavorite,
-      isPinned: _document!.$1.isPinned,
-      isArchived: _document!.$1.isArchived,
-      isDeleted: _document!.$1.isDeleted,
-      usedCount: _document!.$1.usedCount,
-      modifiedAt: _document!.$1.modifiedAt,
-      category: null,
-      tags: null,
+      item: VaultItemCardDto(
+        itemId: item.itemId,
+        type: item.type,
+        name: item.name,
+        description: item.description,
+        categoryId: item.categoryId,
+        iconRefId: item.iconRefId,
+        isFavorite: item.isFavorite,
+        isArchived: item.isArchived,
+        isPinned: item.isPinned,
+        isDeleted: item.isDeleted,
+        createdAt: item.createdAt,
+        modifiedAt: item.modifiedAt,
+        lastUsedAt: item.lastUsedAt,
+        archivedAt: item.archivedAt,
+        deletedAt: item.deletedAt,
+        recentScore: item.recentScore,
+      ),
+      document: DocumentCurrentVersionCardDataDto(
+        currentVersionId: curVer?.id,
+        currentVersionNumber: curVer?.versionNumber,
+        documentType: curVer?.documentType,
+        documentTypeOther: curVer?.documentTypeOther,
+        pageCount: curVer?.pageCount,
+        versionCreatedAt: curVer?.createdAt,
+        versionModifiedAt: curVer?.modifiedAt,
+        hasCurrentVersion: curVer != null,
+      ),
     );
   }
 
@@ -119,24 +161,26 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
       ref,
       widget.documentId,
     );
+    if (!mounted) return;
+
     final fields = [
       ...buildCommonShareFields(
         context,
-        name: record.$1.name,
+        name: record.item.name,
         categoryName: _categoryName,
         tagNames: _tagNames,
-        description: record.$1.description,
+        description: record.item.description,
       ),
       ...compactShareableFields([
         shareableField(
           id: 'document_type',
           label: l10n.share_document_type_label,
-          value: record.$2.documentType,
+          value: _currentVersion?.documentType?.name,
         ),
         shareableField(
           id: 'page_count',
           label: l10n.share_page_count_label,
-          value: record.$2.pageCount,
+          value: _currentVersion?.pageCount.toString(),
         ),
       ]),
       ...customFields,
@@ -145,7 +189,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
     await shareEntityFields(
       context: context,
       entity: ShareableEntity(
-        title: record.$1.name,
+        title: record.item.name,
         entityTypeLabel: EntityType.document.label,
         fields: fields,
       ),
@@ -157,7 +201,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    final title = _document?.$1.name ?? 'Документ';
+    final title = _document?.item.name ?? 'Документ';
 
     return Scaffold(
       backgroundColor: getScreenBackgroundColor(context, ref),
@@ -203,7 +247,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
                         Icon(LucideIcons.fileText, size: 64, color: cs.primary),
                         const SizedBox(height: 12),
                         Text(
-                          '${_document!.$2.pageCount} стр.',
+                          '${_currentVersion?.pageCount ?? 0} стр.',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -212,26 +256,26 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  if (_document!.$1.name.isNotEmpty)
+                  if (_document!.item.name.isNotEmpty)
                     _info(
                       theme,
                       LucideIcons.tag,
                       'Название',
-                      _document!.$1.name,
-                      () => _copy(_document!.$1.name, 'Название'),
+                      _document!.item.name,
+                      () => _copy(_document!.item.name, 'Название'),
                     ),
-                  if (_document!.$2.documentType != null)
+                  if (_currentVersion?.documentType != null)
                     _info(
                       theme,
                       LucideIcons.file,
                       'Тип',
-                      _document!.$2.documentType!,
+                      _currentVersion!.documentType!.name,
                     ),
                   _info(
                     theme,
                     LucideIcons.layers,
                     'Страниц',
-                    '${_document!.$2.pageCount}',
+                    '${_currentVersion?.pageCount ?? 0}',
                   ),
                   if (_categoryName != null)
                     _info(
@@ -241,12 +285,12 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
                       _categoryName!,
                     ),
                   if (_tagNames.isNotEmpty) _tags(theme),
-                  if (_document!.$1.description?.isNotEmpty ?? false)
+                  if (_document!.item.description?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.fileText,
                       'Описание',
-                      _document!.$1.description!,
+                      _document!.item.description!,
                     ),
                   CustomFieldsViewSection(itemId: widget.documentId),
                   const SizedBox(height: 24),

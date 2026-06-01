@@ -2,18 +2,17 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/filter_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_filter_state.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/tag_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
 const int _kPageSize = 20;
 const Duration _kSearchDebounce = Duration(milliseconds: 300);
 
-/// Провайдер для управления состоянием фильтра в drawer
-/// Family по EntityType для правильной фильтрации по типу
 final drawerFilterProvider = AsyncNotifierProvider.autoDispose
     .family<DrawerFilterNotifier, DrawerFilterState, EntityType>(
       DrawerFilterNotifier.new,
@@ -23,30 +22,22 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
   static const String _logTag = 'DrawerFilterNotifier';
   Timer? _categorySearchDebounce;
   Timer? _tagSearchDebounce;
+  List<CategoryCardDto> _allCategories = const [];
+  List<TagCardDto> _allTags = const [];
 
-  DrawerFilterNotifier(this._entityType);
-
-  final EntityType _entityType;
+  DrawerFilterNotifier(EntityType _);
 
   @override
   Future<DrawerFilterState> build() async {
-    // Настраиваем очистку ресурсов
     ref.onDispose(() {
       _categorySearchDebounce?.cancel();
       _tagSearchDebounce?.cancel();
     });
 
-    // Прослушиваем изменения в категориях и тегах СИНХРОННО до любых await
     ref.listen<ManagerRefreshState>(managerRefreshTriggerProvider, (
       previous,
       next,
     ) {
-      logTrace(
-        '$_logTag managerRefreshTriggerProvider изменился: '
-        'previous=${previous?.toString() ?? 'null'}, next=${next.toString()}',
-        tag: _logTag,
-      );
-      // Проверяем, что это изменение категорий или тегов
       final resourceType = next.resourceType;
       if (resourceType == ManagerResourceType.category) {
         logDebug(
@@ -63,45 +54,26 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
       }
     });
 
-    // Начальное состояние без сохранённого выбора
     var currentState = const DrawerFilterState(
       selectedCategoryIds: [],
       selectedTagIds: [],
     );
 
     try {
-      // Загружаем категории
-      final categoryDao = await ref.read(categoryDaoProvider.future);
-      final categoryFilter = CategoriesFilter.create(
-        query: '',
-        types: [_entityType.toCategoryType()],
-        limit: _kPageSize,
-        offset: 0,
-      );
-      final categories = await categoryDao.getCategoryCardsFiltered(
-        categoryFilter,
-      );
-
+      await _refreshCategories();
+      final categories = _sliceCategories(offset: 0, query: '');
       currentState = currentState.copyWith(
         categories: categories,
-        categoriesOffset: _kPageSize,
-        hasMoreCategories: categories.length >= _kPageSize,
+        categoriesOffset: categories.length,
+        hasMoreCategories: categories.length < _filteredCategories('').length,
       );
 
-      // Загружаем теги
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tagFilter = TagsFilter.create(
-        query: '',
-        types: [_entityType.toTagType()],
-        limit: _kPageSize,
-        offset: 0,
-      );
-      final tags = await tagDao.getTagCardsFiltered(tagFilter);
-
+      await _refreshTags();
+      final tags = _sliceTags(offset: 0, query: '');
       currentState = currentState.copyWith(
         tags: tags,
-        tagsOffset: _kPageSize,
-        hasMoreTags: tags.length >= _kPageSize,
+        tagsOffset: tags.length,
+        hasMoreTags: tags.length < _filteredTags('').length,
       );
     } catch (e, s) {
       logError(
@@ -114,20 +86,59 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     return currentState;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Загрузка категорий
-  // ─────────────────────────────────────────────────────────────────────────
+  Future<void> _refreshCategories() async {
+    final repositories = await ref.read(vaultRepositories.future);
+    final categories = (await repositories.category.getAllCategories())
+        .getOrThrow()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    _allCategories = categories;
+  }
 
-  /// Перезагрузить категории (вызывается из listener)
+  Future<void> _refreshTags() async {
+    final repositories = await ref.read(vaultRepositories.future);
+    final tags = (await repositories.tag.getAllTags()).getOrThrow()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    _allTags = tags;
+  }
+
+  List<CategoryCardDto> _filteredCategories(String query) {
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty) return _allCategories;
+    return _allCategories
+        .where((category) => category.name.toLowerCase().contains(normalized))
+        .toList(growable: false);
+  }
+
+  List<TagCardDto> _filteredTags(String query) {
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty) return _allTags;
+    return _allTags
+        .where((tag) => tag.name.toLowerCase().contains(normalized))
+        .toList(growable: false);
+  }
+
+  List<CategoryCardDto> _sliceCategories({
+    required int offset,
+    required String query,
+  }) {
+    final categories = _filteredCategories(query);
+    final end = (offset + _kPageSize).clamp(0, categories.length);
+    if (offset >= end) return const [];
+    return categories.sublist(offset, end);
+  }
+
+  List<TagCardDto> _sliceTags({
+    required int offset,
+    required String query,
+  }) {
+    final tags = _filteredTags(query);
+    final end = (offset + _kPageSize).clamp(0, tags.length);
+    if (offset >= end) return const [];
+    return tags.sublist(offset, end);
+  }
+
   void _reloadCategories() {
-    logDebug(
-      '$_logTag _reloadCategories вызван, state.hasValue: ${state.hasValue}',
-    );
     state.whenData((currentState) {
-      logDebug(
-        '$_logTag Перезагрузка категорий, текущее количество: ${currentState.categories.length}',
-      );
-      // Сбрасываем состояние и перезагружаем
       state = AsyncValue.data(
         currentState.copyWith(categorySearchQuery: '', categoriesOffset: 0),
       );
@@ -135,7 +146,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     });
   }
 
-  /// Public метод для перезагрузки категорий
   void reloadCategories() {
     _reloadCategories();
   }
@@ -147,17 +157,14 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     state = AsyncValue.data(currentState.copyWith(isCategoriesLoading: true));
 
     try {
-      final categoryDao = await ref.read(categoryDaoProvider.future);
+      if (reset) await _refreshCategories();
+
       final offset = reset ? 0 : currentState.categoriesOffset;
-
-      final filter = CategoriesFilter.create(
-        query: currentState.categorySearchQuery,
-        types: [_entityType.toCategoryType()],
-        limit: _kPageSize,
+      final categories = _sliceCategories(
         offset: offset,
+        query: currentState.categorySearchQuery,
       );
-
-      final categories = await categoryDao.getCategoryCardsFiltered(filter);
+      final total = _filteredCategories(currentState.categorySearchQuery).length;
 
       logDebug(
         '$_logTag Загружено категорий: ${categories.length}, reset: $reset',
@@ -167,8 +174,8 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
         state = AsyncValue.data(
           currentState.copyWith(
             categories: categories,
-            categoriesOffset: _kPageSize,
-            hasMoreCategories: categories.length >= _kPageSize,
+            categoriesOffset: categories.length,
+            hasMoreCategories: categories.length < total,
             isCategoriesLoading: false,
           ),
         );
@@ -176,8 +183,8 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
         state = AsyncValue.data(
           currentState.copyWith(
             categories: [...currentState.categories, ...categories],
-            categoriesOffset: offset + _kPageSize,
-            hasMoreCategories: categories.length >= _kPageSize,
+            categoriesOffset: offset + categories.length,
+            hasMoreCategories: offset + categories.length < total,
             isCategoriesLoading: false,
           ),
         );
@@ -190,7 +197,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     }
   }
 
-  /// Загрузить следующую страницу категорий
   Future<void> loadMoreCategories() async {
     final currentState = state.value;
     if (currentState == null ||
@@ -201,31 +207,23 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     await _loadCategories(reset: false);
   }
 
-  /// Поиск категорий с дебаунсингом
   void searchCategories(String query) {
     _categorySearchDebounce?.cancel();
     _categorySearchDebounce = Timer(_kSearchDebounce, () {
       state.whenData((currentState) {
         state = AsyncValue.data(
-          currentState.copyWith(categorySearchQuery: query),
+          currentState.copyWith(
+            categorySearchQuery: query.trim(),
+            categoriesOffset: 0,
+          ),
         );
         _loadCategories(reset: true);
       });
     });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Загрузка тегов
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /// Перезагрузить теги (вызывается из listener)
   void _reloadTags() {
-    logDebug('$_logTag _reloadTags вызван, state.hasValue: ${state.hasValue}');
     state.whenData((currentState) {
-      logDebug(
-        '$_logTag Перезагрузка тегов, текущее количество: ${currentState.tags.length}',
-      );
-      // Сбрасываем состояние и перезагружаем
       state = AsyncValue.data(
         currentState.copyWith(tagSearchQuery: '', tagsOffset: 0),
       );
@@ -233,7 +231,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     });
   }
 
-  /// Public метод для перезагрузки тегов
   void reloadTags() {
     _reloadTags();
   }
@@ -245,17 +242,11 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     state = AsyncValue.data(currentState.copyWith(isTagsLoading: true));
 
     try {
-      final tagDao = await ref.read(tagDaoProvider.future);
+      if (reset) await _refreshTags();
+
       final offset = reset ? 0 : currentState.tagsOffset;
-
-      final filter = TagsFilter.create(
-        query: currentState.tagSearchQuery,
-        types: [_entityType.toTagType()],
-        limit: _kPageSize,
-        offset: offset,
-      );
-
-      final tags = await tagDao.getTagCardsFiltered(filter);
+      final tags = _sliceTags(offset: offset, query: currentState.tagSearchQuery);
+      final total = _filteredTags(currentState.tagSearchQuery).length;
 
       logDebug('$_logTag Загружено тегов: ${tags.length}, reset: $reset');
 
@@ -263,8 +254,8 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
         state = AsyncValue.data(
           currentState.copyWith(
             tags: tags,
-            tagsOffset: _kPageSize,
-            hasMoreTags: tags.length >= _kPageSize,
+            tagsOffset: tags.length,
+            hasMoreTags: tags.length < total,
             isTagsLoading: false,
           ),
         );
@@ -272,8 +263,8 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
         state = AsyncValue.data(
           currentState.copyWith(
             tags: [...currentState.tags, ...tags],
-            tagsOffset: offset + _kPageSize,
-            hasMoreTags: tags.length >= _kPageSize,
+            tagsOffset: offset + tags.length,
+            hasMoreTags: offset + tags.length < total,
             isTagsLoading: false,
           ),
         );
@@ -284,7 +275,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     }
   }
 
-  /// Загрузить следующую страницу тегов
   Future<void> loadMoreTags() async {
     final currentState = state.value;
     if (currentState == null ||
@@ -295,22 +285,18 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     await _loadTags(reset: false);
   }
 
-  /// Поиск тегов с дебаунсингом
   void searchTags(String query) {
     _tagSearchDebounce?.cancel();
     _tagSearchDebounce = Timer(_kSearchDebounce, () {
       state.whenData((currentState) {
-        state = AsyncValue.data(currentState.copyWith(tagSearchQuery: query));
+        state = AsyncValue.data(
+          currentState.copyWith(tagSearchQuery: query.trim(), tagsOffset: 0),
+        );
         _loadTags(reset: true);
       });
     });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Выбор категорий и тегов
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /// Переключить выбор категории
   void toggleCategory(String categoryId) {
     state.whenData((currentState) {
       final selected = currentState.selectedCategoryIds;
@@ -326,7 +312,6 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     });
   }
 
-  /// Переключить выбор тега
   void toggleTag(String tagId) {
     state.whenData((currentState) {
       final selected = currentState.selectedTagIds;
@@ -342,45 +327,32 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     });
   }
 
-  /// Очистить выбранные категории
   void clearCategories() {
     state.whenData((currentState) {
       state = AsyncValue.data(currentState.copyWith(selectedCategoryIds: []));
-
       _applyFilterToBase();
     });
   }
 
-  /// Очистить выбранные теги
   void clearTags() {
     state.whenData((currentState) {
       state = AsyncValue.data(currentState.copyWith(selectedTagIds: []));
-
       _applyFilterToBase();
     });
   }
 
-  /// Очистить все фильтры
   void clearAll() {
     state.whenData((currentState) {
       state = AsyncValue.data(
         currentState.copyWith(selectedCategoryIds: [], selectedTagIds: []),
       );
-
       _applyFilterToBase();
     });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Применение фильтра
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /// Применить выбранные фильтры к baseFilterProvider
   void _applyFilterToBase() {
     state.whenData((currentState) {
       final baseFilter = ref.read(baseFilterProvider.notifier);
-      // Устанавливаем фильтры для текущей сущности
-      // (очистка происходит автоматически в setEntityType при смене сущности)
       baseFilter.setCategoryIds(currentState.selectedCategoryIds);
       baseFilter.setTagIds(currentState.selectedTagIds);
     });

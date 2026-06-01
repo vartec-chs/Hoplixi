@@ -11,7 +11,9 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/m
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_viewer.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -27,7 +29,7 @@ class PasswordViewScreen extends ConsumerStatefulWidget {
 
 class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
   bool _obscurePassword = true;
-  (VaultItemsData, PasswordItemsData)? _password;
+  PasswordViewDto? _password;
   bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
@@ -43,16 +45,19 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
 
   Future<void> _loadPassword() async {
     try {
-      final dao = await ref.read(passwordDaoProvider.future);
-      final record = await dao.getById(widget.passwordId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.password.getViewById(
+        widget.passwordId,
+      );
+      final view = viewResult.getOrNull()?.getOrNull();
 
-      if (record != null && mounted) {
+      if (view != null && mounted) {
         setState(() {
-          _password = record;
-          _isDeleted = record.$1.isDeleted;
+          _password = view;
+          _isDeleted = view.item.isDeleted;
           _isLoading = false;
         });
-        await _loadRelatedData(record);
+        await _loadRelatedData(view, repositories);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -62,36 +67,41 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
   }
 
   Future<void> _loadRelatedData(
-    (VaultItemsData, PasswordItemsData) record,
+    PasswordViewDto view,
+    VaultRepositories repositories,
   ) async {
-    final (vault, pw) = record;
-    if (vault.categoryId != null) {
-      final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(vault.categoryId!);
+    if (view.item.categoryId != null) {
+      final cat = (await repositories.category.getCategory(
+        view.item.categoryId!,
+      )).getOrNull()?.getOrNull();
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(widget.passwordId);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final tagIds =
+        (await relationsService.getTagIdsForItem(
+          widget.passwordId,
+        )).getOrNull() ??
+        [];
     if (tagIds.isNotEmpty) {
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tags = await tagDao.getTagsByIds(tagIds);
+      final tags =
+          (await repositories.tag.getTagsByIds(tagIds)).getOrNull() ?? [];
       if (mounted) setState(() => _tagNames = tags.map((t) => t.name).toList());
     }
 
-    if (vault.noteId != null) {
-      final noteDao = await ref.read(noteDaoProvider.future);
-      final noteRecord = await noteDao.getById(vault.noteId!);
-      if (mounted && noteRecord != null) {
-        setState(() => _noteName = noteRecord.$1.name);
-      }
-    }
+    // TODO: Load Note details using ItemLinkRepository or RelationsService
+    // if (view.item.noteId != null) { ... }
 
-    final customFieldDao = await ref.read(customFieldDaoProvider.future);
-    final rows = await customFieldDao.getByItemId(widget.passwordId);
+    final customFieldsRes = await repositories.vaultItemCustomFields
+        .getByItemId(widget.passwordId);
+    final rows = customFieldsRes.getOrNull() ?? [];
     if (mounted) {
       setState(
-        () => _customFields = rows.map(CustomFieldEntry.fromData).toList(),
+        () => _customFields = rows
+            .map((r) => CustomFieldEntry.fromData(r))
+            .toList(),
       );
     }
   }
@@ -118,30 +128,34 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
     final fields = [
       ...buildCommonShareFields(
         context,
-        name: record.$1.name,
+        name: record.item.name,
         categoryName: _categoryName,
         tagNames: _tagNames,
-        description: record.$1.description,
+        description: record.item.description,
         customFields: _customFields,
       ),
       ...compactShareableFields([
         shareableField(
           id: 'password',
           label: l10n.password_label,
-          value: record.$2.password,
+          value: record.password.password,
           isSensitive: true,
         ),
         shareableField(
           id: 'login',
           label: l10n.login_label,
-          value: record.$2.login,
+          value: record.password.login,
         ),
         shareableField(
           id: 'email',
           label: l10n.email_label,
-          value: record.$2.email,
+          value: record.password.email,
         ),
-        shareableField(id: 'url', label: l10n.url_label, value: record.$2.url),
+        shareableField(
+          id: 'url',
+          label: l10n.url_label,
+          value: record.password.url,
+        ),
         shareableField(
           id: 'note',
           label: l10n.share_linked_note_label,
@@ -153,7 +167,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
     await shareEntityFields(
       context: context,
       entity: ShareableEntity(
-        title: record.$1.name,
+        title: record.item.name,
         entityTypeLabel: EntityType.password.label,
         fields: fields,
       ),
@@ -166,7 +180,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
     return Scaffold(
       backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
-        title: Text(_password?.$1.name ?? 'Пароль'),
+        title: Text(_password?.item.name ?? 'Пароль'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.share2),
@@ -194,33 +208,33 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
                     theme,
                     LucideIcons.tag,
                     'Название',
-                    _password!.$1.name,
-                    () => _copy(_password!.$1.name, 'Название'),
+                    _password!.item.name,
+                    () => _copy(_password!.item.name, 'Название'),
                   ),
                   _passwordField(theme),
-                  if (_password!.$2.login?.isNotEmpty ?? false)
+                  if (_password!.password.login?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.user,
                       'Логин',
-                      _password!.$2.login!,
-                      () => _copy(_password!.$2.login!, 'Логин'),
+                      _password!.password.login!,
+                      () => _copy(_password!.password.login!, 'Логин'),
                     ),
-                  if (_password!.$2.email?.isNotEmpty ?? false)
+                  if (_password!.password.email?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.mail,
                       'Email',
-                      _password!.$2.email!,
-                      () => _copy(_password!.$2.email!, 'Email'),
+                      _password!.password.email!,
+                      () => _copy(_password!.password.email!, 'Email'),
                     ),
-                  if (_password!.$2.url?.isNotEmpty ?? false)
+                  if (_password!.password.url?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.globe,
                       'URL',
-                      _password!.$2.url!,
-                      () => _copy(_password!.$2.url!, 'URL'),
+                      _password!.password.url!,
+                      () => _copy(_password!.password.url!, 'URL'),
                     ),
                   if (_categoryName != null)
                     _info(
@@ -230,12 +244,12 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
                       _categoryName!,
                     ),
                   if (_tagNames.isNotEmpty) _tags(theme),
-                  if (_password!.$1.description?.isNotEmpty ?? false)
+                  if (_password!.item.description?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.fileText,
                       'Описание',
-                      _password!.$1.description!,
+                      _password!.item.description!,
                     ),
                   if (_noteName != null)
                     _info(theme, LucideIcons.stickyNote, 'Заметка', _noteName!),
@@ -258,7 +272,9 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
         leading: Icon(LucideIcons.lock, color: t.colorScheme.primary),
         title: Text('Пароль', style: t.textTheme.bodySmall),
         subtitle: Text(
-          _obscurePassword ? '••••••••••••' : _password!.$2.password,
+          _obscurePassword
+              ? '••••••••••••'
+              : _password!.password.password ?? '',
           style: t.textTheme.bodyLarge,
         ),
         trailing: Row(
@@ -273,7 +289,8 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
             ),
             IconButton(
               icon: const Icon(LucideIcons.copy),
-              onPressed: () => _copy(_password!.$2.password, 'Пароль'),
+              onPressed: () =>
+                  _copy(_password!.password.password ?? '', 'Пароль'),
             ),
           ],
         ),

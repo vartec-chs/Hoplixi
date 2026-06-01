@@ -4,8 +4,9 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/certificate_form_state.dart';
 
@@ -26,37 +27,50 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
     }
     final id = certificateId!;
 
-    final dao = await ref.read(certificateDaoProvider.future);
-    final row = await dao.getById(id);
-    if (row == null) return const CertificateFormState(isEditMode: false);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.certificate.getViewById(id);
 
-    final item = row.$1;
-    final cert = row.$2;
+    final view = viewResult.getOrThrow().getOrNull();
+    if (view == null) return const CertificateFormState(isEditMode: false);
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(id);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final tags = await tagDao.getTagsByIds(tagIds);
+    final item = view.item;
+    final cert = view.certificate;
+
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tags = tagsResult.getOrThrow();
+    final tagNames = tags.map((t) => t.name).toList();
+
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
+
     final customFields = await loadCustomFields(ref, id);
 
     return CertificateFormState(
       isEditMode: true,
       editingCertificateId: id,
       name: item.name,
-      certificatePem: cert.certificatePem,
+      certificatePem: cert.certificatePem ?? '',
       privateKey: cert.privateKey ?? '',
       serialNumber: cert.serialNumber ?? '',
       issuer: cert.issuer ?? '',
       subject: cert.subject ?? '',
-      fingerprint: cert.fingerprint ?? '',
-      ocspUrl: cert.ocspUrl ?? '',
-      crlUrl: cert.crlUrl ?? '',
       description: item.description ?? '',
-      autoRenew: cert.autoRenew,
-      noteId: item.noteId,
       categoryId: item.categoryId,
+      categoryName: categoryName,
       tagIds: tagIds,
-      tagNames: tags.map((t) => t.name).toList(),
+      tagNames: tagNames,
       customFields: customFields,
     );
   }
@@ -88,11 +102,7 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
   void setSerialNumber(String v) => _update((s) => s.copyWith(serialNumber: v));
   void setIssuer(String v) => _update((s) => s.copyWith(issuer: v));
   void setSubject(String v) => _update((s) => s.copyWith(subject: v));
-  void setFingerprint(String v) => _update((s) => s.copyWith(fingerprint: v));
-  void setOcspUrl(String v) => _update((s) => s.copyWith(ocspUrl: v));
-  void setCrlUrl(String v) => _update((s) => s.copyWith(crlUrl: v));
   void setDescription(String v) => _update((s) => s.copyWith(description: v));
-  void setAutoRenew(bool v) => _update((s) => s.copyWith(autoRenew: v));
   void setNote(String? id, String? name) =>
       _update((s) => s.copyWith(noteId: id, noteName: name));
   void setCategory(String? id, String? name) =>
@@ -134,33 +144,29 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
     }
 
     try {
-      final dao = await ref.read(certificateDaoProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (c.isEditMode && c.editingCertificateId != null) {
-        final updated = await dao.updateCertificate(
-          c.editingCertificateId!,
-          UpdateCertificateDto(
-            name: c.name.trim(),
-            certificatePem: c.certificatePem.trim(),
-            privateKey: clean(c.privateKey),
-            serialNumber: clean(c.serialNumber),
-            issuer: clean(c.issuer),
-            subject: clean(c.subject),
-            fingerprint: clean(c.fingerprint),
-            ocspUrl: clean(c.ocspUrl),
-            crlUrl: clean(c.crlUrl),
-            description: clean(c.description),
-            autoRenew: c.autoRenew,
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+        final res = await services.certificate.update(
+          PatchCertificateDto(
+            item: VaultItemPatchDto(
+              itemId: c.editingCertificateId!,
+              name: FieldUpdate.set(c.name.trim()),
+              description: FieldUpdate.set(clean(c.description)),
+              categoryId: FieldUpdate.set(c.categoryId),
+            ),
+            certificate: PatchCertificateDataDto(
+              certificatePem: FieldUpdate.set(c.certificatePem.trim()),
+              privateKey: FieldUpdate.set(clean(c.privateKey)),
+              serialNumber: FieldUpdate.set(clean(c.serialNumber)),
+              issuer: FieldUpdate.set(clean(c.issuer)),
+              subject: FieldUpdate.set(clean(c.subject)),
+            ),
+            tags: FieldUpdate.set(c.tagIds),
           ),
         );
 
-        if (!updated) {
-          _update((s) => s.copyWith(isSaving: false));
-          return false;
-        }
+        res.getOrThrow();
 
         await saveCustomFields(ref, c.editingCertificateId!, c.customFields);
 
@@ -171,24 +177,25 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
               entityId: c.editingCertificateId,
             );
       } else {
-        final id = await dao.createCertificate(
+        final res = await services.certificate.create(
           CreateCertificateDto(
-            name: c.name.trim(),
-            certificatePem: c.certificatePem.trim(),
-            privateKey: clean(c.privateKey),
-            serialNumber: clean(c.serialNumber),
-            issuer: clean(c.issuer),
-            subject: clean(c.subject),
-            fingerprint: clean(c.fingerprint),
-            ocspUrl: clean(c.ocspUrl),
-            crlUrl: clean(c.crlUrl),
-            description: clean(c.description),
-            autoRenew: c.autoRenew,
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+            item: VaultItemCreateDto(
+              name: c.name.trim(),
+              description: clean(c.description),
+              categoryId: c.categoryId,
+            ),
+            certificate: CertificateDataDto(
+              certificatePem: c.certificatePem.trim(),
+              privateKey: clean(c.privateKey),
+              serialNumber: clean(c.serialNumber),
+              issuer: clean(c.issuer),
+              subject: clean(c.subject),
+            ),
+            tagIds: c.tagIds,
           ),
         );
+
+        final id = res.getOrThrow();
 
         await saveCustomFields(ref, id, c.customFields);
         ref
@@ -206,3 +213,4 @@ class CertificateFormNotifier extends AsyncNotifier<CertificateFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

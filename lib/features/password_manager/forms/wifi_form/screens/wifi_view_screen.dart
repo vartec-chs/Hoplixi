@@ -9,7 +9,8 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/share_field
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/wifi/wifi_items.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 import '../services/wifi_os_bridge.dart';
@@ -26,20 +27,16 @@ class WifiViewScreen extends ConsumerStatefulWidget {
 class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
   bool _loading = true;
   bool _showPassword = false;
-
-  String? _password;
   bool _isDeleted = false;
+
   String _name = '';
   String _ssid = '';
-  String? _security;
-  bool _hidden = false;
-  String? _eapMethod;
-  String? _username;
-  String? _identity;
-  String? _domain;
-  String? _lastConnectedBssid;
-  int? _priority;
-  String? _qrPayload;
+  String? _password;
+  WifiSecurityType? _securityType;
+  String? _securityTypeOther;
+  WifiEncryptionType? _encryption;
+  String? _encryptionOther;
+  bool _hiddenSsid = false;
   String? _description;
 
   @override
@@ -51,70 +48,47 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final dao = await ref.read(wifiDaoProvider.future);
-      final row = await dao.getById(widget.wifiId);
-      if (row == null) {
-        Toaster.error(title: context.t.dashboard_forms.wifi_not_found);
-        if (mounted) context.pop();
+      final repos = await ref.read(vaultRepositories.future);
+      final viewResult = await repos.wifi.getViewById(widget.wifiId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view == null) {
+        if (mounted) {
+          Toaster.error(
+            title: context.t.dashboard_forms.wifi_not_found,
+          );
+          context.pop();
+        }
         return;
       }
-      final item = row.$1;
-      final wifi = row.$2;
+      final item = view.item;
+      final wifi = view.wifi;
 
       setState(() {
         _name = item.name;
         _ssid = wifi.ssid;
         _isDeleted = item.isDeleted;
-        _security = wifi.security;
-        _hidden = wifi.hidden;
-        _eapMethod = wifi.eapMethod;
-        _username = wifi.username;
-        _identity = wifi.identity;
-        _domain = wifi.domain;
-        _lastConnectedBssid = wifi.lastConnectedBssid;
-        _priority = wifi.priority;
-        _qrPayload = wifi.qrCodePayload;
+        _password = wifi.password;
+        _securityType = wifi.securityType;
+        _securityTypeOther = wifi.securityTypeOther;
+        _encryption = wifi.encryption;
+        _encryptionOther = wifi.encryptionOther;
+        _hiddenSsid = wifi.hiddenSsid;
         _description = item.description;
       });
     } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_load_error,
-        description: '$e',
-      );
+      if (mounted) {
+        Toaster.error(
+          title: context.t.dashboard_forms.common_load_error,
+          description: '$e',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _revealPassword() async {
-    if (_password != null) {
-      setState(() => _showPassword = !_showPassword);
-      return;
-    }
-
-    try {
-      final dao = await ref.read(wifiDaoProvider.future);
-      final value = await dao.getPasswordFieldById(widget.wifiId);
-      if (value == null || value.isEmpty) {
-        Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(
-            Field: context.t.dashboard_forms.wifi_password_label,
-          ),
-        );
-        return;
-      }
-      setState(() {
-        _password = value;
-        _showPassword = true;
-      });
-    } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(
-          Field: context.t.dashboard_forms.wifi_password_label,
-        ),
-        description: '$e',
-      );
-    }
+    setState(() => _showPassword = !_showPassword);
   }
 
   Future<void> _copyText(String title, String? value) async {
@@ -125,19 +99,11 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(
-      title: context.t.dashboard_forms.common_field_copied(Field: title),
-    );
-  }
-
-  Future<String?> _loadPasswordForConnection() async {
-    if (_password != null) {
-      return _password;
+    if (mounted) {
+      Toaster.success(
+        title: context.t.dashboard_forms.common_field_copied(Field: title),
+      );
     }
-
-    final dao = await ref.read(wifiDaoProvider.future);
-    final value = await dao.getPasswordFieldById(widget.wifiId);
-    return value?.trim().isEmpty == true ? null : value;
   }
 
   Future<void> _exportToWifi() async {
@@ -149,8 +115,7 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       return;
     }
 
-    final password = await _loadPasswordForConnection();
-    if (!mounted) return;
+    final password = _password?.trim().isEmpty == true ? null : _password;
 
     final result = await WifiOsBridge.connect(ssid: ssid, password: password);
     if (!mounted) return;
@@ -170,17 +135,13 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
 
   Future<void> _share() async {
     final l10n = context.t.dashboard_forms;
-    String? password;
-    try {
-      password = await _loadPasswordForConnection();
-    } catch (e) {
-      Toaster.error(
-        title: l10n.common_error_getting_field(Field: l10n.wifi_password_label),
-        description: '$e',
-      );
-    }
 
     final customFields = await loadCustomShareableFields(ref, widget.wifiId);
+    if (!mounted) return;
+
+    String? securityLabel = _securityType?.name ?? _securityTypeOther;
+    String? encryptionLabel = _encryption?.name ?? _encryptionOther;
+
     final fields = [
       ...compactShareableFields([
         shareableField(id: 'name', label: l10n.share_name_label, value: _name),
@@ -188,53 +149,23 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
         shareableField(
           id: 'password',
           label: l10n.wifi_password_label,
-          value: password,
+          value: _password,
           isSensitive: true,
         ),
         shareableField(
           id: 'security',
           label: l10n.wifi_security_label,
-          value: _security,
+          value: securityLabel,
+        ),
+        shareableField(
+          id: 'encryption',
+          label: l10n.wifi_encryption_label,
+          value: encryptionLabel,
         ),
         shareableField(
           id: 'hidden',
           label: l10n.wifi_hidden_network_label,
-          value: _hidden ? l10n.common_yes : l10n.common_no,
-        ),
-        shareableField(
-          id: 'eap_method',
-          label: l10n.wifi_eap_method_label,
-          value: _eapMethod,
-        ),
-        shareableField(
-          id: 'username',
-          label: l10n.wifi_username_label,
-          value: _username,
-        ),
-        shareableField(
-          id: 'identity',
-          label: l10n.wifi_identity_label,
-          value: _identity,
-        ),
-        shareableField(
-          id: 'domain',
-          label: l10n.wifi_domain_label,
-          value: _domain,
-        ),
-        shareableField(
-          id: 'last_connected_bssid',
-          label: l10n.wifi_last_connected_bssid_label,
-          value: _lastConnectedBssid,
-        ),
-        shareableField(
-          id: 'priority',
-          label: l10n.wifi_priority_label,
-          value: _priority,
-        ),
-        shareableField(
-          id: 'qr_payload',
-          label: l10n.wifi_qr_payload_label,
-          value: _qrPayload,
+          value: _hiddenSsid ? l10n.common_yes : l10n.common_no,
         ),
         shareableField(
           id: 'description',
@@ -302,7 +233,7 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
                     title: Text(l10n.wifi_password_label),
                     subtitle: SelectableText(
                       _showPassword
-                          ? (_password ?? '')
+                          ? (_password ?? l10n.common_not_set)
                           : l10n.common_press_visibility_to_load,
                     ),
                     trailing: Wrap(
@@ -324,56 +255,32 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
                       ],
                     ),
                   ),
-                  if (_security?.isNotEmpty == true)
+                  if (_securityType != null)
                     ListTile(
                       title: Text(l10n.wifi_security_label),
-                      subtitle: Text(_security!),
+                      subtitle: Text(_securityType!.name),
+                    )
+                  else if (_securityTypeOther?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.wifi_security_label),
+                      subtitle: Text(_securityTypeOther!),
+                    ),
+                  if (_encryption != null)
+                    ListTile(
+                      title: Text(l10n.wifi_encryption_label),
+                      subtitle: Text(_encryption!.name),
+                    )
+                  else if (_encryptionOther?.isNotEmpty == true)
+                    ListTile(
+                      title: Text(l10n.wifi_encryption_label),
+                      subtitle: Text(_encryptionOther!),
                     ),
                   ListTile(
                     title: Text(l10n.wifi_hidden_network_label),
-                    subtitle: Text(_hidden ? l10n.common_yes : l10n.common_no),
+                    subtitle: Text(
+                      _hiddenSsid ? l10n.common_yes : l10n.common_no,
+                    ),
                   ),
-                  if (_eapMethod?.isNotEmpty == true)
-                    ListTile(
-                      title: Text(l10n.wifi_eap_method_label),
-                      subtitle: Text(_eapMethod!),
-                    ),
-                  if (_username?.isNotEmpty == true)
-                    ListTile(
-                      title: Text(l10n.wifi_username_label),
-                      subtitle: Text(_username!),
-                    ),
-                  if (_identity?.isNotEmpty == true)
-                    ListTile(
-                      title: Text(l10n.wifi_identity_label),
-                      subtitle: Text(_identity!),
-                    ),
-                  if (_domain?.isNotEmpty == true)
-                    ListTile(
-                      title: Text(l10n.wifi_domain_label),
-                      subtitle: Text(_domain!),
-                    ),
-                  if (_lastConnectedBssid?.isNotEmpty == true)
-                    ListTile(
-                      title: Text(l10n.wifi_last_connected_bssid_label),
-                      subtitle: Text(_lastConnectedBssid!),
-                    ),
-                  if (_priority != null)
-                    ListTile(
-                      title: Text(l10n.wifi_priority_label),
-                      subtitle: Text('$_priority'),
-                    ),
-                  if (_qrPayload?.isNotEmpty == true)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.wifi_qr_payload_label),
-                      subtitle: SelectableText(_qrPayload!),
-                      trailing: IconButton(
-                        onPressed: () =>
-                            _copyText(l10n.wifi_qr_payload_label, _qrPayload),
-                        icon: const Icon(Icons.copy),
-                      ),
-                    ),
                   if (_description?.isNotEmpty == true)
                     ListTile(
                       contentPadding: EdgeInsets.zero,

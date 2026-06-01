@@ -12,8 +12,11 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_f
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -29,7 +32,7 @@ class LoyaltyCardViewScreen extends ConsumerStatefulWidget {
 }
 
 class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
-  (VaultItemsData, LoyaltyCardItemsData)? _loyaltyCard;
+  LoyaltyCardViewDto? _loyaltyCard;
   bool _isLoading = true;
   bool _isDeleted = false;
   String? _categoryName;
@@ -46,18 +49,21 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
 
   Future<void> _load() async {
     try {
-      final dao = await ref.read(loyaltyCardDaoProvider.future);
-      final record = await dao.getById(widget.loyaltyCardId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.loyaltyCard.getViewById(
+        widget.loyaltyCardId,
+      );
+      final view = viewResult.getOrNull()?.getOrNull();
       if (!mounted) return;
       setState(() {
-        _loyaltyCard = record;
-        _isDeleted = record!.$1.isDeleted;
+        _loyaltyCard = view;
+        _isDeleted = view?.item.isDeleted ?? false;
         _isLoading = false;
       });
 
-      if (record != null) {
-        await _loadRelatedData(record);
-        _generateBarcode(record);
+      if (view != null) {
+        await _loadRelatedData(view, repositories);
+        _generateBarcode(view);
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
@@ -65,37 +71,42 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
   }
 
   Future<void> _loadRelatedData(
-    (VaultItemsData, LoyaltyCardItemsData) record,
+    LoyaltyCardViewDto view,
+    VaultRepositories repositories,
   ) async {
-    final vault = record.$1;
-    if (vault.categoryId != null) {
-      final categoryDao = await ref.read(categoryDaoProvider.future);
-      final category = await categoryDao.getCategoryById(vault.categoryId!);
-      if (mounted && category != null) {
-        setState(() => _categoryName = category.name);
+    if (view.item.categoryId != null) {
+      final cat = (await repositories.category.getCategory(
+        view.item.categoryId!,
+      )).getOrNull()?.getOrNull();
+      if (mounted && cat != null) {
+        setState(() => _categoryName = cat.name);
       }
     }
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(widget.loyaltyCardId);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final tagIds =
+        (await relationsService.getTagIdsForItem(
+          widget.loyaltyCardId,
+        )).getOrNull() ??
+        [];
     if (tagIds.isNotEmpty) {
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tags = await tagDao.getTagsByIds(tagIds);
+      final tags =
+          (await repositories.tag.getTagsByIds(tagIds)).getOrNull() ?? [];
       if (mounted) {
-        setState(() => _tagNames = tags.map((tag) => tag.name).toList());
+        setState(() => _tagNames = tags.map((t) => t.name).toList());
       }
     }
   }
 
-  Future<void> _generateBarcode(
-    (VaultItemsData, LoyaltyCardItemsData) record,
-  ) async {
-    final value = record.$2.barcodeValue;
+  Future<void> _generateBarcode(LoyaltyCardViewDto view) async {
+    final value = view.loyaltyCard.barcodeValue;
     if (value == null || value.isEmpty) return;
     if (!mounted) return;
     setState(() => _isGeneratingBarcode = true);
     try {
-      final format = _zxingFormat(record.$2.barcodeType);
+      final format = _zxingFormat(view.loyaltyCard.barcodeType);
       final isSquare =
           format == Format.qrCode ||
           format == Format.aztec ||
@@ -135,38 +146,29 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
     }
   }
 
-  int _zxingFormat(String? typeName) {
-    switch (typeName) {
-      case 'QR-код':
+  int _zxingFormat(LoyaltyBarcodeType? type) {
+    if (type == null) return Format.qrCode;
+    switch (type) {
+      case LoyaltyBarcodeType.qr:
         return Format.qrCode;
-      case 'Micro QR':
-        return Format.microQRCode;
-      case 'rMQR':
-        return Format.rmqrCode;
-      case 'Aztec':
+      case LoyaltyBarcodeType.aztec:
         return Format.aztec;
-      case 'Data Matrix':
+      case LoyaltyBarcodeType.dataMatrix:
         return Format.dataMatrix;
-      case 'PDF417':
+      case LoyaltyBarcodeType.pdf417:
         return Format.pdf417;
-      case 'Code 128':
+      case LoyaltyBarcodeType.code128:
         return Format.code128;
-      case 'Code 93':
-        return Format.code93;
-      case 'Code 39':
+      case LoyaltyBarcodeType.code39:
         return Format.code39;
-      case 'Codabar':
-        return Format.codabar;
-      case 'EAN-13':
+      case LoyaltyBarcodeType.ean13:
         return Format.ean13;
-      case 'EAN-8':
+      case LoyaltyBarcodeType.ean8:
         return Format.ean8;
-      case 'UPC-A':
+      case LoyaltyBarcodeType.upcA:
         return Format.upca;
-      case 'UPC-E':
+      case LoyaltyBarcodeType.upcE:
         return Format.upce;
-      case 'ITF':
-        return Format.itf;
       default:
         return Format.qrCode;
     }
@@ -206,75 +208,79 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
     final fields = [
       ...buildCommonShareFields(
         context,
-        name: record.$1.name,
+        name: record.item.name,
         categoryName: _categoryName,
         tagNames: _tagNames,
-        description: record.$1.description,
+        description: record.item.description,
       ),
       ...compactShareableFields([
         shareableField(
           id: 'program',
           label: l10n.program_name_label,
-          value: record.$2.programName,
+          value: record.loyaltyCard.programName,
         ),
         shareableField(
           id: 'card_number',
           label: l10n.loyalty_card_number_label,
-          value: record.$2.cardNumber,
+          value: record.loyaltyCard.cardNumber,
           isSensitive: true,
         ),
         shareableField(
           id: 'barcode',
           label: l10n.barcode_value_label,
-          value: record.$2.barcodeValue,
+          value: record.loyaltyCard.barcodeValue,
           isSensitive: true,
         ),
         shareableField(
           id: 'password',
           label: l10n.pin_password_label,
-          value: record.$2.password,
+          value: record.loyaltyCard.password,
           isSensitive: true,
         ),
         shareableField(
-          id: 'holder',
-          label: l10n.holder_name_label,
-          value: record.$2.holderName,
+          id: 'issuer',
+          label: 'Издатель / Эмитент',
+          value: record.loyaltyCard.issuer,
         ),
         shareableField(
-          id: 'tier',
-          label: l10n.tier_label,
-          value: record.$2.tier,
-        ),
-        shareableField(
-          id: 'points',
-          label: l10n.points_balance_label,
-          value: record.$2.pointsBalance,
-        ),
-        shareableField(
-          id: 'expiry',
-          label: l10n.expiration_date_label,
-          value: record.$2.expiryDate == null
+          id: 'valid_from',
+          label: 'Действует с',
+          value: record.loyaltyCard.validFrom == null
               ? null
-              : _formatDate(record.$2.expiryDate),
+              : _formatDate(record.loyaltyCard.validFrom),
+        ),
+        shareableField(
+          id: 'valid_to',
+          label: 'Действует по',
+          value: record.loyaltyCard.validTo == null
+              ? null
+              : _formatDate(record.loyaltyCard.validTo),
         ),
         shareableField(
           id: 'website',
           label: l10n.website_label,
-          value: record.$2.website,
+          value: record.loyaltyCard.website,
         ),
         shareableField(
           id: 'phone',
           label: l10n.phone_label,
-          value: record.$2.phoneNumber,
+          value: record.loyaltyCard.phone,
+        ),
+        shareableField(
+          id: 'email',
+          label: 'Email',
+          value: record.loyaltyCard.email,
         ),
       ]),
       ...customFields,
     ];
 
+    if (!mounted) return;
+
     await shareEntityFields(
       context: context,
       entity: ShareableEntity(
-        title: record.$1.name,
+        title: record.item.name,
         entityTypeLabel: EntityType.loyaltyCard.label,
         fields: fields,
       ),
@@ -288,7 +294,7 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
     return Scaffold(
       backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
-        title: Text(_loyaltyCard?.$1.name ?? 'Карта лояльности'),
+        title: Text(_loyaltyCard?.item.name ?? 'Карта лояльности'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.share2),
@@ -326,7 +332,7 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  _loyaltyCard!.$2.programName,
+                                  _loyaltyCard!.loyaltyCard.programName,
                                   style: theme.textTheme.titleLarge,
                                 ),
                               ),
@@ -334,7 +340,7 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            _loyaltyCard!.$1.name,
+                            _loyaltyCard!.item.name,
                             style: theme.textTheme.bodyMedium,
                           ),
                         ],
@@ -342,59 +348,63 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  if (_loyaltyCard!.$2.cardNumber?.isNotEmpty == true)
+                  if (_loyaltyCard!.loyaltyCard.cardNumber?.isNotEmpty == true)
                     _info(
                       theme,
                       LucideIcons.creditCard,
                       'Номер карты',
-                      _loyaltyCard!.$2.cardNumber!,
-                      () => _copy(_loyaltyCard!.$2.cardNumber!, 'Номер карты'),
+                      _loyaltyCard!.loyaltyCard.cardNumber!,
+                      () => _copy(
+                        _loyaltyCard!.loyaltyCard.cardNumber!,
+                        'Номер карты',
+                      ),
                     ),
-                  if (_loyaltyCard!.$2.barcodeValue?.isNotEmpty == true)
+                  if (_loyaltyCard!.loyaltyCard.barcodeValue?.isNotEmpty ==
+                      true)
                     _barcodeCard(theme),
-                  if (_loyaltyCard!.$2.password?.isNotEmpty == true)
+                  if (_loyaltyCard!.loyaltyCard.password?.isNotEmpty == true)
                     _passwordInfo(theme),
-                  if (_loyaltyCard!.$2.holderName?.isNotEmpty == true)
+                  if (_loyaltyCard!.loyaltyCard.issuer?.isNotEmpty == true)
                     _info(
                       theme,
-                      LucideIcons.user,
-                      'Владелец',
-                      _loyaltyCard!.$2.holderName!,
+                      LucideIcons.tag,
+                      'Эмитент / Издатель',
+                      _loyaltyCard!.loyaltyCard.issuer!,
                     ),
-                  if (_loyaltyCard!.$2.tier?.isNotEmpty == true)
-                    _info(
-                      theme,
-                      LucideIcons.crown,
-                      'Уровень',
-                      _loyaltyCard!.$2.tier!,
-                    ),
-                  if (_loyaltyCard!.$2.pointsBalance?.isNotEmpty == true)
-                    _info(
-                      theme,
-                      LucideIcons.star,
-                      'Баланс/бонусы',
-                      _loyaltyCard!.$2.pointsBalance!,
-                    ),
-                  if (_loyaltyCard!.$2.expiryDate != null)
+                  if (_loyaltyCard!.loyaltyCard.validFrom != null)
                     _info(
                       theme,
                       LucideIcons.calendar,
-                      'Срок действия',
-                      _formatDate(_loyaltyCard!.$2.expiryDate),
+                      'Действует с',
+                      _formatDate(_loyaltyCard!.loyaltyCard.validFrom),
                     ),
-                  if (_loyaltyCard!.$2.website?.isNotEmpty == true)
+                  if (_loyaltyCard!.loyaltyCard.validTo != null)
+                    _info(
+                      theme,
+                      LucideIcons.calendar,
+                      'Действует по / Истекает',
+                      _formatDate(_loyaltyCard!.loyaltyCard.validTo),
+                    ),
+                  if (_loyaltyCard!.loyaltyCard.website?.isNotEmpty == true)
                     _info(
                       theme,
                       LucideIcons.globe,
                       'Сайт',
-                      _loyaltyCard!.$2.website!,
+                      _loyaltyCard!.loyaltyCard.website!,
                     ),
-                  if (_loyaltyCard!.$2.phoneNumber?.isNotEmpty == true)
+                  if (_loyaltyCard!.loyaltyCard.phone?.isNotEmpty == true)
                     _info(
                       theme,
                       LucideIcons.phone,
                       'Телефон',
-                      _loyaltyCard!.$2.phoneNumber!,
+                      _loyaltyCard!.loyaltyCard.phone!,
+                    ),
+                  if (_loyaltyCard!.loyaltyCard.email?.isNotEmpty == true)
+                    _info(
+                      theme,
+                      LucideIcons.mail,
+                      'Email',
+                      _loyaltyCard!.loyaltyCard.email!,
                     ),
                   if (_categoryName != null)
                     _info(
@@ -404,12 +414,12 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
                       _categoryName!,
                     ),
                   if (_tagNames.isNotEmpty) _tags(theme),
-                  if (_loyaltyCard!.$1.description?.isNotEmpty == true)
+                  if (_loyaltyCard!.item.description?.isNotEmpty == true)
                     _info(
                       theme,
                       LucideIcons.fileText,
                       'Описание',
-                      _loyaltyCard!.$1.description!,
+                      _loyaltyCard!.item.description!,
                     ),
                   CustomFieldsViewSection(itemId: widget.loyaltyCardId),
                   const SizedBox(height: 24),
@@ -420,8 +430,11 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
   }
 
   Widget _barcodeCard(ThemeData theme) {
-    final value = _loyaltyCard!.$2.barcodeValue!;
-    final typeName = _loyaltyCard!.$2.barcodeType;
+    final value = _loyaltyCard!.loyaltyCard.barcodeValue!;
+    final barcodeType = _loyaltyCard!.loyaltyCard.barcodeType;
+    final typeName = barcodeType == LoyaltyBarcodeType.other
+        ? _loyaltyCard!.loyaltyCard.barcodeTypeOther
+        : barcodeType?.name;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -462,8 +475,8 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(value, style: theme.textTheme.bodyLarge),
-                      if (typeName?.isNotEmpty == true)
-                        Text(typeName!, style: theme.textTheme.bodySmall),
+                      if (typeName != null && typeName.isNotEmpty)
+                        Text(typeName, style: theme.textTheme.bodySmall),
                     ],
                   ),
                 ),
@@ -501,7 +514,7 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
   }
 
   Widget _passwordInfo(ThemeData theme) {
-    final password = _loyaltyCard!.$2.password!;
+    final password = _loyaltyCard!.loyaltyCard.password!;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(

@@ -4,8 +4,9 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/recovery_codes_form_state.dart';
 
@@ -29,47 +30,47 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
     }
     final id = recoveryCodesId!;
 
-    final dao = await ref.read(recoveryCodesDaoProvider.future);
-    final row = await dao.getById(id);
-    if (row == null) return const RecoveryCodesFormState(isEditMode: false);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.recoveryCodes.getViewById(id);
 
-    final item = row.$1;
-    final data = row.$2;
+    final view = viewResult.getOrThrow().getOrNull();
+    if (view == null) return const RecoveryCodesFormState(isEditMode: false);
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(id);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final tags = await tagDao.getTagsByIds(tagIds);
+    final item = view.item;
+    final data = view.recoveryCodes;
+
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagRecordsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tagRecords = tagRecordsResult.getOrThrow();
+
     final customFields = await loadCustomFields(ref, id);
 
-    // Загружаем существующие коды
-    final codesRaw = await dao.getCodesForItem(id);
-    final existingCodes = codesRaw
-        .map(
-          (c) => RecoveryCodeItemDto(
-            id: c.id,
-            itemId: c.itemId,
-            code: c.code,
-            used: c.used,
-            usedAt: c.usedAt,
-            position: c.position,
-          ),
-        )
-        .toList();
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
 
     return RecoveryCodesFormState(
       isEditMode: true,
       editingRecoveryCodesId: id,
       name: item.name,
       generatedAt: data.generatedAt?.toIso8601String() ?? '',
-      displayHint: data.displayHint ?? '',
       description: item.description ?? '',
       oneTime: data.oneTime,
-      existingCodes: existingCodes,
-      noteId: item.noteId,
+      existingCodes: view.codes,
       categoryId: item.categoryId,
+      categoryName: categoryName,
       tagIds: tagIds,
-      tagNames: tags.map((t) => t.name).toList(),
+      tagNames: tagRecords.map((t) => t.name).toList(),
       customFields: customFields,
     );
   }
@@ -188,37 +189,49 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
     }
 
     try {
-      final dao = await ref.read(recoveryCodesDaoProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
+      final repositories = await ref.read(vaultRepositories.future);
       final parsedCodes = _parseCodes(c.codesInput);
 
       if (c.isEditMode && c.editingRecoveryCodesId != null) {
         // Удаляем коды, помеченные для удаления
         for (final codeId in _pendingDeleteIds) {
-          await dao.deleteCode(codeId);
+          await repositories.recoveryCodes.deleteCode(codeId);
         }
         _pendingDeleteIds.clear();
 
-        final updated = await dao.updateRecoveryCodes(
-          c.editingRecoveryCodesId!,
-          UpdateRecoveryCodesDto(
-            name: c.name.trim(),
-            newCodes: parsedCodes.isEmpty ? null : parsedCodes,
-            generatedAt: parseDate(c.generatedAt),
-            oneTime: c.oneTime,
-            displayHint: clean(c.displayHint),
-            description: clean(c.description),
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+        if (parsedCodes.isNotEmpty) {
+          await repositories.recoveryCodes.addCodes(
+            itemId: c.editingRecoveryCodesId!,
+            codes: parsedCodes
+                .map((code) => RecoveryCodeValueDto(code: code))
+                .toList(),
+          );
+        }
+
+        final res = await services.recoveryCodes.update(
+          PatchRecoveryCodesDto(
+            item: VaultItemPatchDto(
+              itemId: c.editingRecoveryCodesId!,
+              name: FieldUpdate.set(c.name.trim()),
+              description: FieldUpdate.set(clean(c.description)),
+              categoryId: FieldUpdate.set(c.categoryId),
+            ),
+            recoveryCodes: PatchRecoveryCodesDataDto(
+              generatedAt: FieldUpdate.set(parseDate(c.generatedAt)),
+              oneTime: FieldUpdate.set(c.oneTime),
+            ),
+            tags: FieldUpdate.set(c.tagIds),
           ),
         );
 
-        if (!updated) {
-          _update((s) => s.copyWith(isSaving: false));
-          return false;
-        }
+        res.getOrThrow();
 
-        await saveCustomFields(ref, c.editingRecoveryCodesId!, c.customFields);
+        await saveCustomFields(
+          ref,
+          c.editingRecoveryCodesId!,
+          c.customFields,
+        );
 
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
@@ -227,19 +240,25 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
               entityId: c.editingRecoveryCodesId,
             );
       } else {
-        final id = await dao.createRecoveryCodes(
+        final res = await services.recoveryCodes.create(
           CreateRecoveryCodesDto(
-            name: c.name.trim(),
-            codes: parsedCodes,
-            generatedAt: parseDate(c.generatedAt),
-            oneTime: c.oneTime,
-            displayHint: clean(c.displayHint),
-            description: clean(c.description),
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+            item: VaultItemCreateDto(
+              name: c.name.trim(),
+              description: clean(c.description),
+              categoryId: c.categoryId,
+            ),
+            recoveryCodes: RecoveryCodesDataDto(
+              generatedAt: parseDate(c.generatedAt),
+              oneTime: c.oneTime,
+            ),
+            codes: parsedCodes
+                .map((code) => RecoveryCodeValueDto(code: code))
+                .toList(),
+            tagIds: c.tagIds,
           ),
         );
+
+        final id = res.getOrThrow();
 
         await saveCustomFields(ref, id, c.customFields);
         ref
@@ -257,3 +276,4 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

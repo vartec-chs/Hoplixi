@@ -1,5 +1,5 @@
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
 
 /// Результат парсинга OTP URI
 class OtpUriParseResult {
@@ -7,7 +7,7 @@ class OtpUriParseResult {
   final String secret;
   final String? issuer;
   final String? accountName;
-  final AlgorithmOtp algorithm;
+  final OtpHashAlgorithm algorithm;
   final int digits;
   final int period;
   final int? counter;
@@ -17,7 +17,7 @@ class OtpUriParseResult {
     required this.secret,
     this.issuer,
     this.accountName,
-    this.algorithm = AlgorithmOtp.SHA1,
+    this.algorithm = OtpHashAlgorithm.SHA1,
     this.digits = 6,
     this.period = 30,
     this.counter,
@@ -124,17 +124,17 @@ class OtpUriParser {
 
       // Algorithm
       final algorithmStr = params['algorithm']?.toUpperCase() ?? 'SHA1';
-      final AlgorithmOtp algorithm;
+      final OtpHashAlgorithm algorithm;
       switch (algorithmStr) {
         case 'SHA256':
-          algorithm = AlgorithmOtp.SHA256;
+          algorithm = OtpHashAlgorithm.SHA256;
           break;
         case 'SHA512':
-          algorithm = AlgorithmOtp.SHA512;
+          algorithm = OtpHashAlgorithm.SHA512;
           break;
         case 'SHA1':
         default:
-          algorithm = AlgorithmOtp.SHA1;
+          algorithm = OtpHashAlgorithm.SHA1;
           break;
       }
 
@@ -194,7 +194,7 @@ class OtpUriParser {
     required String secret,
     String? issuer,
     String? accountName,
-    AlgorithmOtp algorithm = AlgorithmOtp.SHA1,
+    OtpHashAlgorithm algorithm = OtpHashAlgorithm.SHA1,
     int digits = 6,
     int period = 30,
     int? counter,
@@ -221,7 +221,7 @@ class OtpUriParser {
       params['issuer'] = issuer;
     }
 
-    if (algorithm != AlgorithmOtp.SHA1) {
+    if (algorithm != OtpHashAlgorithm.SHA1) {
       params['algorithm'] = algorithm.name;
     }
 

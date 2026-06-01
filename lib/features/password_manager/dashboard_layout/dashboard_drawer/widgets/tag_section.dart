@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/utils/color_parser.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_tag_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/providers/drawer_tag_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
@@ -189,16 +188,15 @@ class _TagSectionState extends ConsumerState<TagSection> {
                 ? ColorsHelper.parseColor(tag.color, theme.colorScheme.primary)
                 : null,
           ),
-          controlAffinity: .leading,
+          controlAffinity: ListTileControlAffinity.leading,
           value: isSelected,
           onChanged: (_) => notifier.toggle(tag.id),
           title: Text(tag.name),
-          subtitle: tag.itemsCount > 0
-              ? Text('${tag.itemsCount} элементов')
-              : null,
-          secondary: tag.color != null
-              ? Icon(Icons.tag, size: 18, color: parseColor(tag.color, context))
-              : null,
+          secondary: Icon(
+            Icons.tag,
+            size: 18,
+            color: ColorsHelper.parseColor(tag.color, theme.colorScheme.primary),
+          ),
           dense: true,
           contentPadding: EdgeInsets.zero,
         );

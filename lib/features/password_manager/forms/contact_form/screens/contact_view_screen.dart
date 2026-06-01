@@ -9,7 +9,7 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/share_field
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 import '../models/contact_os_payload.dart';
@@ -48,33 +48,39 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final dao = await ref.read(contactDaoProvider.future);
-      final row = await dao.getById(widget.contactId);
-      if (row == null) {
-        Toaster.error(title: context.t.dashboard_forms.contact_not_found);
-        if (mounted) context.pop();
+      final repos = await ref.read(vaultRepositories.future);
+      if (!mounted) return;
+      final viewResult = await repos.contact.getViewById(widget.contactId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view == null) {
+        if (mounted) {
+          Toaster.error(title: context.t.dashboard_forms.contact_not_found);
+          context.pop();
+        }
         return;
       }
-      final item = row.$1;
-      final details = row.$2;
+      final item = view.item;
+      final contact = view.contact;
       setState(() {
         _isDeleted = item.isDeleted;
         _name = item.name;
-        _phone = details.phone;
-        _email = details.email;
-        _company = details.company;
-        _jobTitle = details.jobTitle;
-        _address = details.address;
-        _website = details.website;
-        _birthday = details.birthday;
+        _phone = contact.phone;
+        _email = contact.email;
+        _company = contact.company;
+        _jobTitle = contact.jobTitle;
+        _address = contact.address;
+        _website = contact.website;
+        _birthday = contact.birthday;
         _description = item.description;
-        _isEmergencyContact = details.isEmergencyContact;
+        _isEmergencyContact = contact.isEmergencyContact;
       });
     } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_load_error,
-        description: '$e',
-      );
+      if (mounted) {
+        Toaster.error(
+          title: context.t.dashboard_forms.common_load_error,
+          description: '$e',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -82,15 +88,19 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
 
   Future<void> _copyValue(String? value, String label) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(
-        title: context.t.dashboard_forms.common_field_missing(Field: label),
-      );
+      if (mounted) {
+        Toaster.warning(
+          title: context.t.dashboard_forms.common_field_missing(Field: label),
+        );
+      }
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(
-      title: context.t.dashboard_forms.common_field_copied(Field: label),
-    );
+    if (mounted) {
+      Toaster.success(
+        title: context.t.dashboard_forms.common_field_copied(Field: label),
+      );
+    }
   }
 
   String _formatDate(DateTime value) {
@@ -141,6 +151,7 @@ class _ContactViewScreenState extends ConsumerState<ContactViewScreen> {
   Future<void> _share() async {
     final l10n = context.t.dashboard_forms;
     final customFields = await loadCustomShareableFields(ref, widget.contactId);
+    if (!mounted) return;
     final fields = [
       ...compactShareableFields([
         shareableField(id: 'name', label: l10n.share_name_label, value: _name),

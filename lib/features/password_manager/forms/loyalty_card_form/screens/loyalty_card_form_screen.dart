@@ -1,19 +1,16 @@
-import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
+import 'package:hoplixi/features/password_manager/forms/loyalty_card_form/models/loyalty_card_form_state.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
-import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/features/qr_scanner/widgets/qr_scanner_widget.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../providers/loyalty_card_form_provider.dart';
@@ -32,15 +29,15 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _programNameController;
   late final TextEditingController _cardNumberController;
-  late final TextEditingController _holderNameController;
   late final TextEditingController _passwordController;
   late final TextEditingController _barcodeValueController;
   late final TextEditingController _barcodeTypeController;
-  late final TextEditingController _pointsBalanceController;
-  late final TextEditingController _tierController;
-  late final TextEditingController _expiryDateController;
+  late final TextEditingController _issuerController;
   late final TextEditingController _websiteController;
-  late final TextEditingController _phoneNumberController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _validFromController;
+  late final TextEditingController _validToController;
   late final TextEditingController _descriptionController;
 
   bool _passwordVisible = false;
@@ -51,15 +48,15 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
     _nameController = TextEditingController();
     _programNameController = TextEditingController();
     _cardNumberController = TextEditingController();
-    _holderNameController = TextEditingController();
     _passwordController = TextEditingController();
     _barcodeValueController = TextEditingController();
     _barcodeTypeController = TextEditingController();
-    _pointsBalanceController = TextEditingController();
-    _tierController = TextEditingController();
-    _expiryDateController = TextEditingController();
+    _issuerController = TextEditingController();
     _websiteController = TextEditingController();
-    _phoneNumberController = TextEditingController();
+    _phoneController = TextEditingController();
+    _emailController = TextEditingController();
+    _validFromController = TextEditingController();
+    _validToController = TextEditingController();
     _descriptionController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -77,35 +74,32 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
     _nameController.dispose();
     _programNameController.dispose();
     _cardNumberController.dispose();
-    _holderNameController.dispose();
     _passwordController.dispose();
     _barcodeValueController.dispose();
     _barcodeTypeController.dispose();
-    _pointsBalanceController.dispose();
-    _tierController.dispose();
-    _expiryDateController.dispose();
+    _issuerController.dispose();
     _websiteController.dispose();
-    _phoneNumberController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _validFromController.dispose();
+    _validToController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
-  String _formatExpiryForDisplay(String isoString) {
+  String _formatDateForDisplay(String isoString) {
     final dt = DateTime.tryParse(isoString);
     if (dt == null) return '';
     final day = dt.day.toString().padLeft(2, '0');
     final month = dt.month.toString().padLeft(2, '0');
     final year = dt.year.toString();
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final minute = dt.minute.toString().padLeft(2, '0');
-    if (dt.hour == 0 && dt.minute == 0) return '$day.$month.$year';
-    return '$day.$month.$year $hour:$minute';
+    return '$day.$month.$year';
   }
 
-  Future<void> _pickExpiryDate() async {
-    final current =
-        DateTime.tryParse(ref.read(loyaltyCardFormProvider).expiryDate) ??
-        DateTime.now();
+  Future<void> _pickDate({required bool isValidFrom}) async {
+    final state = ref.read(loyaltyCardFormProvider);
+    final dateString = isValidFrom ? state.validFrom : state.validTo;
+    final current = DateTime.tryParse(dateString) ?? DateTime.now();
 
     final date = await showDatePicker(
       context: context,
@@ -115,26 +109,16 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
     );
     if (date == null || !mounted) return;
 
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: current.hour, minute: current.minute),
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-        child: child!,
-      ),
-    );
-    if (!mounted) return;
-
-    final combined = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time?.hour ?? 0,
-      time?.minute ?? 0,
-    );
-    ref
-        .read(loyaltyCardFormProvider.notifier)
-        .setExpiryDate(combined.toIso8601String());
+    final combined = DateTime(date.year, date.month, date.day);
+    if (isValidFrom) {
+      ref
+          .read(loyaltyCardFormProvider.notifier)
+          .setValidFrom(combined.toIso8601String());
+    } else {
+      ref
+          .read(loyaltyCardFormProvider.notifier)
+          .setValidTo(combined.toIso8601String());
+    }
   }
 
   Future<void> _scanBarcode() async {
@@ -165,7 +149,7 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
     }
   }
 
-  void _syncControllers(state) {
+  void _syncControllers(LoyaltyCardFormState state) {
     if (_nameController.text != state.name) _nameController.text = state.name;
     if (_programNameController.text != state.programName) {
       _programNameController.text = state.programName;
@@ -173,31 +157,34 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
     if (_cardNumberController.text != state.cardNumber) {
       _cardNumberController.text = state.cardNumber;
     }
-    if (_holderNameController.text != state.holderName) {
-      _holderNameController.text = state.holderName;
-    }
     if (_passwordController.text != state.password) {
       _passwordController.text = state.password;
     }
     if (_barcodeValueController.text != state.barcodeValue) {
       _barcodeValueController.text = state.barcodeValue;
     }
-    if (_barcodeTypeController.text != state.barcodeType) {
-      _barcodeTypeController.text = state.barcodeType;
+    if (_barcodeTypeController.text != (state.barcodeType ?? '')) {
+      _barcodeTypeController.text = state.barcodeType ?? '';
     }
-    if (_pointsBalanceController.text != state.pointsBalance) {
-      _pointsBalanceController.text = state.pointsBalance;
-    }
-    if (_tierController.text != state.tier) _tierController.text = state.tier;
-    final formattedExpiry = _formatExpiryForDisplay(state.expiryDate);
-    if (_expiryDateController.text != formattedExpiry) {
-      _expiryDateController.text = formattedExpiry;
+    if (_issuerController.text != state.issuer) {
+      _issuerController.text = state.issuer;
     }
     if (_websiteController.text != state.website) {
       _websiteController.text = state.website;
     }
-    if (_phoneNumberController.text != state.phoneNumber) {
-      _phoneNumberController.text = state.phoneNumber;
+    if (_phoneController.text != state.phone) {
+      _phoneController.text = state.phone;
+    }
+    if (_emailController.text != state.email) {
+      _emailController.text = state.email;
+    }
+    final formattedFrom = _formatDateForDisplay(state.validFrom);
+    if (_validFromController.text != formattedFrom) {
+      _validFromController.text = formattedFrom;
+    }
+    final formattedTo = _formatDateForDisplay(state.validTo);
+    if (_validToController.text != formattedTo) {
+      _validToController.text = formattedTo;
     }
     if (_descriptionController.text != state.description) {
       _descriptionController.text = state.description;
@@ -299,15 +286,16 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                   ),
                   const SizedBox(height: 12),
                   TextField(
-                    controller: _holderNameController,
+                    controller: _issuerController,
                     decoration: primaryInputDecoration(
                       context,
-                      labelText: context.t.dashboard_forms.holder_name_label,
-                      prefixIcon: const Icon(LucideIcons.user),
+                      labelText: 'Эмитент / Издатель',
+                      hintText: 'Например: ООО Лента',
+                      prefixIcon: const Icon(LucideIcons.tag),
                     ),
                     onChanged: ref
                         .read(loyaltyCardFormProvider.notifier)
-                        .setHolderName,
+                        .setIssuer,
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -388,77 +376,58 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     children: [
                       Expanded(
                         child: TextField(
-                          controller: _pointsBalanceController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText:
-                                context.t.dashboard_forms.points_balance_label,
-                            prefixIcon: const Icon(LucideIcons.star),
-                          ),
-                          onChanged: ref
-                              .read(loyaltyCardFormProvider.notifier)
-                              .setPointsBalance,
+                          controller: _validFromController,
+                          readOnly: true,
+                          onTap: () => _pickDate(isValidFrom: true),
+                          decoration:
+                              primaryInputDecoration(
+                                context,
+                                labelText: 'Действует с',
+                                errorText: state.validFromError,
+                                prefixIcon: const Icon(LucideIcons.calendar),
+                              ).copyWith(
+                                suffixIcon: state.validFrom.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        tooltip: 'Очистить',
+                                        onPressed: () => ref
+                                            .read(
+                                              loyaltyCardFormProvider.notifier,
+                                            )
+                                            .setValidFrom(''),
+                                      )
+                                    : null,
+                              ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
-                          controller: _tierController,
-                          decoration: primaryInputDecoration(
-                            context,
-                            labelText: context.t.dashboard_forms.tier_label,
-                            prefixIcon: const Icon(LucideIcons.award),
-                          ),
-                          onChanged: ref
-                              .read(loyaltyCardFormProvider.notifier)
-                              .setTier,
+                          controller: _validToController,
+                          readOnly: true,
+                          onTap: () => _pickDate(isValidFrom: false),
+                          decoration:
+                              primaryInputDecoration(
+                                context,
+                                labelText: 'Действует по',
+                                errorText: state.validToError,
+                                prefixIcon: const Icon(LucideIcons.calendar),
+                              ).copyWith(
+                                suffixIcon: state.validTo.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        tooltip: 'Очистить',
+                                        onPressed: () => ref
+                                            .read(
+                                              loyaltyCardFormProvider.notifier,
+                                            )
+                                            .setValidTo(''),
+                                      )
+                                    : null,
+                              ),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _expiryDateController,
-                    readOnly: true,
-                    onTap: _pickExpiryDate,
-                    decoration:
-                        primaryInputDecoration(
-                          context,
-                          labelText:
-                              context.t.dashboard_forms.expiration_date_label,
-                          errorText: state.expiryDateError,
-                          prefixIcon: const Icon(LucideIcons.calendar),
-                        ).copyWith(
-                          suffixIcon: state.expiryDate.isNotEmpty
-                              ? Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      tooltip: 'Очистить',
-                                      onPressed: () => ref
-                                          .read(
-                                            loyaltyCardFormProvider.notifier,
-                                          )
-                                          .setExpiryDate(''),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit_calendar_outlined,
-                                      ),
-                                      tooltip: 'Изменить дату',
-                                      onPressed: _pickExpiryDate,
-                                    ),
-                                  ],
-                                )
-                              : IconButton(
-                                  icon: const Icon(
-                                    Icons.edit_calendar_outlined,
-                                  ),
-                                  tooltip: 'Выбрать дату',
-                                  onPressed: _pickExpiryDate,
-                                ),
-                        ),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -481,7 +450,7 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
-                          controller: _phoneNumberController,
+                          controller: _phoneController,
                           decoration: primaryInputDecoration(
                             context,
                             labelText: context.t.dashboard_forms.phone_label,
@@ -489,22 +458,22 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                           ),
                           onChanged: ref
                               .read(loyaltyCardFormProvider.notifier)
-                              .setPhoneNumber,
+                              .setPhone,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  IconSourcePickerButton(
-                    iconRef: IconRefDto.fromFields(
-                      iconSource: state.iconSource,
-                      iconValue: state.iconValue,
+                  TextField(
+                    controller: _emailController,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Email',
+                      prefixIcon: const Icon(LucideIcons.mail),
                     ),
-                    fallbackIcon: Icons.loyalty,
-                    title: 'Иконка записи',
                     onChanged: ref
                         .read(loyaltyCardFormProvider.notifier)
-                        .setIconRef,
+                        .setEmail,
                   ),
                   const SizedBox(height: 12),
                   CategoryPickerField(
@@ -512,10 +481,7 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     selectedCategoryName: state.categoryName,
                     label: context.t.dashboard_forms.pickers_category_label,
                     hintText: context.t.dashboard_forms.select_category_hint,
-                    filterByType: const [
-                      CategoryType.loyaltyCard,
-                      CategoryType.mixed,
-                    ],
+
                     onCategorySelected: ref
                         .read(loyaltyCardFormProvider.notifier)
                         .setCategory,
@@ -526,22 +492,10 @@ class _LoyaltyCardFormScreenState extends ConsumerState<LoyaltyCardFormScreen> {
                     selectedTagNames: state.tagNames,
                     label: context.t.dashboard_forms.pickers_tags_label,
                     hintText: context.t.dashboard_forms.select_tags_hint,
-                    filterByType: const [TagType.loyaltyCard, TagType.mixed],
+
                     onTagsSelected: ref
                         .read(loyaltyCardFormProvider.notifier)
                         .setTags,
-                  ),
-                  const SizedBox(height: 12),
-                  NotePickerField(
-                    selectedNoteId: state.noteId,
-                    selectedNoteName: null,
-                    label: context.t.dashboard_forms.pickers_note_label,
-                    hintText: context.t.dashboard_forms.select_note_hint,
-                    onNoteSelected: (noteId, _) {
-                      ref
-                          .read(loyaltyCardFormProvider.notifier)
-                          .setNoteId(noteId);
-                    },
                   ),
                   const SizedBox(height: 12),
                   TextField(

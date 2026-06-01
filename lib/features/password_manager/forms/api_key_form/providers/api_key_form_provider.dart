@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/m
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/api_key_form_state.dart';
 
@@ -26,8 +27,13 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     }
     final id = apiKeyId!;
 
-    final repository = await ref.read(apiKeyRepositoryProvider.future);
-    final view = await repository.getViewById(id);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.apiKey.getViewById(id);
+
+    final view = viewResult.getOrThrow().getOrNull();
     if (view == null) {
       return const ApiKeyFormState(isEditMode: false);
     }
@@ -35,12 +41,20 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     final item = view.item;
     final details = view.apiKey;
 
-    final tags = await ref.read(tagRepositoryProvider.future);
-    final itemTags = await ref
-        .read(apiKeyRepositoryProvider.future)
-        .then((r) => []); // TODO: handle tags properly in repository
-    // Wait, I need a better way to get tags.
-    // In NEW architecture, I should use VaultItemRelationsService or Repository.
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagRecordsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tagRecords = tagRecordsResult.getOrThrow();
+
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
 
     final customFields = await loadCustomFields(ref, id);
 
@@ -53,10 +67,12 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
       tokenType: details.tokenType?.name ?? '',
       environment: details.environment?.name ?? '',
       description: item.description ?? '',
-      revoked: view.isRevoked,
+      revoked: details.isRevoked,
       expiresAt: details.expiresAt,
       categoryId: item.categoryId,
-      tagIds: [], // TODO: get tag ids
+      categoryName: categoryName,
+      tagIds: tagIds,
+      tagNames: tagRecords.map((t) => t.name).toList(),
       customFields: customFields,
     );
   }
@@ -112,12 +128,7 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
   }
 
   void setIconRef(IconRefDto? iconRef) {
-    _update(
-      (s) => s.copyWith(
-        iconSource: iconRef?.sourceValue,
-        iconValue: iconRef?.value,
-      ),
-    );
+    // TODO: implementation for icon ref update if needed
   }
 
   void setTags(List<String> tagIds, List<String> tagNames) {
@@ -174,13 +185,10 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     final description = current.description.trim();
 
     try {
-      final repository = await ref.read(apiKeyRepositoryProvider.future);
-      final masked = key.length > 6
-          ? '${key.substring(0, 3)}***${key.substring(key.length - 3)}'
-          : '******';
+      final services = await ref.read(vaultEntityServices.future);
 
       if (current.isEditMode && current.editingApiKeyId != null) {
-        await repository.update(
+        final res = await services.apiKey.update(
           PatchApiKeyDto(
             item: VaultItemPatchDto(
               itemId: current.editingApiKeyId!,
@@ -189,28 +197,26 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
                 description.isEmpty ? null : description,
               ),
               categoryId: FieldUpdate.set(current.categoryId),
-              // TODO: isFavorite, isPinned from current state if available
             ),
             apiKey: PatchApiKeyDataDto(
               service: FieldUpdate.set(service),
               key: FieldUpdate.set(key),
-              maskedKey: FieldUpdate.set(masked),
               expiresAt: FieldUpdate.set(current.expiresAt),
               revokedAt: FieldUpdate.set(
                 current.revoked ? DateTime.now() : null,
               ),
-              // TODO: other fields
             ),
             tags: FieldUpdate.set(current.tagIds),
           ),
         );
+
+        res.getOrThrow();
 
         await saveCustomFields(
           ref,
           current.editingApiKeyId!,
           current.customFields,
         );
-        // TODO: handle icon ref via IconRepository/Service
 
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
@@ -219,7 +225,7 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
               entityId: current.editingApiKeyId,
             );
       } else {
-        final id = await repository.create(
+        final res = await services.apiKey.create(
           CreateApiKeyDto(
             item: VaultItemCreateDto(
               name: name,
@@ -232,11 +238,13 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
               expiresAt: current.expiresAt,
               revokedAt: current.revoked ? DateTime.now() : null,
             ),
+            tagIds: current.tagIds,
           ),
         );
 
+        final id = res.getOrThrow();
+
         await saveCustomFields(ref, id, current.customFields);
-        // TODO: handle icon ref
 
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
@@ -255,3 +263,5 @@ class ApiKeyFormNotifier extends AsyncNotifier<ApiKeyFormState> {
     _update((s) => s.copyWith(isSaved: false));
   }
 }
+
+

@@ -1,5 +1,5 @@
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/custom_fields/vault_item_custom_fields.dart';
 
 class ShareableField {
   const ShareableField({

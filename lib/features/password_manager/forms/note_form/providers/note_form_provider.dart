@@ -7,10 +7,12 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/note_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/errors/db_result.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/shared/utils/vault_link_utils.dart';
+import 'package:result_dart/result_dart.dart';
 
 import '../models/note_form_state.dart';
 
@@ -39,40 +41,58 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final dao = await ref.read(noteDaoProvider.future);
-      final record = await dao.getById(noteId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final relationsService = await ref.read(
+        vaultItemRelationsServiceProvider.future,
+      );
+      final viewResult = await repositories.note.getViewById(noteId);
 
-      if (record == null) {
+      final view = viewResult.getOrThrow().getOrNull();
+
+      if (view == null) {
         logWarning('Note not found: $noteId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final (vault, noteItem) = record;
-      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-      final tagIds = await vaultItemDao.getTagIds(noteId);
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final item = view.item;
+      final details = view.note;
+
+      // Load tags
+      final tagIdsResult = await relationsService.getTagIdsForItem(noteId);
+      final tagIds = tagIdsResult.getOrThrow();
+      final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+      final tags = tagsResult.getOrThrow();
+      final tagNames = tags.map((t) => t.name).toList();
+
+      // Load category name if exists
+      String? categoryName;
+      if (item.categoryId != null) {
+        final catResult = await repositories.category.getCategory(
+          item.categoryId!,
+        );
+        categoryName = catResult.getOrThrow().getOrNull()?.name;
+      }
+
       final customFields = await loadCustomFields(ref, noteId);
 
       state = NoteFormState(
         isEditMode: true,
         editingNoteId: noteId,
-        title: vault.name,
-        content: noteItem.content,
-        deltaJson: noteItem.deltaJson,
-        description: vault.description ?? '',
-        categoryId: vault.categoryId,
-        iconSource: vault.iconSource,
-        iconValue: vault.iconValue,
+        title: item.name,
+        content: details.content,
+        deltaJson: details.deltaJson,
+        description: item.description ?? '',
+        categoryId: item.categoryId,
+        categoryName: categoryName,
         tagIds: tagIds,
-        tagNames: tagRecords.map((tag) => tag.name).toList(),
+        tagNames: tagNames,
         customFields: customFields,
         isLoading: false,
-        originalTitle: vault.name,
-        originalDeltaJson: noteItem.deltaJson,
-        originalDescription: vault.description ?? '',
-        originalCategoryId: vault.categoryId,
+        originalTitle: item.name,
+        originalDeltaJson: details.deltaJson,
+        originalDescription: item.description ?? '',
+        originalCategoryId: item.categoryId,
         originalTagIds: tagIds,
         edited: false,
       );
@@ -190,8 +210,8 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
 
   void setIconRef(IconRefDto? iconRef) {
     state = state.copyWith(
-      iconSource: iconRef?.sourceValue,
-      iconValue: iconRef?.value,
+      iconSource: iconRef?.iconSourceType?.name,
+      iconValue: iconRef?.iconValue,
       hasUnsavedChanges: true,
     );
   }
@@ -249,82 +269,70 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final dao = await ref.read(noteDaoProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (state.isEditMode && state.editingNoteId != null) {
         // Режим редактирования
-        final dto = UpdateNoteDto(
-          title: state.title.trim(),
-          content: state.content.trim(),
-          deltaJson: state.deltaJson,
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          categoryId: state.categoryId,
-        );
-
-        final success = await dao.updateNote(state.editingNoteId!, dto);
-
-        if (success) {
-          // Синхронизация тегов
-          final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-          await vaultItemDao.setIconRef(
-            state.editingNoteId!,
-            IconRefDto.fromFields(
-              iconSource: state.iconSource,
-              iconValue: state.iconValue,
+        final res = await services.note.update(
+          PatchNoteDto(
+            item: VaultItemPatchDto(
+              itemId: state.editingNoteId!,
+              name: FieldUpdate.set(state.title.trim()),
+              description: FieldUpdate.set(
+                state.description.trim().isEmpty
+                    ? null
+                    : state.description.trim(),
+              ),
+              categoryId: FieldUpdate.set(state.categoryId),
             ),
-          );
-          await vaultItemDao.syncTags(state.editingNoteId!, state.tagIds);
-
-          await saveCustomFields(ref, state.editingNoteId!, state.customFields);
-
-          logInfo('Note updated: ${state.editingNoteId}', tag: _logTag);
-          state = state.copyWith(
-            isSaving: false,
-            isSaved: true,
-            hasUnsavedChanges: false,
-          );
-
-          // Триггерим обновление списка заметок
-          ref
-              .read(dashboardListRefreshTriggerProvider.notifier)
-              .triggerEntityUpdate(
-                EntityType.note,
-                entityId: state.editingNoteId,
-              );
-
-          return true;
-        } else {
-          logWarning(
-            'Failed to update note: ${state.editingNoteId}',
-            tag: _logTag,
-          );
-          state = state.copyWith(isSaving: false);
-          return false;
-        }
-      } else {
-        // Режим создания
-        final dto = CreateNoteDto(
-          title: state.title.trim(),
-          content: state.content.trim(),
-          deltaJson: state.deltaJson,
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          categoryId: state.categoryId,
-          tagsIds: state.tagIds.isEmpty ? null : state.tagIds,
-        );
-
-        final noteId = await dao.createNote(dto);
-        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-        await vaultItemDao.setIconRef(
-          noteId,
-          IconRefDto.fromFields(
-            iconSource: state.iconSource,
-            iconValue: state.iconValue,
+            note: PatchNoteDataDto(
+              content: FieldUpdate.set(state.content.trim()),
+              deltaJson: FieldUpdate.set(state.deltaJson),
+            ),
+            tags: FieldUpdate.set(state.tagIds),
           ),
         );
+
+        res.getOrThrow();
+
+        await saveCustomFields(ref, state.editingNoteId!, state.customFields);
+
+        logInfo('Note updated: ${state.editingNoteId}', tag: _logTag);
+        state = state.copyWith(
+          isSaving: false,
+          isSaved: true,
+          hasUnsavedChanges: false,
+        );
+
+        // Триггерим обновление списка заметок
+        ref
+            .read(dashboardListRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.note,
+              entityId: state.editingNoteId,
+            );
+
+        return true;
+      } else {
+        // Режим создания
+        final res = await services.note.create(
+          CreateNoteDto(
+            item: VaultItemCreateDto(
+              name: state.title.trim(),
+              description: state.description.trim().isEmpty
+                  ? null
+                  : state.description.trim(),
+              categoryId: state.categoryId,
+            ),
+            note: NoteDataDto(
+              content: state.content.trim(),
+              deltaJson: state.deltaJson,
+            ),
+            tagIds: state.tagIds,
+          ),
+        );
+
+        final noteId = res.getOrThrow();
 
         await saveCustomFields(ref, noteId, state.customFields);
 
@@ -364,3 +372,4 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     state = state.copyWith(hasUnsavedChanges: false);
   }
 }
+

@@ -2,19 +2,16 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_tag_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/filter_providers.dart';
+import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_tag_filter_state.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/tag_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
 const int _kTagPageSize = 20;
 const Duration _kTagSearchDebounce = Duration(milliseconds: 300);
 
-/// Провайдер для загрузки и фильтрации тегов в drawer
-/// Family по EntityType — отдельный экземпляр для каждого типа сущности
 final drawerTagFilterProvider = AsyncNotifierProvider.autoDispose
     .family<DrawerTagFilterNotifier, DrawerTagFilterState, EntityType>(
       DrawerTagFilterNotifier.new,
@@ -23,10 +20,9 @@ final drawerTagFilterProvider = AsyncNotifierProvider.autoDispose
 class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
   static const String _logTag = 'DrawerTagFilterNotifier';
   Timer? _searchDebounce;
+  List<TagCardDto> _allTags = const [];
 
-  DrawerTagFilterNotifier(this._entityType);
-
-  final EntityType _entityType;
+  DrawerTagFilterNotifier(EntityType _);
 
   @override
   Future<DrawerTagFilterState> build() async {
@@ -46,18 +42,12 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
     });
 
     try {
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final filter = TagsFilter.create(
-        query: '',
-        types: [_entityType.toTagType(), TagType.mixed],
-        limit: _kTagPageSize,
-        offset: 0,
-      );
-      final tags = await tagDao.getTagCardsFiltered(filter);
+      await _refreshCache();
+      final tags = _sliceTags(offset: 0, query: '');
       return DrawerTagFilterState(
         tags: tags,
-        offset: _kTagPageSize,
-        hasMore: tags.length >= _kTagPageSize,
+        offset: tags.length,
+        hasMore: tags.length < _filteredTags('').length,
       );
     } catch (e, s) {
       logError(
@@ -69,9 +59,30 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Загрузка данных
-  // ─────────────────────────────────────────────────────────────────────────
+  Future<void> _refreshCache() async {
+    final repositories = await ref.read(vaultRepositories.future);
+    final tags = (await repositories.tag.getAllTags()).getOrThrow()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    _allTags = tags;
+  }
+
+  List<TagCardDto> _filteredTags(String query) {
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty) return _allTags;
+    return _allTags
+        .where((tag) => tag.name.toLowerCase().contains(normalized))
+        .toList(growable: false);
+  }
+
+  List<TagCardDto> _sliceTags({
+    required int offset,
+    required String query,
+  }) {
+    final tags = _filteredTags(query);
+    final end = (offset + _kTagPageSize).clamp(0, tags.length);
+    if (offset >= end) return const [];
+    return tags.sublist(offset, end);
+  }
 
   void _reload() {
     state.whenData((s) {
@@ -89,15 +100,11 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
     state = AsyncValue.data(s.copyWith(isLoading: true));
 
     try {
-      final tagDao = await ref.read(tagDaoProvider.future);
+      if (reset) await _refreshCache();
+
       final offset = reset ? 0 : s.offset;
-      final filter = TagsFilter.create(
-        query: s.searchQuery,
-        types: [_entityType.toTagType(), TagType.mixed],
-        limit: _kTagPageSize,
-        offset: offset,
-      );
-      final tags = await tagDao.getTagCardsFiltered(filter);
+      final tags = _sliceTags(offset: offset, query: s.searchQuery);
+      final total = _filteredTags(s.searchQuery).length;
 
       logDebug('$_logTag Загружено тегов: ${tags.length}, reset: $reset');
 
@@ -105,8 +112,8 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
         state = AsyncValue.data(
           s.copyWith(
             tags: tags,
-            offset: _kTagPageSize,
-            hasMore: tags.length >= _kTagPageSize,
+            offset: tags.length,
+            hasMore: tags.length < total,
             isLoading: false,
           ),
         );
@@ -114,8 +121,8 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
         state = AsyncValue.data(
           s.copyWith(
             tags: [...s.tags, ...tags],
-            offset: offset + _kTagPageSize,
-            hasMore: tags.length >= _kTagPageSize,
+            offset: offset + tags.length,
+            hasMore: offset + tags.length < total,
             isLoading: false,
           ),
         );
@@ -136,15 +143,13 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(_kTagSearchDebounce, () {
       state.whenData((s) {
-        state = AsyncValue.data(s.copyWith(searchQuery: query));
+        state = AsyncValue.data(
+          s.copyWith(searchQuery: query.trim(), offset: 0),
+        );
         _load(reset: true);
       });
     });
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Выбор тегов
-  // ─────────────────────────────────────────────────────────────────────────
 
   void toggle(String id) {
     state.whenData((s) {

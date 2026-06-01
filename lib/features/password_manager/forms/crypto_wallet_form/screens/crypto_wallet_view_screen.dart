@@ -9,7 +9,7 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/share_field
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 class CryptoWalletViewScreen extends ConsumerStatefulWidget {
@@ -54,143 +54,75 @@ class _CryptoWalletViewScreenState
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final dao = await ref.read(cryptoWalletDaoProvider.future);
-      final row = await dao.getById(widget.cryptoWalletId);
-      if (row == null) {
-        Toaster.error(title: context.t.dashboard_forms.crypto_wallet_not_found);
-        if (mounted) context.pop();
+      final repos = await ref.read(vaultRepositories.future);
+      if (!mounted) return;
+      final viewResult = await repos.cryptoWallet.getViewById(widget.cryptoWalletId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view == null) {
+        if (mounted) {
+          Toaster.error(title: context.t.dashboard_forms.crypto_wallet_not_found);
+          context.pop();
+        }
         return;
       }
-      final item = row.$1;
-      final wallet = row.$2;
+      final item = view.item;
+      final cryptoWallet = view.cryptoWallet;
 
       setState(() {
         _isDeleted = item.isDeleted;
         _name = item.name;
-        _walletType = wallet.walletType;
-        _network = wallet.network;
-        _derivationPath = wallet.derivationPath;
-        _addresses = wallet.addresses;
-        _xpub = wallet.xpub;
-        _hardwareDevice = wallet.hardwareDevice;
-        _derivationScheme = wallet.derivationScheme;
+        _walletType = cryptoWallet.walletType?.name ?? '';
+        _network = cryptoWallet.network?.name;
+        _derivationPath = cryptoWallet.derivationPath;
+        _addresses = cryptoWallet.addresses;
+        _xpub = cryptoWallet.xpub;
+        _hardwareDevice = cryptoWallet.hardwareDevice;
+        _derivationScheme = cryptoWallet.derivationScheme?.name;
         _description = item.description;
-        _watchOnly = wallet.watchOnly;
+        _watchOnly = cryptoWallet.watchOnly;
+        _mnemonic = cryptoWallet.mnemonic;
+        _privateKey = cryptoWallet.privateKey;
+        _xprv = cryptoWallet.xprv;
       });
     } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_load_error,
-        description: '$e',
-      );
+      if (mounted) {
+        Toaster.error(
+          title: context.t.dashboard_forms.common_load_error,
+          description: '$e',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _revealMnemonic() async {
-    if (_mnemonic != null) {
-      setState(() => _showMnemonic = !_showMnemonic);
-      return;
-    }
-
-    try {
-      final dao = await ref.read(cryptoWalletDaoProvider.future);
-      final value = await dao.getMnemonicFieldById(widget.cryptoWalletId);
-      if (value == null || value.isEmpty) {
-        Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(
-            Field: context.t.dashboard_forms.mnemonic_label,
-          ),
-        );
-        return;
-      }
-      setState(() {
-        _mnemonic = value;
-        _showMnemonic = true;
-      });
-    } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(
-          Field: context.t.dashboard_forms.mnemonic_label,
-        ),
-        description: '$e',
-      );
-    }
+  void _revealMnemonic() {
+    setState(() => _showMnemonic = !_showMnemonic);
   }
 
-  Future<void> _revealPrivateKey() async {
-    if (_privateKey != null) {
-      setState(() => _showPrivateKey = !_showPrivateKey);
-      return;
-    }
-
-    try {
-      final dao = await ref.read(cryptoWalletDaoProvider.future);
-      final value = await dao.getPrivateKeyFieldById(widget.cryptoWalletId);
-      if (value == null || value.isEmpty) {
-        Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(
-            Field: context.t.dashboard_forms.private_key_label,
-          ),
-        );
-        return;
-      }
-      setState(() {
-        _privateKey = value;
-        _showPrivateKey = true;
-      });
-    } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(
-          Field: context.t.dashboard_forms.private_key_label,
-        ),
-        description: '$e',
-      );
-    }
+  void _revealPrivateKey() {
+    setState(() => _showPrivateKey = !_showPrivateKey);
   }
 
-  Future<void> _revealXprv() async {
-    if (_xprv != null) {
-      setState(() => _showXprv = !_showXprv);
-      return;
-    }
-
-    try {
-      final dao = await ref.read(cryptoWalletDaoProvider.future);
-      final value = await dao.getXprvFieldById(widget.cryptoWalletId);
-      if (value == null || value.isEmpty) {
-        Toaster.warning(
-          title: context.t.dashboard_forms.common_field_missing(
-            Field: context.t.dashboard_forms.xprv_label,
-          ),
-        );
-        return;
-      }
-      setState(() {
-        _xprv = value;
-        _showXprv = true;
-      });
-    } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(
-          Field: context.t.dashboard_forms.xprv_label,
-        ),
-        description: '$e',
-      );
-    }
+  void _revealXprv() {
+    setState(() => _showXprv = !_showXprv);
   }
 
   Future<void> _copyText(String title, String? value) async {
     if (value == null || value.isEmpty) {
-      Toaster.warning(
-        title: context.t.dashboard_forms.common_field_empty(Field: title),
-      );
+      if (mounted) {
+        Toaster.warning(
+          title: context.t.dashboard_forms.common_field_empty(Field: title),
+        );
+      }
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(
-      title: context.t.dashboard_forms.common_field_copied(Field: title),
-    );
+    if (mounted) {
+      Toaster.success(
+        title: context.t.dashboard_forms.common_field_copied(Field: title),
+      );
+    }
   }
 
   Widget _buildSensitiveTile({
@@ -225,22 +157,11 @@ class _CryptoWalletViewScreenState
 
   Future<void> _share() async {
     final l10n = context.t.dashboard_forms;
-    String? mnemonic = _mnemonic;
-    String? privateKey = _privateKey;
-    String? xprv = _xprv;
-    try {
-      final dao = await ref.read(cryptoWalletDaoProvider.future);
-      mnemonic ??= await dao.getMnemonicFieldById(widget.cryptoWalletId);
-      privateKey ??= await dao.getPrivateKeyFieldById(widget.cryptoWalletId);
-      xprv ??= await dao.getXprvFieldById(widget.cryptoWalletId);
-    } catch (e) {
-      Toaster.error(title: l10n.common_load_error, description: '$e');
-    }
-
     final customFields = await loadCustomShareableFields(
       ref,
       widget.cryptoWalletId,
     );
+    if (!mounted) return;
     final fields = [
       ...compactShareableFields([
         shareableField(id: 'name', label: l10n.share_name_label, value: _name),
@@ -252,19 +173,19 @@ class _CryptoWalletViewScreenState
         shareableField(
           id: 'mnemonic',
           label: l10n.mnemonic_label,
-          value: mnemonic,
+          value: _mnemonic,
           isSensitive: true,
         ),
         shareableField(
           id: 'private_key',
           label: l10n.private_key_label,
-          value: privateKey,
+          value: _privateKey,
           isSensitive: true,
         ),
         shareableField(
           id: 'xprv',
           label: l10n.xprv_label,
-          value: xprv,
+          value: _xprv,
           isSensitive: true,
         ),
         shareableField(id: 'xpub', label: l10n.xpub_label, value: _xpub),

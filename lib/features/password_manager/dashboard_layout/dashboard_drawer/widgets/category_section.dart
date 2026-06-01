@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_category_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/providers/drawer_category_filter_provider.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_tree_node.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
 
 import '../colors.dart';
 
@@ -285,12 +284,6 @@ class _CategoryTreeTile extends StatelessWidget {
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
-          subtitle: Text(
-            '${category.itemsCount} эл.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
           children: entry.children
               .map(
                 (child) => _CategoryTreeTile(
@@ -324,9 +317,6 @@ class _CategoryTreeTile extends StatelessWidget {
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      subtitle: category.itemsCount > 0
-          ? Text('${category.itemsCount} элементов')
-          : null,
       dense: true,
     );
   }
@@ -341,7 +331,7 @@ class _LazyCategoryTreeTile extends StatelessWidget {
     required this.depth,
   });
 
-  final CategoryTreeNode node;
+  final DrawerCategoryTreeNode node;
   final List<String> selectedIds;
   final ValueChanged<String> onToggle;
   final void Function(String categoryId, bool expanded) onExpandChanged;
@@ -402,12 +392,6 @@ class _LazyCategoryTreeTile extends StatelessWidget {
                                 fontWeight: isSelected
                                     ? FontWeight.w600
                                     : FontWeight.normal,
-                              ),
-                            ),
-                            Text(
-                              '${category.itemsCount} эл.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -551,9 +535,6 @@ class _LazyCategoryTreeTile extends StatelessWidget {
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      subtitle: category.itemsCount > 0
-          ? Text('${category.itemsCount} элементов')
-          : null,
       dense: true,
     );
   }

@@ -1,8 +1,9 @@
+import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
@@ -150,14 +151,14 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
           _OtpExpandableSection(
             title: context.t.dashboard_forms.advanced_settings,
             initiallyExpanded:
-                state.algorithm != AlgorithmOtp.SHA1 ||
+                state.algorithm != OtpHashAlgorithm.SHA1 ||
                 state.digits != 6 ||
                 state.period != 30,
             children: [
-              _OtpDropdownField<AlgorithmOtp>(
+              _OtpDropdownField<OtpHashAlgorithm>(
                 label: context.t.dashboard_forms.algorithm_label,
                 value: state.algorithm,
-                items: AlgorithmOtp.values,
+                items: OtpHashAlgorithm.values,
                 itemLabel: (item) => item.name,
                 onChanged: (value) {
                   if (value != null) {
@@ -194,13 +195,13 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
           ),
           const SizedBox(height: 16),
           IconSourcePickerButton(
-            iconRef: IconRefDto.fromFields(
-              iconSource: state.iconSource,
+            iconRef: state.iconSource == null ? null : CreateIconRefDto(
+              iconSourceType: IconSourceType.values.byName(state.iconSource!),
               iconValue: state.iconValue,
             ),
-            fallbackIcon: Icons.vpn_key,
+            fallbackIcon: Icons.lock_clock,
             title: 'Иконка записи',
-            onChanged: ref.read(otpFormProvider.notifier).setIconRef,
+            onChanged: ref.read(otpFormProvider(null).notifier).setIconRef,
           ),
           const SizedBox(height: 16),
           CategoryPickerField(
@@ -208,7 +209,7 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
             selectedCategoryName: state.categoryName,
             label: context.t.dashboard_forms.pickers_category_label,
             hintText: context.t.dashboard_forms.select_category_hint,
-            filterByType: const [CategoryType.totp, CategoryType.mixed],
+            
             onCategorySelected: (categoryId, categoryName) {
               ref
                   .read(otpFormProvider.notifier)
@@ -221,7 +222,7 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
             selectedTagNames: state.tagNames,
             label: context.t.dashboard_forms.pickers_tags_label,
             hintText: context.t.dashboard_forms.select_tags_hint,
-            filterByType: const [TagType.totp, TagType.mixed],
+            
             onTagsSelected: (tagIds, tagNames) {
               ref.read(otpFormProvider.notifier).setTags(tagIds, tagNames);
             },

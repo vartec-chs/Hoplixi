@@ -1,3 +1,4 @@
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:async';
 
@@ -21,9 +22,10 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/w
 import 'package:hoplixi/features/password_manager/shared/widgets/email_autocomplete_field/email_autocomplete_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/login_autocomplete_field/login_autocomplete_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -592,10 +594,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             label: context.t.dashboard_forms.category_label,
                             hintText:
                                 context.t.dashboard_forms.select_category_hint,
-                            filterByType: [
-                              CategoryType.password,
-                              CategoryType.mixed,
-                            ],
+                            
                             onCategorySelected: (categoryId, categoryName) {
                               ref
                                   .read(passwordFormProvider.notifier)
@@ -605,10 +604,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           const SizedBox(height: 16),
 
                           IconSourcePickerButton(
-                            iconRef: IconRefDto.fromFields(
-                              iconSource: state.iconSource,
-                              iconValue: state.iconValue,
-                            ),
+                            iconRef: (state.iconSource == null ? null : IconRefDto(iconSourceType: IconSourceType.values.byName(state.iconSource!), iconValue: state.iconValue)),
                             fallbackIcon: Icons.lock,
                             title: 'Иконка записи',
                             onChanged: ref
@@ -624,7 +620,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             label: context.t.dashboard_forms.tags_label,
                             hintText:
                                 context.t.dashboard_forms.select_tags_hint,
-                            filterByType: [TagType.password, TagType.mixed],
+
                             onTagsSelected: (tagIds, tagNames) {
                               ref
                                   .read(passwordFormProvider.notifier)

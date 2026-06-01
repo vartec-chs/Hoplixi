@@ -1,4 +1,3 @@
-import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,9 +9,12 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_f
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/background_utils.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра банковской карты (только чтение)
@@ -27,7 +29,7 @@ class BankCardViewScreen extends ConsumerStatefulWidget {
 
 class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   bool _showBackView = false;
-  (VaultItemsData, BankCardItemsData)? _bankCard;
+  BankCardViewDto? _bankCard;
   bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
@@ -41,16 +43,19 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
 
   Future<void> _loadBankCard() async {
     try {
-      final dao = await ref.read(bankCardDaoProvider.future);
-      final record = await dao.getById(widget.bankCardId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.bankCard.getViewById(
+        widget.bankCardId,
+      );
+      final view = viewResult.getOrNull()?.getOrNull();
 
-      if (record != null && mounted) {
+      if (view != null && mounted) {
         setState(() {
-          _bankCard = record;
-          _isDeleted = record.$1.isDeleted;
+          _bankCard = view;
+          _isDeleted = view.item.isDeleted;
           _isLoading = false;
         });
-        await _loadRelatedData(record);
+        await _loadRelatedData(view, repositories);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -60,20 +65,27 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   }
 
   Future<void> _loadRelatedData(
-    (VaultItemsData, BankCardItemsData) record,
+    BankCardViewDto view,
+    VaultRepositories repositories,
   ) async {
-    final vault = record.$1;
-    if (vault.categoryId != null) {
-      final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(vault.categoryId!);
+    if (view.item.categoryId != null) {
+      final cat = (await repositories.category.getCategory(
+        view.item.categoryId!,
+      )).getOrNull()?.getOrNull();
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(widget.bankCardId);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final tagIds =
+        (await relationsService.getTagIdsForItem(
+          widget.bankCardId,
+        )).getOrNull() ??
+        [];
     if (tagIds.isNotEmpty) {
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tags = await tagDao.getTagsByIds(tagIds);
+      final tags =
+          (await repositories.tag.getTagsByIds(tagIds)).getOrNull() ?? [];
       if (mounted) setState(() => _tagNames = tags.map((t) => t.name).toList());
     }
   }
@@ -96,30 +108,32 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
     final record = _bankCard;
     if (record == null) return;
 
-    final l10n = context.t.dashboard_forms;
     final customFields = await loadCustomShareableFields(
       ref,
       widget.bankCardId,
     );
+    if (!mounted) return;
+
+    final l10n = context.t.dashboard_forms;
     final fields = [
       ...buildCommonShareFields(
         context,
-        name: record.$1.name,
+        name: record.item.name,
         categoryName: _categoryName,
         tagNames: _tagNames,
-        description: record.$1.description,
+        description: record.item.description,
       ),
       ...compactShareableFields([
         shareableField(
           id: 'card_number',
           label: l10n.card_number_label,
-          value: record.$2.cardNumber,
+          value: record.bankCard.cardNumber,
           isSensitive: true,
         ),
         shareableField(
           id: 'cardholder',
           label: l10n.cardholder_name_label,
-          value: record.$2.cardholderName,
+          value: record.bankCard.cardholderName,
         ),
         shareableField(
           id: 'expiry',
@@ -129,13 +143,13 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
         shareableField(
           id: 'cvv',
           label: 'CVV',
-          value: record.$2.cvv,
+          value: record.bankCard.cvv,
           isSensitive: true,
         ),
         shareableField(
           id: 'bank',
           label: l10n.bank_name_label,
-          value: record.$2.bankName,
+          value: record.bankCard.bankName,
         ),
       ]),
       ...customFields,
@@ -144,7 +158,7 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
     await shareEntityFields(
       context: context,
       entity: ShareableEntity(
-        title: record.$1.name,
+        title: record.item.name,
         entityTypeLabel: EntityType.bankCard.label,
         fields: fields,
       ),
@@ -162,8 +176,8 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
   }
 
   String _getExpiryDate() {
-    final month = _bankCard?.$2.expiryMonth ?? '';
-    final year = _bankCard?.$2.expiryYear ?? '';
+    final month = _bankCard?.bankCard.expiryMonth ?? '';
+    final year = _bankCard?.bankCard.expiryYear ?? '';
     if (month.isEmpty && year.isEmpty) return '';
     final shortYear = year.length >= 2 ? year.substring(year.length - 2) : year;
     return '$month/$shortYear';
@@ -177,7 +191,7 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
     return Scaffold(
       backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
-        title: Text(_bankCard?.$1.name ?? 'Карта'),
+        title: Text(_bankCard?.item.name ?? 'Карта'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.share2),
@@ -203,14 +217,16 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                   GestureDetector(
                     onTap: () => setState(() => _showBackView = !_showBackView),
                     child: CreditCardWidget(
-                      cardNumber: _formatCardNumber(_bankCard!.$2.cardNumber),
+                      cardNumber: _formatCardNumber(
+                        _bankCard!.bankCard.cardNumber,
+                      ),
                       expiryDate: _getExpiryDate(),
-                      cardHolderName: _bankCard!.$2.cardholderName
+                      cardHolderName: _bankCard!.bankCard.cardholderName!
                           .toUpperCase(),
-                      cvvCode: _bankCard?.$2.cvv ?? '',
+                      cvvCode: _bankCard?.bankCard.cvv ?? '',
                       showBackView: _showBackView,
                       onCreditCardWidgetChange: (_) {},
-                      bankName: _bankCard!.$2.bankName,
+                      bankName: _bankCard!.bankCard.bankName,
                       cardBgColor: cs.primary,
                       obscureCardNumber: false,
                       obscureCardCvv: true,
@@ -237,22 +253,22 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                     theme,
                     LucideIcons.tag,
                     'Название',
-                    _bankCard!.$1.name,
-                    () => _copy(_bankCard!.$1.name, 'Название'),
+                    _bankCard!.item.name,
+                    () => _copy(_bankCard!.item.name, 'Название'),
                   ),
                   _info(
                     theme,
                     LucideIcons.creditCard,
                     'Номер карты',
-                    _formatCardNumber(_bankCard!.$2.cardNumber),
-                    () => _copy(_bankCard!.$2.cardNumber, 'Номер'),
+                    _formatCardNumber(_bankCard!.bankCard.cardNumber),
+                    () => _copy(_bankCard!.bankCard.cardNumber, 'Номер'),
                   ),
                   _info(
                     theme,
                     LucideIcons.user,
                     'Владелец',
-                    _bankCard!.$2.cardholderName,
-                    () => _copy(_bankCard!.$2.cardholderName, 'Владелец'),
+                    _bankCard!.bankCard.cardholderName ?? '',
+                    () => _copy(_bankCard!.bankCard.cardholderName ?? '', 'Владелец'),
                   ),
                   if (_getExpiryDate().isNotEmpty)
                     _info(
@@ -262,20 +278,20 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                       _getExpiryDate(),
                       () => _copy(_getExpiryDate(), 'Срок'),
                     ),
-                  if (_bankCard!.$2.cvv?.isNotEmpty ?? false)
+                  if (_bankCard!.bankCard.cvv?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.shield,
                       'CVV',
                       '•••',
-                      () => _copy(_bankCard!.$2.cvv!, 'CVV'),
+                      () => _copy(_bankCard!.bankCard.cvv!, 'CVV'),
                     ),
-                  if (_bankCard!.$2.bankName?.isNotEmpty ?? false)
+                  if (_bankCard!.bankCard.bankName?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.building,
                       'Банк',
-                      _bankCard!.$2.bankName!,
+                      _bankCard!.bankCard.bankName!,
                     ),
                   if (_categoryName != null)
                     _info(
@@ -285,12 +301,12 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                       _categoryName!,
                     ),
                   if (_tagNames.isNotEmpty) _tags(theme),
-                  if (_bankCard!.$1.description?.isNotEmpty ?? false)
+                  if (_bankCard!.item.description?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.fileText,
                       'Описание',
-                      _bankCard!.$1.description!,
+                      _bankCard!.item.description!,
                     ),
                   CustomFieldsViewSection(itemId: widget.bankCardId),
                   const SizedBox(height: 24),

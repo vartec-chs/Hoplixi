@@ -9,8 +9,7 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -87,12 +86,17 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
   }
 
   Future<void> _loadNoteName(String noteId) async {
-    final noteDao = await ref.read(noteDaoProvider.future);
-    final record = await noteDao.getById(noteId);
-    if (mounted) {
-      setState(() {
-        _noteName = record?.$1.name;
-      });
+    try {
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.note.getViewById(noteId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (mounted && view != null) {
+        setState(() {
+          _noteName = view.item.name;
+        });
+      }
+    } catch (_) {
+      // Ignore
     }
   }
 
@@ -244,10 +248,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                                 .pickers_category_label,
                             hintText:
                                 context.t.dashboard_forms.select_category_hint,
-                            filterByType: [
-                              CategoryType.file,
-                              CategoryType.mixed,
-                            ],
+                            
                             onCategorySelected: (categoryId, categoryName) {
                               ref
                                   .read(fileFormProvider.notifier)
@@ -263,7 +264,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                             label: context.t.dashboard_forms.pickers_tags_label,
                             hintText:
                                 context.t.dashboard_forms.select_tags_hint,
-                            filterByType: [TagType.file, TagType.mixed],
+
                             onTagsSelected: (tagIds, tagNames) {
                               ref
                                   .read(fileFormProvider.notifier)

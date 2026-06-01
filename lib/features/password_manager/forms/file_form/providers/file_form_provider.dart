@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:cross_file/cross_file.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
@@ -8,9 +8,9 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 
@@ -41,51 +41,42 @@ class FileFormNotifier extends Notifier<FileFormState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final dao = await ref.read(fileDaoProvider.future);
-      final record = await dao.getById(fileId);
+      final repos = await ref.read(vaultRepositories.future);
+      final relationsService = await ref.read(
+        vaultItemRelationsServiceProvider.future,
+      );
+      final viewResult = await repos.file.getViewById(fileId);
+      final view = viewResult.getOrNull()?.getOrNull();
 
-      if (record == null) {
+      if (view == null) {
         logWarning('File not found: $fileId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final (vault, fileItem) = record;
-      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-      final tagIds = await vaultItemDao.getTagIds(fileId);
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final item = view.item;
+      final metadata = view.metadata;
+
+      final tagIdsResult = await relationsService.getTagIdsForItem(fileId);
+      final tagIds = tagIdsResult.getOrThrow();
+      final tagsResult = await repos.tag.getTagsByIds(tagIds);
+      final tags = tagsResult.getOrThrow();
+      final tagNames = tags.map((t) => t.name).toList();
+
       final customFields = await loadCustomFields(ref, fileId);
-
-      // Получаем FileMetadata через metadataId
-      String? existingFileName;
-      int? existingFileSize;
-      String? existingFileExtension;
-
-      if (fileItem.metadataId != null) {
-        final metadata = await (dao.attachedDatabase.select(
-          dao.attachedDatabase.fileMetadata,
-        )..where((m) => m.id.equals(fileItem.metadataId!))).getSingleOrNull();
-
-        if (metadata != null) {
-          existingFileName = metadata.fileName;
-          existingFileSize = metadata.fileSize;
-          existingFileExtension = metadata.fileExtension;
-        }
-      }
 
       state = FileFormState(
         isEditMode: true,
         editingFileId: fileId,
-        name: vault.name,
-        description: vault.description ?? '',
-        existingFileName: existingFileName,
-        existingFileSize: existingFileSize,
-        existingFileExtension: existingFileExtension,
-        categoryId: vault.categoryId,
-        noteId: vault.noteId,
+        name: item.name,
+        description: item.description ?? '',
+        existingFileName: metadata?.fileName,
+        existingFileSize: metadata?.fileSize,
+        existingFileExtension: metadata?.fileExtension,
+        categoryId: item.categoryId,
+        noteId: null,
         tagIds: tagIds,
-        tagNames: tagRecords.map((tag) => tag.name).toList(),
+        tagNames: tagNames,
         customFields: customFields,
         isLoading: false,
       );
@@ -260,66 +251,62 @@ class FileFormNotifier extends Notifier<FileFormState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final dao = await ref.read(fileDaoProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (state.isEditMode && state.editingFileId != null) {
         // Режим редактирования (только метаданные)
-        final dto = UpdateFileDto(
-          name: state.name.trim(),
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          noteId: state.noteId,
-          categoryId: state.categoryId,
-          tagsIds: state.tagIds,
+        final res = await services.file.update(
+          PatchFileDto(
+            item: VaultItemPatchDto(
+              itemId: state.editingFileId!,
+              name: FieldUpdate.set(state.name.trim()),
+              description: FieldUpdate.set(
+                state.description.trim().isEmpty
+                    ? null
+                    : state.description.trim(),
+              ),
+              categoryId: FieldUpdate.set(state.categoryId),
+            ),
+            file: const PatchFileDataDto(),
+            tags: FieldUpdate.set(state.tagIds),
+          ),
         );
 
-        final success = await dao.updateFile(state.editingFileId!, dto);
+        res.getOrThrow();
 
-        if (success) {
-          // Если выбран новый файл, обновляем содержимое
-          if (state.selectedFile != null) {
-            final fileStorageService = await ref.read(
-              fileStorageServiceProvider.future,
-            );
+        // Если выбран новый файл, обновляем содержимое
+        if (state.selectedFile != null) {
+          final fileStorageService = await ref.read(
+            fileStorageServiceProvider.future,
+          );
 
-            await fileStorageService.updateFileContent(
-              fileId: state.editingFileId!,
-              newFile: state.selectedFile!,
-              onProgress: (percentage) {
-                state = state.copyWith(uploadProgress: percentage / 100.0);
-              },
-            );
-            logInfo(
-              'File content updated: ${state.editingFileId}',
-              tag: _logTag,
-            );
-          }
-
-          // Синхронизация тегов уже происходит в dao.updateFile() через dto.tagsIds
-
-          await saveCustomFields(ref, state.editingFileId!, state.customFields);
-
-          logInfo('File updated: ${state.editingFileId}', tag: _logTag);
-          state = state.copyWith(isSaving: false, isSaved: true);
-
-          // Триггерим обновление списка файлов
-          ref
-              .read(dashboardListRefreshTriggerProvider.notifier)
-              .triggerEntityUpdate(
-                EntityType.file,
-                entityId: state.editingFileId,
-              );
-
-          return true;
-        } else {
-          logWarning(
-            'Failed to update file: ${state.editingFileId}',
+          await fileStorageService.updateFileContent(
+            fileId: state.editingFileId!,
+            newFile: state.selectedFile!,
+            onProgress: (percentage) {
+              state = state.copyWith(uploadProgress: percentage / 100.0);
+            },
+          );
+          logInfo(
+            'File content updated: ${state.editingFileId}',
             tag: _logTag,
           );
-          state = state.copyWith(isSaving: false);
-          return false;
         }
+
+        await saveCustomFields(ref, state.editingFileId!, state.customFields);
+
+        logInfo('File updated: ${state.editingFileId}', tag: _logTag);
+        state = state.copyWith(isSaving: false, isSaved: true);
+
+        // Триггерим обновление списка файлов
+        ref
+            .read(dashboardListRefreshTriggerProvider.notifier)
+            .triggerEntityUpdate(
+              EntityType.file,
+              entityId: state.editingFileId,
+            );
+
+        return true;
       } else {
         // Режим создания - загрузка и шифрование файла
         final fileStorageService = await ref.read(

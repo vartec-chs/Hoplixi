@@ -6,7 +6,9 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/c
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/bank_card/bank_card_items.dart';
+
 
 import '../models/bank_card_form_state.dart';
 
@@ -31,8 +33,13 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final repository = await ref.read(bankCardRepositoryProvider.future);
-      final view = await repository.getViewById(bankCardId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final relationsService = await ref.read(
+        vaultItemRelationsServiceProvider.future,
+      );
+      final viewResult = await repositories.bankCard.getViewById(bankCardId);
+
+      final view = viewResult.getOrThrow().getOrNull();
 
       if (view == null) {
         logWarning('Bank card not found: $bankCardId', tag: _logTag);
@@ -43,9 +50,21 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
       final item = view.item;
       final details = view.bankCard;
 
-      // TODO: handle tags properly
-      final tagIds = <String>[];
-      final tagNames = <String>[];
+      // Load tags
+      final tagIdsResult = await relationsService.getTagIdsForItem(bankCardId);
+      final tagIds = tagIdsResult.getOrThrow();
+      final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+      final tags = tagsResult.getOrThrow();
+      final tagNames = tags.map((t) => t.name).toList();
+
+      // Load category name if exists
+      String? categoryName;
+      if (item.categoryId != null) {
+        final catResult = await repositories.category.getCategory(
+          item.categoryId!,
+        );
+        categoryName = catResult.getOrThrow().getOrNull()?.name;
+      }
 
       final customFields = await loadCustomFields(ref, bankCardId);
 
@@ -65,6 +84,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
         cardType: details.cardType?.name,
         cardNetwork: details.cardNetwork?.name,
         categoryId: item.categoryId,
+        categoryName: categoryName,
         tagIds: tagIds,
         tagNames: tagNames,
         customFields: customFields,
@@ -151,8 +171,8 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
 
   void setIconRef(IconRefDto? iconRef) {
     state = state.copyWith(
-      iconSource: iconRef?.sourceValue,
-      iconValue: iconRef?.value,
+      iconSource: iconRef?.iconSourceType.name,
+      iconValue: iconRef?.iconValue,
     );
   }
 
@@ -265,10 +285,10 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final repository = await ref.read(bankCardRepositoryProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (state.isEditMode && state.editingBankCardId != null) {
-        await repository.update(
+        final res = await services.bankCard.update(
           PatchBankCardDto(
             item: VaultItemPatchDto(
               itemId: state.editingBankCardId!,
@@ -316,6 +336,8 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
           ),
         );
 
+        res.getOrThrow();
+
         await saveCustomFields(
           ref,
           state.editingBankCardId!,
@@ -335,7 +357,7 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
 
         return true;
       } else {
-        final id = await repository.create(
+        final res = await services.bankCard.create(
           CreateBankCardDto(
             item: VaultItemCreateDto(
               name: state.name.trim(),
@@ -366,11 +388,11 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
                   ? CardNetwork.values.byName(state.cardNetwork!)
                   : null,
             ),
+            tagIds: state.tagIds,
           ),
         );
 
-        // TODO: handle tags for create
-        // TODO: handle icon ref
+        final id = res.getOrThrow();
 
         await saveCustomFields(ref, id, state.customFields);
 
@@ -399,3 +421,4 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     state = state.copyWith(isSaved: false);
   }
 }
+

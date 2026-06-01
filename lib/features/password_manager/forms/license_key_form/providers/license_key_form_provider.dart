@@ -4,8 +4,10 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/license_key/license_key_items.dart' show LicenseType;
 
 import '../models/license_key_form_state.dart';
 
@@ -26,40 +28,63 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
     }
     final id = licenseKeyId!;
 
-    final dao = await ref.read(licenseKeyDaoProvider.future);
-    final row = await dao.getById(id);
-    if (row == null) return const LicenseKeyFormState(isEditMode: false);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.licenseKey.getViewById(id);
 
-    final item = row.$1;
-    final license = row.$2;
+    final view = viewResult.getOrThrow().getOrNull();
+    if (view == null) return const LicenseKeyFormState(isEditMode: false);
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(id);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final tags = await tagDao.getTagsByIds(tagIds);
+    final item = view.item;
+    final license = view.licenseKey;
+
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tags = tagsResult.getOrThrow();
+    final tagNames = tags.map((t) => t.name).toList();
+
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
+
     final customFields = await loadCustomFields(ref, id);
 
     return LicenseKeyFormState(
       isEditMode: true,
       editingLicenseKeyId: id,
       name: item.name,
-      product: license.product,
+      productName: license.productName,
+      vendor: license.vendor ?? '',
       licenseKey: license.licenseKey,
-      licenseType: license.licenseType ?? '',
-      seats: license.seats?.toString() ?? '',
-      maxActivations: license.maxActivations?.toString() ?? '',
-      activatedOn: license.activatedOn?.toIso8601String() ?? '',
+      licenseType: license.licenseType?.name,
+      licenseTypeOther: license.licenseTypeOther ?? '',
+      accountEmail: license.accountEmail ?? '',
+      accountUsername: license.accountUsername ?? '',
+      purchaseEmail: license.purchaseEmail ?? '',
+      orderNumber: license.orderNumber ?? '',
       purchaseDate: license.purchaseDate?.toIso8601String() ?? '',
-      purchaseFrom: license.purchaseFrom ?? '',
-      orderId: license.orderId ?? '',
-      licenseFileId: license.licenseFileId ?? '',
-      expiresAt: license.expiresAt?.toIso8601String() ?? '',
-      supportContact: license.supportContact ?? '',
+      purchasePrice: license.purchasePrice?.toString() ?? '',
+      currency: license.currency ?? '',
+      validFrom: license.validFrom?.toIso8601String() ?? '',
+      validTo: license.validTo?.toIso8601String() ?? '',
+      renewalDate: license.renewalDate?.toIso8601String() ?? '',
+      seats: license.seats?.toString() ?? '',
+      activationLimit: license.activationLimit?.toString() ?? '',
+      activationsUsed: license.activationsUsed?.toString() ?? '',
       description: item.description ?? '',
-      noteId: item.noteId,
       categoryId: item.categoryId,
+      categoryName: categoryName,
       tagIds: tagIds,
-      tagNames: tags.map((t) => t.name).toList(),
+      tagNames: tagNames,
       customFields: customFields,
     );
   }
@@ -96,12 +121,13 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       nameError: _required(v, t.dashboard_forms.validation_required_name),
     ),
   );
-  void setProduct(String v) => _update(
+  void setProductName(String v) => _update(
     (s) => s.copyWith(
-      product: v,
-      productError: _required(v, t.dashboard_forms.validation_required_product),
+      productName: v,
+      productNameError: _required(v, t.dashboard_forms.validation_required_product),
     ),
   );
+  void setVendor(String v) => _update((s) => s.copyWith(vendor: v));
   void setLicenseKey(String v) => _update(
     (s) => s.copyWith(
       licenseKey: v,
@@ -111,29 +137,29 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       ),
     ),
   );
-  void setLicenseType(String v) => _update((s) => s.copyWith(licenseType: v));
+  void setLicenseType(String? v) => _update((s) => s.copyWith(licenseType: v));
+  void setLicenseTypeOther(String v) => _update((s) => s.copyWith(licenseTypeOther: v));
+  void setAccountEmail(String v) => _update((s) => s.copyWith(accountEmail: v));
+  void setAccountUsername(String v) => _update((s) => s.copyWith(accountUsername: v));
+  void setPurchaseEmail(String v) => _update((s) => s.copyWith(purchaseEmail: v));
+  void setOrderNumber(String v) => _update((s) => s.copyWith(orderNumber: v));
+  void setPurchasePrice(String v) => _update((s) => s.copyWith(purchasePrice: v));
+  void setCurrency(String v) => _update((s) => s.copyWith(currency: v));
+  void setValidFrom(String v) => _update((s) => s.copyWith(validFrom: v, validFromError: _dateError(v)));
+  void setValidTo(String v) => _update((s) => s.copyWith(validTo: v, validToError: _dateError(v)));
+  void setRenewalDate(String v) => _update((s) => s.copyWith(renewalDate: v, renewalDateError: _dateError(v)));
   void setSeats(String v) =>
       _update((s) => s.copyWith(seats: v, seatsError: _intError(v)));
-  void setMaxActivations(String v) => _update(
-    (s) => s.copyWith(maxActivations: v, maxActivationsError: _intError(v)),
+  void setActivationLimit(String v) => _update(
+    (s) => s.copyWith(activationLimit: v, activationLimitError: _intError(v)),
   );
-  void setActivatedOn(String v) => _update(
-    (s) => s.copyWith(activatedOn: v, activatedOnError: _dateError(v)),
+  void setActivationsUsed(String v) => _update(
+    (s) => s.copyWith(activationsUsed: v, activationsUsedError: _intError(v)),
   );
   void setPurchaseDate(String v) => _update(
     (s) => s.copyWith(purchaseDate: v, purchaseDateError: _dateError(v)),
   );
-  void setPurchaseFrom(String v) => _update((s) => s.copyWith(purchaseFrom: v));
-  void setOrderId(String v) => _update((s) => s.copyWith(orderId: v));
-  void setLicenseFileId(String v) =>
-      _update((s) => s.copyWith(licenseFileId: v));
-  void setExpiresAt(String v) =>
-      _update((s) => s.copyWith(expiresAt: v, expiresAtError: _dateError(v)));
-  void setSupportContact(String v) =>
-      _update((s) => s.copyWith(supportContact: v));
   void setDescription(String v) => _update((s) => s.copyWith(description: v));
-  void setNote(String? id, String? name) =>
-      _update((s) => s.copyWith(noteId: id, noteName: name));
   void setCategory(String? id, String? name) =>
       _update((s) => s.copyWith(categoryId: id, categoryName: name));
   void setTags(List<String> ids, List<String> names) =>
@@ -149,8 +175,8 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       c.name,
       t.dashboard_forms.validation_required_name,
     );
-    final productError = _required(
-      c.product,
+    final productNameError = _required(
+      c.productName,
       t.dashboard_forms.validation_required_product,
     );
     final licenseKeyError = _required(
@@ -158,32 +184,38 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       t.dashboard_forms.validation_required_license_key,
     );
     final seatsError = _intError(c.seats);
-    final maxActivationsError = _intError(c.maxActivations);
-    final activatedOnError = _dateError(c.activatedOn);
+    final activationLimitError = _intError(c.activationLimit);
+    final activationsUsedError = _intError(c.activationsUsed);
     final purchaseDateError = _dateError(c.purchaseDate);
-    final expiresAtError = _dateError(c.expiresAt);
+    final validFromError = _dateError(c.validFrom);
+    final validToError = _dateError(c.validTo);
+    final renewalDateError = _dateError(c.renewalDate);
 
     _update(
       (s) => s.copyWith(
         nameError: nameError,
-        productError: productError,
+        productNameError: productNameError,
         licenseKeyError: licenseKeyError,
         seatsError: seatsError,
-        maxActivationsError: maxActivationsError,
-        activatedOnError: activatedOnError,
+        activationLimitError: activationLimitError,
+        activationsUsedError: activationsUsedError,
         purchaseDateError: purchaseDateError,
-        expiresAtError: expiresAtError,
+        validFromError: validFromError,
+        validToError: validToError,
+        renewalDateError: renewalDateError,
       ),
     );
 
     return nameError == null &&
-        productError == null &&
+        productNameError == null &&
         licenseKeyError == null &&
         seatsError == null &&
-        maxActivationsError == null &&
-        activatedOnError == null &&
+        activationLimitError == null &&
+        activationsUsedError == null &&
         purchaseDateError == null &&
-        expiresAtError == null;
+        validFromError == null &&
+        validToError == null &&
+        renewalDateError == null;
   }
 
   Future<bool> save() async {
@@ -209,37 +241,57 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
       return int.tryParse(v);
     }
 
+    double? parseDouble(String value) {
+      final v = value.trim();
+      if (v.isEmpty) return null;
+      return double.tryParse(v);
+    }
+
+    LicenseType? parseLicenseType(String? value) {
+      if (value == null || value.isEmpty) return null;
+      return LicenseType.values.firstWhere(
+        (e) => e.name == value,
+        orElse: () => LicenseType.other,
+      );
+    }
+
     try {
-      final dao = await ref.read(licenseKeyDaoProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (c.isEditMode && c.editingLicenseKeyId != null) {
-        final updated = await dao.updateLicenseKey(
-          c.editingLicenseKeyId!,
-          UpdateLicenseKeyDto(
-            name: c.name.trim(),
-            product: c.product.trim(),
-            licenseKey: c.licenseKey.trim(),
-            licenseType: clean(c.licenseType),
-            seats: parseInt(c.seats),
-            maxActivations: parseInt(c.maxActivations),
-            activatedOn: parseDate(c.activatedOn),
-            purchaseDate: parseDate(c.purchaseDate),
-            purchaseFrom: clean(c.purchaseFrom),
-            orderId: clean(c.orderId),
-            licenseFileId: clean(c.licenseFileId),
-            expiresAt: parseDate(c.expiresAt),
-            supportContact: clean(c.supportContact),
-            description: clean(c.description),
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+        final res = await services.licenseKey.update(
+          PatchLicenseKeyDto(
+            item: VaultItemPatchDto(
+              itemId: c.editingLicenseKeyId!,
+              name: FieldUpdate.set(c.name.trim()),
+              description: FieldUpdate.set(clean(c.description)),
+              categoryId: FieldUpdate.set(c.categoryId),
+            ),
+            licenseKey: PatchLicenseKeyDataDto(
+              productName: FieldUpdate.set(c.productName.trim()),
+              vendor: FieldUpdate.set(clean(c.vendor)),
+              licenseKey: FieldUpdate.set(c.licenseKey.trim()),
+              licenseType: FieldUpdate.set(parseLicenseType(c.licenseType)),
+              licenseTypeOther: FieldUpdate.set(clean(c.licenseTypeOther)),
+              accountEmail: FieldUpdate.set(clean(c.accountEmail)),
+              accountUsername: FieldUpdate.set(clean(c.accountUsername)),
+              purchaseEmail: FieldUpdate.set(clean(c.purchaseEmail)),
+              orderNumber: FieldUpdate.set(clean(c.orderNumber)),
+              purchaseDate: FieldUpdate.set(parseDate(c.purchaseDate)),
+              purchasePrice: FieldUpdate.set(parseDouble(c.purchasePrice)),
+              currency: FieldUpdate.set(clean(c.currency)),
+              validFrom: FieldUpdate.set(parseDate(c.validFrom)),
+              validTo: FieldUpdate.set(parseDate(c.validTo)),
+              renewalDate: FieldUpdate.set(parseDate(c.renewalDate)),
+              seats: FieldUpdate.set(parseInt(c.seats)),
+              activationLimit: FieldUpdate.set(parseInt(c.activationLimit)),
+              activationsUsed: FieldUpdate.set(parseInt(c.activationsUsed)),
+            ),
+            tags: FieldUpdate.set(c.tagIds),
           ),
         );
 
-        if (!updated) {
-          _update((s) => s.copyWith(isSaving: false));
-          return false;
-        }
+        res.getOrThrow();
 
         await saveCustomFields(ref, c.editingLicenseKeyId!, c.customFields);
 
@@ -250,27 +302,38 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
               entityId: c.editingLicenseKeyId,
             );
       } else {
-        final id = await dao.createLicenseKey(
+        final res = await services.licenseKey.create(
           CreateLicenseKeyDto(
-            name: c.name.trim(),
-            product: c.product.trim(),
-            licenseKey: c.licenseKey.trim(),
-            licenseType: clean(c.licenseType),
-            seats: parseInt(c.seats),
-            maxActivations: parseInt(c.maxActivations),
-            activatedOn: parseDate(c.activatedOn),
-            purchaseDate: parseDate(c.purchaseDate),
-            purchaseFrom: clean(c.purchaseFrom),
-            orderId: clean(c.orderId),
-            licenseFileId: clean(c.licenseFileId),
-            expiresAt: parseDate(c.expiresAt),
-            supportContact: clean(c.supportContact),
-            description: clean(c.description),
-            noteId: c.noteId,
-            categoryId: c.categoryId,
-            tagsIds: c.tagIds,
+            item: VaultItemCreateDto(
+              name: c.name.trim(),
+              description: clean(c.description),
+              categoryId: c.categoryId,
+            ),
+            licenseKey: LicenseKeyDataDto(
+              productName: c.productName.trim(),
+              vendor: clean(c.vendor),
+              licenseKey: c.licenseKey.trim(),
+              licenseType: parseLicenseType(c.licenseType),
+              licenseTypeOther: clean(c.licenseTypeOther),
+              accountEmail: clean(c.accountEmail),
+              accountUsername: clean(c.accountUsername),
+              purchaseEmail: clean(c.purchaseEmail),
+              orderNumber: clean(c.orderNumber),
+              purchaseDate: parseDate(c.purchaseDate),
+              purchasePrice: parseDouble(c.purchasePrice),
+              currency: clean(c.currency),
+              validFrom: parseDate(c.validFrom),
+              validTo: parseDate(c.validTo),
+              renewalDate: parseDate(c.renewalDate),
+              seats: parseInt(c.seats),
+              activationLimit: parseInt(c.activationLimit),
+              activationsUsed: parseInt(c.activationsUsed),
+            ),
+            tagIds: c.tagIds,
           ),
         );
+
+        final id = res.getOrThrow();
 
         await saveCustomFields(ref, id, c.customFields);
         ref
@@ -288,3 +351,4 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

@@ -5,6 +5,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/c
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/contact_form_state.dart';
 
@@ -25,8 +26,13 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     }
     final id = contactId!;
 
-    final repository = await ref.read(contactRepositoryProvider.future);
-    final view = await repository.getViewById(id);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.contact.getViewById(id);
+
+    final view = viewResult.getOrThrow().getOrNull();
     if (view == null) {
       return const ContactFormState(isEditMode: false);
     }
@@ -34,7 +40,22 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     final item = view.item;
     final details = view.contact;
 
-    // TODO: handle tags properly
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tags = tagsResult.getOrThrow();
+    final tagNames = tags.map((t) => t.name).toList();
+
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
+
     final customFields = await loadCustomFields(ref, id);
 
     return ContactFormState(
@@ -54,7 +75,9 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
       isEmergencyContact: details.isEmergencyContact,
       description: item.description ?? '',
       categoryId: item.categoryId,
-      tagIds: [],
+      categoryName: categoryName,
+      tagIds: tagIds,
+      tagNames: tagNames,
       customFields: customFields,
     );
   }
@@ -123,19 +146,53 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     _update((s) => s.copyWith(noteId: value));
   }
 
+  void setNote(String? noteId, String? noteName) {
+    _update((s) => s.copyWith(noteId: noteId, noteName: noteName));
+  }
+
   void setCategory(String? categoryId, String? categoryName) {
     _update(
       (s) => s.copyWith(categoryId: categoryId, categoryName: categoryName),
     );
   }
 
-  void setIconRef(IconRefDto? iconRef) {
-    _update(
-      (s) => s.copyWith(
-        iconSource: iconRef?.sourceValue,
-        iconValue: iconRef?.value,
-      ),
-    );
+  void setEmergencyContact(bool value) {
+    setIsEmergencyContact(value);
+  }
+
+  void applyImportedContact({
+    required String name,
+    String? phone,
+    String? email,
+    String? company,
+    String? jobTitle,
+    String? address,
+    String? website,
+    DateTime? birthday,
+  }) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    String firstName = '';
+    String middleName = '';
+    String lastName = '';
+    if (parts.isNotEmpty) firstName = parts[0];
+    if (parts.length > 1) lastName = parts[parts.length - 1];
+    if (parts.length > 2) {
+      middleName = parts.sublist(1, parts.length - 1).join(' ');
+    }
+
+    _update((s) => s.copyWith(
+          name: name,
+          firstName: firstName,
+          middleName: middleName,
+          lastName: lastName,
+          phone: phone ?? '',
+          email: email ?? '',
+          company: company ?? '',
+          jobTitle: jobTitle ?? '',
+          address: address ?? '',
+          website: website ?? '',
+          birthday: birthday,
+        ));
   }
 
   void setTags(List<String> tagIds, List<String> tagNames) {
@@ -168,10 +225,10 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     _update((s) => s.copyWith(isSaving: true));
 
     try {
-      final repository = await ref.read(contactRepositoryProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (current.isEditMode && current.editingContactId != null) {
-        await repository.update(
+        final res = await services.contact.update(
           PatchContactDto(
             item: VaultItemPatchDto(
               itemId: current.editingContactId!,
@@ -222,6 +279,8 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
           ),
         );
 
+        res.getOrThrow();
+
         await saveCustomFields(
           ref,
           current.editingContactId!,
@@ -235,7 +294,7 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
               entityId: current.editingContactId,
             );
       } else {
-        final id = await repository.create(
+        final res = await services.contact.create(
           CreateContactDto(
             item: VaultItemCreateDto(
               name: current.name.trim(),
@@ -269,8 +328,11 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
               birthday: current.birthday,
               isEmergencyContact: current.isEmergencyContact,
             ),
+            tagIds: current.tagIds,
           ),
         );
+
+        final id = res.getOrThrow();
 
         await saveCustomFields(ref, id, current.customFields);
 
@@ -291,3 +353,4 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     _update((s) => s.copyWith(isSaved: false));
   }
 }
+

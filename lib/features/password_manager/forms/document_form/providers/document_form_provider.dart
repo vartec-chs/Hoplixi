@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,11 +8,13 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/old/daos/daos.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
+import 'package:hoplixi/vault_db/core/services/entities/document_service.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/vault_db/services/other/document_storage_service.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
@@ -35,7 +36,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
     return const DocumentFormState(isEditMode: false);
   }
 
-  /// Инициализировать форму для создания нового документа
+  /// Инициализировать форму для создания новой документа
   void initForCreate() {
     state = const DocumentFormState(isEditMode: false);
   }
@@ -45,37 +46,55 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final dao = await ref.read(documentDaoProvider.future);
-      final record = await dao.getById(documentId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final relationsService = await ref.read(
+        vaultItemRelationsServiceProvider.future,
+      );
+      final viewResult = await repositories.document.getViewById(documentId);
 
-      if (record == null) {
+      final view = viewResult.getOrThrow().getOrNull();
+
+      if (view == null) {
         logWarning('Document not found: $documentId', tag: _logTag);
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final (vault, docItem) = record;
-      final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-      final tagIds = await vaultItemDao.getTagIds(documentId);
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tagRecords = await tagDao.getTagsByIds(tagIds);
+      final item = view.item;
+      final docItem = view.document;
+
+      DocumentType? documentType;
+      if (docItem.currentVersionId != null) {
+        final versionResult = await repositories.documentVersion.getVersionById(
+          docItem.currentVersionId!,
+        );
+        final version = versionResult.getOrThrow().getOrNull();
+        if (version != null) {
+          documentType = version.documentType;
+        }
+      }
+
+      // Load tags
+      final tagIdsResult = await relationsService.getTagIdsForItem(documentId);
+      final tagIds = tagIdsResult.getOrThrow();
+      final tagRecordsResult = await repositories.tag.getTagsByIds(tagIds);
+      final tagRecords = tagRecordsResult.getOrThrow();
+
       final customFields = await loadCustomFields(ref, documentId);
 
       // Получаем категорию документа
       String? categoryName;
-      if (vault.categoryId != null) {
-        final categoryDao = await ref.read(categoryDaoProvider.future);
-        final category = await categoryDao.getCategoryById(vault.categoryId!);
-        categoryName = category?.name;
+      if (item.categoryId != null) {
+        final catResult = await repositories.category.getCategory(
+          item.categoryId!,
+        );
+        categoryName = catResult.getOrThrow().getOrNull()?.name;
       }
 
       // Получаем заметку документа
+      // TODO: In new architecture, notes are linked via ItemLinkRepository or RelationsService
+      String? noteId;
       String? noteName;
-      if (vault.noteId != null) {
-        final noteDao = await ref.read(noteDaoProvider.future);
-        final noteRecord = await noteDao.getById(vault.noteId!);
-        noteName = noteRecord?.$1.name;
-      }
 
       // Получаем страницы документа
       final documentService = await ref.read(
@@ -87,28 +106,21 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       final pages = <DocumentPageInfo>[];
       for (final pageData in pagesData) {
         // Получаем информацию о файле страницы
-        final fileDao = await ref.read(fileDaoProvider.future);
-        final fileRecord = await fileDao.getById(pageData.metadataId!);
+        if (pageData.metadataId == null) continue;
+
+        final metadataResult = await repositories.fileMetadata.getMetadataById(
+          pageData.metadataId!,
+        );
+        final metadata = metadataResult.getOrThrow().getOrNull();
 
         String fileName = 'Страница ${pageData.pageNumber}';
         int fileSize = 0;
         String? mimeType;
 
-        if (fileRecord != null) {
-          final (_, fileItem) = fileRecord;
-          if (fileItem.metadataId != null) {
-            final metadata =
-                await (fileDao.attachedDatabase.select(
-                      fileDao.attachedDatabase.fileMetadata,
-                    )..where((m) => m.id.equals(fileItem.metadataId!)))
-                    .getSingleOrNull();
-
-            if (metadata != null) {
-              fileName = metadata.fileName;
-              fileSize = metadata.fileSize;
-              mimeType = metadata.mimeType;
-            }
-          }
+        if (metadata != null) {
+          fileName = metadata.fileName;
+          fileSize = metadata.fileSize;
+          mimeType = metadata.mimeType;
         }
 
         pages.add(
@@ -128,16 +140,16 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
       state = DocumentFormState(
         isEditMode: true,
         editingDocumentId: documentId,
-        title: vault.name,
-        documentType: docItem.documentType,
-        description: vault.description ?? '',
+        title: item.name,
+        documentType: documentType,
+        description: item.description ?? '',
         pages: pages,
-        categoryId: vault.categoryId,
+        categoryId: item.categoryId,
         categoryName: categoryName,
         tagIds: tagIds,
         tagNames: tagRecords.map((tag) => tag.name).toList(),
         customFields: customFields,
-        noteId: vault.noteId,
+        noteId: noteId,
         noteName: noteName,
         isLoading: false,
       );
@@ -422,7 +434,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
   }
 
   /// Обновить поле documentType
-  void setDocumentType(String? value) {
+  void setDocumentType(DocumentType? value) {
     state = state.copyWith(documentType: value);
   }
 
@@ -489,17 +501,17 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
     state = state.copyWith(isSaving: true, totalPages: state.pages.length);
 
     try {
-      final dao = await ref.read(documentDaoProvider.future);
-      final documentService = await ref.read(
+      final services = await ref.read(vaultEntityServices.future);
+      final documentStorageService = await ref.read(
         documentStorageServiceProvider.future,
       );
 
       if (state.isEditMode && state.editingDocumentId != null) {
         // Режим редактирования
-        return await _updateDocument(dao, documentService);
+        return await _updateDocument(services.document, documentStorageService);
       } else {
         // Режим создания
-        return await _createDocument(documentService);
+        return await _createDocument(documentStorageService);
       }
     } catch (e, stack) {
       logError(
@@ -562,30 +574,30 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
 
   /// Обновить существующий документ
   Future<bool> _updateDocument(
-    DocumentDao dao,
-    DocumentStorageService documentService,
+    DocumentService documentService,
+    DocumentStorageService documentStorageService,
   ) async {
     final documentId = state.editingDocumentId!;
 
     // Обновляем метаданные документа
-    final dto = UpdateDocumentDto(
-      title: state.title.trim(),
-      documentType: state.documentType,
-      description: state.description.trim().isEmpty
-          ? null
-          : state.description.trim(),
-      categoryId: state.categoryId,
-      noteId: state.noteId,
-      tagsIds: state.tagIds,
+    final res = await documentService.update(
+      PatchDocumentDto(
+        item: VaultItemPatchDto(
+          itemId: documentId,
+          name: FieldUpdate.set(state.title.trim()),
+          description: FieldUpdate.set(
+            state.description.trim().isEmpty ? null : state.description.trim(),
+          ),
+          categoryId: FieldUpdate.set(state.categoryId),
+        ),
+        document: const PatchDocumentDataDto(),
+        tags: FieldUpdate.set(state.tagIds),
+      ),
     );
 
-    final success = await dao.updateDocument(documentId, dto);
+    res.getOrThrow();
 
-    if (!success) {
-      logWarning('Failed to update document metadata', tag: _logTag);
-      state = state.copyWith(isSaving: false);
-      return false;
-    }
+    // TODO: handle noteId link update
 
     // Добавляем новые страницы если есть
     final newPages = state.pages
@@ -595,7 +607,7 @@ class DocumentFormNotifier extends Notifier<DocumentFormState> {
     if (newPages.isNotEmpty) {
       final pageFiles = newPages.map((p) => p.file!).toList();
 
-      await documentService.addPagesToDocument(
+      await documentStorageService.addPagesToDocument(
         documentId: documentId,
         pageFiles: pageFiles,
         onProgress: (current, total) {

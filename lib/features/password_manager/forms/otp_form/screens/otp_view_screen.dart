@@ -1,11 +1,9 @@
-import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/utils/smart_converter_base.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
@@ -13,10 +11,13 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_f
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/background_utils.dart';
+import 'package:hoplixi/vault_db/core/models/dto/otp_dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:otp/otp.dart';
 
@@ -31,7 +32,7 @@ class OtpViewScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
-  (VaultItemsData, OtpItemsData)? _otp;
+  OtpViewDto? _otp;
   bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
@@ -54,16 +55,17 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
 
   Future<void> _loadOtp() async {
     try {
-      final dao = await ref.read(otpDaoProvider.future);
-      final record = await dao.getById(widget.otpId);
-      if (record != null && mounted) {
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.otp.getViewById(widget.otpId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view != null && mounted) {
         setState(() {
-          _otp = record;
-          _isDeleted = record.$1.isDeleted;
+          _otp = view;
+          _isDeleted = view.item.isDeleted;
           _isLoading = false;
         });
         _startCodeGeneration();
-        await _loadRelatedData(record);
+        await _loadRelatedData(view, repositories);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -72,19 +74,26 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     }
   }
 
-  Future<void> _loadRelatedData((VaultItemsData, OtpItemsData) record) async {
-    final vault = record.$1;
-    if (vault.categoryId != null) {
-      final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(vault.categoryId!);
+  Future<void> _loadRelatedData(
+    OtpViewDto view,
+    VaultRepositories repositories,
+  ) async {
+    if (view.item.categoryId != null) {
+      final cat = (await repositories.category.getCategory(
+        view.item.categoryId!,
+      )).getOrNull()?.getOrNull();
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(widget.otpId);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final tagIds =
+        (await relationsService.getTagIdsForItem(widget.otpId)).getOrNull() ??
+        [];
     if (tagIds.isNotEmpty) {
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tags = await tagDao.getTagsByIds(tagIds);
+      final tags =
+          (await repositories.tag.getTagsByIds(tagIds)).getOrNull() ?? [];
       if (mounted) setState(() => _tagNames = tags.map((t) => t.name).toList());
     }
   }
@@ -97,27 +106,31 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
   void _generateCode() {
     if (_otp == null) return;
 
-    final secretBytes = _otp!.$2.secret;
+    final secretBytes = _otp!.otp.secret;
     if (secretBytes.isEmpty) return;
 
     // Decode secret based on encoding
     String secretString;
     try {
-      secretString = _decodeSecret(secretBytes, _otp!.$2.secretEncoding);
+      secretString =
+          SmartConverter().toBase32(
+            String.fromCharCodes(secretBytes),
+          )['base32'] ??
+          '';
     } catch (_) {
       return;
     }
 
-    final period = _otp!.$2.period;
+    final period = _otp!.otp.period ?? 30;
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final remaining = period - (now % period);
 
     final code = OTP.generateTOTPCodeString(
       secretString,
       DateTime.now().millisecondsSinceEpoch,
-      length: _otp!.$2.digits,
+      length: _otp!.otp.digits,
       interval: period,
-      algorithm: _getAlgorithm(_otp!.$2.algorithm),
+      algorithm: _getAlgorithm(_otp!.otp.algorithm),
     );
 
     if (mounted) {
@@ -128,24 +141,13 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     }
   }
 
-  String _decodeSecret(Uint8List bytes, SecretEncoding encoding) {
-    switch (encoding) {
-      case SecretEncoding.BASE32:
-        return utf8.decode(bytes);
-      case SecretEncoding.HEX:
-        return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-      case SecretEncoding.BINARY:
-        return base64.encode(bytes);
-    }
-  }
-
-  Algorithm _getAlgorithm(AlgorithmOtp algo) {
+  Algorithm _getAlgorithm(OtpHashAlgorithm algo) {
     switch (algo) {
-      case AlgorithmOtp.SHA256:
+      case OtpHashAlgorithm.SHA256:
         return Algorithm.SHA256;
-      case AlgorithmOtp.SHA512:
+      case OtpHashAlgorithm.SHA512:
         return Algorithm.SHA512;
-      case AlgorithmOtp.SHA1:
+      case OtpHashAlgorithm.SHA1:
         return Algorithm.SHA1;
     }
   }
@@ -171,7 +173,9 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     final l10n = context.t.dashboard_forms;
     String? secret;
     try {
-      secret = _decodeSecret(record.$2.secret, record.$2.secretEncoding);
+      secret = SmartConverter().toBase32(
+        String.fromCharCodes(record.otp.secret),
+      )['base32'];
     } catch (_) {
       secret = null;
     }
@@ -180,10 +184,10 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     final fields = [
       ...buildCommonShareFields(
         context,
-        name: record.$1.name,
+        name: record.item.name,
         categoryName: _categoryName,
         tagNames: _tagNames,
-        description: record.$1.description,
+        description: record.item.description,
       ),
       ...compactShareableFields([
         shareableField(
@@ -201,27 +205,27 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
         shareableField(
           id: 'issuer',
           label: l10n.otp_issuer_label,
-          value: record.$2.issuer,
+          value: record.otp.issuer,
         ),
         shareableField(
           id: 'account',
           label: l10n.otp_account_name_label,
-          value: record.$2.accountName,
+          value: record.otp.accountName,
         ),
         shareableField(
           id: 'period',
           label: l10n.period_seconds_label,
-          value: record.$2.period,
+          value: record.otp.period,
         ),
         shareableField(
           id: 'digits',
           label: l10n.digits_count_label,
-          value: record.$2.digits,
+          value: record.otp.digits,
         ),
         shareableField(
           id: 'algorithm',
           label: l10n.algorithm_label,
-          value: record.$2.algorithm.name,
+          value: record.otp.algorithm.name,
         ),
       ]),
       ...customFields,
@@ -230,7 +234,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     await shareEntityFields(
       context: context,
       entity: ShareableEntity(
-        title: record.$1.name,
+        title: record.item.name,
         entityTypeLabel: EntityType.otp.label,
         fields: fields,
       ),
@@ -245,7 +249,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
     return Scaffold(
       backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
-        title: Text(_otp?.$1.name ?? 'OTP'),
+        title: Text(_otp?.item.name ?? 'OTP'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.share2),
@@ -291,7 +295,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                                   width: 24,
                                   height: 24,
                                   child: CircularProgressIndicator(
-                                    value: _remainingSeconds / _otp!.$2.period,
+                                    value: _remainingSeconds / _otp!.otp.period,
                                     strokeWidth: 3,
                                     color: _remainingSeconds <= 5
                                         ? cs.error
@@ -319,26 +323,26 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                     theme,
                     LucideIcons.building,
                     'Издатель',
-                    _otp!.$2.issuer ?? '-',
+                    _otp!.otp.issuer ?? '-',
                   ),
                   _info(
                     theme,
                     LucideIcons.user,
                     'Аккаунт',
-                    _otp!.$2.accountName ?? '-',
+                    _otp!.otp.accountName ?? '-',
                   ),
                   _info(
                     theme,
                     LucideIcons.timer,
                     'Период',
-                    '${_otp!.$2.period} сек',
+                    '${_otp!.otp.period} сек',
                   ),
-                  _info(theme, LucideIcons.hash, 'Цифр', '${_otp!.$2.digits}'),
+                  _info(theme, LucideIcons.hash, 'Цифр', '${_otp!.otp.digits}'),
                   _info(
                     theme,
                     LucideIcons.cpu,
                     'Алгоритм',
-                    _otp!.$2.algorithm.name,
+                    _otp!.otp.algorithm.name,
                   ),
                   if (_categoryName != null)
                     _info(

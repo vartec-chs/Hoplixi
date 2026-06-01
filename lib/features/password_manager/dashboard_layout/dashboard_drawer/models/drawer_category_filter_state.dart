@@ -1,5 +1,38 @@
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_tree_node.dart';
+import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
+
+class DrawerCategoryTreeNode {
+  const DrawerCategoryTreeNode({
+    required this.category,
+    this.children = const [],
+    this.isExpanded = false,
+    this.isChildrenLoaded = true,
+    this.isLoadingChildren = false,
+  });
+
+  final CategoryCardDto category;
+  final List<DrawerCategoryTreeNode> children;
+  final bool isExpanded;
+  final bool isChildrenLoaded;
+  final bool isLoadingChildren;
+
+  bool get hasChildren => children.isNotEmpty;
+
+  DrawerCategoryTreeNode copyWith({
+    CategoryCardDto? category,
+    List<DrawerCategoryTreeNode>? children,
+    bool? isExpanded,
+    bool? isChildrenLoaded,
+    bool? isLoadingChildren,
+  }) {
+    return DrawerCategoryTreeNode(
+      category: category ?? this.category,
+      children: children ?? this.children,
+      isExpanded: isExpanded ?? this.isExpanded,
+      isChildrenLoaded: isChildrenLoaded ?? this.isChildrenLoaded,
+      isLoadingChildren: isLoadingChildren ?? this.isLoadingChildren,
+    );
+  }
+}
 
 class DrawerCategoryFilterState {
   const DrawerCategoryFilterState({
@@ -13,7 +46,7 @@ class DrawerCategoryFilterState {
     this.searchQuery = '',
   });
 
-  final List<CategoryTreeNode> roots;
+  final List<DrawerCategoryTreeNode> roots;
   final List<CategoryCardDto> searchResults;
   final List<String> selectedIds;
   final bool isLoading;
@@ -25,7 +58,7 @@ class DrawerCategoryFilterState {
   bool get isSearching => searchQuery.trim().isNotEmpty;
 
   DrawerCategoryFilterState copyWith({
-    List<CategoryTreeNode>? roots,
+    List<DrawerCategoryTreeNode>? roots,
     List<CategoryCardDto>? searchResults,
     List<String>? selectedIds,
     bool? isLoading,

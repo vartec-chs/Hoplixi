@@ -5,12 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
-import 'package:hoplixi/features/password_manager/pickers/document_picker/document_picker.dart';
-import 'package:hoplixi/features/password_manager/pickers/file_picker/file_picker.dart';
-import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -29,42 +25,65 @@ class IdentityFormScreen extends ConsumerStatefulWidget {
 
 class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
   late final TextEditingController _nameController;
-  late final TextEditingController _idTypeController;
-  late final TextEditingController _idNumberController;
-  late final TextEditingController _fullNameController;
-  late final TextEditingController _placeOfBirthController;
-  late final TextEditingController _nationalityController;
-  late final TextEditingController _issuingAuthorityController;
-  late final TextEditingController _mrzController;
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _middleNameController;
+  late final TextEditingController _lastNameController;
+  late final TextEditingController _displayNameController;
+  late final TextEditingController _usernameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _companyController;
+  late final TextEditingController _jobTitleController;
+  late final TextEditingController _websiteController;
+  late final TextEditingController _taxIdController;
+  late final TextEditingController _nationalIdController;
+  late final TextEditingController _passportNumberController;
+  late final TextEditingController _driverLicenseNumberController;
   late final TextEditingController _descriptionController;
 
   static final _dateFormat = DateFormat('dd.MM.yyyy');
-  static final _dateTimeFormat = DateFormat('dd.MM.yyyy HH:mm');
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _idTypeController = TextEditingController();
-    _idNumberController = TextEditingController();
-    _fullNameController = TextEditingController();
-    _placeOfBirthController = TextEditingController();
-    _nationalityController = TextEditingController();
-    _issuingAuthorityController = TextEditingController();
-    _mrzController = TextEditingController();
+    _firstNameController = TextEditingController();
+    _middleNameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _displayNameController = TextEditingController();
+    _usernameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _addressController = TextEditingController();
+    _companyController = TextEditingController();
+    _jobTitleController = TextEditingController();
+    _websiteController = TextEditingController();
+    _taxIdController = TextEditingController();
+    _nationalIdController = TextEditingController();
+    _passportNumberController = TextEditingController();
+    _driverLicenseNumberController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _idTypeController.dispose();
-    _idNumberController.dispose();
-    _fullNameController.dispose();
-    _placeOfBirthController.dispose();
-    _nationalityController.dispose();
-    _issuingAuthorityController.dispose();
-    _mrzController.dispose();
+    _firstNameController.dispose();
+    _middleNameController.dispose();
+    _lastNameController.dispose();
+    _displayNameController.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _companyController.dispose();
+    _jobTitleController.dispose();
+    _websiteController.dispose();
+    _taxIdController.dispose();
+    _nationalIdController.dispose();
+    _passportNumberController.dispose();
+    _driverLicenseNumberController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -88,34 +107,7 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
   }
 
   /// Открывает выбор даты + времени и передаёт результат в [onChanged] в ISO 8601.
-  Future<void> _pickDateTime({
-    required BuildContext context,
-    required String current,
-    required void Function(String) onChanged,
-  }) async {
-    final initial = DateTime.tryParse(current) ?? DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(1900),
-      lastDate: DateTime(DateTime.now().year + 150),
-    );
-    if (date == null || !context.mounted) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-    );
-    if (time != null) {
-      final result = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
-      onChanged(result.toIso8601String());
-    }
-  }
+
 
   Future<void> _save() async {
     final success = await ref
@@ -167,25 +159,51 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
         if (_nameController.text != state.name) {
           _nameController.text = state.name;
         }
-        if (_idTypeController.text != state.idType) {
-          _idTypeController.text = state.idType;
+        if (_firstNameController.text != state.firstName) {
+          _firstNameController.text = state.firstName;
         }
-        if (_idNumberController.text != state.idNumber) {
-          _idNumberController.text = state.idNumber;
+        if (_middleNameController.text != state.middleName) {
+          _middleNameController.text = state.middleName;
         }
-        if (_fullNameController.text != state.fullName) {
-          _fullNameController.text = state.fullName;
+        if (_lastNameController.text != state.lastName) {
+          _lastNameController.text = state.lastName;
         }
-        if (_placeOfBirthController.text != state.placeOfBirth) {
-          _placeOfBirthController.text = state.placeOfBirth;
+        if (_displayNameController.text != state.displayName) {
+          _displayNameController.text = state.displayName;
         }
-        if (_nationalityController.text != state.nationality) {
-          _nationalityController.text = state.nationality;
+        if (_usernameController.text != state.username) {
+          _usernameController.text = state.username;
         }
-        if (_issuingAuthorityController.text != state.issuingAuthority) {
-          _issuingAuthorityController.text = state.issuingAuthority;
+        if (_emailController.text != state.email) {
+          _emailController.text = state.email;
         }
-        if (_mrzController.text != state.mrz) _mrzController.text = state.mrz;
+        if (_phoneController.text != state.phone) {
+          _phoneController.text = state.phone;
+        }
+        if (_addressController.text != state.address) {
+          _addressController.text = state.address;
+        }
+        if (_companyController.text != state.company) {
+          _companyController.text = state.company;
+        }
+        if (_jobTitleController.text != state.jobTitle) {
+          _jobTitleController.text = state.jobTitle;
+        }
+        if (_websiteController.text != state.website) {
+          _websiteController.text = state.website;
+        }
+        if (_taxIdController.text != state.taxId) {
+          _taxIdController.text = state.taxId;
+        }
+        if (_nationalIdController.text != state.nationalId) {
+          _nationalIdController.text = state.nationalId;
+        }
+        if (_passportNumberController.text != state.passportNumber) {
+          _passportNumberController.text = state.passportNumber;
+        }
+        if (_driverLicenseNumberController.text != state.driverLicenseNumber) {
+          _driverLicenseNumberController.text = state.driverLicenseNumber;
+        }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
         }
@@ -195,19 +213,9 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
         );
 
         // Отображаемые строки для полей-дейтпикеров
-        final dateOfBirthDisplay = state.dateOfBirth.isNotEmpty
+        final birthdayDisplay = state.birthday.isNotEmpty
             ? _dateFormat.format(
-                DateTime.tryParse(state.dateOfBirth) ?? DateTime.now(),
-              )
-            : '';
-        final issueDateDisplay = state.issueDate.isNotEmpty
-            ? _dateTimeFormat.format(
-                DateTime.tryParse(state.issueDate) ?? DateTime.now(),
-              )
-            : '';
-        final expiryDateDisplay = state.expiryDate.isNotEmpty
-            ? _dateTimeFormat.format(
-                DateTime.tryParse(state.expiryDate) ?? DateTime.now(),
+                DateTime.tryParse(state.birthday) ?? DateTime.now(),
               )
             : '';
 
@@ -250,198 +258,187 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: _idTypeController,
+                  controller: _firstNameController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText:
-                        context.t.dashboard_forms.document_type_required_label,
-                    errorText: state.idTypeError,
-                    prefixIcon: const Icon(LucideIcons.idCard),
-                  ),
-                  onChanged: notifier.setIdType,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _idNumberController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context
-                        .t
-                        .dashboard_forms
-                        .document_number_required_label,
-                    errorText: state.idNumberError,
-                    prefixIcon: const Icon(LucideIcons.hash),
-                  ),
-                  onChanged: notifier.setIdNumber,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _fullNameController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.full_name_label,
+                    labelText: 'Имя',
                     prefixIcon: const Icon(LucideIcons.user),
                   ),
-                  onChanged: notifier.setFullName,
+                  onChanged: notifier.setFirstName,
                 ),
                 const SizedBox(height: 12),
-
-                // Дата рождения — только дата
                 TextField(
-                  controller: TextEditingController(text: dateOfBirthDisplay),
+                  controller: _middleNameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Отчество',
+                    prefixIcon: const Icon(LucideIcons.user),
+                  ),
+                  onChanged: notifier.setMiddleName,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _lastNameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Фамилия',
+                    prefixIcon: const Icon(LucideIcons.user),
+                  ),
+                  onChanged: notifier.setLastName,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _displayNameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Отображаемое имя',
+                    prefixIcon: const Icon(LucideIcons.userCheck),
+                  ),
+                  onChanged: notifier.setDisplayName,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _usernameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Имя пользователя',
+                    prefixIcon: const Icon(LucideIcons.atSign),
+                  ),
+                  onChanged: notifier.setUsername,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _emailController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Электронная почта',
+                    prefixIcon: const Icon(LucideIcons.mail),
+                  ),
+                  onChanged: notifier.setEmail,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _phoneController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Телефон',
+                    prefixIcon: const Icon(LucideIcons.phone),
+                  ),
+                  onChanged: notifier.setPhone,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _addressController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Адрес',
+                    prefixIcon: const Icon(LucideIcons.mapPin),
+                  ),
+                  onChanged: notifier.setAddress,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: TextEditingController(text: birthdayDisplay),
                   readOnly: true,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.birth_date_iso_label,
-                    errorText: state.dateOfBirthError,
+                    labelText: 'Дата рождения',
+                    errorText: state.birthdayError,
                     prefixIcon: const Icon(LucideIcons.calendar),
-                    suffixIcon: state.dateOfBirth.isNotEmpty
+                    suffixIcon: state.birthday.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () => notifier.setDateOfBirth(''),
+                            onPressed: () => notifier.setBirthday(''),
                           )
                         : null,
                   ),
                   onTap: () => _pickDate(
                     context: context,
-                    current: state.dateOfBirth,
-                    onChanged: notifier.setDateOfBirth,
+                    current: state.birthday,
+                    onChanged: notifier.setBirthday,
                   ),
                 ),
                 const SizedBox(height: 12),
-
                 TextField(
-                  controller: _placeOfBirthController,
+                  controller: _companyController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.place_of_birth_label,
-                    prefixIcon: const Icon(LucideIcons.mapPin),
-                  ),
-                  onChanged: notifier.setPlaceOfBirth,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _nationalityController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.nationality_label,
-                    prefixIcon: const Icon(LucideIcons.flag),
-                  ),
-                  onChanged: notifier.setNationality,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _issuingAuthorityController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText:
-                        context.t.dashboard_forms.issuing_authority_label,
+                    labelText: 'Компания',
                     prefixIcon: const Icon(LucideIcons.building),
                   ),
-                  onChanged: notifier.setIssuingAuthority,
+                  onChanged: notifier.setCompany,
                 ),
                 const SizedBox(height: 12),
-
-                // Дата выдачи — дата + время
                 TextField(
-                  controller: TextEditingController(text: issueDateDisplay),
-                  readOnly: true,
+                  controller: _jobTitleController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.issue_date_iso_label,
-                    errorText: state.issueDateError,
-                    prefixIcon: const Icon(LucideIcons.calendar),
-                    suffixIcon: state.issueDate.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () => notifier.setIssueDate(''),
-                          )
-                        : null,
+                    labelText: 'Должность',
+                    prefixIcon: const Icon(LucideIcons.briefcase),
                   ),
-                  onTap: () => _pickDateTime(
-                    context: context,
-                    current: state.issueDate,
-                    onChanged: notifier.setIssueDate,
-                  ),
+                  onChanged: notifier.setJobTitle,
                 ),
                 const SizedBox(height: 12),
-
-                // Дата истечения — дата + время
                 TextField(
-                  controller: TextEditingController(text: expiryDateDisplay),
-                  readOnly: true,
+                  controller: _websiteController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.expiry_date_iso_label,
-                    errorText: state.expiryDateError,
-                    prefixIcon: const Icon(LucideIcons.calendarX),
-                    suffixIcon: state.expiryDate.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () => notifier.setExpiryDate(''),
-                          )
-                        : null,
+                    labelText: 'Веб-сайт',
+                    prefixIcon: const Icon(LucideIcons.globe),
                   ),
-                  onTap: () => _pickDateTime(
-                    context: context,
-                    current: state.expiryDate,
-                    onChanged: notifier.setExpiryDate,
-                  ),
+                  onChanged: notifier.setWebsite,
                 ),
                 const SizedBox(height: 12),
-
                 TextField(
-                  controller: _mrzController,
-                  minLines: 2,
-                  maxLines: 4,
+                  controller: _taxIdController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.mrz_label,
-                    prefixIcon: const Icon(LucideIcons.code),
+                    labelText: 'ИНН',
+                    prefixIcon: const Icon(LucideIcons.fileText),
                   ),
-                  onChanged: notifier.setMrz,
+                  onChanged: notifier.setTaxId,
                 ),
                 const SizedBox(height: 12),
-
-                // Скан документа → DocumentPickerField
-                DocumentPickerField(
-                  selectedDocumentId: state.scanAttachmentId,
-                  selectedDocumentTitle: state.scanAttachmentName,
-                  label: context.t.dashboard_forms.scan_id_label,
-                  onDocumentSelected: notifier.setScanAttachment,
+                TextField(
+                  controller: _nationalIdController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'СНИЛС/Паспорт РФ',
+                    prefixIcon: const Icon(LucideIcons.creditCard),
+                  ),
+                  onChanged: notifier.setNationalId,
                 ),
                 const SizedBox(height: 12),
-
-                // Фото → FilePickerField
-                FilePickerField(
-                  selectedFileId: state.photoAttachmentId,
-                  selectedFileName: state.photoAttachmentName,
-                  label: context.t.dashboard_forms.photo_id_label,
-                  onFileSelected: notifier.setPhotoAttachment,
+                TextField(
+                  controller: _passportNumberController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Загранпаспорт',
+                    prefixIcon: const Icon(LucideIcons.contact),
+                  ),
+                  onChanged: notifier.setPassportNumber,
                 ),
                 const SizedBox(height: 12),
-
+                TextField(
+                  controller: _driverLicenseNumberController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Водительские права',
+                    prefixIcon: const Icon(LucideIcons.car),
+                  ),
+                  onChanged: notifier.setDriverLicenseNumber,
+                ),
+                const SizedBox(height: 12),
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  filterByType: const [
-                    CategoryType.identity,
-                    CategoryType.mixed,
-                  ],
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
-                  filterByType: const [TagType.identity, TagType.mixed],
                   onTagsSelected: notifier.setTags,
-                ),
-                const SizedBox(height: 12),
-                NotePickerField(
-                  selectedNoteId: state.noteId,
-                  selectedNoteName: state.noteName,
-                  onNoteSelected: notifier.setNote,
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -454,12 +451,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
                     prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: notifier.setDescription,
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  value: state.verified,
-                  onChanged: notifier.setVerified,
-                  title: Text(context.t.dashboard_forms.verified_label),
                 ),
                 const SizedBox(height: 12),
                 CustomFieldsEditor(

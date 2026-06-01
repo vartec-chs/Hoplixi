@@ -10,10 +10,10 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_f
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -28,8 +28,7 @@ class FileViewScreen extends ConsumerStatefulWidget {
 }
 
 class _FileViewScreenState extends ConsumerState<FileViewScreen> {
-  (VaultItemsData, FileItemsData)? _file;
-  FileMetadataData? _metadata;
+  FileViewDto? _file;
   bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
@@ -43,17 +42,21 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
 
   Future<void> _loadFile() async {
     try {
-      final dao = await ref.read(fileDaoProvider.future);
-      final record = await dao.getById(widget.fileId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.file.getViewById(widget.fileId);
+      final view = viewResult.getOrNull()?.getOrNull();
 
-      if (record != null && mounted) {
+      if (view != null && mounted) {
         setState(() {
-          _file = record;
-          _isDeleted = record.$1.isDeleted;
-          _isLoading = false;
+          _file = view;
+          _isDeleted = view.item.isDeleted;
         });
-        await _loadMetadata(record.$2, dao);
-        await _loadRelatedData(record);
+        await _loadRelatedData(view, repositories);
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -62,26 +65,26 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
     }
   }
 
-  Future<void> _loadMetadata(FileItemsData file, dynamic dao) async {
-    if (file.metadataId != null) {
-      final meta = await dao.getFileMetadataById(file.metadataId!);
-      if (mounted && meta != null) setState(() => _metadata = meta);
-    }
-  }
-
-  Future<void> _loadRelatedData((VaultItemsData, FileItemsData) record) async {
-    final vault = record.$1;
-    if (vault.categoryId != null) {
-      final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(vault.categoryId!);
+  Future<void> _loadRelatedData(
+    FileViewDto view,
+    VaultRepositories repositories,
+  ) async {
+    if (view.item.categoryId != null) {
+      final cat = (await repositories.category.getCategory(
+        view.item.categoryId!,
+      )).getOrNull()?.getOrNull();
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(widget.fileId);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final tagIds =
+        (await relationsService.getTagIdsForItem(widget.fileId)).getOrNull() ??
+        [];
     if (tagIds.isNotEmpty) {
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tags = await tagDao.getTagsByIds(tagIds);
+      final tags =
+          (await repositories.tag.getTagsByIds(tagIds)).getOrNull() ?? [];
       if (mounted) setState(() => _tagNames = tags.map((t) => t.name).toList());
     }
   }
@@ -101,21 +104,42 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
   );
 
   FileCardDto _createFileDto() {
+    final item = _file!.item;
+    final file = _file!.file;
+    final metadata = _file!.metadata;
     return FileCardDto(
-      id: _file!.$1.id,
-      name: _file!.$1.name,
-      metadataId: _file!.$2.metadataId,
-      fileName: _metadata?.fileName,
-      fileExtension: _metadata?.fileExtension,
-      fileSize: _metadata?.fileSize,
-      isFavorite: _file!.$1.isFavorite,
-      isPinned: _file!.$1.isPinned,
-      isArchived: _file!.$1.isArchived,
-      isDeleted: _file!.$1.isDeleted,
-      usedCount: _file!.$1.usedCount,
-      modifiedAt: _file!.$1.modifiedAt,
-      category: null,
-      tags: null,
+      item: VaultItemCardDto(
+        itemId: item.itemId,
+        type: item.type,
+        name: item.name,
+        description: item.description,
+        categoryId: item.categoryId,
+        iconRefId: item.iconRefId,
+        isFavorite: item.isFavorite,
+        isArchived: item.isArchived,
+        isPinned: item.isPinned,
+        isDeleted: item.isDeleted,
+        createdAt: item.createdAt,
+        modifiedAt: item.modifiedAt,
+        lastUsedAt: item.lastUsedAt,
+        archivedAt: item.archivedAt,
+        deletedAt: item.deletedAt,
+        recentScore: item.recentScore,
+      ),
+      file: FileCardDataDto(
+        metadataId: file.metadataId,
+        fileName: metadata?.fileName,
+        fileExtension: metadata?.fileExtension,
+        mimeType: metadata?.mimeType,
+        fileSize: metadata?.fileSize,
+        availabilityStatus: metadata?.availabilityStatus,
+        integrityStatus: metadata?.integrityStatus,
+        missingDetectedAt: metadata?.missingDetectedAt,
+        deletedAt: metadata?.deletedAt,
+        lastIntegrityCheckAt: metadata?.lastIntegrityCheckAt,
+        hasMetadata: metadata != null,
+        hasSha256: metadata?.sha256 != null,
+      ),
     );
   }
 
@@ -133,29 +157,31 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
 
     final l10n = context.t.dashboard_forms;
     final customFields = await loadCustomShareableFields(ref, widget.fileId);
+    if (!mounted) return;
+    final metadata = record.metadata;
     final fields = [
       ...buildCommonShareFields(
         context,
-        name: record.$1.name,
+        name: record.item.name,
         categoryName: _categoryName,
         tagNames: _tagNames,
-        description: record.$1.description,
+        description: record.item.description,
       ),
       ...compactShareableFields([
         shareableField(
           id: 'file_name',
           label: l10n.share_file_name_label,
-          value: _metadata?.fileName,
+          value: metadata?.fileName,
         ),
         shareableField(
           id: 'file_size',
           label: l10n.share_file_size_label,
-          value: _metadata == null ? null : _formatSize(_metadata!.fileSize),
+          value: metadata == null ? null : _formatSize(metadata.fileSize),
         ),
         shareableField(
           id: 'extension',
           label: l10n.share_file_extension_label,
-          value: _metadata?.fileExtension,
+          value: metadata?.fileExtension,
         ),
       ]),
       ...customFields,
@@ -164,7 +190,7 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
     await shareEntityFields(
       context: context,
       entity: ShareableEntity(
-        title: record.$1.name,
+        title: record.item.name,
         entityTypeLabel: EntityType.file.label,
         fields: fields,
       ),
@@ -204,12 +230,12 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    final ext = _metadata?.fileExtension;
+    final ext = _file?.metadata?.fileExtension;
 
     return Scaffold(
       backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
-        title: Text(_file?.$1.name ?? 'Файл'),
+        title: Text(_file?.item.name ?? 'Файл'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.lockOpen),
@@ -263,22 +289,22 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
                     theme,
                     LucideIcons.tag,
                     'Название',
-                    _file!.$1.name,
-                    () => _copy(_file!.$1.name, 'Название'),
+                    _file!.item.name,
+                    () => _copy(_file!.item.name, 'Название'),
                   ),
-                  if (_metadata?.fileName != null)
+                  if (_file?.metadata?.fileName != null)
                     _info(
                       theme,
                       LucideIcons.file,
                       'Имя файла',
-                      _metadata!.fileName,
+                      _file!.metadata!.fileName,
                     ),
-                  if (_metadata != null)
+                  if (_file?.metadata != null)
                     _info(
                       theme,
                       LucideIcons.hardDrive,
                       'Размер',
-                      _formatSize(_metadata!.fileSize),
+                      _formatSize(_file!.metadata!.fileSize),
                     ),
                   if (ext != null)
                     _info(theme, LucideIcons.fileType, 'Расширение', '.$ext'),
@@ -290,12 +316,12 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
                       _categoryName!,
                     ),
                   if (_tagNames.isNotEmpty) _tags(theme),
-                  if (_file!.$1.description?.isNotEmpty ?? false)
+                  if (_file!.item.description?.isNotEmpty ?? false)
                     _info(
                       theme,
                       LucideIcons.fileText,
                       'Описание',
-                      _file!.$1.description!,
+                      _file!.item.description!,
                     ),
                   CustomFieldsViewSection(itemId: widget.fileId),
                   const SizedBox(height: 24),

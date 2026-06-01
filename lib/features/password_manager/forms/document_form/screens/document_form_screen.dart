@@ -1,4 +1,3 @@
-import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -10,10 +9,11 @@ import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
+import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:hoplixi/shared/ui/background_utils.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/document_form_state.dart';
@@ -188,10 +188,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                                 .pickers_category_label,
                             hintText:
                                 context.t.dashboard_forms.select_category_hint,
-                            filterByType: [
-                              CategoryType.document,
-                              CategoryType.mixed,
-                            ],
+
                             onCategorySelected: (categoryId, categoryName) {
                               ref
                                   .read(documentFormProvider.notifier)
@@ -207,7 +204,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
                             label: context.t.dashboard_forms.pickers_tags_label,
                             hintText:
                                 context.t.dashboard_forms.select_tags_hint,
-                            filterByType: [TagType.document, TagType.mixed],
+
                             onTagsSelected: (tagIds, tagNames) {
                               ref
                                   .read(documentFormProvider.notifier)
@@ -618,7 +615,9 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
     ];
 
     return DropdownButtonFormField<String>(
-      initialValue: state.documentType,
+      initialValue: state.documentType == null
+          ? null
+          : state.documentType.toString(),
       decoration: primaryInputDecoration(
         context,
         labelText: context.t.dashboard_forms.document_type_required_label,
@@ -632,7 +631,14 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
         ),
       ],
       onChanged: (value) {
-        ref.read(documentFormProvider.notifier).setDocumentType(value);
+        ref
+            .read(documentFormProvider.notifier)
+            .setDocumentType(
+              DocumentType.values.firstWhere(
+                (e) => e.toString() == 'DocumentType.$value',
+                orElse: () => DocumentType.other,
+              ),
+            );
       },
     );
   }

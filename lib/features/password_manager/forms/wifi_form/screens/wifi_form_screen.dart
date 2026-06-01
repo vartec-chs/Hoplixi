@@ -1,3 +1,4 @@
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,8 +10,8 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/login_autocomplete_field/login_autocomplete_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
@@ -297,10 +298,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 ),
                 const SizedBox(height: 12),
                 IconSourcePickerButton(
-                  iconRef: IconRefDto.fromFields(
-                    iconSource: state.iconSource,
-                    iconValue: state.iconValue,
-                  ),
+                  iconRef: (state.iconSource == null ? null : IconRefDto(iconSourceType: IconSourceType.values.byName(state.iconSource!), iconValue: state.iconValue)),
                   fallbackIcon: Icons.wifi,
                   title: 'Иконка записи',
                   onChanged: notifier.setIconRef,
@@ -309,14 +307,14 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  filterByType: const [CategoryType.wifi, CategoryType.mixed],
+                  
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
-                  filterByType: const [TagType.wifi, TagType.mixed],
+                  
                   onTagsSelected: notifier.setTags,
                 ),
                 const SizedBox(height: 12),

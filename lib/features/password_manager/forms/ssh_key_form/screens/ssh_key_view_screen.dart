@@ -9,8 +9,9 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/share_field
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/ssh_key/ssh_key_items.dart';
 
 class SshKeyViewScreen extends ConsumerStatefulWidget {
   const SshKeyViewScreen({super.key, required this.sshKeyId});
@@ -25,15 +26,14 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
   bool _loading = true;
   bool _isDeleted = false;
   bool _showPrivateKey = false;
-  String? _privateKey;
 
   String _name = '';
   String _publicKey = '';
-  String? _keyType;
-  String? _fingerprint;
-  String? _usage;
+  String? _privateKey;
+  SshKeyType? _keyType;
+  String? _keyTypeOther;
+  int? _keySize;
   String? _description;
-  bool _addedToAgent = false;
 
   @override
   void initState() {
@@ -44,64 +44,44 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final dao = await ref.read(sshKeyDaoProvider.future);
-      final row = await dao.getById(widget.sshKeyId);
-      if (row == null) {
-        Toaster.error(title: context.t.dashboard_forms.ssh_key_not_found);
-        if (mounted) context.pop();
+      final repos = await ref.read(vaultRepositories.future);
+      final viewResult = await repos.sshKey.getViewById(widget.sshKeyId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view == null) {
+        if (mounted) {
+          Toaster.error(
+            title: context.t.dashboard_forms.ssh_key_not_found,
+          );
+          context.pop();
+        }
         return;
       }
-      final item = row.$1;
-      final ssh = row.$2;
+      final item = view.item;
+      final sshKey = view.sshKey;
       setState(() {
         _isDeleted = item.isDeleted;
         _name = item.name;
-        _publicKey = ssh.publicKey;
-        _keyType = ssh.keyType;
-        _fingerprint = ssh.fingerprint;
-        _usage = ssh.usage;
+        _publicKey = sshKey.publicKey ?? '';
+        _privateKey = sshKey.privateKey;
+        _keyType = sshKey.keyType;
+        _keyTypeOther = sshKey.keyTypeOther;
+        _keySize = sshKey.keySize;
         _description = item.description;
-        _addedToAgent = ssh.addedToAgent;
       });
     } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_load_error,
-        description: '$e',
-      );
+      if (mounted) {
+        Toaster.error(
+          title: context.t.dashboard_forms.common_load_error,
+          description: '$e',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _revealPrivateKey() async {
-    if (_privateKey != null) {
-      setState(() => _showPrivateKey = !_showPrivateKey);
-      return;
-    }
-
-    try {
-      final dao = await ref.read(sshKeyDaoProvider.future);
-      final value = await dao.getPrivateKeyFieldById(widget.sshKeyId);
-      if (value == null) {
-        Toaster.error(
-          title: context.t.dashboard_forms.common_error_getting_field(
-            Field: context.t.dashboard_forms.private_key_label,
-          ),
-        );
-        return;
-      }
-      setState(() {
-        _privateKey = value;
-        _showPrivateKey = true;
-      });
-    } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_error_getting_field(
-          Field: context.t.dashboard_forms.private_key_label,
-        ),
-        description: '$e',
-      );
-    }
+  Future<void> _togglePrivateKey() async {
+    setState(() => _showPrivateKey = !_showPrivateKey);
   }
 
   Future<void> _copyPrivateKey() async {
@@ -113,27 +93,22 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       return;
     }
     await Clipboard.setData(ClipboardData(text: value));
-    Toaster.success(
-      title: context.t.dashboard_forms.common_field_copied(
-        Field: context.t.dashboard_forms.private_key_label,
-      ),
-    );
+    if (mounted) {
+      Toaster.success(
+        title: context.t.dashboard_forms.common_field_copied(
+          Field: context.t.dashboard_forms.private_key_label,
+        ),
+      );
+    }
   }
 
   Future<void> _share() async {
     final l10n = context.t.dashboard_forms;
-    String? privateKey = _privateKey;
-    try {
-      final dao = await ref.read(sshKeyDaoProvider.future);
-      privateKey ??= await dao.getPrivateKeyFieldById(widget.sshKeyId);
-    } catch (e) {
-      Toaster.error(
-        title: l10n.common_error_getting_field(Field: l10n.private_key_label),
-        description: '$e',
-      );
-    }
 
     final customFields = await loadCustomShareableFields(ref, widget.sshKeyId);
+    if (!mounted) return;
+
+    final keyTypeLabel = _keyType?.name ?? _keyTypeOther;
     final fields = [
       ...compactShareableFields([
         shareableField(id: 'name', label: l10n.share_name_label, value: _name),
@@ -145,25 +120,20 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
         shareableField(
           id: 'private_key',
           label: l10n.private_key_label,
-          value: privateKey,
+          value: _privateKey,
           isSensitive: true,
         ),
         shareableField(
           id: 'key_type',
           label: l10n.key_type_label,
-          value: _keyType,
+          value: keyTypeLabel,
         ),
-        shareableField(
-          id: 'fingerprint',
-          label: l10n.fingerprint_label,
-          value: _fingerprint,
-        ),
-        shareableField(id: 'usage', label: l10n.usage_label, value: _usage),
-        shareableField(
-          id: 'added_to_agent',
-          label: l10n.added_to_ssh_agent_label,
-          value: _addedToAgent ? l10n.common_added : l10n.common_not_added,
-        ),
+        if (_keySize != null)
+          shareableField(
+            id: 'key_size',
+            label: l10n.key_size_label,
+            value: '$_keySize',
+          ),
         shareableField(
           id: 'description',
           label: l10n.description_label,
@@ -219,21 +189,26 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                 children: [
                   Text(_name, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 12),
-                  SelectableText(_publicKey),
-                  const SizedBox(height: 16),
+                  if (_publicKey.isNotEmpty) ...[
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.share_public_key_label),
+                      subtitle: SelectableText(_publicKey),
+                    ),
+                  ],
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(l10n.private_key_label),
                     subtitle: SelectableText(
                       _showPrivateKey
-                          ? (_privateKey ?? '')
+                          ? (_privateKey ?? l10n.common_not_set)
                           : l10n.common_press_visibility_to_load,
                     ),
                     trailing: Wrap(
                       spacing: 4,
                       children: [
                         IconButton(
-                          onPressed: _revealPrivateKey,
+                          onPressed: _togglePrivateKey,
                           icon: Icon(
                             _showPrivateKey
                                 ? Icons.visibility_off
@@ -247,32 +222,26 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
                       ],
                     ),
                   ),
-                  if (_keyType?.isNotEmpty == true)
+                  if (_keyType != null)
                     ListTile(
                       title: Text(l10n.key_type_label),
-                      subtitle: Text(_keyType!),
-                    ),
-                  if (_fingerprint?.isNotEmpty == true)
+                      subtitle: Text(_keyType!.name),
+                    )
+                  else if (_keyTypeOther?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.fingerprint_label),
-                      subtitle: Text(_fingerprint!),
+                      title: Text(l10n.key_type_label),
+                      subtitle: Text(_keyTypeOther!),
                     ),
-                  if (_usage?.isNotEmpty == true)
+                  if (_keySize != null)
                     ListTile(
-                      title: Text(l10n.usage_label),
-                      subtitle: Text(_usage!),
+                      title: Text(l10n.key_size_label),
+                      subtitle: Text('$_keySize bits'),
                     ),
-                  ListTile(
-                    title: Text(l10n.added_to_ssh_agent_label),
-                    subtitle: Text(
-                      _addedToAgent ? l10n.common_added : l10n.common_not_added,
-                    ),
-                  ),
                   if (_description?.isNotEmpty == true)
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       title: Text(l10n.description_label),
                       subtitle: Text(_description!),
-                      contentPadding: EdgeInsets.zero,
                     ),
                   CustomFieldsViewSection(itemId: widget.sshKeyId),
                 ],

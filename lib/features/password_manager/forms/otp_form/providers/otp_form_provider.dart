@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
@@ -7,8 +9,9 @@ import 'package:hoplixi/features/password_manager/forms/otp_form/utils/otp_uri_p
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/otp_form_state.dart';
 
@@ -35,8 +38,13 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final repository = await ref.read(otpRepositoryProvider.future);
-      final view = await repository.getViewById(otpId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final relationsService = await ref.read(
+        vaultItemRelationsServiceProvider.future,
+      );
+      final viewResult = await repositories.otp.getViewById(otpId);
+
+      final view = viewResult.getOrThrow().getOrNull();
 
       if (view == null) {
         logWarning('OTP not found: $otpId', tag: _logTag);
@@ -47,9 +55,21 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
       final item = view.item;
       final details = view.otp;
 
-      // TODO: handle tags properly
-      final tagIds = <String>[];
-      final tagNames = <String>[];
+      // Load tags
+      final tagIdsResult = await relationsService.getTagIdsForItem(otpId);
+      final tagIds = tagIdsResult.getOrThrow();
+      final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+      final tags = tagsResult.getOrThrow();
+      final tagNames = tags.map((t) => t.name).toList();
+
+      // Load category name if exists
+      String? categoryName;
+      if (item.categoryId != null) {
+        final catResult = await repositories.category.getCategory(
+          item.categoryId!,
+        );
+        categoryName = catResult.getOrThrow().getOrNull()?.name;
+      }
 
       final secretBase32 =
           _smartConverter.toBase32(
@@ -64,11 +84,13 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
         issuer: details.issuer ?? '',
         accountName: details.accountName ?? '',
         secret: secretBase32,
+        description: item.description ?? '',
         algorithm: details.algorithm,
         digits: details.digits,
         period: details.period ?? 30,
         counter: details.counter,
         categoryId: item.categoryId,
+        categoryName: categoryName,
         tagIds: tagIds,
         tagNames: tagNames,
         customFields: await loadCustomFields(ref, otpId),
@@ -159,8 +181,8 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
 
   void setIconRef(IconRefDto? iconRef) {
     state = state.copyWith(
-      iconSource: iconRef?.sourceValue,
-      iconValue: iconRef?.value,
+      iconSource: iconRef?.iconSourceType?.name,
+      iconValue: iconRef?.iconValue,
     );
   }
 
@@ -236,11 +258,11 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final repository = await ref.read(otpRepositoryProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
       final normalizedSecret = _normalizeSecretToBase32(state.secret);
 
       if (state.isEditMode && state.editingOtpId != null) {
-        await repository.update(
+        final res = await services.otp.update(
           PatchOtpDto(
             item: VaultItemPatchDto(
               itemId: state.editingOtpId!,
@@ -268,7 +290,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
               algorithm: FieldUpdate.set(state.algorithm),
               digits: FieldUpdate.set(state.digits),
               period: FieldUpdate.set(
-                state.otpType == OtpType.otp ? state.period : null,
+                state.otpType == OtpType.totp ? state.period : null,
               ),
               counter: FieldUpdate.set(
                 state.otpType == OtpType.hotp ? state.counter : null,
@@ -277,6 +299,8 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
             tags: FieldUpdate.set(state.tagIds),
           ),
         );
+
+        res.getOrThrow();
 
         await saveCustomFields(ref, state.editingOtpId!, state.customFields);
         // TODO: handle icon ref and password link
@@ -290,7 +314,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
 
         return true;
       } else {
-        final id = await repository.create(
+        final res = await services.otp.create(
           CreateOtpDto(
             item: VaultItemCreateDto(
               name: state.issuer.isNotEmpty ? state.issuer : state.accountName,
@@ -306,16 +330,19 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
               secret: Uint8List.fromList(normalizedSecret.codeUnits),
               algorithm: state.algorithm,
               digits: state.digits,
-              period: state.otpType == OtpType.otp ? state.period : null,
+              period: state.otpType == OtpType.totp ? state.period : null,
               counter: state.otpType == OtpType.hotp
                   ? (state.counter ?? 0)
                   : null,
             ),
+            tagIds: state.tagIds,
           ),
         );
 
+        final id = res.getOrThrow();
+
         await saveCustomFields(ref, id, state.customFields);
-        // TODO: handle tags, icon ref, password link
+        // TODO: handle icon ref, password link
 
         logInfo('OTP created: $id', tag: _logTag);
         state = state.copyWith(isSaving: false, isSaved: true);

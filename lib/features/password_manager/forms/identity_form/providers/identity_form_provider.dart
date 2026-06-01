@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/m
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/identity_form_state.dart';
 
@@ -24,14 +25,34 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
     if (identityId == null) return const IdentityFormState(isEditMode: false);
     final id = identityId!;
 
-    final repository = await ref.read(identityRepositoryProvider.future);
-    final view = await repository.getViewById(id);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.identity.getViewById(id);
+
+    final view = viewResult.getOrThrow().getOrNull();
     if (view == null) return const IdentityFormState(isEditMode: false);
 
     final item = view.item;
     final identity = view.identity;
 
-    // TODO: handle tags properly
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tags = tagsResult.getOrThrow();
+    final tagNames = tags.map((t) => t.name).toList();
+
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
+
     final customFields = await loadCustomFields(ref, id);
 
     return IdentityFormState(
@@ -56,7 +77,9 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
       driverLicenseNumber: identity.driverLicenseNumber ?? '',
       description: item.description ?? '',
       categoryId: item.categoryId,
-      tagIds: [],
+      categoryName: categoryName,
+      tagIds: tagIds,
+      tagNames: tagNames,
       customFields: customFields,
     );
   }
@@ -82,43 +105,26 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
       nameError: _req(v, t.dashboard_forms.validation_required_name),
     ),
   );
-  void setIdType(String v) => _update(
-    (s) => s.copyWith(
-      idType: v,
-      idTypeError: _req(v, t.dashboard_forms.validation_required_type),
-    ),
-  );
-  void setIdNumber(String v) => _update(
-    (s) => s.copyWith(
-      idNumber: v,
-      idNumberError: _req(v, t.dashboard_forms.validation_required_number),
-    ),
-  );
-  void setFullName(String v) => _update((s) => s.copyWith(fullName: v));
-  void setDateOfBirth(String v) =>
-      _update((s) => s.copyWith(dateOfBirth: v, dateOfBirthError: _dateErr(v)));
-  void setPlaceOfBirth(String v) => _update((s) => s.copyWith(placeOfBirth: v));
-  void setNationality(String v) => _update((s) => s.copyWith(nationality: v));
-  void setIssuingAuthority(String v) =>
-      _update((s) => s.copyWith(issuingAuthority: v));
-  void setIssueDate(String v) =>
-      _update((s) => s.copyWith(issueDate: v, issueDateError: _dateErr(v)));
-  void setExpiryDate(String v) =>
-      _update((s) => s.copyWith(expiryDate: v, expiryDateError: _dateErr(v)));
-  void setMrz(String v) => _update((s) => s.copyWith(mrz: v));
 
-  void setScanAttachment(String? id, String? name) => _update(
-    (s) => s.copyWith(scanAttachmentId: id, scanAttachmentName: name),
-  );
-
-  void setPhotoAttachment(String? id, String? name) => _update(
-    (s) => s.copyWith(photoAttachmentId: id, photoAttachmentName: name),
-  );
+  void setFirstName(String v) => _update((s) => s.copyWith(firstName: v));
+  void setMiddleName(String v) => _update((s) => s.copyWith(middleName: v));
+  void setLastName(String v) => _update((s) => s.copyWith(lastName: v));
+  void setDisplayName(String v) => _update((s) => s.copyWith(displayName: v));
+  void setUsername(String v) => _update((s) => s.copyWith(username: v));
+  void setEmail(String v) => _update((s) => s.copyWith(email: v));
+  void setPhone(String v) => _update((s) => s.copyWith(phone: v));
+  void setAddress(String v) => _update((s) => s.copyWith(address: v));
+  void setBirthday(String v) =>
+      _update((s) => s.copyWith(birthday: v, birthdayError: _dateErr(v)));
+  void setCompany(String v) => _update((s) => s.copyWith(company: v));
+  void setJobTitle(String v) => _update((s) => s.copyWith(jobTitle: v));
+  void setWebsite(String v) => _update((s) => s.copyWith(website: v));
+  void setTaxId(String v) => _update((s) => s.copyWith(taxId: v));
+  void setNationalId(String v) => _update((s) => s.copyWith(nationalId: v));
+  void setPassportNumber(String v) => _update((s) => s.copyWith(passportNumber: v));
+  void setDriverLicenseNumber(String v) => _update((s) => s.copyWith(driverLicenseNumber: v));
 
   void setDescription(String v) => _update((s) => s.copyWith(description: v));
-  void setVerified(bool v) => _update((s) => s.copyWith(verified: v));
-  void setNote(String? id, String? name) =>
-      _update((s) => s.copyWith(noteId: id, noteName: name));
   void setCategory(String? id, String? name) =>
       _update((s) => s.copyWith(categoryId: id, categoryName: name));
   void setTags(List<String> ids, List<String> names) =>
@@ -156,10 +162,10 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
     }
 
     try {
-      final repository = await ref.read(identityRepositoryProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (c.isEditMode && c.editingIdentityId != null) {
-        await repository.update(
+        final res = await services.identity.update(
           PatchIdentityDto(
             item: VaultItemPatchDto(
               itemId: c.editingIdentityId!,
@@ -191,6 +197,8 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
           ),
         );
 
+        res.getOrThrow();
+
         await saveCustomFields(ref, c.editingIdentityId!, c.customFields);
 
         ref
@@ -200,7 +208,7 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
               entityId: c.editingIdentityId,
             );
       } else {
-        final id = await repository.create(
+        final res = await services.identity.create(
           CreateIdentityDto(
             item: VaultItemCreateDto(
               name: c.name.trim(),
@@ -225,8 +233,11 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
               passportNumber: clean(c.passportNumber),
               driverLicenseNumber: clean(c.driverLicenseNumber),
             ),
+            tagIds: c.tagIds,
           ),
         );
+
+        final id = res.getOrThrow();
 
         await saveCustomFields(ref, id, c.customFields);
         ref
@@ -244,3 +255,4 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

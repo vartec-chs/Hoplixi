@@ -4,8 +4,9 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/ssh_key_form_state.dart';
 
@@ -24,36 +25,50 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
     if (sshKeyId == null) return const SshKeyFormState(isEditMode: false);
     final id = sshKeyId!;
 
-    final dao = await ref.read(sshKeyDaoProvider.future);
-    final row = await dao.getById(id);
-    if (row == null) return const SshKeyFormState(isEditMode: false);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.sshKey.getViewById(id);
 
-    final item = row.$1;
-    final ssh = row.$2;
+    final view = viewResult.getOrThrow().getOrNull();
+    if (view == null) return const SshKeyFormState(isEditMode: false);
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(id);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final tags = await tagDao.getTagsByIds(tagIds);
+    final item = view.item;
+    final ssh = view.sshKey;
+
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tags = tagsResult.getOrThrow();
+    final tagNames = tags.map((t) => t.name).toList();
+
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
+
     final customFields = await loadCustomFields(ref, id);
 
     return SshKeyFormState(
       isEditMode: true,
       editingSshKeyId: id,
       name: item.name,
-      publicKey: ssh.publicKey,
-      privateKey: ssh.privateKey,
-      keyType: ssh.keyType ?? '',
-      fingerprint: ssh.fingerprint ?? '',
-      usage: ssh.usage ?? '',
+      publicKey: ssh.publicKey ?? '',
+      privateKey: ssh.privateKey ?? '',
+      keyType: ssh.keyType?.name ?? '',
+      keyTypeOther: ssh.keyTypeOther ?? '',
+      keySize: ssh.keySize,
       description: item.description ?? '',
-      addedToAgent: ssh.addedToAgent,
-      noteId: item.noteId,
       categoryId: item.categoryId,
-      iconSource: item.iconSource,
-      iconValue: item.iconValue,
+      categoryName: categoryName,
       tagIds: tagIds,
-      tagNames: tags.map((tag) => tag.name).toList(),
+      tagNames: tagNames,
       customFields: customFields,
     );
   }
@@ -91,14 +106,14 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
     ),
   );
 
-  void setKeyType(String value) => _update((s) => s.copyWith(keyType: value));
-  void setFingerprint(String value) =>
-      _update((s) => s.copyWith(fingerprint: value));
-  void setUsage(String value) => _update((s) => s.copyWith(usage: value));
+  void setKeyType(String value) =>
+      _update((s) => s.copyWith(keyType: value));
+  void setKeyTypeOther(String value) =>
+      _update((s) => s.copyWith(keyTypeOther: value));
+  void setKeySize(int? value) =>
+      _update((s) => s.copyWith(keySize: value));
   void setDescription(String value) =>
       _update((s) => s.copyWith(description: value));
-  void setAddedToAgent(bool value) =>
-      _update((s) => s.copyWith(addedToAgent: value));
   void setNote(String? noteId, String? noteName) =>
       _update((s) => s.copyWith(noteId: noteId, noteName: noteName));
   void setCategory(String? categoryId, String? categoryName) => _update(
@@ -107,7 +122,7 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
 
   void setIconRef(IconRefDto? iconRef) => _update(
     (s) =>
-        s.copyWith(iconSource: iconRef?.sourceValue, iconValue: iconRef?.value),
+        s.copyWith(iconSource: iconRef?.iconSourceType?.name, iconValue: iconRef?.iconValue),
   );
 
   void setTags(List<String> tagIds, List<String> tagNames) =>
@@ -153,43 +168,38 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
     }
 
     try {
-      final dao = await ref.read(sshKeyDaoProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (current.isEditMode && current.editingSshKeyId != null) {
-        final updated = await dao.updateSshKey(
-          current.editingSshKeyId!,
-          UpdateSshKeyDto(
-            name: current.name.trim(),
-            publicKey: current.publicKey.trim(),
-            privateKey: current.privateKey.trim(),
-            keyType: clean(current.keyType),
-            fingerprint: clean(current.fingerprint),
-            usage: clean(current.usage),
-            description: clean(current.description),
-            addedToAgent: current.addedToAgent,
-            noteId: current.noteId,
-            categoryId: current.categoryId,
-            tagsIds: current.tagIds,
+        final res = await services.sshKey.update(
+          PatchSshKeyDto(
+            item: VaultItemPatchDto(
+              itemId: current.editingSshKeyId!,
+              name: FieldUpdate.set(current.name.trim()),
+              description: FieldUpdate.set(clean(current.description)),
+              categoryId: FieldUpdate.set(current.categoryId),
+            ),
+            sshKey: PatchSshKeyDataDto(
+              publicKey: FieldUpdate.set(current.publicKey.trim()),
+              privateKey: FieldUpdate.set(current.privateKey.trim()),
+              keyType: FieldUpdate.set(
+                current.keyType.isEmpty
+                    ? null
+                    : SshKeyType.values.byName(current.keyType),
+              ),
+              keyTypeOther: FieldUpdate.set(clean(current.keyTypeOther)),
+              keySize: FieldUpdate.set(current.keySize),
+            ),
+            tags: FieldUpdate.set(current.tagIds),
           ),
         );
 
-        if (!updated) {
-          _update((s) => s.copyWith(isSaving: false));
-          return false;
-        }
+        res.getOrThrow();
 
         await saveCustomFields(
           ref,
           current.editingSshKeyId!,
           current.customFields,
-        );
-        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-        await vaultItemDao.setIconRef(
-          current.editingSshKeyId!,
-          IconRefDto.fromFields(
-            iconSource: current.iconSource,
-            iconValue: current.iconValue,
-          ),
         );
 
         ref
@@ -199,31 +209,30 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
               entityId: current.editingSshKeyId,
             );
       } else {
-        final id = await dao.createSshKey(
+        final res = await services.sshKey.create(
           CreateSshKeyDto(
-            name: current.name.trim(),
-            publicKey: current.publicKey.trim(),
-            privateKey: current.privateKey.trim(),
-            keyType: clean(current.keyType),
-            fingerprint: clean(current.fingerprint),
-            usage: clean(current.usage),
-            description: clean(current.description),
-            addedToAgent: current.addedToAgent,
-            noteId: current.noteId,
-            categoryId: current.categoryId,
-            tagsIds: current.tagIds,
+            item: VaultItemCreateDto(
+              name: current.name.trim(),
+              description: clean(current.description),
+              categoryId: current.categoryId,
+            ),
+            sshKey: SshKeyDataDto(
+              publicKey: current.publicKey.trim(),
+              privateKey: current.privateKey.trim(),
+              keyType: current.keyType.isEmpty
+                  ? null
+                  : SshKeyType.values.byName(current.keyType),
+              keyTypeOther: clean(current.keyTypeOther),
+              keySize: current.keySize,
+            ),
+            tagIds: current.tagIds,
           ),
         );
 
+        final id = res.getOrThrow();
+
         await saveCustomFields(ref, id, current.customFields);
-        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-        await vaultItemDao.setIconRef(
-          id,
-          IconRefDto.fromFields(
-            iconSource: current.iconSource,
-            iconValue: current.iconValue,
-          ),
-        );
+
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.sshKey, entityId: id);
@@ -239,3 +248,4 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

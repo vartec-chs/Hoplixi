@@ -1,3 +1,4 @@
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:card_scanner/card_scanner.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +13,8 @@ import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picke
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/icon_ref_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -261,17 +261,17 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
   }
 
   Future<void> _loadNoteName(String noteId) async {
-    final noteDao = ref.read(noteDaoProvider);
-    final asyncValue = noteDao;
-
-    // Ждём данные из AsyncValue
-    if (!asyncValue.hasValue) return;
-
-    final record = await asyncValue.value!.getById(noteId);
-    if (mounted) {
-      setState(() {
-        _noteName = record?.$1.name;
-      });
+    try {
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.note.getViewById(noteId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (mounted && view != null) {
+        setState(() {
+          _noteName = view.item.name;
+        });
+      }
+    } catch (e) {
+      // Ignore
     }
   }
 
@@ -430,10 +430,10 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                               milliseconds: 500,
                             ),
                             frontCardBorder: Border.all(
-                              color: colorScheme.outline.withOpacity(0.3),
+                              color: colorScheme.outline.withValues(alpha: 0.3),
                             ),
                             backCardBorder: Border.all(
-                              color: colorScheme.outline.withOpacity(0.3),
+                              color: colorScheme.outline.withValues(alpha: 0.3),
                             ),
                             padding: 8,
                             cardType: .values.firstWhere(
@@ -726,10 +726,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           const Divider(height: 32),
 
                           IconSourcePickerButton(
-                            iconRef: IconRefDto.fromFields(
-                              iconSource: state.iconSource,
-                              iconValue: state.iconValue,
-                            ),
+                            iconRef: (state.iconSource == null ? null : IconRefDto(iconSourceType: IconSourceType.values.byName(state.iconSource!), iconValue: state.iconValue)),
                             fallbackIcon: Icons.credit_card,
                             title: 'Иконка записи',
                             onChanged: ref
@@ -748,10 +745,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                 .pickers_category_label,
                             hintText:
                                 context.t.dashboard_forms.select_category_hint,
-                            filterByType: [
-                              CategoryType.bankCard,
-                              CategoryType.mixed,
-                            ],
+                            
                             onCategorySelected: (categoryId, categoryName) {
                               ref
                                   .read(bankCardFormProvider.notifier)
@@ -767,7 +761,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                             label: context.t.dashboard_forms.pickers_tags_label,
                             hintText:
                                 context.t.dashboard_forms.select_tags_hint,
-                            filterByType: [TagType.bankCard, TagType.mixed],
+
                             onTagsSelected: (tagIds, tagNames) {
                               ref
                                   .read(bankCardFormProvider.notifier)

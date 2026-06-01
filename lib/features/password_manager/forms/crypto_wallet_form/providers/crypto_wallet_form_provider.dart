@@ -6,6 +6,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/m
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/crypto_wallet/crypto_wallet_items.dart';
 
 import '../models/crypto_wallet_form_state.dart';
@@ -27,14 +28,34 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
     }
     final id = cryptoWalletId!;
 
-    final repository = await ref.read(cryptoWalletRepositoryProvider.future);
-    final view = await repository.getViewById(id);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.cryptoWallet.getViewById(id);
+
+    final view = viewResult.getOrThrow().getOrNull();
     if (view == null) return const CryptoWalletFormState(isEditMode: false);
 
     final item = view.item;
     final wallet = view.cryptoWallet;
 
-    // TODO: handle tags properly
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tags = tagsResult.getOrThrow();
+    final tagNames = tags.map((t) => t.name).toList();
+
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
+
     final customFields = await loadCustomFields(ref, id);
 
     return CryptoWalletFormState(
@@ -54,7 +75,9 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
       description: item.description ?? '',
       watchOnly: wallet.watchOnly,
       categoryId: item.categoryId,
-      tagIds: [],
+      categoryName: categoryName,
+      tagIds: tagIds,
+      tagNames: tagNames,
       customFields: customFields,
     );
   }
@@ -134,10 +157,10 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
     }
 
     try {
-      final repository = await ref.read(cryptoWalletRepositoryProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (c.isEditMode && c.editingCryptoWalletId != null) {
-        await repository.update(
+        final res = await services.cryptoWallet.update(
           PatchCryptoWalletDto(
             item: VaultItemPatchDto(
               itemId: c.editingCryptoWalletId!,
@@ -174,6 +197,8 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
           ),
         );
 
+        res.getOrThrow();
+
         await saveCustomFields(ref, c.editingCryptoWalletId!, c.customFields);
 
         ref
@@ -183,7 +208,7 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
               entityId: c.editingCryptoWalletId,
             );
       } else {
-        final id = await repository.create(
+        final res = await services.cryptoWallet.create(
           CreateCryptoWalletDto(
             item: VaultItemCreateDto(
               name: c.name.trim(),
@@ -209,8 +234,11 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
                   : CryptoDerivationScheme.values.byName(c.derivationScheme),
               watchOnly: c.watchOnly,
             ),
+            tagIds: c.tagIds,
           ),
         );
+
+        final id = res.getOrThrow();
 
         await saveCustomFields(ref, id, c.customFields);
         ref
@@ -228,3 +256,4 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

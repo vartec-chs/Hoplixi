@@ -4,8 +4,9 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/wifi_form_state.dart';
 
@@ -22,17 +23,34 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
     if (wifiId == null) return const WifiFormState(isEditMode: false);
     final id = wifiId!;
 
-    final dao = await ref.read(wifiDaoProvider.future);
-    final row = await dao.getById(id);
-    if (row == null) return const WifiFormState(isEditMode: false);
+    final repositories = await ref.read(vaultRepositories.future);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final viewResult = await repositories.wifi.getViewById(id);
 
-    final item = row.$1;
-    final wifi = row.$2;
+    final view = viewResult.getOrThrow().getOrNull();
+    if (view == null) return const WifiFormState(isEditMode: false);
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(id);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final tags = await tagDao.getTagsByIds(tagIds);
+    final item = view.item;
+    final wifi = view.wifi;
+
+    // Load tags
+    final tagIdsResult = await relationsService.getTagIdsForItem(id);
+    final tagIds = tagIdsResult.getOrThrow();
+    final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+    final tags = tagsResult.getOrThrow();
+    final tagNames = tags.map((t) => t.name).toList();
+
+    // Load category name if exists
+    String? categoryName;
+    if (item.categoryId != null) {
+      final catResult = await repositories.category.getCategory(
+        item.categoryId!,
+      );
+      categoryName = catResult.getOrThrow().getOrNull()?.name;
+    }
+
     final customFields = await loadCustomFields(ref, id);
 
     return WifiFormState(
@@ -41,22 +59,16 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
       name: item.name,
       ssid: wifi.ssid,
       password: wifi.password ?? '',
-      security: wifi.security ?? '',
-      hidden: wifi.hidden,
-      eapMethod: wifi.eapMethod ?? '',
-      username: wifi.username ?? '',
-      identity: wifi.identity ?? '',
-      domain: wifi.domain ?? '',
-      lastConnectedBssid: wifi.lastConnectedBssid ?? '',
-      priority: wifi.priority?.toString() ?? '',
-      qrCodePayload: wifi.qrCodePayload ?? '',
+      securityType: wifi.securityType?.name ?? '',
+      securityTypeOther: wifi.securityTypeOther ?? '',
+      encryption: wifi.encryption?.name ?? '',
+      encryptionOther: wifi.encryptionOther ?? '',
+      hiddenSsid: wifi.hiddenSsid,
       description: item.description ?? '',
-      noteId: item.noteId,
       categoryId: item.categoryId,
-      iconSource: item.iconSource,
-      iconValue: item.iconValue,
+      categoryName: categoryName,
       tagIds: tagIds,
-      tagNames: tags.map((t) => t.name).toList(),
+      tagNames: tagNames,
       customFields: customFields,
     );
   }
@@ -104,26 +116,18 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
     );
   }
 
-  void setPassword(String value) => _update((s) => s.copyWith(password: value));
-  void setSecurity(String value) => _update((s) => s.copyWith(security: value));
-  void setHidden(bool value) => _update((s) => s.copyWith(hidden: value));
-  void setEapMethod(String value) =>
-      _update((s) => s.copyWith(eapMethod: value));
-  void setUsername(String value) => _update((s) => s.copyWith(username: value));
-  void setIdentity(String value) => _update((s) => s.copyWith(identity: value));
-  void setDomain(String value) => _update((s) => s.copyWith(domain: value));
-  void setLastConnectedBssid(String value) =>
-      _update((s) => s.copyWith(lastConnectedBssid: value));
-  void setPriority(String value) {
-    final v = value.trim();
-    final err = v.isEmpty || int.tryParse(v) != null
-        ? null
-        : t.dashboard_forms.validation_must_be_integer;
-    _update((s) => s.copyWith(priority: value, priorityError: err));
-  }
-
-  void setQrCodePayload(String value) =>
-      _update((s) => s.copyWith(qrCodePayload: value));
+  void setPassword(String value) =>
+      _update((s) => s.copyWith(password: value));
+  void setSecurityType(String value) =>
+      _update((s) => s.copyWith(securityType: value));
+  void setSecurityTypeOther(String value) =>
+      _update((s) => s.copyWith(securityTypeOther: value));
+  void setEncryption(String value) =>
+      _update((s) => s.copyWith(encryption: value));
+  void setEncryptionOther(String value) =>
+      _update((s) => s.copyWith(encryptionOther: value));
+  void setHiddenSsid(bool value) =>
+      _update((s) => s.copyWith(hiddenSsid: value));
   void setDescription(String value) =>
       _update((s) => s.copyWith(description: value));
   void setNote(String? noteId, String? noteName) =>
@@ -134,7 +138,7 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
 
   void setIconRef(IconRefDto? iconRef) => _update(
     (s) =>
-        s.copyWith(iconSource: iconRef?.sourceValue, iconValue: iconRef?.value),
+        s.copyWith(iconSource: iconRef?.iconSourceType?.name, iconValue: iconRef?.iconValue),
   );
 
   void setTags(List<String> tagIds, List<String> tagNames) =>
@@ -152,20 +156,11 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
     final ssidError = current.ssid.trim().isEmpty
         ? t.dashboard_forms.validation_required_ssid
         : null;
-    final priorityError =
-        current.priority.trim().isEmpty ||
-            int.tryParse(current.priority.trim()) != null
-        ? null
-        : t.dashboard_forms.validation_must_be_integer;
 
     _update(
-      (s) => s.copyWith(
-        nameError: nameError,
-        ssidError: ssidError,
-        priorityError: priorityError,
-      ),
+      (s) => s.copyWith(nameError: nameError, ssidError: ssidError),
     );
-    return nameError == null && ssidError == null && priorityError == null;
+    return nameError == null && ssidError == null;
   }
 
   Future<bool> save() async {
@@ -180,49 +175,47 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
     }
 
     try {
-      final dao = await ref.read(wifiDaoProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
       final priority = int.tryParse(current.priority.trim());
 
       if (current.isEditMode && current.editingWifiId != null) {
-        final updated = await dao.updateWifi(
-          current.editingWifiId!,
-          UpdateWifiDto(
-            name: current.name.trim(),
-            ssid: current.ssid.trim(),
-            password: clean(current.password),
-            security: clean(current.security),
-            hidden: current.hidden,
-            eapMethod: clean(current.eapMethod),
-            username: clean(current.username),
-            identity: clean(current.identity),
-            domain: clean(current.domain),
-            lastConnectedBssid: clean(current.lastConnectedBssid),
-            priority: priority,
-            qrCodePayload: clean(current.qrCodePayload),
-            description: clean(current.description),
-            noteId: current.noteId,
-            categoryId: current.categoryId,
-            tagsIds: current.tagIds,
+        final res = await services.wifi.update(
+          PatchWifiDto(
+            item: VaultItemPatchDto(
+              itemId: current.editingWifiId!,
+              name: FieldUpdate.set(current.name.trim()),
+              description: FieldUpdate.set(clean(current.description)),
+              categoryId: FieldUpdate.set(current.categoryId),
+            ),
+            wifi: PatchWifiDataDto(
+              ssid: FieldUpdate.set(current.ssid.trim()),
+              password: FieldUpdate.set(clean(current.password)),
+              securityType: FieldUpdate.set(
+                current.securityType.isEmpty
+                    ? null
+                    : WifiSecurityType.values.byName(current.securityType),
+              ),
+              securityTypeOther: FieldUpdate.set(
+                clean(current.securityTypeOther),
+              ),
+              encryption: FieldUpdate.set(
+                current.encryption.isEmpty
+                    ? null
+                    : WifiEncryptionType.values.byName(current.encryption),
+              ),
+              encryptionOther: FieldUpdate.set(clean(current.encryptionOther)),
+              hiddenSsid: FieldUpdate.set(current.hiddenSsid),
+            ),
+            tags: FieldUpdate.set(current.tagIds),
           ),
         );
 
-        if (!updated) {
-          _update((s) => s.copyWith(isSaving: false));
-          return false;
-        }
+        res.getOrThrow();
 
         await saveCustomFields(
           ref,
           current.editingWifiId!,
           current.customFields,
-        );
-        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-        await vaultItemDao.setIconRef(
-          current.editingWifiId!,
-          IconRefDto.fromFields(
-            iconSource: current.iconSource,
-            iconValue: current.iconValue,
-          ),
         );
 
         ref
@@ -232,36 +225,34 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
               entityId: current.editingWifiId,
             );
       } else {
-        final id = await dao.createWifi(
+        final res = await services.wifi.create(
           CreateWifiDto(
-            name: current.name.trim(),
-            ssid: current.ssid.trim(),
-            password: clean(current.password),
-            security: clean(current.security),
-            hidden: current.hidden,
-            eapMethod: clean(current.eapMethod),
-            username: clean(current.username),
-            identity: clean(current.identity),
-            domain: clean(current.domain),
-            lastConnectedBssid: clean(current.lastConnectedBssid),
-            priority: priority,
-            qrCodePayload: clean(current.qrCodePayload),
-            description: clean(current.description),
-            noteId: current.noteId,
-            categoryId: current.categoryId,
-            tagsIds: current.tagIds,
+            item: VaultItemCreateDto(
+              name: current.name.trim(),
+              description: clean(current.description),
+              categoryId: current.categoryId,
+            ),
+            wifi: WifiDataDto(
+              ssid: current.ssid.trim(),
+              password: clean(current.password),
+              securityType: current.securityType.isEmpty
+                  ? null
+                  : WifiSecurityType.values.byName(current.securityType),
+              securityTypeOther: clean(current.securityTypeOther),
+              encryption: current.encryption.isEmpty
+                  ? null
+                  : WifiEncryptionType.values.byName(current.encryption),
+              encryptionOther: clean(current.encryptionOther),
+              hiddenSsid: current.hiddenSsid,
+            ),
+            tagIds: current.tagIds,
           ),
         );
 
+        final id = res.getOrThrow();
+
         await saveCustomFields(ref, id, current.customFields);
-        final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-        await vaultItemDao.setIconRef(
-          id,
-          IconRefDto.fromFields(
-            iconSource: current.iconSource,
-            iconValue: current.iconValue,
-          ),
-        );
+
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
             .triggerEntityAdd(EntityType.wifi, entityId: id);
@@ -277,3 +268,4 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
+

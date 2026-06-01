@@ -11,15 +11,11 @@ sealed class WifiFormState with _$WifiFormState {
     @Default('') String name,
     @Default('') String ssid,
     @Default('') String password,
-    @Default('') String security,
-    @Default(false) bool hidden,
-    @Default('') String eapMethod,
-    @Default('') String username,
-    @Default('') String identity,
-    @Default('') String domain,
-    @Default('') String lastConnectedBssid,
-    @Default('') String priority,
-    @Default('') String qrCodePayload,
+    @Default('') String securityType,
+    @Default('') String securityTypeOther,
+    @Default('') String encryption,
+    @Default('') String encryptionOther,
+    @Default(false) bool hiddenSsid,
     @Default('') String description,
     String? noteId,
     String? noteName,
@@ -32,13 +28,11 @@ sealed class WifiFormState with _$WifiFormState {
     @Default([]) List<CustomFieldEntry> customFields,
     String? nameError,
     String? ssidError,
-    String? priorityError,
     @Default(false) bool isSaving,
     @Default(false) bool isSaved,
   }) = _WifiFormState;
 
   const WifiFormState._();
 
-  bool get hasErrors =>
-      nameError != null || ssidError != null || priorityError != null;
+  bool get hasErrors => nameError != null || ssidError != null;
 }

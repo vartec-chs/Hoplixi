@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
 
 part 'otp_form_state.freezed.dart';
 
@@ -19,10 +19,11 @@ sealed class OtpFormState with _$OtpFormState {
     @Default('') String issuer,
     @Default('') String accountName,
     @Default('') String secret,
+    @Default('') String description,
     String? noteId,
 
     // Настройки OTP
-    @Default(AlgorithmOtp.SHA1) AlgorithmOtp algorithm,
+    @Default(OtpHashAlgorithm.SHA1) OtpHashAlgorithm algorithm,
     @Default(6) int digits,
     @Default(30) int period,
     int? counter,

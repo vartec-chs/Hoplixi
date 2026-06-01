@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/recovery_code_item_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/recovery_codes_dto.dart';
 
 part 'recovery_codes_form_state.freezed.dart';
 
@@ -19,7 +19,7 @@ sealed class RecoveryCodesFormState with _$RecoveryCodesFormState {
     @Default(false) bool oneTime,
 
     /// Существующие коды (только в режиме редактирования).
-    @Default([]) List<RecoveryCodeItemDto> existingCodes,
+    @Default([]) List<RecoveryCodeValueDto> existingCodes,
     String? noteId,
     String? noteName,
     String? categoryId,
@@ -35,4 +35,7 @@ sealed class RecoveryCodesFormState with _$RecoveryCodesFormState {
   }) = _RecoveryCodesFormState;
 
   const RecoveryCodesFormState._();
+
+  bool get hasErrors =>
+      nameError != null || codesInputError != null || generatedAtError != null;
 }

@@ -55,7 +55,7 @@ class DocumentStorageService {
   /// Возвращает ID созданного документа
   Future<String> createDocumentWithPages({
     required String title,
-    String? documentType,
+    DocumentType? documentType,
     String? description,
     String? categoryId,
     String? noteId,
@@ -153,22 +153,11 @@ class DocumentStorageService {
         );
       }
 
-      // 4. Создаем и активируем первую версию документа
-      DocumentType? docTypeEnum;
-      if (documentType != null) {
-        docTypeEnum = DocumentType.values.firstWhere(
-          (e) => e.name == documentType,
-          orElse: () => DocumentType.other,
-        );
-      }
-
       final createVersionDto = CreateDocumentVersionDto(
         documentId: documentId,
         pages: versionPages,
-        documentType: docTypeEnum,
-        documentTypeOther: docTypeEnum == DocumentType.other
-            ? documentType
-            : null,
+        documentType: documentType,
+        documentTypeOther: documentType == DocumentType.other ? title : null,
       );
 
       final versionResult = await _documentVersionService.createVersion(

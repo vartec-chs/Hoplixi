@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## 2026-06-02
+
+### password_manager
+
+- Проведен рефакторинг всех 7 экранов просмотра сущностей (`*_view_screen.dart` для Password, BankCard, Document, File, LoyaltyCard, Note, Otp):
+  - Полностью устранены `dynamic` типы, код переведен на строгую типизацию с использованием `VaultRepositories` и новых DTO из `vault_db`.
+  - Исправлены критические опечатки копипасты в методах `_share` (замена `_document == null` на корректную проверку сущности).
+  - Исправлена опечатка `_document == null` в генерации TOTP-кодов в `otp_view_screen.dart`, полностью разблокировавшая работу TOTP-контроллера.
+  - Обновлены вызовы в `file_view_screen.dart` и `loyalty_card_view_screen.dart`, устранены ошибки компиляции с несуществующими переменными (`record`, `dao`, `repos`), старые ДАО заменены на репозитории.
+  - Обновлены и приведены в соответствие с новыми схемами конструкторы `DocumentCardDto` и `FileCardDto`.
+  - Интегрирован `SmartConverter` для декодирования TOTP секретов в Base32, устаревший класс `SecretEncoding` удален.
+- Завершён полный рефакторинг всех форм в `lib/features/password_manager/forms/` (12 модулей: api_key, bank_card, certificate, contact, crypto_wallet, document, file, identity, license_key, loyalty_card, note, otp, password, recovery_codes, ssh_key, wifi):
+  - Устранены все `dynamic` типы, весь код форм переведён на строгую типизацию.
+  - Заменены устаревшие DAO-провайдеры (`noteDaoProvider`, `otpDaoProvider` и др.) на репозитории `VaultRepositories`.
+  - В `loyalty_card_form` удалены несуществующие поля (`holderName`, `tier`, `pointsBalance`, `expiryDate`, `phoneNumber`), добавлены новые: `issuer`, `phone`, `email`, `validFrom`, `validTo`; метод `_zxingFormat` переведён на enum `LoyaltyBarcodeType`.
+  - В `wifi_form` устаревшие поля `security`, `hidden`, `eapMethod`, `username`, `identity`, `domain`, `lastConnectedBssid`, `priority`, `qrCodePayload` заменены на актуальные из `WifiDataDto`.
+  - В `ssh_key_form` убраны несуществующие геттеры `fingerprint`, `usage`, `addedToAgent` и метод `getPrivateKeyFieldById`.
+  - В `certificate_form` удалены несуществующие поля `fingerprint`, `ocspUrl`, `crlUrl`, `autoRenew`.
+  - Во всех формах добавлены проверки `mounted` после асинхронных вызовов.
+  - Статический анализ `flutter analyze` для всей папки форм возвращает `No errors`.
+
+
 ## 2026-05-30
 
 ### docs
@@ -23,6 +45,16 @@
 
 ### password_manager
 
+- Переписан модуль `dashboard_layout/dashboard_drawer` на текущий слой
+  `vault_db` repositories: категории и теги drawer теперь грузятся без legacy
+  `main_db` DAO/DTO/filter-зависимостей.
+- Переписан модуль `duplicate_passwords` на текущий слой `vault_db`
+  repositories: анализ дубликатов теперь выполняется через
+  `PasswordRepository` без legacy `main_db` DAO/DTO-зависимостей.
+- Переписан модуль `decrypt_modal` на текущий слой `vault_db`
+  repositories/services: убраны legacy `main_db` DTO/DAO-зависимости и старый
+  путь `vault_db/providers/other/service_providers.dart`, сохранена временная
+  совместимость с legacy card DTO из текущих view-экранов.
 - Переписан модуль `history` на новый history service слой `vault_db` без
   зависимости от нового `core/api`: контроллеры и legacy list provider теперь
   используют `VaultHistoryServiceAssembly`.

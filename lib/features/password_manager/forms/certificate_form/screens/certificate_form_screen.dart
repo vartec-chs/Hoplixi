@@ -8,7 +8,6 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -32,9 +31,6 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
   late final TextEditingController _serialController;
   late final TextEditingController _issuerController;
   late final TextEditingController _subjectController;
-  late final TextEditingController _fingerprintController;
-  late final TextEditingController _ocspController;
-  late final TextEditingController _crlController;
   late final TextEditingController _descriptionController;
 
   @override
@@ -46,9 +42,6 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
     _serialController = TextEditingController();
     _issuerController = TextEditingController();
     _subjectController = TextEditingController();
-    _fingerprintController = TextEditingController();
-    _ocspController = TextEditingController();
-    _crlController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
@@ -60,9 +53,6 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
     _serialController.dispose();
     _issuerController.dispose();
     _subjectController.dispose();
-    _fingerprintController.dispose();
-    _ocspController.dispose();
-    _crlController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -133,15 +123,6 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
         }
         if (_subjectController.text != state.subject) {
           _subjectController.text = state.subject;
-        }
-        if (_fingerprintController.text != state.fingerprint) {
-          _fingerprintController.text = state.fingerprint;
-        }
-        if (_ocspController.text != state.ocspUrl) {
-          _ocspController.text = state.ocspUrl;
-        }
-        if (_crlController.text != state.crlUrl) {
-          _crlController.text = state.crlUrl;
         }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
@@ -244,50 +225,17 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                   onChanged: notifier.setSubject,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _fingerprintController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.fingerprint_label,
-                    prefixIcon: const Icon(LucideIcons.fingerprintPattern),
-                  ),
-                  onChanged: notifier.setFingerprint,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _ocspController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.ocsp_url_label,
-                    prefixIcon: const Icon(LucideIcons.globe),
-                  ),
-                  onChanged: notifier.setOcspUrl,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _crlController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.crl_url_label,
-                    prefixIcon: const Icon(LucideIcons.globe),
-                  ),
-                  onChanged: notifier.setCrlUrl,
-                ),
-                const SizedBox(height: 12),
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  filterByType: const [
-                    CategoryType.certificate,
-                    CategoryType.mixed,
-                  ],
+                  
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
-                  filterByType: const [TagType.certificate, TagType.mixed],
+                  
                   onTagsSelected: notifier.setTags,
                 ),
                 const SizedBox(height: 12),
@@ -308,13 +256,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                   ),
                   onChanged: notifier.setDescription,
                 ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  value: state.autoRenew,
-                  onChanged: notifier.setAutoRenew,
-                  title: Text(context.t.dashboard_forms.auto_renew_label),
-                ),
-                const SizedBox(height: 12),
+                 const SizedBox(height: 12),
                 CustomFieldsEditor(
                   fields: state.customFields,
                   onChanged: notifier.setCustomFields,

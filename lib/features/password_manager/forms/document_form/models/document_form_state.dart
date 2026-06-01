@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/document/document_types.dart';
 
 part 'document_form_state.freezed.dart';
 
@@ -72,7 +73,7 @@ sealed class DocumentFormState with _$DocumentFormState {
 
     // Поля формы
     @Default('') String title,
-    String? documentType,
+    DocumentType? documentType,
     @Default('') String description,
 
     // Страницы документа

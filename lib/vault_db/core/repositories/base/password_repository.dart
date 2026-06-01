@@ -210,6 +210,56 @@ class PasswordRepository {
     );
   }
 
+  AsyncDBResult<List<List<PasswordCardDto>>> getDuplicatePasswordGroups() {
+    return tryCatchAsync(
+      () async {
+        final query =
+            db.select(db.vaultItems).join([
+                innerJoin(
+                  db.passwordItems,
+                  db.passwordItems.itemId.equalsExp(db.vaultItems.id),
+                ),
+              ])
+              ..where(db.vaultItems.type.equalsValue(VaultItemType.password))
+              ..where(db.vaultItems.isDeleted.equals(false));
+
+        final rows = await query.get();
+        final groupsByPassword = <String, List<PasswordCardDto>>{};
+
+        for (final row in rows) {
+          final item = row.readTable(db.vaultItems);
+          final password = row.readTable(db.passwordItems);
+          final secret = password.password;
+          if (secret.isEmpty) continue;
+
+          groupsByPassword.putIfAbsent(secret, () => []).add(
+            PasswordCardDto(
+              item: item.toVaultItemCardDto(),
+              password: password.toPasswordCardDataDto(),
+            ),
+          );
+        }
+
+        final groups =
+            groupsByPassword.values.where((items) => items.length > 1).toList()
+              ..sort((a, b) {
+                final byCount = b.length.compareTo(a.length);
+                if (byCount != 0) return byCount;
+                return a.first.item.name.compareTo(b.first.item.name);
+              });
+
+        return groups;
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при поиске одинаковых паролей',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
   AsyncDBResult<Unit> deletePermanently(String itemId) {
     return tryCatchAsync(
       () async {

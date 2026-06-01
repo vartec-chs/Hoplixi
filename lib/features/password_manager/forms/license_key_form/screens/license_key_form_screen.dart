@@ -5,10 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
-import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/license_key/license_key_items.dart' show LicenseType;
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -28,15 +27,20 @@ class LicenseKeyFormScreen extends ConsumerStatefulWidget {
 
 class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
   late final TextEditingController _nameController;
-  late final TextEditingController _productController;
+  late final TextEditingController _productNameController;
+  late final TextEditingController _vendorController;
   late final TextEditingController _licenseKeyController;
   late final TextEditingController _licenseTypeController;
+  late final TextEditingController _licenseTypeOtherController;
+  late final TextEditingController _accountEmailController;
+  late final TextEditingController _accountUsernameController;
+  late final TextEditingController _purchaseEmailController;
+  late final TextEditingController _orderNumberController;
+  late final TextEditingController _purchasePriceController;
+  late final TextEditingController _currencyController;
   late final TextEditingController _seatsController;
-  late final TextEditingController _maxActivationsController;
-  late final TextEditingController _purchaseFromController;
-  late final TextEditingController _orderIdController;
-  late final TextEditingController _licenseFileIdController;
-  late final TextEditingController _supportContactController;
+  late final TextEditingController _activationLimitController;
+  late final TextEditingController _activationsUsedController;
   late final TextEditingController _descriptionController;
 
   static final _dateTimeFormat = DateFormat('dd.MM.yyyy HH:mm');
@@ -45,30 +49,40 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _productController = TextEditingController();
+    _productNameController = TextEditingController();
+    _vendorController = TextEditingController();
     _licenseKeyController = TextEditingController();
     _licenseTypeController = TextEditingController();
+    _licenseTypeOtherController = TextEditingController();
+    _accountEmailController = TextEditingController();
+    _accountUsernameController = TextEditingController();
+    _purchaseEmailController = TextEditingController();
+    _orderNumberController = TextEditingController();
+    _purchasePriceController = TextEditingController();
+    _currencyController = TextEditingController();
     _seatsController = TextEditingController();
-    _maxActivationsController = TextEditingController();
-    _purchaseFromController = TextEditingController();
-    _orderIdController = TextEditingController();
-    _licenseFileIdController = TextEditingController();
-    _supportContactController = TextEditingController();
+    _activationLimitController = TextEditingController();
+    _activationsUsedController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _productController.dispose();
+    _productNameController.dispose();
+    _vendorController.dispose();
     _licenseKeyController.dispose();
     _licenseTypeController.dispose();
+    _licenseTypeOtherController.dispose();
+    _accountEmailController.dispose();
+    _accountUsernameController.dispose();
+    _purchaseEmailController.dispose();
+    _orderNumberController.dispose();
+    _purchasePriceController.dispose();
+    _currencyController.dispose();
     _seatsController.dispose();
-    _maxActivationsController.dispose();
-    _purchaseFromController.dispose();
-    _orderIdController.dispose();
-    _licenseFileIdController.dispose();
-    _supportContactController.dispose();
+    _activationLimitController.dispose();
+    _activationsUsedController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -155,32 +169,47 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
         if (_nameController.text != state.name) {
           _nameController.text = state.name;
         }
-        if (_productController.text != state.product) {
-          _productController.text = state.product;
+        if (_productNameController.text != state.productName) {
+          _productNameController.text = state.productName;
+        }
+        if (_vendorController.text != state.vendor) {
+          _vendorController.text = state.vendor;
         }
         if (_licenseKeyController.text != state.licenseKey) {
           _licenseKeyController.text = state.licenseKey;
         }
-        if (_licenseTypeController.text != state.licenseType) {
-          _licenseTypeController.text = state.licenseType;
+        if (_licenseTypeController.text != (state.licenseType ?? '')) {
+          _licenseTypeController.text = state.licenseType ?? '';
+        }
+        if (_licenseTypeOtherController.text != state.licenseTypeOther) {
+          _licenseTypeOtherController.text = state.licenseTypeOther;
+        }
+        if (_accountEmailController.text != state.accountEmail) {
+          _accountEmailController.text = state.accountEmail;
+        }
+        if (_accountUsernameController.text != state.accountUsername) {
+          _accountUsernameController.text = state.accountUsername;
+        }
+        if (_purchaseEmailController.text != state.purchaseEmail) {
+          _purchaseEmailController.text = state.purchaseEmail;
+        }
+        if (_orderNumberController.text != state.orderNumber) {
+          _orderNumberController.text = state.orderNumber;
+        }
+        if (_purchasePriceController.text != state.purchasePrice) {
+          _purchasePriceController.text = state.purchasePrice;
+        }
+        if (_currencyController.text != state.currency) {
+          _currencyController.text = state.currency;
         }
         if (_seatsController.text != state.seats) {
           _seatsController.text = state.seats;
         }
-        if (_maxActivationsController.text != state.maxActivations) {
-          _maxActivationsController.text = state.maxActivations;
+        if (_activationLimitController.text != state.activationLimit) {
+          _activationLimitController.text = state.activationLimit;
         }
-        if (_purchaseFromController.text != state.purchaseFrom) {
-          _purchaseFromController.text = state.purchaseFrom;
-        }
-        if (_orderIdController.text != state.orderId) {
-          _orderIdController.text = state.orderId;
-        }
-        if (_licenseFileIdController.text != state.licenseFileId) {
-          _licenseFileIdController.text = state.licenseFileId;
-        }
-        if (_supportContactController.text != state.supportContact) {
-          _supportContactController.text = state.supportContact;
+        if (_activationsUsedController.text != state.activationsUsed) {
+          _activationsUsedController.text = state.activationsUsed;
         }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
@@ -190,9 +219,9 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
           licenseKeyFormProvider(widget.licenseKeyId).notifier,
         );
 
-        final activatedOnDisplay = state.activatedOn.isNotEmpty
+        final validFromDisplay = state.validFrom.isNotEmpty
             ? _dateTimeFormat.format(
-                DateTime.tryParse(state.activatedOn) ?? DateTime.now(),
+                DateTime.tryParse(state.validFrom) ?? DateTime.now(),
               )
             : '';
         final purchaseDateDisplay = state.purchaseDate.isNotEmpty
@@ -200,9 +229,14 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 DateTime.tryParse(state.purchaseDate) ?? DateTime.now(),
               )
             : '';
-        final expiresAtDisplay = state.expiresAt.isNotEmpty
+        final validToDisplay = state.validTo.isNotEmpty
             ? _dateTimeFormat.format(
-                DateTime.tryParse(state.expiresAt) ?? DateTime.now(),
+                DateTime.tryParse(state.validTo) ?? DateTime.now(),
+              )
+            : '';
+        final renewalDateDisplay = state.renewalDate.isNotEmpty
+            ? _dateTimeFormat.format(
+                DateTime.tryParse(state.renewalDate) ?? DateTime.now(),
               )
             : '';
 
@@ -245,14 +279,24 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: _productController,
+                  controller: _productNameController,
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.product_label,
-                    errorText: state.productError,
+                    errorText: state.productNameError,
                     prefixIcon: const Icon(LucideIcons.package),
                   ),
-                  onChanged: notifier.setProduct,
+                  onChanged: notifier.setProductName,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _vendorController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Продавец',
+                    prefixIcon: const Icon(LucideIcons.shoppingCart),
+                  ),
+                  onChanged: notifier.setVendor,
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -266,61 +310,162 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   onChanged: notifier.setLicenseKey,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _licenseTypeController,
+                DropdownButtonFormField<String>(
+                  initialValue: state.licenseType,
                   decoration: primaryInputDecoration(
                     context,
                     labelText: context.t.dashboard_forms.license_type_label,
                     prefixIcon: const Icon(LucideIcons.type),
                   ),
+                  items: LicenseType.values.map((type) {
+                    return DropdownMenuItem<String>(
+                      value: type.name,
+                      child: Text(type.name),
+                    );
+                  }).toList(),
                   onChanged: notifier.setLicenseType,
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: _seatsController,
-                  keyboardType: TextInputType.number,
+                  controller: _licenseTypeOtherController,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.seats_count_label,
-                    errorText: state.seatsError,
-                    prefixIcon: const Icon(LucideIcons.users),
+                    labelText: 'Другой тип лицензии',
+                    prefixIcon: const Icon(LucideIcons.type),
                   ),
-                  onChanged: notifier.setSeats,
+                  onChanged: notifier.setLicenseTypeOther,
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: _maxActivationsController,
+                  controller: _accountEmailController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Email аккаунта',
+                    prefixIcon: const Icon(LucideIcons.mail),
+                  ),
+                  onChanged: notifier.setAccountEmail,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _accountUsernameController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Логин аккаунта',
+                    prefixIcon: const Icon(LucideIcons.user),
+                  ),
+                  onChanged: notifier.setAccountUsername,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _purchaseEmailController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Email покупки',
+                    prefixIcon: const Icon(LucideIcons.mail),
+                  ),
+                  onChanged: notifier.setPurchaseEmail,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _orderNumberController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Номер заказа',
+                    prefixIcon: const Icon(LucideIcons.hash),
+                  ),
+                  onChanged: notifier.setOrderNumber,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _purchasePriceController,
                   keyboardType: TextInputType.number,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.max_activations_label,
-                    errorText: state.maxActivationsError,
-                    prefixIcon: const Icon(LucideIcons.hash),
+                    labelText: 'Цена покупки',
+                    prefixIcon: const Icon(LucideIcons.dollarSign),
                   ),
-                  onChanged: notifier.setMaxActivations,
+                  onChanged: notifier.setPurchasePrice,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _currencyController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Валюта',
+                    prefixIcon: const Icon(LucideIcons.coins),
+                  ),
+                  onChanged: notifier.setCurrency,
                 ),
                 const SizedBox(height: 12),
 
-                // Activated On
+                // Valid From
                 TextField(
-                  controller: TextEditingController(text: activatedOnDisplay),
+                  controller: TextEditingController(text: validFromDisplay),
                   readOnly: true,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.activated_at_iso_label,
-                    errorText: state.activatedOnError,
+                    labelText: 'Действителен с',
+                    errorText: state.validFromError,
                     prefixIcon: const Icon(LucideIcons.calendar),
-                    suffixIcon: state.activatedOn.isNotEmpty
+                    suffixIcon: state.validFrom.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () => notifier.setActivatedOn(''),
+                            onPressed: () => notifier.setValidFrom(''),
                           )
                         : null,
                   ),
                   onTap: () => _pickDateTime(
                     context: context,
-                    current: state.activatedOn,
-                    onChanged: notifier.setActivatedOn,
+                    current: state.validFrom,
+                    onChanged: notifier.setValidFrom,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Valid To
+                TextField(
+                  controller: TextEditingController(text: validToDisplay),
+                  readOnly: true,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Действителен до',
+                    errorText: state.validToError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
+                    suffixIcon: state.validTo.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () => notifier.setValidTo(''),
+                          )
+                        : null,
+                  ),
+                  onTap: () => _pickDateTime(
+                    context: context,
+                    current: state.validTo,
+                    onChanged: notifier.setValidTo,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Renewal Date
+                TextField(
+                  controller: TextEditingController(text: renewalDateDisplay),
+                  readOnly: true,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'Дата продления',
+                    errorText: state.renewalDateError,
+                    prefixIcon: const Icon(LucideIcons.calendar),
+                    suffixIcon: state.renewalDate.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () => notifier.setRenewalDate(''),
+                          )
+                        : null,
+                  ),
+                  onTap: () => _pickDateTime(
+                    context: context,
+                    current: state.renewalDate,
+                    onChanged: notifier.setRenewalDate,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -331,8 +476,7 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                   readOnly: true,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText:
-                        context.t.dashboard_forms.purchase_date_iso_label,
+                    labelText: context.t.dashboard_forms.purchase_date_iso_label,
                     errorText: state.purchaseDateError,
                     prefixIcon: const Icon(LucideIcons.calendar),
                     suffixIcon: state.purchaseDate.isNotEmpty
@@ -351,91 +495,51 @@ class _LicenseKeyFormScreenState extends ConsumerState<LicenseKeyFormScreen> {
                 const SizedBox(height: 12),
 
                 TextField(
-                  controller: _purchaseFromController,
+                  controller: _seatsController,
+                  keyboardType: TextInputType.number,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.purchased_from_label,
-                    prefixIcon: const Icon(LucideIcons.shoppingCart),
+                    labelText: context.t.dashboard_forms.seats_count_label,
+                    errorText: state.seatsError,
+                    prefixIcon: const Icon(LucideIcons.users),
                   ),
-                  onChanged: notifier.setPurchaseFrom,
+                  onChanged: notifier.setSeats,
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: _orderIdController,
+                  controller: _activationLimitController,
+                  keyboardType: TextInputType.number,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.order_id_label,
+                    labelText: 'Лимит активаций',
+                    errorText: state.activationLimitError,
                     prefixIcon: const Icon(LucideIcons.hash),
                   ),
-                  onChanged: notifier.setOrderId,
+                  onChanged: notifier.setActivationLimit,
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: _licenseFileIdController,
+                  controller: _activationsUsedController,
+                  keyboardType: TextInputType.number,
                   decoration: primaryInputDecoration(
                     context,
-                    labelText: context.t.dashboard_forms.license_file_id_label,
-                    prefixIcon: const Icon(LucideIcons.file),
+                    labelText: 'Использовано активаций',
+                    errorText: state.activationsUsedError,
+                    prefixIcon: const Icon(LucideIcons.hash),
                   ),
-                  onChanged: notifier.setLicenseFileId,
-                ),
-                const SizedBox(height: 12),
-
-                // Expires At
-                TextField(
-                  controller: TextEditingController(text: expiresAtDisplay),
-                  readOnly: true,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.expires_at_iso_label,
-                    errorText: state.expiresAtError,
-                    prefixIcon: const Icon(LucideIcons.calendar),
-                    suffixIcon: state.expiresAt.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () => notifier.setExpiresAt(''),
-                          )
-                        : null,
-                  ),
-                  onTap: () => _pickDateTime(
-                    context: context,
-                    current: state.expiresAt,
-                    onChanged: notifier.setExpiresAt,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                TextField(
-                  controller: _supportContactController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.support_contact_label,
-                    prefixIcon: const Icon(LucideIcons.headphones),
-                  ),
-                  onChanged: notifier.setSupportContact,
+                  onChanged: notifier.setActivationsUsed,
                 ),
                 const SizedBox(height: 12),
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  filterByType: const [
-                    CategoryType.licenseKey,
-                    CategoryType.mixed,
-                  ],
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
-                  filterByType: const [TagType.licenseKey, TagType.mixed],
                   onTagsSelected: notifier.setTags,
-                ),
-                const SizedBox(height: 12),
-                NotePickerField(
-                  selectedNoteId: state.noteId,
-                  selectedNoteName: state.noteName,
-                  onNoteSelected: notifier.setNote,
                 ),
                 const SizedBox(height: 12),
                 TextField(

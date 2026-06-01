@@ -134,6 +134,22 @@ class TagRepository {
     );
   }
 
+  AsyncDBResult<List<TagCardDto>> getTagsByIds(List<String> ids) {
+    return tryCatchAsync(
+      () async {
+        final rows = await db.tagsDao.getTagsByIds(ids);
+        return rows.map((r) => r.toTagCardDto()).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении тегов по ID',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
   AsyncDBResult<List<TagCardDto>> searchTags(String query) {
     return tryCatchAsync(
       () async {

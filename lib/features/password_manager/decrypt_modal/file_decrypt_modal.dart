@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/file_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/file_dto.dart';
 import 'package:hoplixi/vault_db/providers/decrypted_files_guard_provider.dart';
-import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/shared/ui/slider_button.dart';
@@ -15,7 +15,9 @@ import 'package:open_file/open_file.dart';
 import 'package:watcher/watcher.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
-void showFileDecryptModal(BuildContext context, FileCardDto file) {
+void showFileDecryptModal(BuildContext context, Object file) {
+  final target = _FileDecryptTarget.from(file);
+
   WoltModalSheet.show(
     context: context,
     useRootNavigator: true,
@@ -29,15 +31,44 @@ void showFileDecryptModal(BuildContext context, FileCardDto file) {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           isTopBarLayerAlwaysVisible: true,
-          child: _FileDecryptContent(file: file),
+          child: _FileDecryptContent(file: target),
         ),
       ];
     },
   );
 }
 
+class _FileDecryptTarget {
+  const _FileDecryptTarget({
+    required this.id,
+    required this.name,
+    this.fileName,
+  });
+
+  final String id;
+  final String name;
+  final String? fileName;
+
+  factory _FileDecryptTarget.from(Object value) {
+    if (value is FileCardDto) {
+      return _FileDecryptTarget(
+        id: value.item.itemId,
+        name: value.item.name,
+        fileName: value.file.fileName,
+      );
+    }
+
+    final legacy = value as dynamic;
+    return _FileDecryptTarget(
+      id: legacy.id as String,
+      name: legacy.name as String,
+      fileName: legacy.fileName as String?,
+    );
+  }
+}
+
 class _FileDecryptContent extends ConsumerStatefulWidget {
-  final FileCardDto file;
+  final _FileDecryptTarget file;
 
   const _FileDecryptContent({required this.file});
 

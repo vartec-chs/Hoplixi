@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/password_dto.dart';
 
 import '../providers/duplicate_passwords_analysis_provider.dart';
 
@@ -228,7 +228,7 @@ class _DuplicatePasswordGroupCard extends StatelessWidget {
             for (final password in group.items) ...[
               _DuplicatePasswordItemTile(
                 password: password,
-                onTap: () => onOpenPasswordEdit(password.id),
+                onTap: () => onOpenPasswordEdit(password.item.itemId),
               ),
               if (password != group.items.last) const SizedBox(height: 8),
             ],
@@ -251,8 +251,8 @@ class _DuplicatePasswordItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final login = password.email ?? password.login;
-    final url = password.url;
+    final login = password.password.email ?? password.password.login;
+    final url = password.password.url;
 
     return Material(
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
@@ -261,7 +261,7 @@ class _DuplicatePasswordItemTile extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         leading: const CircleAvatar(child: Icon(Icons.lock_outline)),
         title: Text(
-          password.name,
+          password.item.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

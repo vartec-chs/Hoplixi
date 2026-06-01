@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/document_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/document_dto.dart';
 import 'package:hoplixi/vault_db/providers/decrypted_files_guard_provider.dart';
-import 'package:hoplixi/vault_db/providers/other/service_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/shared/ui/slider_button.dart';
@@ -19,7 +19,8 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 const String _logTag = 'DocumentDecryptModal';
 
 /// Показать модальное окно расшифровки документа
-void showDocumentDecryptModal(BuildContext context, DocumentCardDto document) {
+void showDocumentDecryptModal(BuildContext context, Object document) {
+  final target = _DocumentDecryptTarget.from(document);
   final pageIndexNotifier = ValueNotifier<int>(0);
   final selectedPagesNotifier = ValueNotifier<Set<String>>({});
 
@@ -32,20 +33,49 @@ void showDocumentDecryptModal(BuildContext context, DocumentCardDto document) {
         // Страница 1: Список страниц документа
         _DocumentDecryptModalPages.buildPagesListPage(
           modalContext,
-          document,
+          target,
           pageIndexNotifier,
           selectedPagesNotifier,
         ),
         // Страница 2: Расшифровка выбранных страниц
         _DocumentDecryptModalPages.buildDecryptPage(
           modalContext,
-          document,
+          target,
           pageIndexNotifier,
           selectedPagesNotifier,
         ),
       ];
     },
   );
+}
+
+class _DocumentDecryptTarget {
+  const _DocumentDecryptTarget({
+    required this.id,
+    required this.title,
+    required this.pageCount,
+  });
+
+  final String id;
+  final String title;
+  final int pageCount;
+
+  factory _DocumentDecryptTarget.from(Object value) {
+    if (value is DocumentCardDto) {
+      return _DocumentDecryptTarget(
+        id: value.item.itemId,
+        title: value.item.name,
+        pageCount: value.document.pageCount ?? 0,
+      );
+    }
+
+    final legacy = value as dynamic;
+    return _DocumentDecryptTarget(
+      id: legacy.id as String,
+      title: (legacy.title as String?) ?? 'Документ',
+      pageCount: (legacy.pageCount as int?) ?? 0,
+    );
+  }
 }
 
 /// Вспомогательный класс для построения страниц модального окна
@@ -55,14 +85,14 @@ class _DocumentDecryptModalPages {
   /// Построение первой страницы - список страниц документа
   static SliverWoltModalSheetPage buildPagesListPage(
     BuildContext context,
-    DocumentCardDto document,
+    _DocumentDecryptTarget document,
     ValueNotifier<int> pageIndexNotifier,
     ValueNotifier<Set<String>> selectedPagesNotifier,
   ) {
     return SliverWoltModalSheetPage(
       hasSabGradient: false,
       topBarTitle: Text(
-        document.title ?? 'Документ',
+        document.title,
         style: Theme.of(context).textTheme.titleMedium,
       ),
       isTopBarLayerAlwaysVisible: true,
@@ -88,7 +118,7 @@ class _DocumentDecryptModalPages {
   /// Построение второй страницы - расшифровка
   static SliverWoltModalSheetPage buildDecryptPage(
     BuildContext context,
-    DocumentCardDto document,
+    _DocumentDecryptTarget document,
     ValueNotifier<int> pageIndexNotifier,
     ValueNotifier<Set<String>> selectedPagesNotifier,
   ) {
@@ -133,7 +163,7 @@ class _DocumentDecryptModalPages {
 /// Информация о странице документа для отображения
 class DocumentPageDisplayInfo {
   final String pageId;
-  final String fileId;
+  final String? fileId;
   final int pageNumber;
   final bool isPrimary;
   final String? fileName;
@@ -143,7 +173,7 @@ class DocumentPageDisplayInfo {
 
   const DocumentPageDisplayInfo({
     required this.pageId,
-    required this.fileId,
+    this.fileId,
     required this.pageNumber,
     required this.isPrimary,
     this.fileName,
@@ -168,7 +198,7 @@ class DocumentPageDisplayInfo {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _DocumentPagesListContent extends ConsumerStatefulWidget {
-  final DocumentCardDto document;
+  final _DocumentDecryptTarget document;
   final ValueNotifier<int> pageIndexNotifier;
   final ValueNotifier<Set<String>> selectedPagesNotifier;
 
@@ -227,7 +257,7 @@ class _DocumentPagesListContentState
       final documentService = await ref.read(
         documentStorageServiceProvider.future,
       );
-      final fileDao = await ref.read(fileDaoProvider.future);
+      final repositories = await ref.read(vaultRepositories.future);
 
       // Получаем все страницы документа
       final allPages = await documentService.getDocumentPages(
@@ -247,9 +277,9 @@ class _DocumentPagesListContentState
 
         // Получаем метаданные файла
         if (page.metadataId != null) {
-          final metadata = await (fileDao.attachedDatabase.select(
-            fileDao.attachedDatabase.fileMetadata,
-          )..where((m) => m.id.equals(page.metadataId!))).getSingleOrNull();
+          final metadata = (await repositories.fileMetadata.getMetadataById(
+            page.metadataId!,
+          )).getOrThrow().getOrNull();
 
           if (metadata != null) {
             fileName = metadata.fileName;
@@ -261,13 +291,12 @@ class _DocumentPagesListContentState
         newPages.add(
           DocumentPageDisplayInfo(
             pageId: page.id,
-            fileId: page.metadataId!,
+            fileId: page.metadataId,
             pageNumber: page.pageNumber,
             isPrimary: page.isPrimary,
             fileName: fileName,
             fileSize: fileSize,
             mimeType: mimeType,
-            extractedText: page.extractedText,
           ),
         );
       }
@@ -356,7 +385,7 @@ class _DocumentPagesListContentState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.document.title ?? 'Без названия',
+                        widget.document.title,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -631,7 +660,7 @@ class _PageListItem extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _DocumentDecryptContent extends ConsumerStatefulWidget {
-  final DocumentCardDto document;
+  final _DocumentDecryptTarget document;
   final ValueNotifier<int> pageIndexNotifier;
   final ValueNotifier<Set<String>> selectedPagesNotifier;
 

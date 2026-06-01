@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/share_field
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 class LicenseKeyViewScreen extends ConsumerStatefulWidget {
@@ -26,18 +26,16 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
   bool _isDeleted = false;
 
   String _name = '';
-  String _product = '';
+  String _productName = '';
+  String? _vendor;
   String _licenseKey = '';
   String? _licenseType;
-  int? _seats;
-  int? _maxActivations;
-  DateTime? _activatedOn;
+  String? _orderNumber;
   DateTime? _purchaseDate;
-  String? _purchaseFrom;
-  String? _orderId;
-  String? _licenseFileId;
-  DateTime? _expiresAt;
-  String? _supportContact;
+  DateTime? _validFrom;
+  DateTime? _validTo;
+  int? _seats;
+  int? _activationLimit;
   String? _description;
 
   @override
@@ -49,38 +47,42 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final dao = await ref.read(licenseKeyDaoProvider.future);
-      final row = await dao.getById(widget.licenseKeyId);
-      if (row == null) {
-        Toaster.error(title: context.t.dashboard_forms.common_record_not_found);
-        if (mounted) context.pop();
+      final repos = await ref.read(vaultRepositories.future);
+      if (!mounted) return;
+      final viewResult = await repos.licenseKey.getViewById(widget.licenseKeyId);
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view == null) {
+        if (mounted) {
+          Toaster.error(title: context.t.dashboard_forms.common_record_not_found);
+          context.pop();
+        }
         return;
       }
-      final item = row.$1;
-      final license = row.$2;
+      final item = view.item;
+      final licenseKey = view.licenseKey;
 
       setState(() {
         _isDeleted = item.isDeleted;
         _name = item.name;
-        _product = license.product;
-        _licenseKey = license.licenseKey;
-        _licenseType = license.licenseType;
-        _seats = license.seats;
-        _maxActivations = license.maxActivations;
-        _activatedOn = license.activatedOn;
-        _purchaseDate = license.purchaseDate;
-        _purchaseFrom = license.purchaseFrom;
-        _orderId = license.orderId;
-        _licenseFileId = license.licenseFileId;
-        _expiresAt = license.expiresAt;
-        _supportContact = license.supportContact;
+        _productName = licenseKey.productName;
+        _vendor = licenseKey.vendor;
+        _licenseKey = licenseKey.licenseKey;
+        _licenseType = licenseKey.licenseType?.name;
+        _orderNumber = licenseKey.orderNumber;
+        _purchaseDate = licenseKey.purchaseDate;
+        _validFrom = licenseKey.validFrom;
+        _validTo = licenseKey.validTo;
+        _seats = licenseKey.seats;
+        _activationLimit = licenseKey.activationLimit;
         _description = item.description;
       });
     } catch (e) {
-      Toaster.error(
-        title: context.t.dashboard_forms.common_load_error,
-        description: '$e',
-      );
+      if (mounted) {
+        Toaster.error(
+          title: context.t.dashboard_forms.common_load_error,
+          description: '$e',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -88,7 +90,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
 
   String _fmt(DateTime? value) {
     if (value == null) return '-';
-    return value.toIso8601String();
+    return value.toIso8601String().split('T')[0];
   }
 
   Future<void> _share() async {
@@ -97,13 +99,14 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
       ref,
       widget.licenseKeyId,
     );
+    if (!mounted) return;
     final fields = [
       ...compactShareableFields([
         shareableField(id: 'name', label: l10n.share_name_label, value: _name),
         shareableField(
           id: 'product',
           label: l10n.product_label,
-          value: _product,
+          value: _productName,
         ),
         shareableField(
           id: 'license_key',
@@ -122,14 +125,14 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
           value: _seats,
         ),
         shareableField(
-          id: 'max_activations',
-          label: l10n.max_activations_label,
-          value: _maxActivations,
+          id: 'activation_limit',
+          label: 'Лимит активаций',
+          value: _activationLimit,
         ),
         shareableField(
-          id: 'activated_on',
-          label: l10n.activated_at_iso_label,
-          value: _activatedOn,
+          id: 'valid_from',
+          label: 'Действителен с',
+          value: _validFrom,
         ),
         shareableField(
           id: 'purchase_date',
@@ -137,29 +140,19 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
           value: _purchaseDate,
         ),
         shareableField(
-          id: 'purchase_from',
-          label: l10n.purchased_from_label,
-          value: _purchaseFrom,
+          id: 'vendor',
+          label: 'Продавец',
+          value: _vendor,
         ),
         shareableField(
-          id: 'order_id',
-          label: l10n.order_id_label,
-          value: _orderId,
+          id: 'order_number',
+          label: 'Номер заказа',
+          value: _orderNumber,
         ),
         shareableField(
-          id: 'license_file',
-          label: l10n.license_file_id_label,
-          value: _licenseFileId,
-        ),
-        shareableField(
-          id: 'expires_at',
-          label: l10n.expires_at_iso_label,
-          value: _expiresAt,
-        ),
-        shareableField(
-          id: 'support_contact',
-          label: l10n.support_contact_label,
-          value: _supportContact,
+          id: 'valid_to',
+          label: 'Действителен до',
+          value: _validTo,
         ),
         shareableField(
           id: 'description',
@@ -218,7 +211,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
                   const SizedBox(height: 12),
                   ListTile(
                     title: Text(l10n.product_label),
-                    subtitle: Text(_product),
+                    subtitle: Text(_productName),
                   ),
                   ListTile(
                     title: Text(l10n.license_key_label),
@@ -234,42 +227,35 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
                       title: Text(l10n.seats_count_label),
                       subtitle: Text('$_seats'),
                     ),
-                  if (_maxActivations != null)
+                   if (_activationLimit != null)
                     ListTile(
-                      title: Text(l10n.max_activations_label),
-                      subtitle: Text('$_maxActivations'),
+                      title: const Text('Лимит активаций'),
+                      subtitle: Text('$_activationLimit'),
                     ),
-                  ListTile(
-                    title: Text(l10n.activated_at_iso_label),
-                    subtitle: Text(_fmt(_activatedOn)),
-                  ),
-                  ListTile(
-                    title: Text(l10n.purchase_date_iso_label),
-                    subtitle: Text(_fmt(_purchaseDate)),
-                  ),
-                  if (_purchaseFrom?.isNotEmpty == true)
+                  if (_validFrom != null)
                     ListTile(
-                      title: Text(l10n.purchased_from_label),
-                      subtitle: Text(_purchaseFrom!),
+                      title: const Text('Действителен с'),
+                      subtitle: Text(_fmt(_validFrom)),
                     ),
-                  if (_orderId?.isNotEmpty == true)
+                  if (_purchaseDate != null)
                     ListTile(
-                      title: Text(l10n.order_id_label),
-                      subtitle: Text(_orderId!),
+                      title: Text(l10n.purchase_date_iso_label),
+                      subtitle: Text(_fmt(_purchaseDate)),
                     ),
-                  if (_licenseFileId?.isNotEmpty == true)
+                  if (_vendor?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.license_file_id_label),
-                      subtitle: Text(_licenseFileId!),
+                      title: const Text('Продавец'),
+                      subtitle: Text(_vendor!),
                     ),
-                  ListTile(
-                    title: Text(l10n.expires_at_iso_label),
-                    subtitle: Text(_fmt(_expiresAt)),
-                  ),
-                  if (_supportContact?.isNotEmpty == true)
+                  if (_orderNumber?.isNotEmpty == true)
                     ListTile(
-                      title: Text(l10n.support_contact_label),
-                      subtitle: Text(_supportContact!),
+                      title: const Text('Номер заказа'),
+                      subtitle: Text(_orderNumber!),
+                    ),
+                  if (_validTo != null)
+                    ListTile(
+                      title: const Text('Действителен до'),
+                      subtitle: Text(_fmt(_validTo)),
                     ),
                   if (_description?.isNotEmpty == true)
                     ListTile(

@@ -1,6 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/password_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+
+class DuplicatePasswordGroupDto {
+  const DuplicatePasswordGroupDto({required this.items});
+
+  final List<PasswordCardDto> items;
+
+  int get count => items.length;
+}
 
 final duplicatePasswordsAnalysisProvider =
     AsyncNotifierProvider.autoDispose<
@@ -18,8 +26,13 @@ class DuplicatePasswordsAnalysisNotifier
   Future<void> analyze() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final dao = await ref.read(passwordFilterDaoProvider.future);
-      return dao.getDuplicatePasswordGroups();
+      final repositories = await ref.read(vaultRepositories.future);
+      final groups = (await repositories.password.getDuplicatePasswordGroups())
+          .getOrThrow();
+
+      return groups
+          .map((items) => DuplicatePasswordGroupDto(items: items))
+          .toList(growable: false);
     });
   }
 }

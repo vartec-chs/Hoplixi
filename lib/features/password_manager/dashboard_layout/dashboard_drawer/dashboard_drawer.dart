@@ -220,7 +220,7 @@ class _DrawerMobileActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isStoreOpen = ref
-        .watch(vaultDBProvider)
+        .watch(vaultDBStateProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
 
     return Row(

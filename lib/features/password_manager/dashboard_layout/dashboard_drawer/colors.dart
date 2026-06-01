@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 class ColorsHelper {
-  static Color parseColor(String? hex, Color fallback) {
-    if (hex == null || hex.isEmpty) return fallback;
-    final value = int.tryParse(hex.replaceFirst('#', ''), radix: 16);
+  static Color parseColor(Object? color, Color fallback) {
+    if (color == null) return fallback;
+    final value = color is int
+        ? color
+        : int.tryParse(color.toString().replaceFirst('#', ''), radix: 16);
     return value != null ? Color(0xFF000000 | value) : fallback;
   }
 

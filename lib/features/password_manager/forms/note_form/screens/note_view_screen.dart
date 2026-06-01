@@ -12,8 +12,10 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_f
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/note_dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -28,7 +30,7 @@ class NoteViewScreen extends ConsumerStatefulWidget {
 }
 
 class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
-  (VaultItemsData, NoteItemsData)? _note;
+  NoteViewDto? _note;
   bool _isDeleted = false;
   bool _isLoading = true;
   String? _categoryName;
@@ -49,17 +51,18 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
 
   Future<void> _loadNote() async {
     try {
-      final dao = await ref.read(noteDaoProvider.future);
-      final record = await dao.getById(widget.noteId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final viewResult = await repositories.note.getViewById(widget.noteId);
+      final view = viewResult.getOrNull()?.getOrNull();
 
-      if (record != null && mounted) {
+      if (view != null && mounted) {
         setState(() {
-          _note = record;
-          _isDeleted = record.$1.isDeleted;
+          _note = view;
+          _isDeleted = view.item.isDeleted;
           _isLoading = false;
         });
-        _initQuillController(record.$2);
-        await _loadRelatedData(record);
+        _initQuillController(view.note);
+        await _loadRelatedData(view, repositories);
       } else if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -68,7 +71,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     }
   }
 
-  void _initQuillController(NoteItemsData note) {
+  void _initQuillController(NoteDataDto note) {
     if (note.deltaJson.isNotEmpty) {
       try {
         final deltaJson = jsonDecode(note.deltaJson) as List<dynamic>;
@@ -88,19 +91,26 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     setState(() {});
   }
 
-  Future<void> _loadRelatedData((VaultItemsData, NoteItemsData) record) async {
-    final (vault, _) = record;
-    if (vault.categoryId != null) {
-      final catDao = await ref.read(categoryDaoProvider.future);
-      final cat = await catDao.getCategoryById(vault.categoryId!);
+  Future<void> _loadRelatedData(
+    NoteViewDto view,
+    VaultRepositories repositories,
+  ) async {
+    if (view.item.categoryId != null) {
+      final cat = (await repositories.category.getCategory(
+        view.item.categoryId!,
+      )).getOrNull()?.getOrNull();
       if (mounted && cat != null) setState(() => _categoryName = cat.name);
     }
 
-    final vaultItemDao = await ref.read(vaultItemDaoProvider.future);
-    final tagIds = await vaultItemDao.getTagIds(widget.noteId);
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final tagIds =
+        (await relationsService.getTagIdsForItem(widget.noteId)).getOrNull() ??
+        [];
     if (tagIds.isNotEmpty) {
-      final tagDao = await ref.read(tagDaoProvider.future);
-      final tags = await tagDao.getTagsByIds(tagIds);
+      final tags =
+          (await repositories.tag.getTagsByIds(tagIds)).getOrNull() ?? [];
       if (mounted) setState(() => _tagNames = tags.map((t) => t.name).toList());
     }
   }
@@ -131,10 +141,10 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     final fields = [
       ...buildCommonShareFields(
         context,
-        name: record.$1.name,
+        name: record.item.name,
         categoryName: _categoryName,
         tagNames: _tagNames,
-        description: record.$1.description,
+        description: record.item.description,
       ),
       ...compactShareableFields([
         shareableField(
@@ -149,7 +159,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     await shareEntityFields(
       context: context,
       entity: ShareableEntity(
-        title: record.$1.name,
+        title: record.item.name,
         entityTypeLabel: EntityType.note.label,
         fields: fields,
       ),
@@ -163,7 +173,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     return Scaffold(
       backgroundColor: getScreenBackgroundColor(context, ref),
       appBar: AppBar(
-        title: Text(_note?.$1.name ?? 'Заметка'),
+        title: Text(_note?.item.name ?? 'Заметка'),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.share2),

@@ -4,8 +4,11 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
+import 'package:result_dart/result_dart.dart';
 
 import '../models/password_form_state.dart';
 
@@ -30,8 +33,13 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final repository = await ref.read(passwordRepositoryProvider.future);
-      final view = await repository.getViewById(passwordId);
+      final repositories = await ref.read(vaultRepositories.future);
+      final relationsService = await ref.read(
+        vaultItemRelationsServiceProvider.future,
+      );
+      final viewResult = await repositories.password.getViewById(passwordId);
+
+      final view = viewResult.getOrThrow().getOrNull();
 
       if (view == null) {
         logWarning('Password not found: $passwordId', tag: _logTag);
@@ -42,9 +50,21 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
       final item = view.item;
       final details = view.password;
 
-      // TODO: handle tags properly
-      final tagIds = <String>[];
-      final tagNames = <String>[];
+      // Load tags
+      final tagIdsResult = await relationsService.getTagIdsForItem(passwordId);
+      final tagIds = tagIdsResult.getOrThrow();
+      final tagsResult = await repositories.tag.getTagsByIds(tagIds);
+      final tags = tagsResult.getOrThrow();
+      final tagNames = tags.map((t) => t.name).toList();
+
+      // Load category name if exists
+      String? categoryName;
+      if (item.categoryId != null) {
+        final catResult = await repositories.category.getCategory(
+          item.categoryId!,
+        );
+        categoryName = catResult.getOrThrow().getOrNull()?.name;
+      }
 
       // TODO: handle OTP link properly via ItemLinkRepository or RelationsService
       String? otpId;
@@ -62,6 +82,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
         url: details.url ?? '',
         description: item.description ?? '',
         categoryId: item.categoryId,
+        categoryName: categoryName,
         expireAt: details.expiresAt,
         tagIds: tagIds,
         tagNames: tagNames,
@@ -132,8 +153,8 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
 
   void setIconRef(IconRefDto? iconRef) {
     state = state.copyWith(
-      iconSource: iconRef?.sourceValue,
-      iconValue: iconRef?.value,
+      iconSource: iconRef?.iconSourceType?.name,
+      iconValue: iconRef?.iconValue,
     );
   }
 
@@ -236,10 +257,10 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final repository = await ref.read(passwordRepositoryProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
 
       if (state.isEditMode && state.editingPasswordId != null) {
-        await repository.update(
+        final res = await services.password.update(
           PatchPasswordDto(
             item: VaultItemPatchDto(
               itemId: state.editingPasswordId!,
@@ -268,6 +289,8 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
           ),
         );
 
+        res.getOrThrow();
+
         await saveCustomFields(
           ref,
           state.editingPasswordId!,
@@ -288,7 +311,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
 
         return true;
       } else {
-        final id = await repository.create(
+        final res = await services.password.create(
           CreatePasswordDto(
             item: VaultItemCreateDto(
               name: state.name.trim(),
@@ -304,10 +327,12 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
               url: state.url.trim().isEmpty ? null : state.url.trim(),
               expiresAt: state.expireAt,
             ),
+            tagIds: state.tagIds,
           ),
         );
 
-        // TODO: handle tags for create
+        final id = res.getOrThrow();
+
         // TODO: handle icon ref
         // TODO: handle OTP link
 
@@ -338,3 +363,4 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     state = state.copyWith(isSaved: false);
   }
 }
+

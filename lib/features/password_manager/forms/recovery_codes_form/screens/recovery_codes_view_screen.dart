@@ -9,8 +9,8 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_f
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/recovery_code_item_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/recovery_codes_dto.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 class RecoveryCodesViewScreen extends ConsumerStatefulWidget {
@@ -29,12 +29,9 @@ class _RecoveryCodesViewScreenState
   bool _isDeleted = false;
 
   String _name = '';
-  int _codesCount = 0;
-  int _usedCount = 0;
   bool _oneTime = false;
-  String? _displayHint;
   String? _description;
-  List<RecoveryCodeItemDto> _codes = [];
+  List<RecoveryCodeValueDto> _codes = [];
 
   @override
   void initState() {
@@ -45,40 +42,29 @@ class _RecoveryCodesViewScreenState
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final dao = await ref.read(recoveryCodesDaoProvider.future);
-      final row = await dao.getById(widget.recoveryCodesId);
-      if (row == null) {
-        Toaster.error(title: context.t.dashboard_forms.common_record_not_found);
-        if (mounted) context.pop();
+      final repos = await ref.read(vaultRepositories.future);
+      final viewResult = await repos.recoveryCodes.getViewById(
+        widget.recoveryCodesId,
+      );
+      final view = viewResult.getOrNull()?.getOrNull();
+      if (view == null) {
+        if (mounted) {
+          Toaster.error(
+            title: context.t.dashboard_forms.common_record_not_found,
+          );
+          context.pop();
+        }
         return;
       }
-      final item = row.$1;
-      final data = row.$2;
+      final item = view.item;
+      final recoveryCodes = view.recoveryCodes;
 
-      final codesRaw = await dao.getCodesForItem(widget.recoveryCodesId);
-      final codes = codesRaw
-          .map(
-            (c) => RecoveryCodeItemDto(
-              id: c.id,
-              itemId: c.itemId,
-              code: c.code,
-              used: c.used,
-              usedAt: c.usedAt,
-              position: c.position,
-            ),
-          )
-          .toList();
-
-      if (!mounted) return;
       setState(() {
         _isDeleted = item.isDeleted;
         _name = item.name;
-        _codesCount = data.codesCount;
-        _usedCount = data.usedCount;
-        _oneTime = data.oneTime;
-        _displayHint = data.displayHint;
+        _oneTime = recoveryCodes.oneTime;
         _description = item.description;
-        _codes = codes;
+        _codes = view.codes;
       });
     } catch (e) {
       if (mounted) {
@@ -92,18 +78,32 @@ class _RecoveryCodesViewScreenState
     }
   }
 
-  Future<void> _markUsed(RecoveryCodeItemDto code) async {
-    final dao = await ref.read(recoveryCodesDaoProvider.future);
-    await dao.markCodeUsed(code.id);
-    Toaster.success(title: context.t.dashboard_forms.code_marked_used);
-    await _load();
+  int get _totalCount => _codes.length;
+  int get _usedCount => _codes.where((c) => c.used).length;
+
+  Future<void> _markUsed(RecoveryCodeValueDto code) async {
+    final id = code.id;
+    if (id == null) return;
+    final repos = await ref.read(vaultRepositories.future);
+    await repos.recoveryCodes.markCodeUsed(
+      codeId: id,
+      usedAt: DateTime.now(),
+    );
+    if (mounted) {
+      Toaster.success(title: context.t.dashboard_forms.code_marked_used);
+      await _load();
+    }
   }
 
-  Future<void> _markUnused(RecoveryCodeItemDto code) async {
-    final dao = await ref.read(recoveryCodesDaoProvider.future);
-    await dao.markCodeUnused(code.id);
-    Toaster.success(title: context.t.dashboard_forms.code_marked_unused);
-    await _load();
+  Future<void> _markUnused(RecoveryCodeValueDto code) async {
+    final id = code.id;
+    if (id == null) return;
+    final repos = await ref.read(vaultRepositories.future);
+    await repos.recoveryCodes.markCodeUnused(codeId: id);
+    if (mounted) {
+      Toaster.success(title: context.t.dashboard_forms.code_marked_unused);
+      await _load();
+    }
   }
 
   Future<void> _copyCode(String code) async {
@@ -128,7 +128,10 @@ class _RecoveryCodesViewScreenState
     }
   }
 
-  Future<void> _deleteCode(RecoveryCodeItemDto code) async {
+  Future<void> _deleteCode(RecoveryCodeValueDto code) async {
+    final id = code.id;
+    if (id == null) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -147,9 +150,9 @@ class _RecoveryCodesViewScreenState
     );
     if (confirmed != true) return;
 
-    final dao = await ref.read(recoveryCodesDaoProvider.future);
-    await dao.deleteCode(code.id);
-    await _load();
+    final repos = await ref.read(vaultRepositories.future);
+    await repos.recoveryCodes.deleteCode(id);
+    if (mounted) await _load();
   }
 
   Future<void> _share() async {
@@ -158,6 +161,8 @@ class _RecoveryCodesViewScreenState
       ref,
       widget.recoveryCodesId,
     );
+    if (!mounted) return;
+
     final codesText = _codes
         .map(
           (code) =>
@@ -170,7 +175,7 @@ class _RecoveryCodesViewScreenState
         shareableField(
           id: 'codes_count',
           label: l10n.total_codes_label,
-          value: _codesCount,
+          value: _totalCount,
         ),
         shareableField(
           id: 'used_count',
@@ -181,11 +186,6 @@ class _RecoveryCodesViewScreenState
           id: 'one_time',
           label: l10n.one_time_codes_label,
           value: _oneTime ? l10n.common_enabled : l10n.common_disabled,
-        ),
-        shareableField(
-          id: 'display_hint',
-          label: l10n.display_hint_label,
-          value: _displayHint,
         ),
         shareableField(
           id: 'description',
@@ -247,7 +247,7 @@ class _RecoveryCodesViewScreenState
             ? const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
-                  // Ð¨Ð°Ð¿ÐºÐ° / ÑÑ‚Ð°Ñ‚Ð¸ÑÑ‚Ð¸ÐºÐ°
+                  // Шапка / статистика
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -262,24 +262,18 @@ class _RecoveryCodesViewScreenState
                           children: [
                             _StatChip(
                               icon: Icons.list_alt,
-                              label: '$_usedCount / $_codesCount',
+                              label: '$_usedCount / $_totalCount',
                             ),
                             const SizedBox(width: 8),
                             _StatChip(
-                              icon: _oneTime ? Icons.looks_one : Icons.repeat,
+                              icon:
+                                  _oneTime ? Icons.looks_one : Icons.repeat,
                               label: _oneTime
                                   ? l10n.one_time_codes_label
                                   : 'multi-use',
                             ),
                           ],
                         ),
-                        if (_displayHint?.isNotEmpty == true) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '${l10n.display_hint_label}: $_displayHint',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
                         if (_description?.isNotEmpty == true) ...[
                           const SizedBox(height: 4),
                           Text(
@@ -287,13 +281,14 @@ class _RecoveryCodesViewScreenState
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
-                        CustomFieldsViewSection(itemId: widget.recoveryCodesId),
+                        CustomFieldsViewSection(
+                          itemId: widget.recoveryCodesId,
+                        ),
                         const SizedBox(height: 12),
-                        // ÐšÐ½Ð¾Ð¿ÐºÐ° Ð±Ñ‹ÑÑ‚Ñ€Ð¾Ð³Ð¾ ÐºÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ñ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰ÐµÐ³Ð¾ Ð½ÐµÐ¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ð¾Ð³Ð¾
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton.icon(
-                            onPressed: _usedCount < _codesCount
+                            onPressed: _usedCount < _totalCount
                                 ? _copyNextUnused
                                 : null,
                             icon: const Icon(Icons.copy),
@@ -304,7 +299,7 @@ class _RecoveryCodesViewScreenState
                     ),
                   ),
                   const Divider(height: 1),
-                  // Ð¡Ð¿Ð¸ÑÐ¾Ðº ÐºÐ¾Ð´Ð¾Ð²
+                  // Список кодов
                   Expanded(
                     child: _codes.isEmpty
                         ? Center(child: Text(l10n.no_codes_yet))
@@ -369,7 +364,7 @@ class _CodeListTile extends StatelessWidget {
     required this.onDelete,
   });
 
-  final RecoveryCodeItemDto code;
+  final RecoveryCodeValueDto code;
   final VoidCallback onCopy;
   final VoidCallback? onMarkUsed;
   final VoidCallback? onMarkUnused;
@@ -412,14 +407,12 @@ class _CodeListTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ÐšÐ¾Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
           if (!used)
             IconButton(
               tooltip: l10n.copy_code_action,
               icon: const Icon(Icons.copy, size: 18),
               onPressed: onCopy,
             ),
-          // ÐžÑ‚Ð¼ÐµÑ‚Ð¸Ñ‚ÑŒ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ñ‹Ð¼ / ÑÐ½ÑÑ‚ÑŒ
           if (onMarkUsed != null)
             IconButton(
               tooltip: l10n.mark_code_used_action,
@@ -432,7 +425,6 @@ class _CodeListTile extends StatelessWidget {
               icon: const Icon(Icons.undo, size: 18),
               onPressed: onMarkUnused,
             ),
-          // Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ
           IconButton(
             tooltip: l10n.delete_code_label,
             icon: Icon(
