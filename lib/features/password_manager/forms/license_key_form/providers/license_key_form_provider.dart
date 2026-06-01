@@ -7,7 +7,8 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/license_key/license_key_items.dart' show LicenseType;
+import 'package:hoplixi/vault_db/core/scheme/tables/license_key/license_key_items.dart'
+    show LicenseType;
 
 import '../models/license_key_form_state.dart';
 
@@ -124,7 +125,10 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
   void setProductName(String v) => _update(
     (s) => s.copyWith(
       productName: v,
-      productNameError: _required(v, t.dashboard_forms.validation_required_product),
+      productNameError: _required(
+        v,
+        t.dashboard_forms.validation_required_product,
+      ),
     ),
   );
   void setVendor(String v) => _update((s) => s.copyWith(vendor: v));
@@ -138,16 +142,24 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
     ),
   );
   void setLicenseType(String? v) => _update((s) => s.copyWith(licenseType: v));
-  void setLicenseTypeOther(String v) => _update((s) => s.copyWith(licenseTypeOther: v));
+  void setLicenseTypeOther(String v) =>
+      _update((s) => s.copyWith(licenseTypeOther: v));
   void setAccountEmail(String v) => _update((s) => s.copyWith(accountEmail: v));
-  void setAccountUsername(String v) => _update((s) => s.copyWith(accountUsername: v));
-  void setPurchaseEmail(String v) => _update((s) => s.copyWith(purchaseEmail: v));
+  void setAccountUsername(String v) =>
+      _update((s) => s.copyWith(accountUsername: v));
+  void setPurchaseEmail(String v) =>
+      _update((s) => s.copyWith(purchaseEmail: v));
   void setOrderNumber(String v) => _update((s) => s.copyWith(orderNumber: v));
-  void setPurchasePrice(String v) => _update((s) => s.copyWith(purchasePrice: v));
+  void setPurchasePrice(String v) =>
+      _update((s) => s.copyWith(purchasePrice: v));
   void setCurrency(String v) => _update((s) => s.copyWith(currency: v));
-  void setValidFrom(String v) => _update((s) => s.copyWith(validFrom: v, validFromError: _dateError(v)));
-  void setValidTo(String v) => _update((s) => s.copyWith(validTo: v, validToError: _dateError(v)));
-  void setRenewalDate(String v) => _update((s) => s.copyWith(renewalDate: v, renewalDateError: _dateError(v)));
+  void setValidFrom(String v) =>
+      _update((s) => s.copyWith(validFrom: v, validFromError: _dateError(v)));
+  void setValidTo(String v) =>
+      _update((s) => s.copyWith(validTo: v, validToError: _dateError(v)));
+  void setRenewalDate(String v) => _update(
+    (s) => s.copyWith(renewalDate: v, renewalDateError: _dateError(v)),
+  );
   void setSeats(String v) =>
       _update((s) => s.copyWith(seats: v, seatsError: _intError(v)));
   void setActivationLimit(String v) => _update(
@@ -351,4 +363,3 @@ class LicenseKeyFormNotifier extends AsyncNotifier<LicenseKeyFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

@@ -9,7 +9,9 @@ Future<List<CustomFieldEntry>> loadCustomFields(
   String itemId,
 ) async {
   final db = await _readVaultDb(ref);
-  final rows = await db.vaultItemCustomFieldsDao.getCustomFieldsByItemId(itemId);
+  final rows = await db.vaultItemCustomFieldsDao.getCustomFieldsByItemId(
+    itemId,
+  );
   return rows.map(CustomFieldEntry.fromData).toList();
 }
 

@@ -195,7 +195,10 @@ class _TagSectionState extends ConsumerState<TagSection> {
           secondary: Icon(
             Icons.tag,
             size: 18,
-            color: ColorsHelper.parseColor(tag.color, theme.colorScheme.primary),
+            color: ColorsHelper.parseColor(
+              tag.color,
+              theme.colorScheme.primary,
+            ),
           ),
           dense: true,
           contentPadding: EdgeInsets.zero,

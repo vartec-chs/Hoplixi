@@ -372,4 +372,3 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
     state = state.copyWith(hasUnsavedChanges: false);
   }
 }
-

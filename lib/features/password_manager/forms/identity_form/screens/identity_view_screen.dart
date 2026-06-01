@@ -58,7 +58,9 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
       final view = viewResult.getOrNull()?.getOrNull();
       if (view == null) {
         if (mounted) {
-          Toaster.error(title: context.t.dashboard_forms.common_record_not_found);
+          Toaster.error(
+            title: context.t.dashboard_forms.common_record_not_found,
+          );
           context.pop();
         }
         return;
@@ -115,22 +117,62 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
       ...compactShareableFields([
         shareableField(id: 'name', label: l10n.share_name_label, value: _name),
         shareableField(id: 'first_name', label: 'Имя', value: _firstName),
-        shareableField(id: 'middle_name', label: 'Отчество', value: _middleName),
+        shareableField(
+          id: 'middle_name',
+          label: 'Отчество',
+          value: _middleName,
+        ),
         shareableField(id: 'last_name', label: 'Фамилия', value: _lastName),
-        shareableField(id: 'display_name', label: 'Отображаемое имя', value: _displayName),
-        shareableField(id: 'username', label: 'Имя пользователя', value: _username),
+        shareableField(
+          id: 'display_name',
+          label: 'Отображаемое имя',
+          value: _displayName,
+        ),
+        shareableField(
+          id: 'username',
+          label: 'Имя пользователя',
+          value: _username,
+        ),
         shareableField(id: 'email', label: 'Электронная почта', value: _email),
         shareableField(id: 'phone', label: 'Телефон', value: _phone),
         shareableField(id: 'address', label: 'Адрес', value: _address),
-        shareableField(id: 'birthday', label: 'Дата рождения', value: _fmt(_birthday)),
+        shareableField(
+          id: 'birthday',
+          label: 'Дата рождения',
+          value: _fmt(_birthday),
+        ),
         shareableField(id: 'company', label: 'Компания', value: _company),
         shareableField(id: 'job_title', label: 'Должность', value: _jobTitle),
         shareableField(id: 'website', label: 'Веб-сайт', value: _website),
-        shareableField(id: 'tax_id', label: 'ИНН', value: _taxId, isSensitive: true),
-        shareableField(id: 'national_id', label: 'СНИЛС/Паспорт РФ', value: _nationalId, isSensitive: true),
-        shareableField(id: 'passport_number', label: 'Загранпаспорт', value: _passportNumber, isSensitive: true),
-        shareableField(id: 'driver_license', label: 'Водительские права', value: _driverLicenseNumber, isSensitive: true),
-        shareableField(id: 'description', label: l10n.description_label, value: _description),
+        shareableField(
+          id: 'tax_id',
+          label: 'ИНН',
+          value: _taxId,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'national_id',
+          label: 'СНИЛС/Паспорт РФ',
+          value: _nationalId,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'passport_number',
+          label: 'Загранпаспорт',
+          value: _passportNumber,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'driver_license',
+          label: 'Водительские права',
+          value: _driverLicenseNumber,
+          isSensitive: true,
+        ),
+        shareableField(
+          id: 'description',
+          label: l10n.description_label,
+          value: _description,
+        ),
       ]),
       ...customFields,
     ];
@@ -191,15 +233,30 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
                   Text(_name, style: theme.textTheme.headlineSmall),
                   const SizedBox(height: 12),
                   if (_displayName?.isNotEmpty == true)
-                    _info(theme, Icons.person, 'Отображаемое имя', _displayName!),
+                    _info(
+                      theme,
+                      Icons.person,
+                      'Отображаемое имя',
+                      _displayName!,
+                    ),
                   if (_firstName?.isNotEmpty == true)
                     _info(theme, Icons.person_outline, 'Имя', _firstName!),
                   if (_middleName?.isNotEmpty == true)
-                    _info(theme, Icons.person_outline, 'Отчество', _middleName!),
+                    _info(
+                      theme,
+                      Icons.person_outline,
+                      'Отчество',
+                      _middleName!,
+                    ),
                   if (_lastName?.isNotEmpty == true)
                     _info(theme, Icons.person_outline, 'Фамилия', _lastName!),
                   if (_username?.isNotEmpty == true)
-                    _info(theme, Icons.account_circle, 'Имя пользователя', _username!),
+                    _info(
+                      theme,
+                      Icons.account_circle,
+                      'Имя пользователя',
+                      _username!,
+                    ),
                   if (_email?.isNotEmpty == true)
                     _info(theme, Icons.email, 'Электронная почта', _email!),
                   if (_phone?.isNotEmpty == true)
@@ -217,13 +274,33 @@ class _IdentityViewScreenState extends ConsumerState<IdentityViewScreen> {
                   if (_taxId?.isNotEmpty == true)
                     _info(theme, Icons.assignment, 'ИНН', _taxId!),
                   if (_nationalId?.isNotEmpty == true)
-                    _info(theme, Icons.assignment_ind, 'СНИЛС/Паспорт РФ', _nationalId!),
+                    _info(
+                      theme,
+                      Icons.assignment_ind,
+                      'СНИЛС/Паспорт РФ',
+                      _nationalId!,
+                    ),
                   if (_passportNumber?.isNotEmpty == true)
-                    _info(theme, Icons.badge, 'Загранпаспорт', _passportNumber!),
+                    _info(
+                      theme,
+                      Icons.badge,
+                      'Загранпаспорт',
+                      _passportNumber!,
+                    ),
                   if (_driverLicenseNumber?.isNotEmpty == true)
-                    _info(theme, Icons.drive_eta, 'Водительские права', _driverLicenseNumber!),
+                    _info(
+                      theme,
+                      Icons.drive_eta,
+                      'Водительские права',
+                      _driverLicenseNumber!,
+                    ),
                   if (_description?.isNotEmpty == true)
-                    _info(theme, Icons.description, l10n.description_label, _description!),
+                    _info(
+                      theme,
+                      Icons.description,
+                      l10n.description_label,
+                      _description!,
+                    ),
                   CustomFieldsViewSection(itemId: widget.identityId),
                 ],
               ),

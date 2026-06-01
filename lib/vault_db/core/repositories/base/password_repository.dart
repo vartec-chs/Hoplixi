@@ -232,12 +232,14 @@ class PasswordRepository {
           final secret = password.password;
           if (secret.isEmpty) continue;
 
-          groupsByPassword.putIfAbsent(secret, () => []).add(
-            PasswordCardDto(
-              item: item.toVaultItemCardDto(),
-              password: password.toPasswordCardDataDto(),
-            ),
-          );
+          groupsByPassword
+              .putIfAbsent(secret, () => [])
+              .add(
+                PasswordCardDto(
+                  item: item.toVaultItemCardDto(),
+                  password: password.toPasswordCardDataDto(),
+                ),
+              );
         }
 
         final groups =

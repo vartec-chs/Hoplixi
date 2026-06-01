@@ -27,10 +27,7 @@ class VaultStoreApi {
     return _metaService.getStoreMeta();
   }
 
-  AsyncDBResult<Unit> updateInfo({
-    required String name,
-    String? description,
-  }) {
+  AsyncDBResult<Unit> updateInfo({required String name, String? description}) {
     return _metaService.updateInfo(name: name, description: description);
   }
 

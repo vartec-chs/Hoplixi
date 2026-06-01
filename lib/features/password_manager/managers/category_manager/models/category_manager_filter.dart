@@ -2,11 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'category_manager_filter.freezed.dart';
 
-enum CategoryManagerSortField {
-  name,
-  createdAt,
-  modifiedAt,
-}
+enum CategoryManagerSortField { name, createdAt, modifiedAt }
 
 @freezed
 sealed class CategoryManagerFilter with _$CategoryManagerFilter {

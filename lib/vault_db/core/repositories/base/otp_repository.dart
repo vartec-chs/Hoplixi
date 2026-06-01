@@ -82,7 +82,9 @@ class OtpRepository {
         for (final dto in dtos) {
           final itemId = const Uuid().v4();
 
-          await db.into(db.vaultItems).insert(
+          await db
+              .into(db.vaultItems)
+              .insert(
                 VaultItemsCompanion.insert(
                   id: Value(itemId),
                   type: VaultItemType.otp,
@@ -97,7 +99,9 @@ class OtpRepository {
                 ),
               );
 
-          await db.into(db.otpItems).insert(
+          await db
+              .into(db.otpItems)
+              .insert(
                 OtpItemsCompanion.insert(
                   itemId: itemId,
                   type: Value(dto.otp.type),
@@ -113,7 +117,10 @@ class OtpRepository {
 
           if (dto.tagIds.isNotEmpty) {
             for (final tagId in dto.tagIds) {
-              await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+              await db.itemTagsDao.assignTagToItem(
+                itemId: itemId,
+                tagId: tagId,
+              );
             }
           }
           itemIds.add(itemId);

@@ -49,11 +49,15 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
     try {
       final repos = await ref.read(vaultRepositories.future);
       if (!mounted) return;
-      final viewResult = await repos.licenseKey.getViewById(widget.licenseKeyId);
+      final viewResult = await repos.licenseKey.getViewById(
+        widget.licenseKeyId,
+      );
       final view = viewResult.getOrNull()?.getOrNull();
       if (view == null) {
         if (mounted) {
-          Toaster.error(title: context.t.dashboard_forms.common_record_not_found);
+          Toaster.error(
+            title: context.t.dashboard_forms.common_record_not_found,
+          );
           context.pop();
         }
         return;
@@ -139,11 +143,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
           label: l10n.purchase_date_iso_label,
           value: _purchaseDate,
         ),
-        shareableField(
-          id: 'vendor',
-          label: 'Продавец',
-          value: _vendor,
-        ),
+        shareableField(id: 'vendor', label: 'Продавец', value: _vendor),
         shareableField(
           id: 'order_number',
           label: 'Номер заказа',
@@ -227,7 +227,7 @@ class _LicenseKeyViewScreenState extends ConsumerState<LicenseKeyViewScreen> {
                       title: Text(l10n.seats_count_label),
                       subtitle: Text('$_seats'),
                     ),
-                   if (_activationLimit != null)
+                  if (_activationLimit != null)
                     ListTile(
                       title: const Text('Лимит активаций'),
                       subtitle: Text('$_activationLimit'),

@@ -248,7 +248,7 @@ class _FileFormScreenState extends ConsumerState<FileFormScreen> {
                                 .pickers_category_label,
                             hintText:
                                 context.t.dashboard_forms.select_category_hint,
-                            
+
                             onCategorySelected: (categoryId, categoryName) {
                               ref
                                   .read(fileFormProvider.notifier)

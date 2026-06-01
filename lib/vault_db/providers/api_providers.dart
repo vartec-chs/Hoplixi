@@ -34,7 +34,9 @@ final vaultDocumentsApiProvider = FutureProvider<VaultDocumentsApi>((
   return api.documents;
 });
 
-final vaultRelationsApiProvider = FutureProvider<VaultRelationsApi>((ref) async {
+final vaultRelationsApiProvider = FutureProvider<VaultRelationsApi>((
+  ref,
+) async {
   final api = await ref.watch(vaultApiProvider.future);
   return api.relations;
 });

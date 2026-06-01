@@ -195,10 +195,14 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
           ),
           const SizedBox(height: 16),
           IconSourcePickerButton(
-            iconRef: state.iconSource == null ? null : CreateIconRefDto(
-              iconSourceType: IconSourceType.values.byName(state.iconSource!),
-              iconValue: state.iconValue,
-            ),
+            iconRef: state.iconSource == null
+                ? null
+                : CreateIconRefDto(
+                    iconSourceType: IconSourceType.values.byName(
+                      state.iconSource!,
+                    ),
+                    iconValue: state.iconValue,
+                  ),
             fallbackIcon: Icons.lock_clock,
             title: 'Иконка записи',
             onChanged: ref.read(otpFormProvider(null).notifier).setIconRef,
@@ -209,7 +213,7 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
             selectedCategoryName: state.categoryName,
             label: context.t.dashboard_forms.pickers_category_label,
             hintText: context.t.dashboard_forms.select_category_hint,
-            
+
             onCategorySelected: (categoryId, categoryName) {
               ref
                   .read(otpFormProvider.notifier)
@@ -222,7 +226,7 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
             selectedTagNames: state.tagNames,
             label: context.t.dashboard_forms.pickers_tags_label,
             hintText: context.t.dashboard_forms.select_tags_hint,
-            
+
             onTagsSelected: (tagIds, tagNames) {
               ref.read(otpFormProvider.notifier).setTags(tagIds, tagNames);
             },

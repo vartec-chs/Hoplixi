@@ -10,8 +10,8 @@ import 'tag_filter_provider.dart';
 /// Провайдер для получения отфильтрованного списка тегов
 final tagListProvider =
     AsyncNotifierProvider.autoDispose<TagListNotifier, TagPaginationState>(
-  TagListNotifier.new,
-);
+      TagListNotifier.new,
+    );
 
 /// AsyncNotifier для управления списком тегов
 class TagListNotifier extends AsyncNotifier<TagPaginationState> {

@@ -206,9 +206,7 @@ enum VaultEventHistoryIndex {
 
   snapshotHistoryId('idx_vault_events_history_snapshot_history_id'),
 
-  actorTypeEventCreatedAt(
-    'idx_vault_events_history_actor_type_created_at',
-  ),
+  actorTypeEventCreatedAt('idx_vault_events_history_actor_type_created_at'),
 
   eventCreatedAt('idx_vault_events_history_created_at');
 

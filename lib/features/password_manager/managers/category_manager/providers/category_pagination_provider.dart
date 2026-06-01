@@ -70,7 +70,7 @@ class CategoryListNotifier extends AsyncNotifier<CategoryPaginationState> {
       }
 
       final totalCount = filtered.length;
-      
+
       // Пагинация (простая реализация для манагера)
       final items = filtered; // В манагере обычно список небольшой, грузим всё
 

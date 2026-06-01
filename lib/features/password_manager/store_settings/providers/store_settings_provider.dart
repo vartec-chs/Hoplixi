@@ -320,8 +320,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         ref.invalidate(pinnedEntityTypesProvider);
       }
 
- 
-
       if (shouldCleanupHistory) {
         final cleanup = await ref.read(performStoreCleanupProvider.future);
         await cleanup(ignoreInterval: true);
@@ -793,7 +791,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       final storeMetaService = await ref.read(storeMetaServiceProvider.future);
       final metaResult = await storeMetaService.getStoreMeta();
       final meta = metaResult.getOrNull();
-      
+
       if (meta == null) {
         throw StateError('Метаданные хранилища не найдены');
       }

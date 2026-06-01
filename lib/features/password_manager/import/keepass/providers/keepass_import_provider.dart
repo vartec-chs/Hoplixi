@@ -10,7 +10,6 @@ import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 const _messageNotChanged = Object();
 
-
 enum KeepassImportStep { source, options, preview }
 
 class KeepassImportState {
@@ -364,7 +363,6 @@ class KeepassImportNotifier extends Notifier<KeepassImportState> {
     );
   }
 }
-
 
 final keepassImportProvider =
     NotifierProvider.autoDispose<KeepassImportNotifier, KeepassImportState>(

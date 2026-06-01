@@ -48,7 +48,9 @@ class _CertificateViewScreenState extends ConsumerState<CertificateViewScreen> {
     try {
       final repos = await ref.read(vaultRepositories.future);
       if (!mounted) return;
-      final viewResult = await repos.certificate.getViewById(widget.certificateId);
+      final viewResult = await repos.certificate.getViewById(
+        widget.certificateId,
+      );
       final view = viewResult.getOrNull()?.getOrNull();
       if (view == null) {
         if (mounted) {

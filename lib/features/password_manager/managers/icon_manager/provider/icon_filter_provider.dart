@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/icon_manager_filter.dart';
 
 /// Провайдер для управления состоянием фильтра иконок
-final iconFilterProvider = NotifierProvider<IconFilterNotifier, IconManagerFilter>(
-  () {
-    return IconFilterNotifier();
-  },
-);
+final iconFilterProvider =
+    NotifierProvider<IconFilterNotifier, IconManagerFilter>(() {
+      return IconFilterNotifier();
+    });
 
 /// Notifier для управления фильтром иконок
 class IconFilterNotifier extends Notifier<IconManagerFilter> {

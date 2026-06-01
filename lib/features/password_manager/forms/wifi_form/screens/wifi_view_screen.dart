@@ -53,9 +53,7 @@ class _WifiViewScreenState extends ConsumerState<WifiViewScreen> {
       final view = viewResult.getOrNull()?.getOrNull();
       if (view == null) {
         if (mounted) {
-          Toaster.error(
-            title: context.t.dashboard_forms.wifi_not_found,
-          );
+          Toaster.error(title: context.t.dashboard_forms.wifi_not_found);
           context.pop();
         }
         return;

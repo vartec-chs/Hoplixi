@@ -61,9 +61,9 @@ class DrawerCategoryFilterNotifier
 
   Future<void> _refreshCache() async {
     final repositories = await ref.read(vaultRepositories.future);
-    final categories = (await repositories.category.getAllCategories())
-        .getOrThrow()
-      ..sort((a, b) => a.name.compareTo(b.name));
+    final categories =
+        (await repositories.category.getAllCategories()).getOrThrow()
+          ..sort((a, b) => a.name.compareTo(b.name));
 
     _allCategories = categories;
     _allRoots = _buildTree(categories);

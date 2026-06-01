@@ -4,10 +4,7 @@ import 'package:hoplixi/vault_db/core/models/dto_history/recovery_codes_history_
 
 extension RecoveryCodesItemsDataMapper on RecoveryCodesItemsData {
   RecoveryCodesDataDto toRecoveryCodesDataDto() {
-    return RecoveryCodesDataDto(
-      generatedAt: generatedAt,
-      oneTime: oneTime,
-    );
+    return RecoveryCodesDataDto(generatedAt: generatedAt, oneTime: oneTime);
   }
 
   RecoveryCodesCardDataDto toRecoveryCodesCardDataDto() {

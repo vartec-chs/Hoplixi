@@ -726,7 +726,13 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                           const Divider(height: 32),
 
                           IconSourcePickerButton(
-                            iconRef: (state.iconSource == null ? null : IconRefDto(iconSourceType: IconSourceType.values.byName(state.iconSource!), iconValue: state.iconValue)),
+                            iconRef: (state.iconSource == null
+                                ? null
+                                : IconRefDto(
+                                    iconSourceType: IconSourceType.values
+                                        .byName(state.iconSource!),
+                                    iconValue: state.iconValue,
+                                  )),
                             fallbackIcon: Icons.credit_card,
                             title: 'Иконка записи',
                             onChanged: ref
@@ -745,7 +751,7 @@ class _BankCardFormScreenState extends ConsumerState<BankCardFormScreen> {
                                 .pickers_category_label,
                             hintText:
                                 context.t.dashboard_forms.select_category_hint,
-                            
+
                             onCategorySelected: (categoryId, categoryName) {
                               ref
                                   .read(bankCardFormProvider.notifier)

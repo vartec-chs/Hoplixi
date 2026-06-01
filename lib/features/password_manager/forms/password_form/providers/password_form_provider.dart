@@ -363,4 +363,3 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
     state = state.copyWith(isSaved: false);
   }
 }
-

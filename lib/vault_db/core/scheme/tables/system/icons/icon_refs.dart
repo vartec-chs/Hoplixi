@@ -78,7 +78,7 @@ class IconRefs extends Table {
         CONSTRAINT ${IconRefConstraint.customIconIdNoOuterWhitespace.constraintName}
         CHECK (custom_icon_id IS NULL OR custom_icon_id = trim(custom_icon_id))
         ''',
-    
+
     '''
         CONSTRAINT ${IconRefConstraint.validIconSource.constraintName}
         CHECK (
@@ -108,8 +108,6 @@ class IconRefs extends Table {
         )
         ''',
 
- 
-  
     '''
         CONSTRAINT ${IconRefConstraint.modifiedAtAfterCreatedAt.constraintName}
         CHECK (modified_at >= created_at)

@@ -268,7 +268,10 @@ class _BankCardViewScreenState extends ConsumerState<BankCardViewScreen> {
                     LucideIcons.user,
                     'Владелец',
                     _bankCard!.bankCard.cardholderName ?? '',
-                    () => _copy(_bankCard!.bankCard.cardholderName ?? '', 'Владелец'),
+                    () => _copy(
+                      _bankCard!.bankCard.cardholderName ?? '',
+                      'Владелец',
+                    ),
                   ),
                   if (_getExpiryDate().isNotEmpty)
                     _info(

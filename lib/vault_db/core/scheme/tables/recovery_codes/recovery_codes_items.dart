@@ -28,7 +28,7 @@ class RecoveryCodesItems extends Table {
 }
 
 enum RecoveryCodesItemConstraint {
-  itemIdNotBlank('chk_recovery_codes_items_item_id_not_blank'),;
+  itemIdNotBlank('chk_recovery_codes_items_item_id_not_blank');
 
   const RecoveryCodesItemConstraint(this.constraintName);
 

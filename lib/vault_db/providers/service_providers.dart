@@ -68,7 +68,7 @@ final vaultItemsStateServiceProvider = FutureProvider<VaultItemsStateService>((
 final vaultEntityServices = FutureProvider<VaultEntityServices>((ref) async {
   final db = await ref.watch(vaultDBProvider.future);
   final repositories = await ref.watch(vaultRepositories.future);
- 
+
   final vaultHistoryServiceAssembly = await ref.watch(
     vaultHistoryServiceAssemblyProvider.future,
   );

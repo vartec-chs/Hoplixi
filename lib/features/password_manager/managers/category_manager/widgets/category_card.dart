@@ -216,7 +216,8 @@ class _CategoryCardState extends State<CategoryCard>
             ? IconRefPreview(
                 iconRef: IconRefDto(
                   id: widget.category.iconRefId,
-                  iconSourceType: IconSourceType.pack, // Заглушка, нужно грузить реальный IconRef
+                  iconSourceType: IconSourceType
+                      .pack, // Заглушка, нужно грузить реальный IconRef
                 ),
                 fallbackIcon: Icons.folder,
                 size: 26,

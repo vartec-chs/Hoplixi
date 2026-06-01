@@ -11,5 +11,4 @@ final Map<String, DbConstraintDescriptor> recoveryCodesRegistry = {
         code: 'recovery_codes.item_id.not_blank',
         message: 'ID записи не может быть пустым',
       ),
-
 };

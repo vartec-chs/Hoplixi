@@ -15,8 +15,9 @@ class CategoryRevisionsDao extends DatabaseAccessor<VaultDB>
   }
 
   Future<CategoryRevisionData?> getCategoryRevisionById(String id) {
-    return (select(categoryRevisions)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      categoryRevisions,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<CategoryRevisionData>> getCategoryRevisionsByOriginalCategoryId(

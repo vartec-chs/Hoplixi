@@ -121,8 +121,10 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
   void setWebsite(String v) => _update((s) => s.copyWith(website: v));
   void setTaxId(String v) => _update((s) => s.copyWith(taxId: v));
   void setNationalId(String v) => _update((s) => s.copyWith(nationalId: v));
-  void setPassportNumber(String v) => _update((s) => s.copyWith(passportNumber: v));
-  void setDriverLicenseNumber(String v) => _update((s) => s.copyWith(driverLicenseNumber: v));
+  void setPassportNumber(String v) =>
+      _update((s) => s.copyWith(passportNumber: v));
+  void setDriverLicenseNumber(String v) =>
+      _update((s) => s.copyWith(driverLicenseNumber: v));
 
   void setDescription(String v) => _update((s) => s.copyWith(description: v));
   void setCategory(String? id, String? name) =>
@@ -255,4 +257,3 @@ class IdentityFormNotifier extends AsyncNotifier<IdentityFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

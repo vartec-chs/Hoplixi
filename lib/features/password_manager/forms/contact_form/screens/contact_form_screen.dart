@@ -430,7 +430,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  
+
                   onCategorySelected: ref
                       .read(contactFormProvider(widget.contactId).notifier)
                       .setCategory,
@@ -439,7 +439,7 @@ class _ContactFormScreenState extends ConsumerState<ContactFormScreen> {
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
-                  
+
                   onTagsSelected: ref
                       .read(contactFormProvider(widget.contactId).notifier)
                       .setTags,

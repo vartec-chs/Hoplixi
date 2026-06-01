@@ -182,9 +182,14 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
     return count;
   }
 
-  Future<void> _showFilterSheet(BuildContext context, TagManagerFilter filter) async {
+  Future<void> _showFilterSheet(
+    BuildContext context,
+    TagManagerFilter filter,
+  ) async {
     final colorController = TextEditingController(
-      text: filter.color != null ? filter.color!.toRadixString(16).toUpperCase() : '',
+      text: filter.color != null
+          ? filter.color!.toRadixString(16).toUpperCase()
+          : '',
     );
 
     try {
@@ -257,9 +262,7 @@ class _TagsManagerAppBarState extends ConsumerState<TagsManagerAppBar> {
                                   await ref
                                       .read(tagFilterProvider.notifier)
                                       .updateFilter(
-                                        filter.copyWith(
-                                          color: color,
-                                        ),
+                                        filter.copyWith(color: color),
                                       );
                                   if (modalSheetContext.mounted) {
                                     Navigator.of(modalSheetContext).pop();

@@ -228,7 +228,14 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                 ),
                 const SizedBox(height: 12),
                 IconSourcePickerButton(
-                  iconRef: (state.iconSource == null ? null : IconRefDto(iconSourceType: IconSourceType.values.byName(state.iconSource!), iconValue: state.iconValue)),
+                  iconRef: (state.iconSource == null
+                      ? null
+                      : IconRefDto(
+                          iconSourceType: IconSourceType.values.byName(
+                            state.iconSource!,
+                          ),
+                          iconValue: state.iconValue,
+                        )),
                   fallbackIcon: Icons.key,
                   title: 'Иконка записи',
                   onChanged: notifier.setIconRef,
@@ -237,14 +244,14 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  
+
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
-                  
+
                   onTagsSelected: notifier.setTags,
                 ),
                 const SizedBox(height: 12),

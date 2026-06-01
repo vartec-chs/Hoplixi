@@ -14,12 +14,7 @@ class IconCard extends ConsumerWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
-  const IconCard({
-    super.key,
-    required this.icon,
-    this.onTap,
-    this.onLongPress,
-  });
+  const IconCard({super.key, required this.icon, this.onTap, this.onLongPress});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,11 +30,7 @@ class IconCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Иконка
-              Expanded(
-                child: Center(
-                  child: _buildIconAsync(ref),
-                ),
-              ),
+              Expanded(child: Center(child: _buildIconAsync(ref))),
               const SizedBox(height: 8),
               // Название
               Text(

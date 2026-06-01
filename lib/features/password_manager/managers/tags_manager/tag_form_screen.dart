@@ -189,13 +189,10 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color:
-                                    _selectedColor ?? Colors.grey.shade300,
+                                color: _selectedColor ?? Colors.grey.shade300,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.outline,
+                                  color: Theme.of(context).colorScheme.outline,
                                   width: 1,
                                 ),
                               ),
@@ -244,10 +241,7 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
         }
       } else {
         // Режим создания
-        final dto = CreateTagDto(
-          name: _name.trim(),
-          color: colorInt,
-        );
+        final dto = CreateTagDto(name: _name.trim(), color: colorInt);
 
         final result = await repositories.tag.createTag(dto);
         result.getOrThrow();

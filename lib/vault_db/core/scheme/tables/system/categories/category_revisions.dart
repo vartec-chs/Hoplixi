@@ -8,10 +8,10 @@ class CategoryRevisions extends Table {
   TextColumn get id => text().clientDefault(() => const Uuid().v4())();
 
   TextColumn get categoryId => text().nullable().references(
-        Categories,
-        #id,
-        onDelete: KeyAction.setNull,
-      )();
+    Categories,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   TextColumn get categoryOriginalId => text()();
 
@@ -38,69 +38,71 @@ class CategoryRevisions extends Table {
 
   @override
   List<String> get customConstraints => [
-        '''
+    '''
     CONSTRAINT ${CategoryRevisionConstraint.idNotBlank.constraintName}
     CHECK (
       length(trim(id)) > 0
     )
     ''',
-        '''
+    '''
     CONSTRAINT ${CategoryRevisionConstraint.originalCategoryIdNotBlank.constraintName}
     CHECK (
       length(trim(category_original_id)) > 0
     )
     ''',
-        '''
+    '''
     CONSTRAINT ${CategoryRevisionConstraint.nameNotBlank.constraintName}
     CHECK (
       length(trim(name)) > 0
     )
     ''',
-        '''
+    '''
     CONSTRAINT ${CategoryRevisionConstraint.nameNoOuterWhitespace.constraintName}
     CHECK (
       name = trim(name)
     )
     ''',
-        '''
+    '''
     CONSTRAINT ${CategoryRevisionConstraint.iconRefIdNotBlank.constraintName}
     CHECK (
       icon_ref_id IS NULL
       OR length(trim(icon_ref_id)) > 0
     )
     ''',
-        '''
+    '''
     CONSTRAINT ${CategoryRevisionConstraint.colorRange.constraintName}
     CHECK (
       color BETWEEN 0 AND 16777215
     )
     ''',
-        '''
+    '''
     CONSTRAINT ${CategoryRevisionConstraint.parentOriginalIdNotBlank.constraintName}
     CHECK (
       parent_original_id IS NULL
       OR length(trim(parent_original_id)) > 0
     )
     ''',
-        '''
+    '''
     CONSTRAINT ${CategoryRevisionConstraint.categoryModifiedAtRange.constraintName}
     CHECK (
       category_modified_at >= category_created_at
     )
     ''',
-      ];
+  ];
 }
 
 enum CategoryRevisionConstraint {
   idNotBlank('chk_category_revisions_id_not_blank'),
   originalCategoryIdNotBlank(
-      'chk_category_revisions_category_original_id_not_blank'),
+    'chk_category_revisions_category_original_id_not_blank',
+  ),
   nameNotBlank('chk_category_revisions_name_not_blank'),
   nameNoOuterWhitespace('chk_category_revisions_name_no_outer_whitespace'),
   iconRefIdNotBlank('chk_category_revisions_icon_ref_id_not_blank'),
   colorRange('chk_category_revisions_color_range'),
   parentOriginalIdNotBlank(
-      'chk_category_revisions_parent_original_id_not_blank'),
+    'chk_category_revisions_parent_original_id_not_blank',
+  ),
   categoryModifiedAtRange('chk_category_revisions_category_modified_at_range');
 
   const CategoryRevisionConstraint(this.constraintName);

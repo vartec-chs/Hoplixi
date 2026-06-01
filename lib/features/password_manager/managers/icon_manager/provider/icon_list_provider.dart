@@ -10,8 +10,8 @@ import 'icon_filter_provider.dart';
 /// Провайдер для получения отфильтрованного списка иконок
 final iconListProvider =
     AsyncNotifierProvider<IconListNotifier, IconPaginationState>(
-  IconListNotifier.new,
-);
+      IconListNotifier.new,
+    );
 
 /// AsyncNotifier для управления списком иконок
 class IconListNotifier extends AsyncNotifier<IconPaginationState> {

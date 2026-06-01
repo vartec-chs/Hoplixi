@@ -108,7 +108,6 @@ class _IdentityFormScreenState extends ConsumerState<IdentityFormScreen> {
 
   /// Открывает выбор даты + времени и передаёт результат в [onChanged] в ISO 8601.
 
-
   Future<void> _save() async {
     final success = await ref
         .read(identityFormProvider(widget.identityId).notifier)

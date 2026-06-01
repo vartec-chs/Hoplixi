@@ -85,10 +85,7 @@ class _RecoveryCodesViewScreenState
     final id = code.id;
     if (id == null) return;
     final repos = await ref.read(vaultRepositories.future);
-    await repos.recoveryCodes.markCodeUsed(
-      codeId: id,
-      usedAt: DateTime.now(),
-    );
+    await repos.recoveryCodes.markCodeUsed(codeId: id, usedAt: DateTime.now());
     if (mounted) {
       Toaster.success(title: context.t.dashboard_forms.code_marked_used);
       await _load();
@@ -266,8 +263,7 @@ class _RecoveryCodesViewScreenState
                             ),
                             const SizedBox(width: 8),
                             _StatChip(
-                              icon:
-                                  _oneTime ? Icons.looks_one : Icons.repeat,
+                              icon: _oneTime ? Icons.looks_one : Icons.repeat,
                               label: _oneTime
                                   ? l10n.one_time_codes_label
                                   : 'multi-use',
@@ -281,9 +277,7 @@ class _RecoveryCodesViewScreenState
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
-                        CustomFieldsViewSection(
-                          itemId: widget.recoveryCodesId,
-                        ),
+                        CustomFieldsViewSection(itemId: widget.recoveryCodesId),
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,

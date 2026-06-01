@@ -182,7 +182,7 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
             selectedCategoryName: state.categoryName,
             label: 'Категория',
             hintText: 'Выберите категорию',
-            
+
             onCategorySelected: (categoryId, categoryName) {
               ref
                   .read(noteFormProvider.notifier)
@@ -192,10 +192,14 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
           const SizedBox(height: 16),
 
           IconSourcePickerButton(
-            iconRef: state.iconSource == null ? null : CreateIconRefDto(
-              iconSourceType: IconSourceType.values.byName(state.iconSource!),
-              iconValue: state.iconValue,
-            ),
+            iconRef: state.iconSource == null
+                ? null
+                : CreateIconRefDto(
+                    iconSourceType: IconSourceType.values.byName(
+                      state.iconSource!,
+                    ),
+                    iconValue: state.iconValue,
+                  ),
             fallbackIcon: Icons.note_alt_outlined,
             title: 'Иконка записи',
             onChanged: ref.read(noteFormProvider.notifier).setIconRef,
@@ -208,7 +212,7 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
             selectedTagNames: state.tagNames,
             label: 'Теги',
             hintText: 'Выберите теги',
-            
+
             onTagsSelected: (tagIds, tagNames) {
               ref.read(noteFormProvider.notifier).setTags(tagIds, tagNames);
             },

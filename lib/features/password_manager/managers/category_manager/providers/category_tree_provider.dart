@@ -27,7 +27,7 @@ class CategoryTreeNotifier extends AsyncNotifier<CategoryTreeState> {
     final repos = await ref.read(vaultRepositories.future);
     final result = await repos.category.getCategoryTree();
     final dtos = result.getOrThrow();
-    
+
     final roots = dtos.map(CategoryTreeNodeUi.fromDto).toList();
 
     return CategoryTreeState(

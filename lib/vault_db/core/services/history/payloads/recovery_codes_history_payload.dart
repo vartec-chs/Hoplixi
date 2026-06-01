@@ -3,18 +3,10 @@ import '../models/history_field_snapshot.dart';
 import '../models/history_payload.dart';
 
 class RecoveryCodesHistoryPayload extends HistoryPayload {
-  const RecoveryCodesHistoryPayload({
-    this.generatedAt,
-    this.oneTime,
-  });
-
-
+  const RecoveryCodesHistoryPayload({this.generatedAt, this.oneTime});
 
   final DateTime? generatedAt;
   final bool? oneTime;
-
-
-
 
   @override
   VaultItemType get type => VaultItemType.recoveryCodes;

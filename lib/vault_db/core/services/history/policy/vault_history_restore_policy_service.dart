@@ -35,9 +35,7 @@ class VaultHistoryRestorePolicyService {
         'Физический файл не копируется и не проверяется автоматически',
       ];
     } else if (type == VaultItemType.recoveryCodes) {
-      return [
-        'Сами значения кодов восстановления не сохраняются в истории',
-      ];
+      return ['Сами значения кодов восстановления не сохраняются в истории'];
     }
     return const [];
   }

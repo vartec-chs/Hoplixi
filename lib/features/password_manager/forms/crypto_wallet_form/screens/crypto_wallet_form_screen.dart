@@ -316,14 +316,14 @@ class _CryptoWalletFormScreenState
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  
+
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
-                  
+
                   onTagsSelected: notifier.setTags,
                 ),
                 const SizedBox(height: 12),

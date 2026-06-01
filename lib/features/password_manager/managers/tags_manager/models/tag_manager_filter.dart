@@ -2,11 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'tag_manager_filter.freezed.dart';
 
-enum TagManagerSortField {
-  name,
-  createdAt,
-  modifiedAt,
-}
+enum TagManagerSortField { name, createdAt, modifiedAt }
 
 @freezed
 sealed class TagManagerFilter with _$TagManagerFilter {

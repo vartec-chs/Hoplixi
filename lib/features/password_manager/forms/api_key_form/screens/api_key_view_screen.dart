@@ -12,7 +12,6 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 
-
 class ApiKeyViewScreen extends ConsumerStatefulWidget {
   const ApiKeyViewScreen({super.key, required this.apiKeyId});
 
@@ -135,7 +134,9 @@ class _ApiKeyViewScreenState extends ConsumerState<ApiKeyViewScreen> {
     try {
       final repositories = await ref.read(vaultRepositories.future);
       if (!mounted) return;
-      key ??= (await repositories.apiKey.getViewById(widget.apiKeyId)).getOrNull()?.getOrNull()?.apiKey.key;
+      key ??= (await repositories.apiKey.getViewById(
+        widget.apiKeyId,
+      )).getOrNull()?.getOrNull()?.apiKey.key;
     } catch (e) {
       if (mounted) {
         Toaster.error(

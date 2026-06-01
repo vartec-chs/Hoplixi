@@ -106,12 +106,10 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
     ),
   );
 
-  void setKeyType(String value) =>
-      _update((s) => s.copyWith(keyType: value));
+  void setKeyType(String value) => _update((s) => s.copyWith(keyType: value));
   void setKeyTypeOther(String value) =>
       _update((s) => s.copyWith(keyTypeOther: value));
-  void setKeySize(int? value) =>
-      _update((s) => s.copyWith(keySize: value));
+  void setKeySize(int? value) => _update((s) => s.copyWith(keySize: value));
   void setDescription(String value) =>
       _update((s) => s.copyWith(description: value));
   void setNote(String? noteId, String? noteName) =>
@@ -121,8 +119,10 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
   );
 
   void setIconRef(IconRefDto? iconRef) => _update(
-    (s) =>
-        s.copyWith(iconSource: iconRef?.iconSourceType?.name, iconValue: iconRef?.iconValue),
+    (s) => s.copyWith(
+      iconSource: iconRef?.iconSourceType?.name,
+      iconValue: iconRef?.iconValue,
+    ),
   );
 
   void setTags(List<String> tagIds, List<String> tagNames) =>
@@ -248,4 +248,3 @@ class SshKeyFormNotifier extends AsyncNotifier<SshKeyFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

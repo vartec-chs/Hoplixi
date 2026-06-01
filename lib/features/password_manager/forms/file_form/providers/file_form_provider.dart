@@ -287,10 +287,7 @@ class FileFormNotifier extends Notifier<FileFormState> {
               state = state.copyWith(uploadProgress: percentage / 100.0);
             },
           );
-          logInfo(
-            'File content updated: ${state.editingFileId}',
-            tag: _logTag,
-          );
+          logInfo('File content updated: ${state.editingFileId}', tag: _logTag);
         }
 
         await saveCustomFields(ref, state.editingFileId!, state.customFields);

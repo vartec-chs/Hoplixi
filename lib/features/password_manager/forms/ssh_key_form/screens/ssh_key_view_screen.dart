@@ -49,9 +49,7 @@ class _SshKeyViewScreenState extends ConsumerState<SshKeyViewScreen> {
       final view = viewResult.getOrNull()?.getOrNull();
       if (view == null) {
         if (mounted) {
-          Toaster.error(
-            title: context.t.dashboard_forms.ssh_key_not_found,
-          );
+          Toaster.error(title: context.t.dashboard_forms.ssh_key_not_found);
           context.pop();
         }
         return;

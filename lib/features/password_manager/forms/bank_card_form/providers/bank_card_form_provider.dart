@@ -9,7 +9,6 @@ import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/bank_card/bank_card_items.dart';
 
-
 import '../models/bank_card_form_state.dart';
 
 const _logTag = 'BankCardFormProvider';
@@ -421,4 +420,3 @@ class BankCardFormNotifier extends Notifier<BankCardFormState> {
     state = state.copyWith(isSaved: false);
   }
 }
-

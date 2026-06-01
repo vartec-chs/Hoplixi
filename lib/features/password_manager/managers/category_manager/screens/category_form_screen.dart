@@ -57,20 +57,23 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     if (_isEditMode) {
       try {
         final repos = await ref.read(vaultRepositories.future);
-        final categoryResult = await repos.category.getCategory(widget.categoryId!);
+        final categoryResult = await repos.category.getCategory(
+          widget.categoryId!,
+        );
         final category = categoryResult.getOrNull()?.getOrNull();
 
         if (category != null) {
           String? parentName;
           if (category.parentId != null) {
-            final parentResult = await repos.category.getCategory(category.parentId!);
+            final parentResult = await repos.category.getCategory(
+              category.parentId!,
+            );
             parentName = parentResult.getOrNull()?.getOrNull()?.name;
           }
 
           IconRefDto? iconRef;
           if (category.iconRefId != null) {
-            final iconResult =
-                await repos.icon.getIconRef(category.iconRefId!);
+            final iconResult = await repos.icon.getIconRef(category.iconRefId!);
             final viewDto = iconResult.getOrNull()?.getOrNull();
             if (viewDto != null) {
               iconRef = IconRefDto(

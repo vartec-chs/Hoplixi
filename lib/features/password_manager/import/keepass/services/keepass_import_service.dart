@@ -15,8 +15,6 @@ import 'package:hoplixi/vault_db/core/services/entities/password_service.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/rust/api/keepass_api/types.dart';
 
-
-
 class KeepassImportExecutionOptions {
   final bool importOtps;
   final bool importNotes;
@@ -94,8 +92,8 @@ class KeepassImportService {
     FrbKeepassDatabaseExport export,
     KeepassImportExecutionOptions options,
   ) async {
-    final existingCategories =
-        (await categoryRepository.getAllCategories()).getOrThrow();
+    final existingCategories = (await categoryRepository.getAllCategories())
+        .getOrThrow();
     final existingTags = (await tagRepository.getAllTags()).getOrThrow();
 
     final categoriesByName = <String, _ExistingCategoryRef>{};
@@ -338,17 +336,11 @@ class KeepassImportService {
 
         final selectedName = category == null ? desiredName : fallbackName;
         final createRes = await categoryRepository.createCategory(
-          CreateCategoryDto(
-            name: selectedName,
-            parentId: parentId,
-          ),
+          CreateCategoryDto(name: selectedName, parentId: parentId),
         );
 
         final newId = createRes.getOrThrow();
-        category = _ExistingCategoryRef(
-          id: newId,
-          parentId: parentId,
-        );
+        category = _ExistingCategoryRef(id: newId, parentId: parentId);
         categoriesByName[_normalizeKey(selectedName)] = category;
         createdCount += 1;
       }
@@ -983,10 +975,7 @@ class _ExistingCategoryRef {
   final String id;
   final String? parentId;
 
-  const _ExistingCategoryRef({
-    required this.id,
-    required this.parentId,
-  });
+  const _ExistingCategoryRef({required this.id, required this.parentId});
 }
 
 class _ExistingTagRef {
@@ -1026,4 +1015,3 @@ class _CustomFieldSeed {
     this.isSecret = false,
   });
 }
-

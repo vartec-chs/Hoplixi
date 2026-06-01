@@ -594,7 +594,7 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                             label: context.t.dashboard_forms.category_label,
                             hintText:
                                 context.t.dashboard_forms.select_category_hint,
-                            
+
                             onCategorySelected: (categoryId, categoryName) {
                               ref
                                   .read(passwordFormProvider.notifier)
@@ -604,7 +604,13 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
                           const SizedBox(height: 16),
 
                           IconSourcePickerButton(
-                            iconRef: (state.iconSource == null ? null : IconRefDto(iconSourceType: IconSourceType.values.byName(state.iconSource!), iconValue: state.iconValue)),
+                            iconRef: (state.iconSource == null
+                                ? null
+                                : IconRefDto(
+                                    iconSourceType: IconSourceType.values
+                                        .byName(state.iconSource!),
+                                    iconValue: state.iconValue,
+                                  )),
                             fallbackIcon: Icons.lock,
                             title: 'Иконка записи',
                             onChanged: ref

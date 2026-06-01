@@ -10,9 +10,7 @@ import '../../../scheme/tables/tables.dart';
 import 'vault_snapshot_type_handler.dart';
 
 class RecoveryCodesSnapshotHandler implements VaultSnapshotTypeHandler {
-  RecoveryCodesSnapshotHandler({
-    required this.recoveryCodesHistoryDao,
-  });
+  RecoveryCodesSnapshotHandler({required this.recoveryCodesHistoryDao});
 
   final RecoveryCodesHistoryDao recoveryCodesHistoryDao;
 

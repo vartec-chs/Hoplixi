@@ -227,11 +227,7 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
 
         res.getOrThrow();
 
-        await saveCustomFields(
-          ref,
-          c.editingRecoveryCodesId!,
-          c.customFields,
-        );
+        await saveCustomFields(ref, c.editingRecoveryCodesId!, c.customFields);
 
         ref
             .read(dashboardListRefreshTriggerProvider.notifier)
@@ -276,4 +272,3 @@ class RecoveryCodesFormNotifier extends AsyncNotifier<RecoveryCodesFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

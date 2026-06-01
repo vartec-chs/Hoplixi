@@ -180,19 +180,21 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
       middleName = parts.sublist(1, parts.length - 1).join(' ');
     }
 
-    _update((s) => s.copyWith(
-          name: name,
-          firstName: firstName,
-          middleName: middleName,
-          lastName: lastName,
-          phone: phone ?? '',
-          email: email ?? '',
-          company: company ?? '',
-          jobTitle: jobTitle ?? '',
-          address: address ?? '',
-          website: website ?? '',
-          birthday: birthday,
-        ));
+    _update(
+      (s) => s.copyWith(
+        name: name,
+        firstName: firstName,
+        middleName: middleName,
+        lastName: lastName,
+        phone: phone ?? '',
+        email: email ?? '',
+        company: company ?? '',
+        jobTitle: jobTitle ?? '',
+        address: address ?? '',
+        website: website ?? '',
+        birthday: birthday,
+      ),
+    );
   }
 
   void setTags(List<String> tagIds, List<String> tagNames) {
@@ -353,4 +355,3 @@ class ContactFormNotifier extends AsyncNotifier<ContactFormState> {
     _update((s) => s.copyWith(isSaved: false));
   }
 }
-

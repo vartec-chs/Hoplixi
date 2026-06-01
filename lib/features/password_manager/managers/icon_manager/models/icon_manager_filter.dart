@@ -2,11 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'icon_manager_filter.freezed.dart';
 
-enum IconManagerSortField {
-  name,
-  createdAt,
-  modifiedAt,
-}
+enum IconManagerSortField { name, createdAt, modifiedAt }
 
 @freezed
 sealed class IconManagerFilter with _$IconManagerFilter {

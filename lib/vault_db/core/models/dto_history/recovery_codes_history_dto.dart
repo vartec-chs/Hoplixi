@@ -15,6 +15,7 @@ sealed class RecoveryCodesHistoryDataDto with _$RecoveryCodesHistoryDataDto {
   factory RecoveryCodesHistoryDataDto.fromJson(Map<String, dynamic> json) =>
       _$RecoveryCodesHistoryDataDtoFromJson(json);
 }
+
 @freezed
 sealed class RecoveryCodesHistoryViewDto with _$RecoveryCodesHistoryViewDto {
   const factory RecoveryCodesHistoryViewDto({

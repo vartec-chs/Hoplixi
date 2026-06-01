@@ -78,8 +78,9 @@ class HistoryRepository {
     required EntityType entityType,
     required String revisionId,
   }) async {
-    (await historyAssembly.deleteService.deleteRevision(revisionId))
-        .getOrThrow();
+    (await historyAssembly.deleteService.deleteRevision(
+      revisionId,
+    )).getOrThrow();
     return true;
   }
 
@@ -94,10 +95,7 @@ class HistoryRepository {
     return true;
   }
 
-  VaultSnapshotHistoryFilter _filterFor(
-    HistoryQueryState query, {
-    int? limit,
-  }) {
+  VaultSnapshotHistoryFilter _filterFor(HistoryQueryState query, {int? limit}) {
     return VaultSnapshotHistoryFilter.create(
       itemId: query.entityId,
       types: [_toVaultItemType(query.entityType)],

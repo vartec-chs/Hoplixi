@@ -99,9 +99,7 @@ Future<void> showCategoryManagerFilterSheet(
                                   ),
                                 ),
                               const SizedBox(width: 8),
-                              Text(selectedColor != null
-                                  ? 'Выбран'
-                                  : 'Любой'),
+                              Text(selectedColor != null ? 'Выбран' : 'Любой'),
                               const Spacer(),
                               if (selectedColor != null)
                                 IconButton(

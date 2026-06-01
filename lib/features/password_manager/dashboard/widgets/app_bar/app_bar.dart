@@ -5,7 +5,6 @@ import 'package:hoplixi/core/app_prefs/settings_prefs.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/store_settings/index.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -98,7 +97,7 @@ final class _DashboardSliverAppBarState
     final currentType = widget.entityType;
     final hasActiveFilters = _hasActiveFilters(filters);
     final isStoreOpen = ref
-        .watch(vaultDBProvider)
+        .watch(vaultDBStateProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
 
     if (_searchController.text != filters.query) {

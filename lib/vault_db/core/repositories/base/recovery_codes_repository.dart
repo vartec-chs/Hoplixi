@@ -41,7 +41,6 @@ class RecoveryCodesRepository {
             itemId: itemId,
             generatedAt: Value(dto.recoveryCodes.generatedAt),
             oneTime: Value(dto.recoveryCodes.oneTime),
-          
           ),
         );
 
@@ -435,7 +434,7 @@ class RecoveryCodesRepository {
       db.vaultItems.archivedAt,
       db.vaultItems.deletedAt,
       db.vaultItems.recentScore,
-  
+
       db.recoveryCodesItems.generatedAt,
       db.recoveryCodesItems.oneTime,
     ]);

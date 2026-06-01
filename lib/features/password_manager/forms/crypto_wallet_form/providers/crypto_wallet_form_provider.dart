@@ -256,4 +256,3 @@ class CryptoWalletFormNotifier extends AsyncNotifier<CryptoWalletFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

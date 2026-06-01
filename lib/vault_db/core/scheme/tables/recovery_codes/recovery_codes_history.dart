@@ -35,7 +35,7 @@ class RecoveryCodesHistory extends Table {
 }
 
 enum RecoveryCodesHistoryConstraint {
-  historyIdNotBlank('chk_recovery_codes_history_history_id_not_blank'),;
+  historyIdNotBlank('chk_recovery_codes_history_history_id_not_blank');
 
   const RecoveryCodesHistoryConstraint(this.constraintName);
 

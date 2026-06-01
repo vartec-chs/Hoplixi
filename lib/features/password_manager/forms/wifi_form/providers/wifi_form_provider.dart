@@ -116,8 +116,7 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
     );
   }
 
-  void setPassword(String value) =>
-      _update((s) => s.copyWith(password: value));
+  void setPassword(String value) => _update((s) => s.copyWith(password: value));
   void setSecurityType(String value) =>
       _update((s) => s.copyWith(securityType: value));
   void setSecurityTypeOther(String value) =>
@@ -137,8 +136,10 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
   );
 
   void setIconRef(IconRefDto? iconRef) => _update(
-    (s) =>
-        s.copyWith(iconSource: iconRef?.iconSourceType?.name, iconValue: iconRef?.iconValue),
+    (s) => s.copyWith(
+      iconSource: iconRef?.iconSourceType?.name,
+      iconValue: iconRef?.iconValue,
+    ),
   );
 
   void setTags(List<String> tagIds, List<String> tagNames) =>
@@ -157,9 +158,7 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
         ? t.dashboard_forms.validation_required_ssid
         : null;
 
-    _update(
-      (s) => s.copyWith(nameError: nameError, ssidError: ssidError),
-    );
+    _update((s) => s.copyWith(nameError: nameError, ssidError: ssidError));
     return nameError == null && ssidError == null;
   }
 
@@ -268,4 +267,3 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
 
   void resetSaved() => _update((s) => s.copyWith(isSaved: false));
 }
-

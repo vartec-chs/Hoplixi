@@ -21,7 +21,10 @@ class TagFilterNotifier extends Notifier<TagManagerFilter> {
       _debounceTimer?.cancel();
     });
 
-    return const TagManagerFilter(sortField: TagManagerSortField.name, limit: 30);
+    return const TagManagerFilter(
+      sortField: TagManagerSortField.name,
+      limit: 30,
+    );
   }
 
   /// Обновить поисковый запрос с дебаунсингом
@@ -75,7 +78,10 @@ class TagFilterNotifier extends Notifier<TagManagerFilter> {
   /// Сбросить фильтр к начальному состоянию
   Future<void> reset() async {
     _debounceTimer?.cancel();
-    state = const TagManagerFilter(sortField: TagManagerSortField.name, limit: 30);
+    state = const TagManagerFilter(
+      sortField: TagManagerSortField.name,
+      limit: 30,
+    );
   }
 
   /// Обновить весь фильтр сразу

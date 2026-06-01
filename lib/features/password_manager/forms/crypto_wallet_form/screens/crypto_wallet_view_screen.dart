@@ -56,11 +56,15 @@ class _CryptoWalletViewScreenState
     try {
       final repos = await ref.read(vaultRepositories.future);
       if (!mounted) return;
-      final viewResult = await repos.cryptoWallet.getViewById(widget.cryptoWalletId);
+      final viewResult = await repos.cryptoWallet.getViewById(
+        widget.cryptoWalletId,
+      );
       final view = viewResult.getOrNull()?.getOrNull();
       if (view == null) {
         if (mounted) {
-          Toaster.error(title: context.t.dashboard_forms.crypto_wallet_not_found);
+          Toaster.error(
+            title: context.t.dashboard_forms.crypto_wallet_not_found,
+          );
           context.pop();
         }
         return;

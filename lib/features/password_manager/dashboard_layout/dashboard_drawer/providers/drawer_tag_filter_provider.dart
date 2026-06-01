@@ -74,10 +74,7 @@ class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
         .toList(growable: false);
   }
 
-  List<TagCardDto> _sliceTags({
-    required int offset,
-    required String query,
-  }) {
+  List<TagCardDto> _sliceTags({required int offset, required String query}) {
     final tags = _filteredTags(query);
     final end = (offset + _kTagPageSize).clamp(0, tags.length);
     if (offset >= end) return const [];

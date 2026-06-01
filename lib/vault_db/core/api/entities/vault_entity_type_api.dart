@@ -6,8 +6,7 @@ typedef VaultEntityCreate<TCreate extends Object> =
     AsyncDBResult<String> Function(TCreate dto);
 typedef VaultEntityUpdate<TPatch extends Object> =
     AsyncDBResult<Unit> Function(TPatch dto);
-typedef VaultEntityStateMutation =
-    AsyncDBResult<Unit> Function(String itemId);
+typedef VaultEntityStateMutation = AsyncDBResult<Unit> Function(String itemId);
 typedef VaultEntityBoolStateMutation =
     AsyncDBResult<Unit> Function(String itemId, bool value);
 typedef VaultEntityGetView<TView extends Object> =

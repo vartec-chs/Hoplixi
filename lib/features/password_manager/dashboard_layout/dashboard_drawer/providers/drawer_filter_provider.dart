@@ -88,9 +88,9 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
 
   Future<void> _refreshCategories() async {
     final repositories = await ref.read(vaultRepositories.future);
-    final categories = (await repositories.category.getAllCategories())
-        .getOrThrow()
-      ..sort((a, b) => a.name.compareTo(b.name));
+    final categories =
+        (await repositories.category.getAllCategories()).getOrThrow()
+          ..sort((a, b) => a.name.compareTo(b.name));
     _allCategories = categories;
   }
 
@@ -127,10 +127,7 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
     return categories.sublist(offset, end);
   }
 
-  List<TagCardDto> _sliceTags({
-    required int offset,
-    required String query,
-  }) {
+  List<TagCardDto> _sliceTags({required int offset, required String query}) {
     final tags = _filteredTags(query);
     final end = (offset + _kPageSize).clamp(0, tags.length);
     if (offset >= end) return const [];
@@ -164,7 +161,9 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
         offset: offset,
         query: currentState.categorySearchQuery,
       );
-      final total = _filteredCategories(currentState.categorySearchQuery).length;
+      final total = _filteredCategories(
+        currentState.categorySearchQuery,
+      ).length;
 
       logDebug(
         '$_logTag Загружено категорий: ${categories.length}, reset: $reset',
@@ -245,7 +244,10 @@ class DrawerFilterNotifier extends AsyncNotifier<DrawerFilterState> {
       if (reset) await _refreshTags();
 
       final offset = reset ? 0 : currentState.tagsOffset;
-      final tags = _sliceTags(offset: offset, query: currentState.tagSearchQuery);
+      final tags = _sliceTags(
+        offset: offset,
+        query: currentState.tagSearchQuery,
+      );
       final total = _filteredTags(currentState.tagSearchQuery).length;
 
       logDebug('$_logTag Загружено тегов: ${tags.length}, reset: $reset');

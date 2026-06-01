@@ -228,14 +228,14 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                 CategoryPickerField(
                   selectedCategoryId: state.categoryId,
                   selectedCategoryName: state.categoryName,
-                  
+
                   onCategorySelected: notifier.setCategory,
                 ),
                 const SizedBox(height: 12),
                 TagPickerField(
                   selectedTagIds: state.tagIds,
                   selectedTagNames: state.tagNames,
-                  
+
                   onTagsSelected: notifier.setTags,
                 ),
                 const SizedBox(height: 12),
@@ -256,7 +256,7 @@ class _CertificateFormScreenState extends ConsumerState<CertificateFormScreen> {
                   ),
                   onChanged: notifier.setDescription,
                 ),
-                 const SizedBox(height: 12),
+                const SizedBox(height: 12),
                 CustomFieldsEditor(
                   fields: state.customFields,
                   onChanged: notifier.setCustomFields,

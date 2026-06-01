@@ -55,7 +55,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
         final repos = await ref.read(vaultRepositories.future);
         final iconResult = await repos.icon.getCustomIcon(widget.iconId!);
         final icon = iconResult.getOrNull()?.getOrNull();
-        
+
         if (icon != null) {
           setState(() {
             _name = icon.name;
@@ -175,7 +175,7 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
           'gif' => CustomIconFormat.gif,
           _ => CustomIconFormat.png,
         };
-        
+
         Uint8List processedData = data;
 
         // Обрабатываем растровые изображения
@@ -285,18 +285,14 @@ class _IconFormScreenState extends ConsumerState<IconFormScreen> {
                   Text(
                     'Поддерживаемые форматы: SVG, PNG, JPG, WEBP (макс. 500 КБ)',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   Text(
                     'Растровые изображения будут автоматически обрезаны до 256x256 px',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
 
                   if (_iconData != null) ...[

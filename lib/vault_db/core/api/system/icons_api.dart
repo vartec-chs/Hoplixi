@@ -7,7 +7,8 @@ import 'package:hoplixi/vault_db/core/repositories/base/system/icon_repository.d
 
 /// Public API boundary for icon refs and custom icons.
 class IconsApi {
-  const IconsApi({required IconRepository repository}) : _repository = repository;
+  const IconsApi({required IconRepository repository})
+    : _repository = repository;
 
   final IconRepository _repository;
 
