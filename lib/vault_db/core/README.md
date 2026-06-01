@@ -18,10 +18,17 @@ DAOs или сервисов, пожалуйста,обновляйте этот
 
 - `api/` содержит стабильные фасады для app/feature-слоя.
 - Feature/app-слой должен использовать API-фасады вместо прямых обращений к DAO.
-- На первом этапе API покрывает system-домены: категории, теги, icon refs и
-  custom icons.
+- System API покрывает категории, теги, icon refs, custom icons, store metadata
+  и store settings.
 - Read-only `items` API покрывает карточные фильтры и счетчики vault items без
   выдачи секретных полей.
+- Entity API покрывает типизированные create/update/state операции для всех
+  vault item типов через `VaultEntityServices`, а также detail/card/list reads
+  и явное permanent delete через repositories.
+- History API покрывает карточки, timeline, детали ревизий, restore, delete и
+  retention cleanup.
+- Documents API покрывает версии документов.
+- Relations API покрывает теги, категории и item links.
 - API-фасады делегируют операции существующим repositories/services и сохраняют
   typed result-контракты core.
 

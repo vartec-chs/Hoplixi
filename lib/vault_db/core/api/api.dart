@@ -1,4 +1,10 @@
+export 'documents/vault_documents_api.dart';
+export 'entities/vault_entities_api.dart';
+export 'entities/vault_entity_type_api.dart';
+export 'history/vault_history_api.dart';
 export 'items/vault_items_api.dart';
+export 'relations/vault_relations_api.dart';
+export 'store/vault_store_api.dart';
 export 'system/categories_api.dart';
 export 'system/icons_api.dart';
 export 'system/tags_api.dart';

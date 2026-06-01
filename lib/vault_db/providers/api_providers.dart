@@ -17,6 +17,33 @@ final vaultItemsApiProvider = FutureProvider<VaultItemsApi>((ref) async {
   return api.items;
 });
 
+final vaultEntitiesApiProvider = FutureProvider<VaultEntitiesApi>((ref) async {
+  final api = await ref.watch(vaultApiProvider.future);
+  return api.entities;
+});
+
+final vaultHistoryApiProvider = FutureProvider<VaultHistoryApi>((ref) async {
+  final api = await ref.watch(vaultApiProvider.future);
+  return api.history;
+});
+
+final vaultDocumentsApiProvider = FutureProvider<VaultDocumentsApi>((
+  ref,
+) async {
+  final api = await ref.watch(vaultApiProvider.future);
+  return api.documents;
+});
+
+final vaultRelationsApiProvider = FutureProvider<VaultRelationsApi>((ref) async {
+  final api = await ref.watch(vaultApiProvider.future);
+  return api.relations;
+});
+
+final vaultStoreApiProvider = FutureProvider<VaultStoreApi>((ref) async {
+  final api = await ref.watch(vaultApiProvider.future);
+  return api.store;
+});
+
 final vaultCategoriesApiProvider = FutureProvider<CategoriesApi>((ref) async {
   final system = await ref.watch(vaultSystemApiProvider.future);
   return system.categories;

@@ -13,8 +13,13 @@
   `VaultCoreApi` и system API для категорий, тегов, icon refs и custom icons.
 - Добавлен read-only `VaultItemsApi` для карточных фильтров и счетчиков vault
   items поверх существующего `VaultCardFilterService`.
+- Добавлены `VaultEntitiesApi`, `VaultHistoryApi`, `VaultDocumentsApi`,
+  `VaultRelationsApi` и `VaultStoreApi`, закрывающие публичный доступ к
+  существующим core services через API-фасады.
+- `VaultEntitiesApi` расширен typed detail/card/list reads и явным
+  `deletePermanently` поверх repositories.
 - Добавлены Riverpod providers для доступа app/feature-слоя к `VaultCoreApi` и
-  system API без прямой сборки repositories.
+  доменным API без прямой сборки repositories/services.
 
 ### password_manager
 

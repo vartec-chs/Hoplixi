@@ -189,6 +189,34 @@ Provider layer отвечает за:
 - docs обновлены;
 - `CHANGELOG.md` обновлен.
 
+## Текущее состояние реализации
+
+Начальный API-слой создан в `lib/vault_db/core/api/`.
+
+Публичные фасады:
+
+- `VaultCoreApi` - root facade и composition root для core services.
+- `VaultSystemApi` - categories, tags, icons.
+- `VaultStoreApi` - store metadata и store settings.
+- `VaultItemsApi` - read-only карточные фильтры и счетчики.
+- `VaultEntitiesApi` - typed create/update/state operations, detail/card/list
+  reads и explicit permanent delete для vault item типов.
+- `VaultHistoryApi` - history cards, timeline, revision detail, restore,
+  delete, retention cleanup.
+- `VaultDocumentsApi` - document versions.
+- `VaultRelationsApi` - tags/category relations и item links.
+
+App/feature-слой должен получать API через `lib/vault_db/providers`:
+
+- `vaultApiProvider`
+- `vaultSystemApiProvider`
+- `vaultItemsApiProvider`
+- `vaultEntitiesApiProvider`
+- `vaultHistoryApiProvider`
+- `vaultDocumentsApiProvider`
+- `vaultRelationsApiProvider`
+- `vaultStoreApiProvider`
+
 ## Agent Notes
 
 - Не переписывать все сразу: сначала `system_api`, затем managers/pickers.
