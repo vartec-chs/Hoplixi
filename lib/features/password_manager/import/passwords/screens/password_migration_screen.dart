@@ -5,10 +5,10 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/import/passwords/providers/password_migration_provider.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/password_dto.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 class PasswordMigrationScreen extends ConsumerStatefulWidget {
   const PasswordMigrationScreen({super.key});
@@ -168,9 +168,11 @@ class _PasswordMigrationScreenState
                   final password = passwords[index];
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(password.name),
+                    title: Text(password.item.name),
                     subtitle: Text(
-                      password.login ?? password.email ?? 'Без логина и email',
+                      password.password.login ??
+                          password.password.email ??
+                          'Без логина и email',
                     ),
                     trailing: const Icon(Icons.lock_outline, size: 18),
                   );
@@ -602,12 +604,13 @@ class _PasswordDraftControllers {
 
   CreatePasswordDto toDto() {
     return CreatePasswordDto(
-      name: nameController.text.trim(),
-      password: passwordController.text.trim(),
-      login: _normalize(loginController.text),
-      email: _normalize(emailController.text),
-      url: _normalize(urlController.text),
-      description: _normalize(descriptionController.text),
+      item: VaultItemCreateDto(name: nameController.text.trim()),
+      password: PasswordDataDto(
+        password: passwordController.text.trim(),
+        login: _normalize(loginController.text),
+        email: _normalize(emailController.text),
+        url: _normalize(urlController.text),
+      ),
     );
   }
 

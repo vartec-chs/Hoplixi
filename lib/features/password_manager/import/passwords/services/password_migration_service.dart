@@ -1,16 +1,16 @@
-import 'package:hoplixi/main_db/core/old/daos/daos.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/password_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/services/entities/password_service.dart';
 import 'package:result_dart/result_dart.dart';
 
 class PasswordMigrationService {
-  final PasswordDao _passwordDao;
+  final PasswordService _passwordService;
 
-  PasswordMigrationService(this._passwordDao);
+  PasswordMigrationService(this._passwordService);
 
   Future<Result<int>> savePasswords(List<CreatePasswordDto> passwords) async {
     try {
       for (final dto in passwords) {
-        await _passwordDao.createPassword(dto);
+        await _passwordService.create(dto);
       }
 
       return Success(passwords.length);

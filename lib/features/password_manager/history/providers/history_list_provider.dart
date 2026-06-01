@@ -3,8 +3,10 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_item.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_list_state.dart';
+import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
 import 'package:hoplixi/features/password_manager/history/providers/history_search_provider.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/features/password_manager/history/services/history_repository.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 /// Константа размера страницы для пагинации истории
 const int kHistoryPageSize = 20;
@@ -28,36 +30,30 @@ class HistoryParams {
   int get hashCode => entityType.hashCode ^ entityId.hashCode;
 }
 
-/// Провайдер параметров истории
-/// Устанавливается перед использованием historyListProvider
+/// Провайдер параметров истории.
 final historyParamsProvider =
     NotifierProvider.autoDispose<HistoryParamsNotifier, HistoryParams?>(
       HistoryParamsNotifier.new,
     );
 
-/// Нотификатор для управления параметрами истории
 class HistoryParamsNotifier extends Notifier<HistoryParams?> {
   @override
   HistoryParams? build() => null;
 
-  /// Установить параметры истории
   void setParams(HistoryParams params) {
     state = params;
   }
 
-  /// Очистить параметры
   void clear() {
     state = null;
   }
 }
 
-/// Провайдер для управления списком истории с пагинацией
 final historyListProvider =
     AsyncNotifierProvider.autoDispose<HistoryListNotifier, HistoryListState>(
       HistoryListNotifier.new,
     );
 
-/// Нотификатор для управления списком истории
 class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
   static const String _logTag = 'HistoryListNotifier';
 
@@ -76,8 +72,6 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
 
   @override
   Future<HistoryListState> build() async {
-    // Следим за изменениями параметров через watch
-    // При изменении params провайдер автоматически пересоздастся
     final params = ref.watch(historyParamsProvider);
     if (params == null) {
       return const HistoryListState(
@@ -88,26 +82,115 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
       );
     }
 
-    // Следим за изменениями поиска через watch
-    // При изменении query провайдер автоматически пересоздастся
     final searchState = ref.watch(historySearchProvider);
-
-    return _loadInitialData(searchQuery: searchState.query);
+    return _loadPage(page: 1, searchQuery: searchState.query);
   }
 
-  /// Загрузить начальные данные
-  Future<HistoryListState> _loadInitialData({String? searchQuery}) async {
-    try {
-      final items = await _fetchHistoryItems(page: 1, searchQuery: searchQuery);
+  Future<void> loadMore() async {
+    final currentState = state.value;
+    if (currentState == null ||
+        currentState.isLoadingMore ||
+        !currentState.hasMore) {
+      return;
+    }
 
-      final totalCount = await _getTotalCount(searchQuery: searchQuery);
+    state = AsyncValue.data(currentState.copyWith(isLoadingMore: true));
+
+    final nextPage = currentState.currentPage + 1;
+    final searchState = ref.read(historySearchProvider);
+    final nextState = await _loadPage(
+      page: nextPage,
+      searchQuery: searchState.query,
+    );
+
+    state = AsyncValue.data(nextState);
+  }
+
+  Future<void> refresh() async {
+    final searchState = ref.read(historySearchProvider);
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => _loadPage(page: 1, searchQuery: searchState.query),
+    );
+  }
+
+  Future<bool> deleteHistoryItem(String historyId) async {
+    try {
+      final repository = await _repository();
+      final params = _params;
+      final deleted = await repository.deleteRevision(
+        entityType: params.entityType,
+        revisionId: historyId,
+      );
+      await refresh();
+      return deleted;
+    } catch (e, st) {
+      logError(
+        'Ошибка удаления записи истории',
+        tag: _logTag,
+        error: e,
+        stackTrace: st,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> deleteAllHistory() async {
+    try {
+      final repository = await _repository();
+      final params = _params;
+      final cleared = await repository.clearAllHistory(
+        entityType: params.entityType,
+        entityId: params.entityId,
+      );
+      await refresh();
+      return cleared;
+    } catch (e, st) {
+      logError(
+        'Ошибка очистки истории',
+        tag: _logTag,
+        error: e,
+        stackTrace: st,
+      );
+      return false;
+    }
+  }
+
+  Future<HistoryListState> _loadPage({
+    required int page,
+    String? searchQuery,
+  }) async {
+    try {
+      final params = _params;
+      final repository = await _repository();
+      final result = await repository.loadHistory(
+        HistoryQueryState(
+          entityType: params.entityType,
+          entityId: params.entityId,
+          search: searchQuery ?? '',
+          page: page,
+          pageSize: pageSize,
+        ),
+      );
 
       return HistoryListState(
-        items: items,
+        items: result.timelineItems
+            .map(
+              (item) => HistoryItem(
+                id: item.revisionId,
+                originalEntityId: item.originalEntityId,
+                entityType: params.entityType,
+                action: item.action,
+                title: item.title,
+                subtitle: item.subtitle,
+                actionAt: item.actionAt,
+              ),
+            )
+            .toList(),
         isLoading: false,
-        hasMore: items.length >= pageSize && items.length < totalCount,
-        currentPage: 1,
-        totalCount: totalCount,
+        hasMore: result.canLoadMore,
+        currentPage: page,
+        totalCount: result.totalCount,
       );
     } catch (e, st) {
       logError(
@@ -120,855 +203,10 @@ class HistoryListNotifier extends AsyncNotifier<HistoryListState> {
     }
   }
 
-  /// Загрузить следующую страницу
-  Future<void> loadMore() async {
-    final current = state.value;
-    if (current == null || current.isLoadingMore || !current.hasMore) return;
-
-    try {
-      state = AsyncValue.data(current.copyWith(isLoadingMore: true));
-
-      final nextPage = current.currentPage + 1;
-      final searchState = ref.read(historySearchProvider);
-      final newItems = await _fetchHistoryItems(
-        page: nextPage,
-        searchQuery: searchState.query,
-      );
-
-      final allItems = [...current.items, ...newItems];
-      final hasMore =
-          newItems.length >= pageSize && allItems.length < current.totalCount;
-
-      state = AsyncValue.data(
-        current.copyWith(
-          items: allItems,
-          isLoadingMore: false,
-          hasMore: hasMore,
-          currentPage: nextPage,
-        ),
-      );
-    } catch (e, st) {
-      logError(
-        'Ошибка загрузки дополнительной истории',
-        tag: _logTag,
-        error: e,
-        stackTrace: st,
-      );
-      state = AsyncValue.data(
-        current.copyWith(isLoadingMore: false, error: e.toString()),
-      );
-    }
-  }
-
-  /// Обновить список истории
-  Future<void> refresh() async {
-    final current = state.value;
-    final searchState = ref.read(historySearchProvider);
-
-    if (current != null) {
-      state = AsyncValue.data(current.copyWith(isLoading: true, error: null));
-      try {
-        final newState = await _loadInitialData(searchQuery: searchState.query);
-        state = AsyncValue.data(newState);
-      } catch (e) {
-        state = AsyncValue.data(
-          current.copyWith(isLoading: false, error: e.toString()),
-        );
-      }
-    } else {
-      state = const AsyncValue.loading();
-      state = await AsyncValue.guard(
-        () => _loadInitialData(searchQuery: searchState.query),
-      );
-    }
-  }
-
-  /// Удалить одну запись из истории
-  Future<bool> deleteHistoryItem(String historyItemId) async {
-    final current = state.value;
-    if (current == null) return false;
-
-    final index = current.items.indexWhere((e) => e.id == historyItemId);
-    if (index == -1) return false;
-
-    final item = current.items[index];
-    final updated = [...current.items];
-    updated.removeAt(index);
-
-    // Оптимистичное обновление
-    state = AsyncValue.data(
-      current.copyWith(items: updated, totalCount: current.totalCount - 1),
+  Future<HistoryRepository> _repository() async {
+    final historyAssembly = await ref.read(
+      vaultHistoryServiceAssemblyProvider.future,
     );
-
-    try {
-      final success = await _deleteHistoryItemFromDb(historyItemId);
-
-      if (!success) {
-        // Откат при неудаче
-        updated.insert(index, item);
-        state = AsyncValue.data(
-          current.copyWith(items: updated, totalCount: current.totalCount),
-        );
-        return false;
-      }
-
-      logInfo('Запись истории удалена: $historyItemId', tag: _logTag);
-      return true;
-    } catch (e, st) {
-      logError(
-        'Ошибка удаления записи истории',
-        tag: _logTag,
-        error: e,
-        stackTrace: st,
-      );
-      // Откат при ошибке
-      updated.insert(index, item);
-      state = AsyncValue.data(
-        current.copyWith(items: updated, totalCount: current.totalCount),
-      );
-      return false;
-    }
-  }
-
-  /// Удалить всю историю для текущей сущности
-  Future<bool> deleteAllHistory() async {
-    final current = state.value;
-    if (current == null) return false;
-
-    // Оптимистичное обновление
-    state = const AsyncValue.data(
-      HistoryListState(
-        items: [],
-        isLoading: false,
-        hasMore: false,
-        totalCount: 0,
-      ),
-    );
-
-    try {
-      final success = await _deleteAllHistoryFromDb();
-
-      if (!success) {
-        // Откат при неудаче
-        state = AsyncValue.data(current);
-        return false;
-      }
-
-      logInfo(
-        'Вся история удалена для: ${_params.entityType.label} (${_params.entityId})',
-        tag: _logTag,
-      );
-      return true;
-    } catch (e, st) {
-      logError(
-        'Ошибка удаления всей истории',
-        tag: _logTag,
-        error: e,
-        stackTrace: st,
-      );
-      // Откат при ошибке
-      state = AsyncValue.data(current);
-      return false;
-    }
-  }
-
-  // ============================================
-  // Приватные методы для работы с DAO
-  // ============================================
-
-  /// Получить элементы истории с пагинацией
-  Future<List<HistoryItem>> _fetchHistoryItems({
-    required int page,
-    String? searchQuery,
-  }) async {
-    final offset = (page - 1) * pageSize;
-
-    switch (_params.entityType) {
-      case EntityType.password:
-        return _fetchPasswordHistory(offset, searchQuery);
-      case EntityType.note:
-        return _fetchNoteHistory(offset, searchQuery);
-      case EntityType.bankCard:
-        return _fetchBankCardHistory(offset, searchQuery);
-      case EntityType.file:
-        return _fetchFileHistory(offset, searchQuery);
-      case EntityType.otp:
-        return _fetchOtpHistory(offset, searchQuery);
-      case EntityType.document:
-        return _fetchDocumentHistory(offset, searchQuery);
-      case EntityType.contact:
-        return _fetchContactHistory(offset, searchQuery);
-      case EntityType.apiKey:
-        return _fetchApiKeyHistory(offset, searchQuery);
-      case EntityType.sshKey:
-        return _fetchSshKeyHistory(offset, searchQuery);
-      case EntityType.certificate:
-        return _fetchCertificateHistory(offset, searchQuery);
-      case EntityType.cryptoWallet:
-        return _fetchCryptoWalletHistory(offset, searchQuery);
-      case EntityType.wifi:
-        return _fetchWifiHistory(offset, searchQuery);
-      case EntityType.identity:
-        return _fetchIdentityHistory(offset, searchQuery);
-      case EntityType.licenseKey:
-        return _fetchLicenseKeyHistory(offset, searchQuery);
-      case EntityType.recoveryCodes:
-        return _fetchRecoveryCodesHistory(offset, searchQuery);
-      case EntityType.loyaltyCard:
-        return _fetchLoyaltyCardHistory(offset, searchQuery);
-    }
-  }
-
-  Future<List<HistoryItem>> _fetchPasswordHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(passwordHistoryDaoProvider.future);
-    final cards = await dao.getPasswordHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    logTrace('Cards fetched: ${cards.toString()}', tag: _logTag);
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalPasswordId,
-            entityType: EntityType.password,
-            action: card.action,
-            title: card.name,
-            subtitle: card.login ?? card.email,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchNoteHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(noteHistoryDaoProvider.future);
-    final cards = await dao.getNoteHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalNoteId,
-            entityType: EntityType.note,
-            action: card.action,
-            title: card.title,
-            subtitle: card.description,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchBankCardHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(bankCardHistoryDaoProvider.future);
-    final cards = await dao.getBankCardHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalCardId,
-            entityType: EntityType.bankCard,
-            action: card.action,
-            title: card.name,
-            subtitle: card.cardholderName,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchFileHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(fileHistoryDaoProvider.future);
-    final cards = await dao.getFileHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalFileId,
-            entityType: EntityType.file,
-            action: card.action,
-            title: card.name,
-            subtitle: null,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchOtpHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(otpHistoryDaoProvider.future);
-    final cards = await dao.getOtpHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalOtpId,
-            entityType: EntityType.otp,
-            action: card.action,
-            title: card.issuer ?? 'OTP',
-            subtitle: card.accountName,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchDocumentHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(documentHistoryDaoProvider.future);
-    final cards = await dao.getDocumentHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalDocumentId,
-            entityType: EntityType.document,
-            action: card.action,
-            title: card.title,
-            subtitle: card.documentType,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchContactHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(contactHistoryDaoProvider.future);
-    final cards = await dao.getContactHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalContactId,
-            entityType: EntityType.contact,
-            action: card.action,
-            title: card.name,
-            subtitle: card.phone ?? card.email ?? card.company,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchApiKeyHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(apiKeyHistoryDaoProvider.future);
-    final cards = await dao.getApiKeyHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalApiKeyId,
-            entityType: EntityType.apiKey,
-            action: card.action,
-            title: card.name,
-            subtitle: card.service,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchSshKeyHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(sshKeyHistoryDaoProvider.future);
-    final cards = await dao.getSshKeyHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalSshKeyId,
-            entityType: EntityType.sshKey,
-            action: card.action,
-            title: card.name,
-            subtitle: card.fingerprint ?? card.keyType,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchCertificateHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(certificateHistoryDaoProvider.future);
-    final cards = await dao.getCertificateHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalCertificateId,
-            entityType: EntityType.certificate,
-            action: card.action,
-            title: card.name,
-            subtitle: card.issuer ?? card.subject,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchCryptoWalletHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(cryptoWalletHistoryDaoProvider.future);
-    final cards = await dao.getCryptoWalletHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalCryptoWalletId,
-            entityType: EntityType.cryptoWallet,
-            action: card.action,
-            title: card.name,
-            subtitle: card.network ?? card.walletType,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchWifiHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(wifiHistoryDaoProvider.future);
-    final cards = await dao.getWifiHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalWifiId,
-            entityType: EntityType.wifi,
-            action: card.action,
-            title: card.name,
-            subtitle: card.ssid,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchIdentityHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(identityHistoryDaoProvider.future);
-    final cards = await dao.getIdentityHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalIdentityId,
-            entityType: EntityType.identity,
-            action: card.action,
-            title: card.name,
-            subtitle: card.idNumber,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchLicenseKeyHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(licenseKeyHistoryDaoProvider.future);
-    final cards = await dao.getLicenseKeyHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalLicenseKeyId,
-            entityType: EntityType.licenseKey,
-            action: card.action,
-            title: card.name,
-            subtitle: card.product,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchRecoveryCodesHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
-    final cards = await dao.getRecoveryCodesHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalRecoveryCodesId,
-            entityType: EntityType.recoveryCodes,
-            action: card.action,
-            title: card.name,
-            subtitle: card.oneTime == true
-                ? 'Одноразовые коды'
-                : 'Коды восстановления',
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<HistoryItem>> _fetchLoyaltyCardHistory(
-    int offset,
-    String? searchQuery,
-  ) async {
-    final dao = await ref.read(loyaltyCardHistoryDaoProvider.future);
-    final cards = await dao.getLoyaltyCardHistoryCardsByOriginalId(
-      _params.entityId,
-      offset,
-      pageSize,
-      searchQuery,
-    );
-
-    return cards
-        .map(
-          (card) => HistoryItem(
-            id: card.id,
-            originalEntityId: card.originalLoyaltyCardId,
-            entityType: EntityType.loyaltyCard,
-            action: card.action,
-            title: card.name,
-            subtitle: card.programName,
-            actionAt: card.actionAt,
-          ),
-        )
-        .toList();
-  }
-
-  /// Получить общее количество записей
-  Future<int> _getTotalCount({String? searchQuery}) async {
-    switch (_params.entityType) {
-      case EntityType.password:
-        final dao = await ref.read(passwordHistoryDaoProvider.future);
-        return dao.countPasswordHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.note:
-        final dao = await ref.read(noteHistoryDaoProvider.future);
-        return dao.countNoteHistoryByOriginalId(_params.entityId, searchQuery);
-      case EntityType.bankCard:
-        final dao = await ref.read(bankCardHistoryDaoProvider.future);
-        return dao.countBankCardHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.file:
-        final dao = await ref.read(fileHistoryDaoProvider.future);
-        return dao.countFileHistoryByOriginalId(_params.entityId, searchQuery);
-      case EntityType.otp:
-        final dao = await ref.read(otpHistoryDaoProvider.future);
-        return dao.countOtpHistoryByOriginalId(_params.entityId, searchQuery);
-      case EntityType.document:
-        final dao = await ref.read(documentHistoryDaoProvider.future);
-        return dao.countDocumentHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.contact:
-        final dao = await ref.read(contactHistoryDaoProvider.future);
-        return dao.countContactHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.apiKey:
-        final dao = await ref.read(apiKeyHistoryDaoProvider.future);
-        return dao.countApiKeyHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.sshKey:
-        final dao = await ref.read(sshKeyHistoryDaoProvider.future);
-        return dao.countSshKeyHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.certificate:
-        final dao = await ref.read(certificateHistoryDaoProvider.future);
-        return dao.countCertificateHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.cryptoWallet:
-        final dao = await ref.read(cryptoWalletHistoryDaoProvider.future);
-        return dao.countCryptoWalletHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.wifi:
-        final dao = await ref.read(wifiHistoryDaoProvider.future);
-        return dao.countWifiHistoryByOriginalId(_params.entityId, searchQuery);
-      case EntityType.identity:
-        final dao = await ref.read(identityHistoryDaoProvider.future);
-        return dao.countIdentityHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.licenseKey:
-        final dao = await ref.read(licenseKeyHistoryDaoProvider.future);
-        return dao.countLicenseKeyHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.recoveryCodes:
-        final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
-        return dao.countRecoveryCodesHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-      case EntityType.loyaltyCard:
-        final dao = await ref.read(loyaltyCardHistoryDaoProvider.future);
-        return dao.countLoyaltyCardHistoryByOriginalId(
-          _params.entityId,
-          searchQuery,
-        );
-    }
-  }
-
-  /// Удалить запись истории из БД
-  Future<bool> _deleteHistoryItemFromDb(String historyItemId) async {
-    switch (_params.entityType) {
-      case EntityType.password:
-        final dao = await ref.read(passwordHistoryDaoProvider.future);
-        return await dao.deletePasswordHistoryById(historyItemId) > 0;
-      case EntityType.note:
-        final dao = await ref.read(noteHistoryDaoProvider.future);
-        return await dao.deleteNoteHistoryById(historyItemId) > 0;
-      case EntityType.bankCard:
-        final dao = await ref.read(bankCardHistoryDaoProvider.future);
-        return await dao.deleteBankCardHistoryById(historyItemId) > 0;
-      case EntityType.file:
-        final dao = await ref.read(fileHistoryDaoProvider.future);
-        return await dao.deleteFileHistoryById(historyItemId) > 0;
-      case EntityType.otp:
-        final dao = await ref.read(otpHistoryDaoProvider.future);
-        return await dao.deleteOtpHistoryById(historyItemId) > 0;
-      case EntityType.document:
-        final dao = await ref.read(documentHistoryDaoProvider.future);
-        return await dao.deleteDocumentHistoryById(historyItemId) > 0;
-      case EntityType.contact:
-        final dao = await ref.read(contactHistoryDaoProvider.future);
-        return await dao.deleteContactHistoryById(historyItemId) > 0;
-      case EntityType.apiKey:
-        final dao = await ref.read(apiKeyHistoryDaoProvider.future);
-        return await dao.deleteApiKeyHistoryById(historyItemId) > 0;
-      case EntityType.sshKey:
-        final dao = await ref.read(sshKeyHistoryDaoProvider.future);
-        return await dao.deleteSshKeyHistoryById(historyItemId) > 0;
-      case EntityType.certificate:
-        final dao = await ref.read(certificateHistoryDaoProvider.future);
-        return await dao.deleteCertificateHistoryById(historyItemId) > 0;
-      case EntityType.cryptoWallet:
-        final dao = await ref.read(cryptoWalletHistoryDaoProvider.future);
-        return await dao.deleteCryptoWalletHistoryById(historyItemId) > 0;
-      case EntityType.wifi:
-        final dao = await ref.read(wifiHistoryDaoProvider.future);
-        return await dao.deleteWifiHistoryById(historyItemId) > 0;
-      case EntityType.identity:
-        final dao = await ref.read(identityHistoryDaoProvider.future);
-        return await dao.deleteIdentityHistoryById(historyItemId) > 0;
-      case EntityType.licenseKey:
-        final dao = await ref.read(licenseKeyHistoryDaoProvider.future);
-        return await dao.deleteLicenseKeyHistoryById(historyItemId) > 0;
-      case EntityType.recoveryCodes:
-        final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
-        return await dao.deleteRecoveryCodesHistoryById(historyItemId) > 0;
-      case EntityType.loyaltyCard:
-        final dao = await ref.read(loyaltyCardHistoryDaoProvider.future);
-        return await dao.deleteLoyaltyCardHistoryById(historyItemId) > 0;
-    }
-  }
-
-  /// Удалить всю историю для сущности из БД
-  Future<bool> _deleteAllHistoryFromDb() async {
-    switch (_params.entityType) {
-      case EntityType.password:
-        final dao = await ref.read(passwordHistoryDaoProvider.future);
-        return await dao.deletePasswordHistoryByPasswordId(_params.entityId) >=
-            0;
-      case EntityType.note:
-        final dao = await ref.read(noteHistoryDaoProvider.future);
-        return await dao.deleteNoteHistoryByNoteId(_params.entityId) >= 0;
-      case EntityType.bankCard:
-        final dao = await ref.read(bankCardHistoryDaoProvider.future);
-        return await dao.deleteBankCardHistoryByOriginalId(_params.entityId) >=
-            0;
-      case EntityType.file:
-        final dao = await ref.read(fileHistoryDaoProvider.future);
-        return await dao.deleteFileHistoryByFileId(_params.entityId) >= 0;
-      case EntityType.otp:
-        final dao = await ref.read(otpHistoryDaoProvider.future);
-        return await dao.deleteOtpHistoryByOtpId(_params.entityId) >= 0;
-      case EntityType.document:
-        final dao = await ref.read(documentHistoryDaoProvider.future);
-        return await dao.deleteDocumentHistoryByDocumentId(_params.entityId) >=
-            0;
-      case EntityType.contact:
-        final dao = await ref.read(contactHistoryDaoProvider.future);
-        return await dao.deleteContactHistoryByContactId(_params.entityId) >= 0;
-      case EntityType.apiKey:
-        final dao = await ref.read(apiKeyHistoryDaoProvider.future);
-        return await dao.deleteApiKeyHistoryByApiKeyId(_params.entityId) >= 0;
-      case EntityType.sshKey:
-        final dao = await ref.read(sshKeyHistoryDaoProvider.future);
-        return await dao.deleteSshKeyHistoryBySshKeyId(_params.entityId) >= 0;
-      case EntityType.certificate:
-        final dao = await ref.read(certificateHistoryDaoProvider.future);
-        return await dao.deleteCertificateHistoryByCertificateId(
-              _params.entityId,
-            ) >=
-            0;
-      case EntityType.cryptoWallet:
-        final dao = await ref.read(cryptoWalletHistoryDaoProvider.future);
-        return await dao.deleteCryptoWalletHistoryByCryptoWalletId(
-              _params.entityId,
-            ) >=
-            0;
-      case EntityType.wifi:
-        final dao = await ref.read(wifiHistoryDaoProvider.future);
-        return await dao.deleteWifiHistoryByWifiId(_params.entityId) >= 0;
-      case EntityType.identity:
-        final dao = await ref.read(identityHistoryDaoProvider.future);
-        return await dao.deleteIdentityHistoryByIdentityId(_params.entityId) >=
-            0;
-      case EntityType.licenseKey:
-        final dao = await ref.read(licenseKeyHistoryDaoProvider.future);
-        return await dao.deleteLicenseKeyHistoryByLicenseKeyId(
-              _params.entityId,
-            ) >=
-            0;
-      case EntityType.recoveryCodes:
-        final dao = await ref.read(recoveryCodesHistoryDaoProvider.future);
-        return await dao.deleteRecoveryCodesHistoryByRecoveryCodesId(
-              _params.entityId,
-            ) >=
-            0;
-      case EntityType.loyaltyCard:
-        final dao = await ref.read(loyaltyCardHistoryDaoProvider.future);
-        return await dao.deleteLoyaltyCardHistoryByOriginalId(
-              _params.entityId,
-            ) >=
-            0;
-    }
+    return HistoryRepository(historyAssembly);
   }
 }

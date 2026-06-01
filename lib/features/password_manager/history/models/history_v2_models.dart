@@ -1,5 +1,5 @@
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/custom_fields/vault_item_custom_fields.dart';
 
 const int kHistoryPageSize = 20;
 

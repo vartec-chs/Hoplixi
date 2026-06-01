@@ -73,6 +73,64 @@ class OtpRepository {
     );
   }
 
+  AsyncDBResult<List<String>> createMany(List<CreateOtpDto> dtos) {
+    return tryCatchAsync(
+      () => db.transaction(() async {
+        final List<String> itemIds = [];
+        final now = DateTime.now();
+
+        for (final dto in dtos) {
+          final itemId = const Uuid().v4();
+
+          await db.into(db.vaultItems).insert(
+                VaultItemsCompanion.insert(
+                  id: Value(itemId),
+                  type: VaultItemType.otp,
+                  name: dto.item.name,
+                  description: Value(dto.item.description),
+                  categoryId: Value(dto.item.categoryId),
+                  iconRefId: Value(dto.item.iconRefId),
+                  isFavorite: Value(dto.item.isFavorite),
+                  isPinned: Value(dto.item.isPinned),
+                  createdAt: Value(now),
+                  modifiedAt: Value(now),
+                ),
+              );
+
+          await db.into(db.otpItems).insert(
+                OtpItemsCompanion.insert(
+                  itemId: itemId,
+                  type: Value(dto.otp.type),
+                  issuer: Value(dto.otp.issuer),
+                  accountName: Value(dto.otp.accountName),
+                  secret: dto.otp.secret,
+                  algorithm: Value(dto.otp.algorithm),
+                  digits: Value(dto.otp.digits),
+                  period: Value(dto.otp.period),
+                  counter: Value(dto.otp.counter),
+                ),
+              );
+
+          if (dto.tagIds.isNotEmpty) {
+            for (final tagId in dto.tagIds) {
+              await db.itemTagsDao.assignTagToItem(itemId: itemId, tagId: tagId);
+            }
+          }
+          itemIds.add(itemId);
+        }
+
+        return itemIds;
+      }),
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при массовом создании OTP',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
   AsyncDBResult<Unit> update(PatchOtpDto dto) {
     return tryCatchAsync(
       () => db.transaction(() async {

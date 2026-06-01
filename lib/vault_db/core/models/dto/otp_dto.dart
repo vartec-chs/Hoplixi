@@ -13,7 +13,7 @@ part 'otp_dto.g.dart';
 @freezed
 sealed class OtpDataDto with _$OtpDataDto {
   const factory OtpDataDto({
-    @Default(OtpType.otp) OtpType type,
+    @Default(OtpType.totp) OtpType type,
     String? issuer,
     String? accountName,
     @Uint8ListBase64Converter() required Uint8List secret,
@@ -30,7 +30,7 @@ sealed class OtpDataDto with _$OtpDataDto {
 @freezed
 sealed class OtpCardDataDto with _$OtpCardDataDto {
   const factory OtpCardDataDto({
-    @Default(OtpType.otp) OtpType type,
+    @Default(OtpType.totp) OtpType type,
     String? issuer,
     String? accountName,
     @Default(OtpHashAlgorithm.SHA1) OtpHashAlgorithm algorithm,

@@ -57,6 +57,59 @@ class OtpService extends BaseVaultEntityService<OtpRepository> {
     }
   }
 
+  Future<DBResult<List<String>>> createMany(List<CreateOtpDto> dtos) async {
+    for (final dto in dtos) {
+      final validationError = validateCreateOtp(dto);
+      if (validationError != null) return Failure(validationError);
+    }
+
+    try {
+      return await db.transaction(() async {
+        final List<String> itemIds = [];
+
+        for (final dto in dtos) {
+          // 1. Создаем запись в репозитории
+          final itemId = (await repository.create(dto)).getOrThrow();
+
+          // 2. Получаем созданное состояние для snapshot
+          final createdViewResult = await repository.getViewById(itemId);
+          final createdView = createdViewResult.getOrThrow().fold(
+            (view) => view,
+            () => throw DBCoreError.notFound(
+              entity: 'otp',
+              id: itemId,
+              message: 'Failed to retrieve created Otp: $itemId',
+            ),
+          );
+
+          // 3. Пишем snapshot created (After create)
+          final snapshotRes = (await historyService.snapshotAfterCreate(
+            createdView: createdView,
+            action: VaultEventHistoryAction.created,
+          )).getOrThrow();
+
+          // 4. Пишем event created
+          final eventRes = await historyService.writeEvent(
+            itemId: itemId,
+            type: VaultItemType.otp,
+            action: VaultEventHistoryAction.created,
+            name: createdView.item.name,
+            snapshotHistoryId: snapshotRes.getOrNull(),
+          );
+          if (eventRes.isError()) throw eventRes.exceptionOrNull()!;
+
+          itemIds.add(itemId);
+        }
+
+        return Success(itemIds);
+      });
+    } on DBCoreError catch (e) {
+      return Failure(e);
+    } catch (e, st) {
+      return Failure(mapDbException(e, st));
+    }
+  }
+
   Future<DBResult<Unit>> update(PatchOtpDto dto) async {
     final validationError = validatePatchOtp(dto);
     if (validationError != null) return Failure(validationError);

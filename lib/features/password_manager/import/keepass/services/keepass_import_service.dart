@@ -1,20 +1,21 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:drift/drift.dart' as drift;
 import 'package:hoplixi/core/utils/smart_converter_base.dart';
-import 'package:hoplixi/main_db/core/old/daos/crud/category_dao.dart';
-import 'package:hoplixi/main_db/core/old/daos/crud/custom_field_dao.dart';
-import 'package:hoplixi/main_db/core/old/daos/crud/note_dao.dart';
-import 'package:hoplixi/main_db/core/old/daos/crud/otp_dao.dart';
-import 'package:hoplixi/main_db/core/old/daos/crud/password_dao.dart';
-import 'package:hoplixi/main_db/core/old/daos/crud/tag_dao.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/category_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/custom_field_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/note_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/otp_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/password_dto.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/tag_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/base/system/category_repository.dart';
+import 'package:hoplixi/vault_db/core/repositories/base/system/tag_repository.dart';
+import 'package:hoplixi/vault_db/core/repositories/base/vault_item_custom_fields_repository.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/custom_fields/vault_item_custom_fields.dart';
+import 'package:hoplixi/vault_db/core/services/entities/note_service.dart';
+import 'package:hoplixi/vault_db/core/services/entities/otp_service.dart';
+import 'package:hoplixi/vault_db/core/services/entities/password_service.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/rust/api/keepass_api/types.dart';
+
+
 
 class KeepassImportExecutionOptions {
   final bool importOtps;
@@ -71,46 +72,43 @@ class KeepassImportService {
   static const _attachmentInlineLimitBytes = 128 * 1024;
   static const _customDataInlineLimitBytes = 32 * 1024;
 
-  final PasswordDao passwordDao;
-  final OtpDao otpDao;
-  final NoteDao noteDao;
-  final CategoryDao categoryDao;
-  final TagDao tagDao;
-  final CustomFieldDao customFieldDao;
+  final PasswordService passwordService;
+  final OtpService otpService;
+  final NoteService noteService;
+  final CategoryRepository categoryRepository;
+  final TagRepository tagRepository;
+  final VaultItemCustomFieldsRepository customFieldRepository;
 
   final SmartConverter _smartConverter = SmartConverter();
 
   KeepassImportService({
-    required this.passwordDao,
-    required this.otpDao,
-    required this.noteDao,
-    required this.categoryDao,
-    required this.tagDao,
-    required this.customFieldDao,
+    required this.passwordService,
+    required this.otpService,
+    required this.noteService,
+    required this.categoryRepository,
+    required this.tagRepository,
+    required this.customFieldRepository,
   });
 
   Future<KeepassImportSummary> importDatabase(
     FrbKeepassDatabaseExport export,
     KeepassImportExecutionOptions options,
   ) async {
-    final existingCategories = await categoryDao.getAllCategories();
-    final existingTags = await tagDao.getAllTags();
+    final existingCategories =
+        (await categoryRepository.getAllCategories()).getOrThrow();
+    final existingTags = (await tagRepository.getAllTags()).getOrThrow();
 
     final categoriesByName = <String, _ExistingCategoryRef>{};
     for (final category in existingCategories) {
       categoriesByName[_normalizeKey(category.name)] = _ExistingCategoryRef(
         id: category.id,
-        type: category.type,
         parentId: category.parentId,
       );
     }
 
     final tagsByName = <String, _ExistingTagRef>{};
     for (final tag in existingTags) {
-      tagsByName[_normalizeKey(tag.name)] = _ExistingTagRef(
-        id: tag.id,
-        type: tag.type,
-      );
+      tagsByName[_normalizeKey(tag.name)] = _ExistingTagRef(id: tag.id);
     }
 
     final categoryIdsByPath = <String, String>{};
@@ -165,61 +163,80 @@ class KeepassImportService {
       String? noteId;
       final noteContent = options.importNotes ? _buildNoteContent(entry) : null;
       if (noteContent != null && noteContent.trim().isNotEmpty) {
-        noteId = await noteDao.createNote(
+        final createNoteRes = await noteService.create(
           CreateNoteDto(
-            title: entryTitle,
-            content: noteContent,
-            deltaJson: jsonEncode([
-              {'insert': '$noteContent\n'},
-            ]),
-            description: _buildSourceDescription(entry.groupPath),
-            categoryId: categoryId,
-            tagsIds: tagIds,
+            item: VaultItemCreateDto(
+              name: entryTitle,
+              description: _buildSourceDescription(entry.groupPath),
+              categoryId: categoryId,
+            ),
+            note: NoteDataDto(
+              content: noteContent,
+              deltaJson: jsonEncode([
+                {'insert': '$noteContent\n'},
+              ]),
+            ),
+            tagIds: tagIds,
           ),
         );
-        importedNotes += 1;
+        noteId = createNoteRes.getOrNull();
+        if (noteId != null) {
+          importedNotes += 1;
+        }
       }
 
       String? passwordId;
       if (shouldCreatePassword) {
-        passwordId = await passwordDao.createPassword(
+        final createPasswordRes = await passwordService.create(
           CreatePasswordDto(
-            name: entryTitle,
-            password: entry.password ?? '',
-            login: login,
-            email: email,
-            url: _clean(entry.url),
-            description: options.importNotes
-                ? _buildSourceDescription(entry.groupPath)
-                : _fallbackDescription(entry),
-            noteId: noteId,
-            categoryId: categoryId,
-            tagsIds: tagIds,
-            expireAt: _parseExpiry(entry.times),
+            item: VaultItemCreateDto(
+              name: entryTitle,
+              description: options.importNotes
+                  ? _buildSourceDescription(entry.groupPath)
+                  : _fallbackDescription(entry),
+              categoryId: categoryId,
+            ),
+            password: PasswordDataDto(
+              password: entry.password ?? '',
+              login: login,
+              email: email,
+              url: _clean(entry.url),
+              expiresAt: _parseExpiry(entry.times),
+            ),
+            tagIds: tagIds,
           ),
         );
-        importedPasswords += 1;
+        passwordId = createPasswordRes.getOrNull();
+        if (passwordId != null) {
+          importedPasswords += 1;
+        }
       }
 
       String? otpId;
       if (importedOtpForEntry) {
-        otpId = await otpDao.createOtp(
+        final createOtpRes = await otpService.create(
           CreateOtpDto(
-            type: OtpType.totp.name,
-            secret: normalizedOtp.secret.codeUnits,
-            secretEncoding: SecretEncoding.BASE32.name,
-            issuer: normalizedOtp.issuer,
-            accountName: normalizedOtp.accountName,
-            noteId: noteId,
-            algorithm: normalizedOtp.algorithm,
-            digits: normalizedOtp.digits,
-            period: normalizedOtp.period,
-            categoryId: categoryId,
-            tagsIds: tagIds,
-            passwordId: passwordId,
+            item: VaultItemCreateDto(
+              name: entryTitle,
+              description: _buildSourceDescription(entry.groupPath),
+              categoryId: categoryId,
+            ),
+            otp: OtpDataDto(
+              type: OtpType.totp,
+              secret: Uint8List.fromList(normalizedOtp.secret.codeUnits),
+              issuer: normalizedOtp.issuer,
+              accountName: normalizedOtp.accountName,
+              algorithm: normalizedOtp.algorithm,
+              digits: normalizedOtp.digits,
+              period: normalizedOtp.period,
+            ),
+            tagIds: tagIds,
           ),
         );
-        importedOtps += 1;
+        otpId = createOtpRes.getOrNull();
+        if (otpId != null) {
+          importedOtps += 1;
+        }
       }
 
       final customFieldTargetId = passwordId ?? otpId;
@@ -234,13 +251,13 @@ class KeepassImportService {
 
         for (var index = 0; index < customFields.length; index++) {
           final field = customFields[index];
-          await customFieldDao.create(
-            customFieldTargetId,
-            CreateCustomFieldDto(
+          await customFieldRepository.create(
+            VaultItemCustomFieldsCompanion.insert(
+              itemId: customFieldTargetId,
               label: field.label,
-              value: field.value,
-              fieldType: field.fieldType,
-              sortOrder: index,
+              value: drift.Value(field.value),
+              fieldType: drift.Value(field.fieldType),
+              sortOrder: drift.Value(index),
             ),
           );
         }
@@ -304,14 +321,14 @@ class KeepassImportService {
       _ExistingCategoryRef? category =
           categoriesByName[_normalizeKey(desiredName)];
 
-      if (category == null || category.type != CategoryType.mixed) {
+      if (category == null) {
         final fallback = categoriesByName[_normalizeKey(fallbackName)];
-        if (fallback != null && fallback.type == CategoryType.mixed) {
+        if (fallback != null) {
           category = fallback;
         }
       }
 
-      if (category == null || category.type != CategoryType.mixed) {
+      if (category == null) {
         if (!allowCreate) {
           return _EnsureCategoryResult(
             categoryId: parentId,
@@ -320,17 +337,16 @@ class KeepassImportService {
         }
 
         final selectedName = category == null ? desiredName : fallbackName;
-        final newId = await categoryDao.createCategory(
+        final createRes = await categoryRepository.createCategory(
           CreateCategoryDto(
             name: selectedName,
-            type: CategoryType.mixed.value,
-            description: 'Импортировано из KeePass',
             parentId: parentId,
           ),
         );
+
+        final newId = createRes.getOrThrow();
         category = _ExistingCategoryRef(
           id: newId,
-          type: CategoryType.mixed,
           parentId: parentId,
         );
         categoriesByName[_normalizeKey(selectedName)] = category;
@@ -367,10 +383,11 @@ class KeepassImportService {
         continue;
       }
 
-      final tagId = await tagDao.createTag(
-        CreateTagDto(name: tagName, type: TagType.mixed.value),
+      final createRes = await tagRepository.createTag(
+        CreateTagDto(name: tagName),
       );
-      tagsByName[key] = _ExistingTagRef(id: tagId, type: TagType.mixed);
+      final tagId = createRes.getOrThrow();
+      tagsByName[key] = _ExistingTagRef(id: tagId);
       tagIds.add(tagId);
       createdCount += 1;
     }
@@ -676,6 +693,7 @@ class KeepassImportService {
         _CustomFieldSeed(
           label: 'KeePass OTP',
           value: _serializeOtp(entry.otp!),
+          isSecret: true,
           fieldType: CustomFieldType.concealed,
         ),
       );
@@ -909,14 +927,14 @@ class KeepassImportService {
     return CustomFieldType.text;
   }
 
-  String _normalizeOtpAlgorithm(String? rawValue) {
+  OtpHashAlgorithm _normalizeOtpAlgorithm(String? rawValue) {
     switch (_clean(rawValue)?.toUpperCase()) {
       case 'SHA256':
-        return 'SHA256';
+        return OtpHashAlgorithm.SHA256;
       case 'SHA512':
-        return 'SHA512';
+        return OtpHashAlgorithm.SHA512;
       default:
-        return 'SHA1';
+        return OtpHashAlgorithm.SHA1;
     }
   }
 
@@ -963,28 +981,25 @@ class _EnsureTagResult {
 
 class _ExistingCategoryRef {
   final String id;
-  final CategoryType type;
   final String? parentId;
 
   const _ExistingCategoryRef({
     required this.id,
-    required this.type,
     required this.parentId,
   });
 }
 
 class _ExistingTagRef {
   final String id;
-  final TagType type;
 
-  const _ExistingTagRef({required this.id, required this.type});
+  const _ExistingTagRef({required this.id});
 }
 
 class _NormalizedOtp {
   final String secret;
   final String? issuer;
   final String? accountName;
-  final String algorithm;
+  final OtpHashAlgorithm algorithm;
   final int digits;
   final int period;
 
@@ -1002,10 +1017,13 @@ class _CustomFieldSeed {
   final String label;
   final String? value;
   final CustomFieldType fieldType;
+  final bool isSecret;
 
   const _CustomFieldSeed({
     required this.label,
     required this.value,
     this.fieldType = CustomFieldType.text,
+    this.isSecret = false,
   });
 }
+

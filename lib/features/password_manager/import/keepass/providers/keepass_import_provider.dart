@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/import/keepass/services/keepass_import_service.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/rust/api/keepass_api.dart';
 import 'package:hoplixi/rust/api/keepass_api/types.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 const _messageNotChanged = Object();
+
 
 enum KeepassImportStep { source, options, preview }
 
@@ -349,23 +351,20 @@ class KeepassImportNotifier extends Notifier<KeepassImportState> {
   }
 
   Future<KeepassImportService> _buildService() async {
-    final passwordDao = await ref.read(passwordDaoProvider.future);
-    final otpDao = await ref.read(otpDaoProvider.future);
-    final noteDao = await ref.read(noteDaoProvider.future);
-    final categoryDao = await ref.read(categoryDaoProvider.future);
-    final tagDao = await ref.read(tagDaoProvider.future);
-    final customFieldDao = await ref.read(customFieldDaoProvider.future);
+    final services = await ref.read(vaultEntityServices.future);
+    final repos = await ref.read(vaultRepositories.future);
 
     return KeepassImportService(
-      passwordDao: passwordDao,
-      otpDao: otpDao,
-      noteDao: noteDao,
-      categoryDao: categoryDao,
-      tagDao: tagDao,
-      customFieldDao: customFieldDao,
+      passwordService: services.password,
+      otpService: services.otp,
+      noteService: services.note,
+      categoryRepository: repos.category,
+      tagRepository: repos.tag,
+      customFieldRepository: repos.vaultItemCustomFields,
     );
   }
 }
+
 
 final keepassImportProvider =
     NotifierProvider.autoDispose<KeepassImportNotifier, KeepassImportState>(

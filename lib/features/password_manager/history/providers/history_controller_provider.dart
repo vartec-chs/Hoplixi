@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/history/models/history_v2_models.dart';
 import 'package:hoplixi/features/password_manager/history/services/history_repository.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 final historyControllerProvider =
     AsyncNotifierProvider.family<
@@ -15,8 +15,6 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
   HistoryController(this.scope);
 
   final HistoryScope scope;
-  List<dynamic> _history = const [];
-  dynamic _current;
 
   @override
   Future<HistoryScreenState> build() async {
@@ -77,11 +75,9 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
     final currentState = state.value;
     if (currentState == null) return;
     final repository = await _repository();
-    final detail = repository.buildDetail(
+    final detail = await repository.buildDetail(
       entityType: scope.entityType,
       revisionId: revisionId,
-      history: _history.cast(),
-      current: _current,
     );
     state = AsyncValue.data(
       currentState.copyWith(
@@ -103,7 +99,6 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
       await repository.restoreRevision(
         entityType: scope.entityType,
         revisionId: revisionId,
-        history: _history.cast(),
       );
       ref
           .read(dashboardListRefreshTriggerProvider.notifier)
@@ -164,19 +159,15 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
   Future<HistoryScreenState> _load(HistoryQueryState query) async {
     final repository = await _repository();
     final result = await repository.loadHistory(query);
-    _history = result.history;
-    _current = result.current;
     final selectedRevisionId = _pickSelectedRevisionId(
       preferred: state.value?.selectedRevisionId,
       timelineItems: result.timelineItems,
     );
     final detail = selectedRevisionId == null
         ? null
-        : repository.buildDetail(
+        : await repository.buildDetail(
             entityType: scope.entityType,
             revisionId: selectedRevisionId,
-            history: result.history,
-            current: result.current,
           );
     return HistoryScreenState(
       query: query,
@@ -187,7 +178,7 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
       isRefreshing: false,
       isRestoring: false,
       canLoadMore: result.canLoadMore,
-      hasLiveEntity: result.current != null,
+      hasLiveEntity: result.hasLiveEntity,
     );
   }
 
@@ -203,11 +194,9 @@ class HistoryController extends AsyncNotifier<HistoryScreenState> {
   }
 
   Future<HistoryRepository> _repository() async {
-    final manager = await ref.read(vaultDBManagerProvider.future);
-    final store = manager.currentStore;
-    if (store == null) {
-      throw StateError('Main store is not initialized.');
-    }
-    return HistoryRepository(store);
+    final historyAssembly = await ref.read(
+      vaultHistoryServiceAssemblyProvider.future,
+    );
+    return HistoryRepository(historyAssembly);
   }
 }

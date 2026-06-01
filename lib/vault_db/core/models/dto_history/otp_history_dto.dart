@@ -12,7 +12,7 @@ part 'otp_history_dto.g.dart';
 @freezed
 sealed class OtpHistoryDataDto with _$OtpHistoryDataDto {
   const factory OtpHistoryDataDto({
-    @Default(OtpType.otp) OtpType type,
+    @Default(OtpType.totp) OtpType type,
     String? issuer,
     String? accountName,
     @NullableUint8ListBase64Converter() Uint8List? secret,
@@ -40,7 +40,7 @@ sealed class OtpHistoryViewDto with _$OtpHistoryViewDto {
 @freezed
 sealed class OtpHistoryCardDataDto with _$OtpHistoryCardDataDto {
   const factory OtpHistoryCardDataDto({
-    @Default(OtpType.otp) OtpType type,
+    @Default(OtpType.totp) OtpType type,
     String? issuer,
     String? accountName,
     @Default(OtpHashAlgorithm.SHA1) OtpHashAlgorithm algorithm,

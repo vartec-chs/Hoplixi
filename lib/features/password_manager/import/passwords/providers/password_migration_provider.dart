@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/password_dto.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/features/password_manager/import/passwords/services/password_migration_service.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/api_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 const _messageNotChanged = Object();
 
@@ -36,9 +37,9 @@ class PasswordMigrationNotifier extends AsyncNotifier<PasswordMigrationState> {
 
   @override
   Future<PasswordMigrationState> build() async {
-    final passwordDao = await ref.watch(passwordDaoProvider.future);
+    final services = await ref.watch(vaultEntityServices.future);
 
-    _service = PasswordMigrationService(passwordDao);
+    _service = PasswordMigrationService(services.password);
     return const PasswordMigrationState();
   }
 

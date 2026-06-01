@@ -23,6 +23,9 @@
 
 ### password_manager
 
+- Переписан модуль `history` на новый history service слой `vault_db` без
+  зависимости от нового `core/api`: контроллеры и legacy list provider теперь
+  используют `VaultHistoryServiceAssembly`.
 - Вынес общий маппинг иконок для custom fields в
   [lib/features/password_manager/shared/widgets/custom_fields/custom_field_type_icon.dart](lib/features/password_manager/shared/widgets/custom_fields/custom_field_type_icon.dart)
   и убрал дублирование `_iconFor` в

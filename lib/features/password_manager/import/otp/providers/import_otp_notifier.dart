@@ -8,9 +8,9 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/import/otp/otp_extractor.dart';
 import 'package:hoplixi/features/password_manager/import/otp/providers/import_otp_state.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/otp_dto.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:zxing2/qrcode.dart';
@@ -161,7 +161,8 @@ class ImportOtpNotifier extends Notifier<ImportOtpState> {
     state = state.copyWith(isSaving: true);
 
     try {
-      final otpDao = await ref.read(otpDaoProvider.future);
+      final services = await ref.read(vaultEntityServices.future);
+      final otpDao = services.otp;
 
       // Создаём список DTO для сохранения
       final dtos = <CreateOtpDto>[];
@@ -179,22 +180,32 @@ class ImportOtpNotifier extends Notifier<ImportOtpState> {
 
         dtos.add(
           CreateOtpDto(
-            type: mappedType,
-            secret: secretBytes,
-            secretEncoding: SecretEncoding.BASE32.name,
-            issuer: otp.issuer.trim().isEmpty ? null : otp.issuer.trim(),
-            accountName: otp.name.trim().isEmpty ? null : otp.name.trim(),
-            algorithm: _mapAlgorithm(otp.algorithm),
-            digits: otp.digits,
-            period: 30,
-            // counter должен быть NULL для TOTP и NOT NULL для HOTP
-            counter: mappedType == 'hotp' ? otp.counter : null,
+            item: VaultItemCreateDto(
+              name: otp.name.trim().isEmpty ? 'Unnamed OTP' : otp.name.trim(),
+            ),
+            otp: OtpDataDto(
+              type: OtpType.values.firstWhere(
+                (e) => e.name.toLowerCase() == mappedType,
+                orElse: () => OtpType.totp,
+              ),
+              secret: Uint8List.fromList(secretBytes),
+              issuer: otp.issuer.trim().isEmpty ? null : otp.issuer.trim(),
+              accountName: otp.name.trim().isEmpty ? null : otp.name.trim(),
+              algorithm: OtpHashAlgorithm.values.firstWhere(
+                (e) => e.name.toUpperCase() == _mapAlgorithm(otp.algorithm),
+                orElse: () => OtpHashAlgorithm.SHA1,
+              ),
+              digits: otp.digits,
+              period: 30,
+              // counter должен быть NULL для TOTP и NOT NULL для HOTP
+              counter: mappedType == 'hotp' ? otp.counter : null,
+            ),
           ),
         );
       }
 
       // Сохраняем все OTP
-      await otpDao.createManyOtps(dtos);
+      await otpDao.createMany(dtos);
 
       // Удаляем сохранённые элементы из списка
       final remainingOtps = <OtpData>[];

@@ -16,6 +16,8 @@ import 'package:hoplixi/vault_db/core/services/vault_item_mutation_service.dart'
 import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 
+/// NOT STABLE!
+///
 /// Root public API facade for `lib/vault_db/core`.
 class VaultCoreApi {
   VaultCoreApi({required VaultRepositories repositories})
@@ -32,12 +34,11 @@ class VaultCoreApi {
   late final VaultHistoryServiceAssembly _historyAssembly =
       VaultHistoryServiceAssembly(db: db, repos: _repositories);
 
-  late final VaultItemsStateService _itemsStateService =
-      VaultItemsStateService(
-        db: db,
-        viewResolver: _historyAssembly.viewResolver,
-        historyService: _historyAssembly.historyService,
-      );
+  late final VaultItemsStateService _itemsStateService = VaultItemsStateService(
+    db: db,
+    viewResolver: _historyAssembly.viewResolver,
+    historyService: _historyAssembly.historyService,
+  );
 
   late final VaultEntityServices _entityServices = VaultEntityServices(
     db: db,
@@ -78,10 +79,7 @@ class VaultCoreApi {
     mutationService: _itemMutationService,
   );
   late final VaultStoreApi store = VaultStoreApi(
-    metaService: StoreMetaService(
-      db: db,
-      repository: _repositories.storeMeta,
-    ),
+    metaService: StoreMetaService(db: db, repository: _repositories.storeMeta),
     settingsRepository: _repositories.storeSettings,
   );
 }
