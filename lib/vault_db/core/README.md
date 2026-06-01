@@ -14,6 +14,17 @@ DAOs или сервисов, пожалуйста,обновляйте этот
 
 ## Точка входа
 
+### [VaultCoreApi](./api/vault_core_api.dart) — публичный API ядра
+
+- `api/` содержит стабильные фасады для app/feature-слоя.
+- Feature/app-слой должен использовать API-фасады вместо прямых обращений к DAO.
+- На первом этапе API покрывает system-домены: категории, теги, icon refs и
+  custom icons.
+- Read-only `items` API покрывает карточные фильтры и счетчики vault items без
+  выдачи секретных полей.
+- API-фасады делегируют операции существующим repositories/services и сохраняют
+  typed result-контракты core.
+
 ### [VaultDB](./vault_db.dart) — сборка ядра БД
 
 - `vault_db.dart` объединяет таблицы, DAOs, индексы и триггеры в единую

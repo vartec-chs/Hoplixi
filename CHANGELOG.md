@@ -7,6 +7,15 @@
 - Добавлено ТЗ для AI-агентов по переводу `vault_db/core` на API-формат:
   [docs-ai/vault-db-api-format-agent-tz.md](docs-ai/vault-db-api-format-agent-tz.md).
 
+### vault_db
+
+- Добавлен начальный API-слой `lib/vault_db/core/api` с root-фасадом
+  `VaultCoreApi` и system API для категорий, тегов, icon refs и custom icons.
+- Добавлен read-only `VaultItemsApi` для карточных фильтров и счетчиков vault
+  items поверх существующего `VaultCardFilterService`.
+- Добавлены Riverpod providers для доступа app/feature-слоя к `VaultCoreApi` и
+  system API без прямой сборки repositories.
+
 ### password_manager
 
 - Вынес общий маппинг иконок для custom fields в
