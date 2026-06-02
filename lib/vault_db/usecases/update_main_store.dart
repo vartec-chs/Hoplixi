@@ -25,7 +25,7 @@ class UpdateVaultDB {
         data: {'storeId': session.info.id, 'path': session.storeDirectoryPath},
       );
 
-      final currentMeta = await session.store.storeMetaDao.getStoreMeta();
+      final currentMeta = await session.api.db.storeMetaDao.getStoreMeta();
       if (currentMeta == null) {
         return Failure(
           AppError.mainDatabase(
@@ -53,7 +53,7 @@ class UpdateVaultDB {
         passwordHash = _hashPassword(dto.password.requireValue()!);
       }
 
-      await session.store.storeMetaDao.patchStoreMeta(
+      await session.api.db.storeMetaDao.patchStoreMeta(
         name: name,
         description: description,
         passwordHash: passwordHash,

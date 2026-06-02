@@ -12,7 +12,6 @@ import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/vault_db/services/other/document_storage_service.dart';
 import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
-import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
 
 final iconPackCatalogServiceProvider = Provider<IconPackCatalogService>((ref) {
   return const IconPackCatalogService();
@@ -131,16 +130,3 @@ final documentStorageServiceProvider = FutureProvider<DocumentStorageService>((
   );
 });
 
-final performStoreCleanupProvider =
-    FutureProvider.autoDispose<PerformStoreCleanup>((ref) async {
-      final fileStorageService = await ref.watch(
-        fileStorageServiceProvider.future,
-      );
-
-      final db = await ref.watch(vaultDBProvider.future);
-
-      return PerformStoreCleanup(
-        settingsDao: db.storeSettingsDao,
-        fileStorageService: fileStorageService,
-      );
-    });

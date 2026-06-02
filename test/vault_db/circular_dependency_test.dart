@@ -1,13 +1,12 @@
-import 'dart:async';
 import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hoplixi/vault_db/core/api/vault_core_api.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
 
 void main() {
@@ -23,7 +22,7 @@ void main() {
     });
 
     test(
-      'Проверка отсутствия циклических зависимостей при чтении performStoreCleanupProvider',
+      'Проверка отсутствия циклических зависимостей при чтении vaultStoreApiProvider',
       () async {
         final now = DateTime.now();
         final fakeStoreInfo = StoreInfoDto(
@@ -36,7 +35,7 @@ void main() {
         );
 
         final Session fakeSession = (
-          store: inMemoryDb,
+          api: VaultCoreApi(inMemoryDb),
           info: fakeStoreInfo,
           storeDirectoryPath: '/fake/store/directory/path',
         );
@@ -60,10 +59,8 @@ void main() {
         // Запускаем чтение всех ключевых провайдеров цепочки.
         // Если в графе есть циклическая зависимость, Riverpod выбросит CircularDependencyError во время выполнения ref.read.
 
-        final cleanup = await container.read(
-          performStoreCleanupProvider.future,
-        );
-        expect(cleanup, isNotNull);
+        final storeApi = await container.read(vaultStoreApiProvider.future);
+        expect(storeApi, isNotNull);
 
         final fileStorageService = await container.read(
           fileStorageServiceProvider.future,

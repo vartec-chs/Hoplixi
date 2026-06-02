@@ -165,6 +165,24 @@ class VaultDB extends _$VaultDB {
   VaultDB(super.e);
 
   @override
+  Future<void> close() async {
+    try {
+      await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+    } catch (error, stackTrace) {
+      logWarning(
+        'Failed to checkpoint WAL before closing database',
+        tag: _logTag,
+        data: {
+          'error': error.toString(),
+          'stackTrace': stackTrace.toString(),
+        },
+      );
+    } finally {
+      await super.close();
+    }
+  }
+
+  @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       onCreate: (Migrator m) async {

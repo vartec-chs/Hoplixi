@@ -10,7 +10,6 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'package:hoplixi/vault_db/providers/effects/vault_cleanup_effect.dart';
 import 'package:hoplixi/vault_db/providers/effects/vault_close_sync_effect.dart';
 import 'package:hoplixi/vault_db/providers/session_providers.dart';
 import 'package:hoplixi/vault_db/services/main_store_manager.dart';
@@ -69,15 +68,15 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
   String? get currentStorePath => _manager.currentStorePath;
 
   VaultDB get requireDatabase {
-    final db = _manager.currentDB;
-    if (db == null) {
+    final api = _manager.currentApi;
+    if (api == null) {
       throw AppError.mainDatabase(
         code: MainDatabaseErrorCode.notInitialized,
         message: 'База данных не открыта',
         timestamp: DateTime.now(),
       );
     }
-    return db;
+    return api.db;
   }
 
   Session get currentSession {
@@ -97,8 +96,6 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
     final manager = await ref.watch(vaultDBManagerProvider.future);
     _manager = manager;
 
-    // Автоматически подключаем реактивные эффекты к жизненному циклу
-    ref.watch(vaultCleanupEffectProvider);
     ref.watch(vaultCloseSyncEffectProvider);
 
     return _stateFromManager(manager) ??
@@ -590,6 +587,33 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
           forceUpload: forceUpload,
         );
     _setState(_stateFromSession(session));
+    _scheduleStoreCleanup(session);
+  }
+
+  void _scheduleStoreCleanup(Session session) {
+    scheduleMicrotask(() async {
+      try {
+        await session.api.store.performCleanup(
+          storePath: session.storeDirectoryPath,
+          ignoreInterval: false,
+        );
+        logInfo(
+          'Background store cleanup completed successfully',
+          tag: _logTag,
+        );
+      } catch (error, stackTrace) {
+        logWarning(
+          'Failed to perform store cleanup in background',
+          tag: _logTag,
+          data: {
+            'storeId': session.info.id,
+            'storePath': session.storeDirectoryPath,
+            'error': error.toString(),
+            'stackTrace': stackTrace.toString(),
+          },
+        );
+      }
+    });
   }
 
   void _setErrorState(AppError error) {

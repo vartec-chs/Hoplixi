@@ -20,16 +20,14 @@ import 'package:hoplixi/vault_db/core/vault_db.dart';
 ///
 /// Root public API facade for `lib/vault_db/core`.
 class VaultCoreApi {
-  VaultCoreApi({required VaultRepositories repositories})
-    : _repositories = repositories;
+  VaultCoreApi(VaultDB db) : _repositories = VaultRepositories(db), _db = db;
 
-  factory VaultCoreApi.fromDb(VaultDB db) {
-    return VaultCoreApi(repositories: VaultRepositories(db));
-  }
-
+  final VaultDB _db;
   final VaultRepositories _repositories;
 
-  VaultDB get db => _repositories.db;
+  VaultDB get db => _db;
+  VaultRepositories get repositories => _repositories;
+  VaultEntityServices get entityServices => _entityServices;
 
   late final VaultHistoryServiceAssembly _historyAssembly =
       VaultHistoryServiceAssembly(db: db, repos: _repositories);
@@ -79,7 +77,10 @@ class VaultCoreApi {
     mutationService: _itemMutationService,
   );
   late final VaultStoreApi store = VaultStoreApi(
+    db: db,
     metaService: StoreMetaService(db: db, repository: _repositories.storeMeta),
     settingsRepository: _repositories.storeSettings,
+    entityServices: _entityServices,
+    repositories: _repositories,
   );
 }

@@ -15,7 +15,7 @@ class CloseVaultDB {
         data: {'path': session.storeDirectoryPath},
       );
 
-      await session.store.close();
+      await session.api.db.close();
 
       logInfo('Store closed successfully', tag: _logTag);
       return const Success(unit);

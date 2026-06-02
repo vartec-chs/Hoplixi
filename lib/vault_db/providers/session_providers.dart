@@ -9,10 +9,7 @@ import 'package:hoplixi/vault_db/services/main_store_manager.dart';
 /// Используется для создания [VaultDBManager] (который является фасадом VaultDBFacade).
 final vaultDBManagerProvider = FutureProvider<VaultDBManager>((ref) async {
   final dbHistory = await ref.watch(dbHistoryProvider.future);
-  final manager = VaultDBManagerFactory(
-    dbHistoryService: dbHistory,
-    performStoreCleanup: null,
-  ).create();
+  final manager = VaultDBManagerFactory(dbHistoryService: dbHistory).create();
   return manager;
 });
 
@@ -22,7 +19,7 @@ final vaultDBSessionStreamProvider = StreamProvider<Session?>((ref) async* {
   yield* manager.sessionStream;
 });
 
-/// Провайдер текущей сессии. 100% совместим с прежним FutureProvider<Session>,
+/// Провайдер текущей сессии. 100% совместим с прежним `FutureProvider<Session>`,
 /// но зависит исключительно от стрима сессий, а не от UI стейта.
 final vaultDBSessionProvider = FutureProvider<Session>((ref) async {
   final sessionAsync = ref.watch(vaultDBSessionStreamProvider);
@@ -40,7 +37,7 @@ final vaultDBSessionProvider = FutureProvider<Session>((ref) async {
 /// Провайдер базы данных VaultDB. Реактивно зависит от сессии.
 final vaultDBProvider = FutureProvider<VaultDB>((ref) async {
   final session = await ref.watch(vaultDBSessionProvider.future);
-  return session.store;
+  return session.api.db;
 });
 
 /// Провайдер текущего DatabaseState.

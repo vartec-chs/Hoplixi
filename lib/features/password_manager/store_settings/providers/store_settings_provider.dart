@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
@@ -8,8 +5,6 @@ import 'package:hoplixi/features/password_manager/store_settings/models/store_se
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
-import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/services/db_key_derivation_service.dart';
@@ -17,7 +12,6 @@ import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_man
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 import 'package:result_dart/result_dart.dart';
-import 'package:uuid/uuid.dart';
 
 import 'pinned_entity_types_provider.dart';
 
@@ -232,7 +226,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       final repos = await ref.read(vaultRepositories.future);
       final storeMetaService = await ref.read(storeMetaServiceProvider.future);
       final storeSettings = repos.storeSettings;
-      var settingsChanged = false;
 
       // Обновляем имя или описание если изменилось
       if (state.newName.trim() != state.name ||
@@ -260,7 +253,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         if (result.isError()) {
           return Failure(result.exceptionOrNull()!.message!);
         }
-        settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newHistoryMaxAgeDays != state.historyMaxAgeDays) {
@@ -271,7 +263,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         if (result.isError()) {
           return Failure(result.exceptionOrNull()!.message!);
         }
-        settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newHistoryEnabled != state.historyEnabled) {
@@ -282,7 +273,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         if (result.isError()) {
           return Failure(result.exceptionOrNull()!.message!);
         }
-        settingsChanged = true;
         shouldCleanupHistory = true;
       }
       if (state.newIncrementUsageOnCopy != state.incrementUsageOnCopy) {
@@ -293,7 +283,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         if (result.isError()) {
           return Failure(result.exceptionOrNull()!.message!);
         }
-        settingsChanged = true;
       }
       if (state.newHistoryCleanupIntervalDays !=
           state.historyCleanupIntervalDays) {
@@ -304,7 +293,6 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         if (result.isError()) {
           return Failure(result.exceptionOrNull()!.message!);
         }
-        settingsChanged = true;
       }
 
       if (!_listEquals(state.newPinnedEntityTypes, state.pinnedEntityTypes)) {
@@ -315,14 +303,22 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         if (result.isError()) {
           return Failure(result.exceptionOrNull()!.message!);
         }
-        settingsChanged = true;
         // Сбрасываем кэш провайдера закреплённых типов
         ref.invalidate(pinnedEntityTypesProvider);
       }
 
       if (shouldCleanupHistory) {
-        final cleanup = await ref.read(performStoreCleanupProvider.future);
-        await cleanup(ignoreInterval: true);
+        final dbState = await ref.read(vaultDBStateProvider.future);
+        final storePath = dbState.path;
+        if (storePath == null) {
+          return const Failure('Не удалось определить текущее хранилище');
+        }
+
+        final storeApi = await ref.read(vaultStoreApiProvider.future);
+        await storeApi.performCleanup(
+          storePath: storePath,
+          ignoreInterval: true,
+        );
       }
 
       // Обновляем состояние успешно

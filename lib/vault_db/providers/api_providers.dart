@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/vault_db/core/api/api.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/session_providers.dart';
 
 final vaultApiProvider = FutureProvider<VaultCoreApi>((ref) async {
-  final repositories = await ref.watch(vaultRepositories.future);
-  return VaultCoreApi(repositories: repositories);
+  final session = await ref.watch(vaultDBSessionProvider.future);
+  return session.api;
 });
 
 final vaultSystemApiProvider = FutureProvider<VaultSystemApi>((ref) async {

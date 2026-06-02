@@ -4,7 +4,6 @@ import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'package:hoplixi/vault_db/services/cleanup/vault_cleanup_service.dart';
 import 'package:hoplixi/vault_db/services/db_history_services/db_history_services.dart';
 import 'package:hoplixi/vault_db/services/session/ivault_session_holder.dart';
 import 'package:hoplixi/vault_db/services/storage/ivault_storage_manager.dart';
@@ -28,7 +27,6 @@ class VaultLifecycleService implements IVaultLifecycleService {
   final OpenVaultDB _openVaultDB;
   final CloseVaultDB _closeVaultDB;
   final UpdateVaultDB _updateVaultDB;
-  final VaultCleanupService _cleanupService;
 
   VaultLifecycleService({
     required IVaultSessionHolder sessionHolder,
@@ -38,15 +36,13 @@ class VaultLifecycleService implements IVaultLifecycleService {
     required OpenVaultDB openVaultDB,
     required CloseVaultDB closeVaultDB,
     required UpdateVaultDB updateVaultDB,
-    required VaultCleanupService cleanupService,
   }) : _sessionHolder = sessionHolder,
        _storageManager = storageManager,
        _dbHistoryService = dbHistoryService,
        _createVaultDB = createVaultDB,
        _openVaultDB = openVaultDB,
        _closeVaultDB = closeVaultDB,
-       _updateVaultDB = updateVaultDB,
-       _cleanupService = cleanupService;
+       _updateVaultDB = updateVaultDB;
 
   bool _isCurrentStorePath(String storePath) {
     return _sessionHolder.currentStorePath == storePath;
@@ -107,28 +103,6 @@ class VaultLifecycleService implements IVaultLifecycleService {
       } catch (error, stackTrace) {
         logWarning(
           'Failed to create history entry for new store',
-          tag: _logTag,
-          data: {
-            'storeId': session.info.id,
-            'storePath': session.storeDirectoryPath,
-            'error': error.toString(),
-            'stackTrace': stackTrace.toString(),
-          },
-        );
-      }
-
-      try {
-        await _cleanupService.cleanup(
-          session.store,
-          session.storeDirectoryPath,
-        );
-        logInfo(
-          'Store cleanup completed successfully during store creation',
-          tag: _logTag,
-        );
-      } catch (error, stackTrace) {
-        logWarning(
-          'Failed to perform store cleanup during store creation',
           tag: _logTag,
           data: {
             'storeId': session.info.id,
@@ -200,28 +174,6 @@ class VaultLifecycleService implements IVaultLifecycleService {
         );
       }
 
-      try {
-        await _cleanupService.cleanup(
-          session.store,
-          session.storeDirectoryPath,
-        );
-        logInfo(
-          'Store cleanup completed successfully during store opening',
-          tag: _logTag,
-        );
-      } catch (error, stackTrace) {
-        logWarning(
-          'Failed to perform store cleanup during store opening',
-          tag: _logTag,
-          data: {
-            'storeId': session.info.id,
-            'storePath': session.storeDirectoryPath,
-            'error': error.toString(),
-            'stackTrace': stackTrace.toString(),
-          },
-        );
-      }
-
       return Success(session);
     });
   }
@@ -255,7 +207,7 @@ class VaultLifecycleService implements IVaultLifecycleService {
       final storeInfo = result.getOrThrow();
       if (_sessionHolder.currentStorePath == session.storeDirectoryPath) {
         _sessionHolder.updateSession((
-          store: session.store,
+          api: session.api,
           info: storeInfo,
           storeDirectoryPath: session.storeDirectoryPath,
         ));

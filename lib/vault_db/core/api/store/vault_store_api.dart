@@ -4,20 +4,34 @@ import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/store_meta_dto.dart';
 import 'package:hoplixi/vault_db/core/repositories/base/system/store_settings_repository.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/store/store_settings.dart';
 import 'package:hoplixi/vault_db/core/services/system/store_meta_service.dart';
+import 'package:hoplixi/vault_db/core/services/vault_entity_services.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
+import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
+import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
 
 /// Public API boundary for store metadata and settings.
 class VaultStoreApi {
   const VaultStoreApi({
+    required VaultDB db,
     required StoreMetaService metaService,
     required StoreSettingsRepository settingsRepository,
-  }) : _metaService = metaService,
-       _settingsRepository = settingsRepository;
+    required VaultEntityServices entityServices,
+    required VaultRepositories repositories,
+  }) : _db = db,
+       _metaService = metaService,
+       _settingsRepository = settingsRepository,
+       _entityServices = entityServices,
+       _repositories = repositories;
 
+  final VaultDB _db;
   final StoreMetaService _metaService;
   final StoreSettingsRepository _settingsRepository;
+  final VaultEntityServices _entityServices;
+  final VaultRepositories _repositories;
 
   AsyncDBResult<StoreInfoDto> getStoreInfo() {
     return _metaService.getStoreInfo();
@@ -91,5 +105,29 @@ class VaultStoreApi {
 
   AsyncDBResult<Unit> repairSettings() {
     return _settingsRepository.repairSettings();
+  }
+
+  Future<StoreCleanupResult> performCleanup({
+    required String storePath,
+    bool ignoreInterval = false,
+  }) {
+    const storageService = VaultDBFileService();
+    final fileStorageService = FileStorageService(
+      db: _db,
+      attachmentsPath: storageService.getAttachmentsPath(storePath),
+      decryptedAttachmentsPath: storageService.getDecryptedAttachmentsPath(
+        storePath,
+      ),
+      fileService: _entityServices.file,
+      fileRepository: _repositories.file,
+      fileMetadataRepository: _repositories.fileMetadata,
+    );
+
+    final cleanup = PerformStoreCleanup(
+      settingsDao: _db.storeSettingsDao,
+      fileStorageService: fileStorageService,
+    );
+
+    return cleanup(ignoreInterval: ignoreInterval);
   }
 }

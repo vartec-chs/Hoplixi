@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hoplixi/vault_db/core/api/vault_core_api.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
@@ -37,7 +37,7 @@ void main() {
       );
 
       fakeSession = (
-        store: inMemoryDb,
+        api: VaultCoreApi(inMemoryDb),
         info: storeInfo,
         storeDirectoryPath: '/path/to/store',
       );

@@ -11,6 +11,7 @@ import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
 import 'package:hoplixi/core/logger/models.dart' as logger_models;
 import 'package:hoplixi/setup/di_init.dart';
+import 'package:hoplixi/vault_db/core/api/vault_core_api.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
@@ -159,7 +160,7 @@ class CreateVaultDB {
 
       logInfo('Store created successfully: ${dto.name}', tag: _logTag);
       return Success((
-        store: store,
+        api: VaultCoreApi(store),
         info: info,
         storeDirectoryPath: storageDir.path,
       ));

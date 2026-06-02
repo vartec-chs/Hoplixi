@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:hoplixi/core/errors/errors.dart';
+import 'package:hoplixi/vault_db/core/api/vault_core_api.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'package:hoplixi/vault_db/services/cleanup/vault_cleanup_service.dart';
 import 'package:hoplixi/vault_db/services/db_history_services/db_history_services.dart';
 import 'package:hoplixi/vault_db/services/lifecycle/ivault_lifecycle_service.dart';
 import 'package:hoplixi/vault_db/services/lifecycle/vault_lifecycle_service.dart';
@@ -23,10 +23,8 @@ import 'package:result_dart/result_dart.dart';
 typedef VaultDBManager = VaultDBFacade;
 
 class VaultDBManagerFactory {
-  VaultDBManagerFactory({
-    required this.dbHistoryService,
-    this.performStoreCleanup,
-  }) : createVaultDB = CreateVaultDB(),
+  VaultDBManagerFactory({required this.dbHistoryService})
+    : createVaultDB = CreateVaultDB(),
        openVaultDB = OpenVaultDB(),
        closeVaultDB = CloseVaultDB(),
        updateVaultDB = UpdateVaultDB(),
@@ -38,17 +36,12 @@ class VaultDBManagerFactory {
   final CloseVaultDB closeVaultDB;
   final UpdateVaultDB updateVaultDB;
   final VaultDBFileService storageService;
-  final Future<void> Function(VaultDB db, String storePath)?
-  performStoreCleanup;
 
   VaultDBManager create() {
     final sessionHolder = VaultSessionHolder();
     final storageManager = VaultStorageManager(
       sessionHolder: sessionHolder,
       storageService: storageService,
-    );
-    final cleanupService = VaultCleanupService(
-      performStoreCleanup: performStoreCleanup,
     );
     final lifecycleService = VaultLifecycleService(
       sessionHolder: sessionHolder,
@@ -58,7 +51,6 @@ class VaultDBManagerFactory {
       openVaultDB: openVaultDB,
       closeVaultDB: closeVaultDB,
       updateVaultDB: updateVaultDB,
-      cleanupService: cleanupService,
     );
 
     return VaultDBFacade(
@@ -90,7 +82,9 @@ class VaultDBFacade {
 
   bool get isStoreOpen => _sessionHolder.isStoreOpen;
 
-  VaultDB? get currentDB => _sessionHolder.currentDB;
+  VaultCoreApi? get currentApi => _sessionHolder.currentApi;
+
+  VaultDB? get currentDB => currentApi?.db;
 
   Session? get currentSession => _sessionHolder.currentSession;
 

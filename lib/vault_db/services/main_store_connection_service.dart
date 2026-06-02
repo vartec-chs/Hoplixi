@@ -28,6 +28,8 @@ class VaultDBConnectionService {
         File(dbFilePath),
         isolateSetup: () => _driftIsolateSetup(token),
         setup: (rawDb) {
+          rawDb.execute('PRAGMA memory_security = ON;');
+
           if (!_debugCheckHasCipher(
             rawDb,
             cipher,
