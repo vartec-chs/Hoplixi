@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/api_key_dto.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
 import '../shared/shared.dart';

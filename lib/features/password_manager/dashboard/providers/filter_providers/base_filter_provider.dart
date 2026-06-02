@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 
 /// Провайдер для управления базовым фильтром
 final baseFilterProvider =
@@ -151,12 +151,6 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
     state = state.copyWith(isPinned: isPinned);
   }
 
-  /// Установить фильтр наличия заметок
-  void setHasNotes(bool? hasNotes) {
-    logDebug('Фильтр заметок установлен: $hasNotes', tag: _logTag);
-    state = state.copyWith(hasNotes: hasNotes);
-  }
-
   // ============================================================================
   // Методы фильтрации по датам
   // ============================================================================
@@ -256,6 +250,12 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
     state = state.copyWith(sortDirection: newDirection);
   }
 
+  /// Установить поле сортировки
+  void setSortBy(BaseSortBy sortBy) {
+    logDebug('Поле сортировки установлено: $sortBy', tag: _logTag);
+    state = state.copyWith(sortBy: sortBy);
+  }
+
   /// Установить лимит и offset (пагинация)
   void setPagination(int limit, int offset) {
     logDebug(
@@ -296,7 +296,6 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
     bool? isArchived,
     bool? isDeleted,
     bool? isPinned,
-    bool? hasNotes,
     DateTime? createdAfter,
     DateTime? createdBefore,
     DateTime? modifiedAfter,
@@ -304,6 +303,7 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
     DateTime? lastUsedAfter,
     DateTime? lastUsedBefore,
     SortDirection? sortDirection,
+    BaseSortBy? sortBy,
     int? minUsedCount,
     int? maxUsedCount,
     int? limit,
@@ -317,7 +317,6 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
       isArchived: isArchived ?? state.isArchived,
       isDeleted: isDeleted ?? state.isDeleted,
       isPinned: isPinned ?? state.isPinned,
-      hasNotes: hasNotes ?? state.hasNotes,
       createdAfter: createdAfter ?? state.createdAfter,
       createdBefore: createdBefore ?? state.createdBefore,
       modifiedAfter: modifiedAfter ?? state.modifiedAfter,
@@ -325,6 +324,7 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
       lastUsedAfter: lastUsedAfter ?? state.lastUsedAfter,
       lastUsedBefore: lastUsedBefore ?? state.lastUsedBefore,
       sortDirection: sortDirection ?? state.sortDirection,
+      sortBy: sortBy ?? state.sortBy,
       minUsedCount: minUsedCount ?? state.minUsedCount,
       maxUsedCount: maxUsedCount ?? state.maxUsedCount,
       limit: limit ?? state.limit,
@@ -377,14 +377,13 @@ class BaseFilterNotifier extends Notifier<BaseFilter> {
       isArchived: null,
       isDeleted: null,
       isPinned: null,
-      hasNotes: null,
     );
   }
 
   /// Сбросить все фильтры по датам
   void clearDateFilters() {
     _debounceTimer?.cancel();
-    logDebug('Фильтры по датам очищены', tag: _logTag);
+    logDebug('Фильтеры по датам очищены', tag: _logTag);
     state = state.copyWith(
       createdAfter: null,
       createdBefore: null,

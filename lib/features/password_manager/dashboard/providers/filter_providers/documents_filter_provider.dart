@@ -2,23 +2,24 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/document/document_types.dart';
 
 import 'base_filter_provider.dart';
 
 /// Провайдер для управления фильтром документов
 final documentsFilterProvider =
-    NotifierProvider.autoDispose<DocumentsFilterNotifier, DocumentsFilter>(
+    NotifierProvider.autoDispose<DocumentsFilterNotifier, DocumentFilter>(
       DocumentsFilterNotifier.new,
     );
 
-class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
+class DocumentsFilterNotifier extends Notifier<DocumentFilter> {
   static const String _logTag = 'DocumentsFilterNotifier';
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
   @override
-  DocumentsFilter build() {
+  DocumentFilter build() {
     logDebug('Инициализация фильтра документов', tag: _logTag);
 
     // Подписываемся на изменения базового фильтра
@@ -32,10 +33,10 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
       _debounceTimer?.cancel();
     });
 
-    return DocumentsFilter(base: ref.read(baseFilterProvider));
+    return DocumentFilter(base: ref.read(baseFilterProvider));
   }
 
-  void updateFilterDebounced(DocumentsFilter newFilter) {
+  void updateFilterDebounced(DocumentFilter newFilter) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(_debounceDuration, () {
       logDebug('Фильтр обновлен с дебаунсом', tag: _logTag);
@@ -44,7 +45,7 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
   }
 
   /// Обновить фильтр немедленно без дебаунса
-  void updateFilter(DocumentsFilter newFilter) {
+  void updateFilter(DocumentFilter newFilter) {
     logDebug('Фильтр обновлен немедленно', tag: _logTag);
     state = newFilter;
   }
@@ -53,82 +54,46 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
   // Методы фильтрации по типам документов
   // ============================================================================
 
-  /// Добавить тип документа в фильтр
-  void addDocumentType(String documentType) {
-    final normalizedType = documentType.trim().toLowerCase();
-    if (normalizedType.isEmpty ||
-        state.documentTypes.contains(normalizedType)) {
-      return;
-    }
-    final updated = [...state.documentTypes, normalizedType];
-    logDebug('Добавлен тип документа: $normalizedType', tag: _logTag);
-    state = state.copyWith(documentTypes: updated);
-  }
-
-  /// Удалить тип документа из фильтра
-  void removeDocumentType(String documentType) {
-    final normalizedType = documentType.trim().toLowerCase();
-    final updated = state.documentTypes
-        .where((e) => e != normalizedType)
-        .toList();
-    logDebug('Удален тип документа: $normalizedType', tag: _logTag);
-    state = state.copyWith(documentTypes: updated);
-  }
-
-  /// Переключить тип документа в фильтре
-  void toggleDocumentType(String documentType) {
-    final normalizedType = documentType.trim().toLowerCase();
-    if (state.documentTypes.contains(normalizedType)) {
-      removeDocumentType(normalizedType);
-    } else {
-      addDocumentType(normalizedType);
-    }
-  }
-
-  /// Установить типы документов (заменить все)
-  void setDocumentTypes(List<String> documentTypes) {
-    final normalized = documentTypes
-        .map((e) => e.trim().toLowerCase())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    logDebug('Установлены типы документов: $normalized', tag: _logTag);
-    state = state.copyWith(documentTypes: normalized);
+  /// Установить тип документа в фильтре
+  void setDocumentType(DocumentType? documentType) {
+    logDebug('Установлен тип документа: $documentType', tag: _logTag);
+    state = state.copyWith(documentType: documentType);
   }
 
   /// Показать только паспорта
   void showOnlyPassports() {
     logDebug('Фильтр: только паспорта', tag: _logTag);
-    state = state.copyWith(documentTypes: ['passport']);
+    state = state.copyWith(documentType: DocumentType.passport);
   }
 
   /// Показать только договоры
   void showOnlyContracts() {
     logDebug('Фильтр: только договоры', tag: _logTag);
-    state = state.copyWith(documentTypes: ['contract']);
+    state = state.copyWith(documentType: DocumentType.contract);
   }
 
   /// Показать только сертификаты
   void showOnlyCertificates() {
     logDebug('Фильтр: только сертификаты', tag: _logTag);
-    state = state.copyWith(documentTypes: ['certificate']);
+    state = state.copyWith(documentType: DocumentType.certificate);
   }
 
   /// Показать удостоверения личности
   void showOnlyIdCards() {
     logDebug('Фильтр: только удостоверения', tag: _logTag);
-    state = state.copyWith(documentTypes: ['id_card']);
+    state = state.copyWith(documentType: DocumentType.idCard);
   }
 
   /// Показать медицинские документы
   void showOnlyMedical() {
     logDebug('Фильтр: только медицинские', tag: _logTag);
-    state = state.copyWith(documentTypes: ['medical']);
+    state = state.copyWith(documentType: DocumentType.medical);
   }
 
   /// Очистить фильтр типов документов
-  void clearDocumentTypes() {
-    logDebug('Очищены типы документов', tag: _logTag);
-    state = state.copyWith(documentTypes: []);
+  void clearDocumentType() {
+    logDebug('Очищен тип документа', tag: _logTag);
+    state = state.copyWith(documentType: null);
   }
 
   // ============================================================================
@@ -183,53 +148,19 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
   }
 
   // ============================================================================
-  // Методы фильтрации по текстовым полям
+  // Статусные фильтры
   // ============================================================================
 
-  /// Установить поиск по названию
-  void setTitleQuery(String? query) {
-    final normalized = query?.trim();
-    logDebug('Установлен поиск по названию: $normalized', tag: _logTag);
-    updateFilterDebounced(
-      state.copyWith(
-        titleQuery: normalized?.isEmpty == true ? null : normalized,
-      ),
-    );
+  /// Установить фильтр по актуальной версии
+  void setHasCurrentVersion(bool? hasCurrentVersion) {
+    logDebug('Фильтр "актуальная версия" установлен: $hasCurrentVersion', tag: _logTag);
+    state = state.copyWith(hasCurrentVersion: hasCurrentVersion);
   }
 
-  /// Установить поиск по описанию
-  void setDescriptionQuery(String? query) {
-    final normalized = query?.trim();
-    logDebug('Установлен поиск по описанию: $normalized', tag: _logTag);
-    updateFilterDebounced(
-      state.copyWith(
-        descriptionQuery: normalized?.isEmpty == true ? null : normalized,
-      ),
-    );
-  }
-
-  /// Установить поиск по агрегированному тексту (OCR)
-  void setAggregatedTextQuery(String? query) {
-    final normalized = query?.trim();
-    logDebug(
-      'Установлен поиск по агрегированному тексту: $normalized',
-      tag: _logTag,
-    );
-    updateFilterDebounced(
-      state.copyWith(
-        aggregatedTextQuery: normalized?.isEmpty == true ? null : normalized,
-      ),
-    );
-  }
-
-  /// Очистить все текстовые запросы
-  void clearTextQueries() {
-    logDebug('Очищены текстовые запросы', tag: _logTag);
-    state = state.copyWith(
-      titleQuery: null,
-      descriptionQuery: null,
-      aggregatedTextQuery: null,
-    );
+  /// Установить фильтр по наличию хеша
+  void setHasAggregateHash(bool? hasAggregateHash) {
+    logDebug('Фильтр "есть хеш" установлен: $hasAggregateHash', tag: _logTag);
+    state = state.copyWith(hasAggregateHash: hasAggregateHash);
   }
 
   // ============================================================================
@@ -237,38 +168,16 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
   // ============================================================================
 
   /// Установить поле сортировки
-  void setSortField(DocumentsSortField? field) {
+  void setSortField(DocumentSortField? field) {
     logDebug('Установлено поле сортировки: $field', tag: _logTag);
     state = state.copyWith(sortField: field);
   }
 
   /// Сортировать по названию
-  void sortByTitle({bool ascending = true}) {
+  void sortByName({bool ascending = true}) {
     logDebug('Сортировка по названию: $ascending', tag: _logTag);
     state = state.copyWith(
-      sortField: DocumentsSortField.title,
-      base: state.base.copyWith(
-        sortDirection: ascending ? SortDirection.asc : SortDirection.desc,
-      ),
-    );
-  }
-
-  /// Сортировать по типу документа
-  void sortByDocumentType({bool ascending = true}) {
-    logDebug('Сортировка по типу документа: $ascending', tag: _logTag);
-    state = state.copyWith(
-      sortField: DocumentsSortField.documentType,
-      base: state.base.copyWith(
-        sortDirection: ascending ? SortDirection.asc : SortDirection.desc,
-      ),
-    );
-  }
-
-  /// Сортировать по количеству страниц
-  void sortByPageCount({bool ascending = true}) {
-    logDebug('Сортировка по количеству страниц: $ascending', tag: _logTag);
-    state = state.copyWith(
-      sortField: DocumentsSortField.pageCount,
+      sortField: DocumentSortField.name,
       base: state.base.copyWith(
         sortDirection: ascending ? SortDirection.asc : SortDirection.desc,
       ),
@@ -279,7 +188,7 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
   void sortByCreatedAt({bool ascending = true}) {
     logDebug('Сортировка по дате создания: $ascending', tag: _logTag);
     state = state.copyWith(
-      sortField: DocumentsSortField.createdAt,
+      sortField: DocumentSortField.createdAt,
       base: state.base.copyWith(
         sortDirection: ascending ? SortDirection.asc : SortDirection.desc,
       ),
@@ -290,7 +199,7 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
   void sortByModifiedAt({bool ascending = true}) {
     logDebug('Сортировка по дате изменения: $ascending', tag: _logTag);
     state = state.copyWith(
-      sortField: DocumentsSortField.modifiedAt,
+      sortField: DocumentSortField.modifiedAt,
       base: state.base.copyWith(
         sortDirection: ascending ? SortDirection.asc : SortDirection.desc,
       ),
@@ -304,7 +213,7 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
       tag: _logTag,
     );
     state = state.copyWith(
-      sortField: DocumentsSortField.lastUsedAt,
+      sortField: DocumentSortField.lastUsedAt,
       base: state.base.copyWith(
         sortDirection: ascending ? SortDirection.asc : SortDirection.desc,
       ),
@@ -319,12 +228,11 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
   void resetDocumentSpecificFilters() {
     logDebug('Сброс специфичных фильтров документов', tag: _logTag);
     state = state.copyWith(
-      documentTypes: [],
+      documentType: null,
       minPageCount: null,
       maxPageCount: null,
-      titleQuery: null,
-      descriptionQuery: null,
-      aggregatedTextQuery: null,
+      hasCurrentVersion: null,
+      hasAggregateHash: null,
       sortField: null,
     );
   }
@@ -347,8 +255,8 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
   String getActiveFiltersDescription() {
     final parts = <String>[];
 
-    if (state.documentTypes.isNotEmpty) {
-      parts.add('Типы: ${state.documentTypes.join(", ")}');
+    if (state.documentType != null) {
+      parts.add('Тип: ${state.documentType!.name}');
     }
 
     if (state.minPageCount != null || state.maxPageCount != null) {
@@ -361,16 +269,8 @@ class DocumentsFilterNotifier extends Notifier<DocumentsFilter> {
       }
     }
 
-    if (state.titleQuery != null) {
-      parts.add('Название: "${state.titleQuery}"');
-    }
-
-    if (state.descriptionQuery != null) {
-      parts.add('Описание: "${state.descriptionQuery}"');
-    }
-
-    if (state.aggregatedTextQuery != null) {
-      parts.add('Текст: "${state.aggregatedTextQuery}"');
+    if (state.hasCurrentVersion != null) {
+      parts.add(state.hasCurrentVersion! ? 'Только актуальные' : 'Только архивные');
     }
 
     if (parts.isEmpty) {

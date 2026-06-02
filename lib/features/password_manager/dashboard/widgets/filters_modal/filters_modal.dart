@@ -4,11 +4,10 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:universal_platform/universal_platform.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -36,22 +35,22 @@ import 'filters_section/filter_sections.dart';
 /// Типобезопасное хранилище начальных значений фильтров
 class _InitialFilterValues {
   final BaseFilter baseFilter;
-  final PasswordsFilter? passwordsFilter;
-  final NotesFilter? notesFilter;
-  final OtpsFilter? otpsFilter;
-  final BankCardsFilter? bankCardsFilter;
-  final FilesFilter? filesFilter;
-  final DocumentsFilter? documentsFilter;
-  final ContactsFilter? contactsFilter;
-  final ApiKeysFilter? apiKeysFilter;
-  final SshKeysFilter? sshKeysFilter;
-  final CertificatesFilter? certificatesFilter;
-  final CryptoWalletsFilter? cryptoWalletsFilter;
-  final WifisFilter? wifisFilter;
-  final IdentitiesFilter? identitiesFilter;
-  final LicenseKeysFilter? licenseKeysFilter;
+  final PasswordFilter? passwordsFilter;
+  final NoteFilter? notesFilter;
+  final OtpFilter? otpsFilter;
+  final BankCardFilter? bankCardsFilter;
+  final FileFilter? filesFilter;
+  final DocumentFilter? documentsFilter;
+  final ContactFilter? contactsFilter;
+  final ApiKeyFilter? apiKeysFilter;
+  final SshKeyFilter? sshKeysFilter;
+  final CertificateFilter? certificatesFilter;
+  final CryptoWalletFilter? cryptoWalletsFilter;
+  final WifiFilter? wifisFilter;
+  final IdentityFilter? identitiesFilter;
+  final LicenseKeyFilter? licenseKeysFilter;
   final RecoveryCodesFilter? recoveryCodesFilter;
-  final LoyaltyCardsFilter? loyaltyCardsFilter;
+  final LoyaltyCardFilter? loyaltyCardsFilter;
 
   _InitialFilterValues({
     required this.baseFilter,
@@ -244,72 +243,72 @@ class _FilterModalActions extends ConsumerWidget {
         case EntityType.password:
           ref
               .read(passwordsFilterProvider.notifier)
-              .updateFilter(PasswordsFilter(base: emptyBaseFilter));
+              .updateFilter(PasswordFilter(base: emptyBaseFilter));
           break;
         case EntityType.note:
           ref
               .read(notesFilterProvider.notifier)
-              .updateFilter(NotesFilter(base: emptyBaseFilter));
+              .updateFilter(NoteFilter(base: emptyBaseFilter));
           break;
         case EntityType.otp:
           ref
               .read(otpsFilterProvider.notifier)
-              .updateFilter(OtpsFilter(base: emptyBaseFilter));
+              .updateFilter(OtpFilter(base: emptyBaseFilter));
           break;
         case EntityType.bankCard:
           ref
               .read(bankCardsFilterProvider.notifier)
-              .updateFilter(BankCardsFilter(base: emptyBaseFilter));
+              .updateFilter(BankCardFilter(base: emptyBaseFilter));
           break;
         case EntityType.file:
           ref
               .read(filesFilterProvider.notifier)
-              .updateFilter(FilesFilter(base: emptyBaseFilter));
+              .updateFilter(FileFilter(base: emptyBaseFilter));
           break;
         case EntityType.document:
           ref
               .read(documentsFilterProvider.notifier)
-              .updateFilter(DocumentsFilter(base: emptyBaseFilter));
+              .updateFilter(DocumentFilter(base: emptyBaseFilter));
           break;
         case EntityType.apiKey:
           ref
               .read(apiKeysFilterProvider.notifier)
-              .updateFilter(ApiKeysFilter(base: emptyBaseFilter));
+              .updateFilter(ApiKeyFilter(base: emptyBaseFilter));
           break;
         case EntityType.contact:
           ref
               .read(contactsFilterProvider.notifier)
-              .updateFilter(ContactsFilter(base: emptyBaseFilter));
+              .updateFilter(ContactFilter(base: emptyBaseFilter));
           break;
         case EntityType.sshKey:
           ref
               .read(sshKeysFilterProvider.notifier)
-              .updateFilter(SshKeysFilter(base: emptyBaseFilter));
+              .updateFilter(SshKeyFilter(base: emptyBaseFilter));
           break;
         case EntityType.certificate:
           ref
               .read(certificatesFilterProvider.notifier)
-              .updateFilter(CertificatesFilter(base: emptyBaseFilter));
+              .updateFilter(CertificateFilter(base: emptyBaseFilter));
           break;
         case EntityType.cryptoWallet:
           ref
               .read(cryptoWalletsFilterProvider.notifier)
-              .updateFilter(CryptoWalletsFilter(base: emptyBaseFilter));
+              .updateFilter(CryptoWalletFilter(base: emptyBaseFilter));
           break;
         case EntityType.wifi:
           ref
               .read(wifisFilterProvider.notifier)
-              .updateFilter(WifisFilter(base: emptyBaseFilter));
+              .updateFilter(WifiFilter(base: emptyBaseFilter));
           break;
         case EntityType.identity:
           ref
               .read(identitiesFilterProvider.notifier)
-              .updateFilter(IdentitiesFilter(base: emptyBaseFilter));
+              .updateFilter(IdentityFilter(base: emptyBaseFilter));
           break;
         case EntityType.licenseKey:
           ref
               .read(licenseKeysFilterProvider.notifier)
-              .updateFilter(LicenseKeysFilter(base: emptyBaseFilter));
+              .updateFilter(LicenseKeyFilter(base: emptyBaseFilter));
           break;
         case EntityType.recoveryCodes:
           ref
@@ -319,7 +318,7 @@ class _FilterModalActions extends ConsumerWidget {
         case EntityType.loyaltyCard:
           ref
               .read(loyaltyCardsFilterProvider.notifier)
-              .updateFilter(LoyaltyCardsFilter(base: emptyBaseFilter));
+              .updateFilter(LoyaltyCardFilter(base: emptyBaseFilter));
           break;
       }
 
@@ -399,22 +398,22 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
   // Локальные копии фильтров (изменяются локально, применяются при нажатии кнопки)
   late BaseFilter _localBaseFilter;
-  PasswordsFilter? _localPasswordsFilter;
-  NotesFilter? _localNotesFilter;
-  OtpsFilter? _localOtpsFilter;
-  BankCardsFilter? _localBankCardsFilter;
-  FilesFilter? _localFilesFilter;
-  DocumentsFilter? _localDocumentsFilter;
-  ContactsFilter? _localContactsFilter;
-  ApiKeysFilter? _localApiKeysFilter;
-  SshKeysFilter? _localSshKeysFilter;
-  CertificatesFilter? _localCertificatesFilter;
-  CryptoWalletsFilter? _localCryptoWalletsFilter;
-  WifisFilter? _localWifisFilter;
-  IdentitiesFilter? _localIdentitiesFilter;
-  LicenseKeysFilter? _localLicenseKeysFilter;
+  PasswordFilter? _localPasswordsFilter;
+  NoteFilter? _localNotesFilter;
+  OtpFilter? _localOtpsFilter;
+  BankCardFilter? _localBankCardsFilter;
+  FileFilter? _localFilesFilter;
+  DocumentFilter? _localDocumentsFilter;
+  ContactFilter? _localContactsFilter;
+  ApiKeyFilter? _localApiKeysFilter;
+  SshKeyFilter? _localSshKeysFilter;
+  CertificateFilter? _localCertificatesFilter;
+  CryptoWalletFilter? _localCryptoWalletsFilter;
+  WifiFilter? _localWifisFilter;
+  IdentityFilter? _localIdentitiesFilter;
+  LicenseKeyFilter? _localLicenseKeysFilter;
   RecoveryCodesFilter? _localRecoveryCodesFilter;
-  LoyaltyCardsFilter? _localLoyaltyCardsFilter;
+  LoyaltyCardFilter? _localLoyaltyCardsFilter;
 
   // Типобезопасное хранение начальных значений для отката
   _InitialFilterValues? _initialValues;
@@ -704,7 +703,6 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           isFilter: true,
           selectedCategoryIds: _selectedCategoryIds,
           selectedCategoryNames: _selectedCategoryNames,
-          filterByType: [_getCategoryType(entityType), CategoryType.mixed],
           onCategoriesSelected: (ids, names) {
             setState(() {
               _selectedCategoryIds = ids;
@@ -736,7 +734,6 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           isFilter: true,
           selectedTagIds: _selectedTagIds,
           selectedTagNames: _selectedTagNames,
-          filterByType: [_getTagType(entityType), TagType.mixed],
           onTagsSelected: (ids, names) {
             setState(() {
               _selectedTagIds = ids;
@@ -911,7 +908,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
       case EntityType.password:
         return PasswordFilterSection(
           filter:
-              _localPasswordsFilter ?? PasswordsFilter(base: _localBaseFilter),
+              _localPasswordsFilter ?? PasswordFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localPasswordsFilter = updatedFilter;
@@ -922,7 +919,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
       case EntityType.note:
         return NotesFilterSection(
-          filter: _localNotesFilter ?? NotesFilter(base: _localBaseFilter),
+          filter: _localNotesFilter ?? NoteFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localNotesFilter = updatedFilter;
@@ -933,7 +930,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
       case EntityType.otp:
         return OtpsFilterSection(
-          filter: _localOtpsFilter ?? OtpsFilter(base: _localBaseFilter),
+          filter: _localOtpsFilter ?? OtpFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localOtpsFilter = updatedFilter;
@@ -945,7 +942,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
       case EntityType.bankCard:
         return BankCardsFilterSection(
           filter:
-              _localBankCardsFilter ?? BankCardsFilter(base: _localBaseFilter),
+              _localBankCardsFilter ?? BankCardFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localBankCardsFilter = updatedFilter;
@@ -956,7 +953,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
       case EntityType.file:
         return FilesFilterSection(
-          filter: _localFilesFilter ?? FilesFilter(base: _localBaseFilter),
+          filter: _localFilesFilter ?? FileFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localFilesFilter = updatedFilter;
@@ -968,7 +965,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
       case EntityType.document:
         return DocumentsFilterSection(
           filter:
-              _localDocumentsFilter ?? DocumentsFilter(base: _localBaseFilter),
+              _localDocumentsFilter ?? DocumentFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localDocumentsFilter = updatedFilter;
@@ -978,7 +975,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
       case EntityType.apiKey:
         return ApiKeysFilterSection(
-          filter: _localApiKeysFilter ?? ApiKeysFilter(base: _localBaseFilter),
+          filter: _localApiKeysFilter ?? ApiKeyFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localApiKeysFilter = updatedFilter;
@@ -988,8 +985,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
       case EntityType.contact:
         return ContactsFilterSection(
-          filter:
-              _localContactsFilter ?? ContactsFilter(base: _localBaseFilter),
+          filter: _localContactsFilter ?? ContactFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localContactsFilter = updatedFilter;
@@ -999,7 +995,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
       case EntityType.sshKey:
         return SshKeysFilterSection(
-          filter: _localSshKeysFilter ?? SshKeysFilter(base: _localBaseFilter),
+          filter: _localSshKeysFilter ?? SshKeyFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localSshKeysFilter = updatedFilter;
@@ -1011,7 +1007,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return CertificatesFilterSection(
           filter:
               _localCertificatesFilter ??
-              CertificatesFilter(base: _localBaseFilter),
+              CertificateFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localCertificatesFilter = updatedFilter;
@@ -1023,7 +1019,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return CryptoWalletsFilterSection(
           filter:
               _localCryptoWalletsFilter ??
-              CryptoWalletsFilter(base: _localBaseFilter),
+              CryptoWalletFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localCryptoWalletsFilter = updatedFilter;
@@ -1033,7 +1029,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         );
       case EntityType.wifi:
         return WifisFilterSection(
-          filter: _localWifisFilter ?? WifisFilter(base: _localBaseFilter),
+          filter: _localWifisFilter ?? WifiFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localWifisFilter = updatedFilter;
@@ -1044,8 +1040,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
       case EntityType.identity:
         return IdentitiesFilterSection(
           filter:
-              _localIdentitiesFilter ??
-              IdentitiesFilter(base: _localBaseFilter),
+              _localIdentitiesFilter ?? IdentityFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localIdentitiesFilter = updatedFilter;
@@ -1057,7 +1052,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return LicenseKeysFilterSection(
           filter:
               _localLicenseKeysFilter ??
-              LicenseKeysFilter(base: _localBaseFilter),
+              LicenseKeyFilter(base: _localBaseFilter),
           onFilterChanged: (updatedFilter) {
             setState(() {
               _localLicenseKeysFilter = updatedFilter;
@@ -1081,88 +1076,14 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
         return LoyaltyCardsFilterSection(
           filter:
               _localLoyaltyCardsFilter ??
-              LoyaltyCardsFilter(base: _localBaseFilter),
-          onChanged: (updatedFilter) {
+              LoyaltyCardFilter(base: _localBaseFilter),
+          onFilterChanged: (updatedFilter) {
             setState(() {
               _localLoyaltyCardsFilter = updatedFilter;
             });
             logDebug('FilterModal: Обновлены фильтры карт лояльности локально');
           },
         );
-    }
-  }
-
-  CategoryType _getCategoryType(EntityType entityType) {
-    switch (entityType) {
-      case EntityType.document:
-        return CategoryType.document;
-      case EntityType.password:
-        return CategoryType.password;
-      case EntityType.note:
-        return CategoryType.note;
-      case EntityType.bankCard:
-        return CategoryType.bankCard;
-      case EntityType.file:
-        return CategoryType.file;
-      case EntityType.otp:
-        return CategoryType.totp;
-      case EntityType.apiKey:
-        return CategoryType.apiKey;
-      case EntityType.contact:
-        return CategoryType.contact;
-      case EntityType.sshKey:
-        return CategoryType.sshKey;
-      case EntityType.certificate:
-        return CategoryType.certificate;
-      case EntityType.cryptoWallet:
-        return CategoryType.cryptoWallet;
-      case EntityType.wifi:
-        return CategoryType.wifi;
-      case EntityType.identity:
-        return CategoryType.identity;
-      case EntityType.licenseKey:
-        return CategoryType.licenseKey;
-      case EntityType.recoveryCodes:
-        return CategoryType.recoveryCodes;
-      case EntityType.loyaltyCard:
-        return CategoryType.loyaltyCard;
-    }
-  }
-
-  TagType _getTagType(EntityType entityType) {
-    switch (entityType) {
-      case EntityType.document:
-        return TagType.document;
-      case EntityType.password:
-        return TagType.password;
-      case EntityType.note:
-        return TagType.note;
-      case EntityType.bankCard:
-        return TagType.bankCard;
-      case EntityType.file:
-        return TagType.file;
-      case EntityType.otp:
-        return TagType.totp;
-      case EntityType.apiKey:
-        return TagType.apiKey;
-      case EntityType.contact:
-        return TagType.contact;
-      case EntityType.sshKey:
-        return TagType.sshKey;
-      case EntityType.certificate:
-        return TagType.certificate;
-      case EntityType.cryptoWallet:
-        return TagType.cryptoWallet;
-      case EntityType.wifi:
-        return TagType.wifi;
-      case EntityType.identity:
-        return TagType.identity;
-      case EntityType.licenseKey:
-        return TagType.licenseKey;
-      case EntityType.recoveryCodes:
-        return TagType.recoveryCodes;
-      case EntityType.loyaltyCard:
-        return TagType.loyaltyCard;
     }
   }
 
@@ -1173,13 +1094,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
     try {
       // Загружаем имена категорий через DAO
       if (_selectedCategoryIds.isNotEmpty) {
-        final categoryDao = await ref.read(categoryDaoProvider.future);
+        final categoryDao = (await ref.read(vaultRepositories.future)).category;
         final categoryNames = <String>[];
 
         for (final id in _selectedCategoryIds) {
-          final category = await categoryDao.getCategoryById(id);
-          if (category != null) {
-            categoryNames.add(category.name);
+          final category = (await categoryDao.getCategory(id)).getOrThrow();
+          if (category.isPresent) {
+            categoryNames.add(category.getOrNull()!.name);
           }
         }
 
@@ -1192,13 +1113,13 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
       // Загружаем имена тегов через DAO
       if (_selectedTagIds.isNotEmpty) {
-        final tagDao = await ref.read(tagDaoProvider.future);
+        final tagDao = (await ref.read(vaultRepositories.future)).tag;
         final tagNames = <String>[];
 
         for (final id in _selectedTagIds) {
-          final tag = await tagDao.getTagById(id);
-          if (tag != null) {
-            tagNames.add(tag.name);
+          final tag = (await tagDao.getTag(id)).getOrThrow();
+          if (tag.isPresent) {
+            tagNames.add(tag.getOrNull()!.name);
           }
         }
 
@@ -1430,35 +1351,35 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           if (_initialValues!.passwordsFilter != null) {
             ref
                 .read(passwordsFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.passwordsFilter!);
+                .updateFilter(_initialValues!.passwordsFilter!);
           }
           break;
         case EntityType.note:
           if (_initialValues!.notesFilter != null) {
             ref
                 .read(notesFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.notesFilter!);
+                .updateFilter(_initialValues!.notesFilter!);
           }
           break;
         case EntityType.otp:
           if (_initialValues!.otpsFilter != null) {
             ref
                 .read(otpsFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.otpsFilter!);
+                .updateFilter(_initialValues!.otpsFilter!);
           }
           break;
         case EntityType.bankCard:
           if (_initialValues!.bankCardsFilter != null) {
             ref
                 .read(bankCardsFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.bankCardsFilter!);
+                .updateFilter(_initialValues!.bankCardsFilter!);
           }
           break;
         case EntityType.file:
           if (_initialValues!.filesFilter != null) {
             ref
                 .read(filesFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.filesFilter!);
+                .updateFilter(_initialValues!.filesFilter!);
           }
           break;
 
@@ -1466,77 +1387,77 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           if (_initialValues!.documentsFilter != null) {
             ref
                 .read(documentsFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.documentsFilter!);
+                .updateFilter(_initialValues!.documentsFilter!);
           }
           break;
         case EntityType.apiKey:
           if (_initialValues!.apiKeysFilter != null) {
             ref
                 .read(apiKeysFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.apiKeysFilter!);
+                .updateFilter(_initialValues!.apiKeysFilter!);
           }
           break;
         case EntityType.contact:
           if (_initialValues!.contactsFilter != null) {
             ref
                 .read(contactsFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.contactsFilter!);
+                .updateFilter(_initialValues!.contactsFilter!);
           }
           break;
         case EntityType.sshKey:
           if (_initialValues!.sshKeysFilter != null) {
             ref
                 .read(sshKeysFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.sshKeysFilter!);
+                .updateFilter(_initialValues!.sshKeysFilter!);
           }
           break;
         case EntityType.certificate:
           if (_initialValues!.certificatesFilter != null) {
             ref
                 .read(certificatesFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.certificatesFilter!);
+                .updateFilter(_initialValues!.certificatesFilter!);
           }
           break;
         case EntityType.cryptoWallet:
           if (_initialValues!.cryptoWalletsFilter != null) {
             ref
                 .read(cryptoWalletsFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.cryptoWalletsFilter!);
+                .updateFilter(_initialValues!.cryptoWalletsFilter!);
           }
           break;
         case EntityType.wifi:
           if (_initialValues!.wifisFilter != null) {
             ref
                 .read(wifisFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.wifisFilter!);
+                .updateFilter(_initialValues!.wifisFilter!);
           }
           break;
         case EntityType.identity:
           if (_initialValues!.identitiesFilter != null) {
             ref
                 .read(identitiesFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.identitiesFilter!);
+                .updateFilter(_initialValues!.identitiesFilter!);
           }
           break;
         case EntityType.licenseKey:
           if (_initialValues!.licenseKeysFilter != null) {
             ref
                 .read(licenseKeysFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.licenseKeysFilter!);
+                .updateFilter(_initialValues!.licenseKeysFilter!);
           }
           break;
         case EntityType.recoveryCodes:
           if (_initialValues!.recoveryCodesFilter != null) {
             ref
                 .read(recoveryCodesFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.recoveryCodesFilter!);
+                .updateFilter(_initialValues!.recoveryCodesFilter!);
           }
           break;
         case EntityType.loyaltyCard:
           if (_initialValues!.loyaltyCardsFilter != null) {
             ref
                 .read(loyaltyCardsFilterProvider.notifier)
-                .updateFilterDebounced(_initialValues!.loyaltyCardsFilter!);
+                .updateFilter(_initialValues!.loyaltyCardsFilter!);
           }
           break;
       }
@@ -1570,49 +1491,49 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
 
       switch (widget.entityType) {
         case EntityType.password:
-          _localPasswordsFilter = PasswordsFilter(base: _localBaseFilter);
+          _localPasswordsFilter = PasswordFilter(base: _localBaseFilter);
           break;
         case EntityType.note:
-          _localNotesFilter = NotesFilter(base: _localBaseFilter);
+          _localNotesFilter = NoteFilter(base: _localBaseFilter);
           break;
         case EntityType.otp:
-          _localOtpsFilter = OtpsFilter(base: _localBaseFilter);
+          _localOtpsFilter = OtpFilter(base: _localBaseFilter);
           break;
         case EntityType.bankCard:
-          _localBankCardsFilter = BankCardsFilter(base: _localBaseFilter);
+          _localBankCardsFilter = BankCardFilter(base: _localBaseFilter);
           break;
         case EntityType.file:
-          _localFilesFilter = FilesFilter(base: _localBaseFilter);
+          _localFilesFilter = FileFilter(base: _localBaseFilter);
           break;
 
         case EntityType.document:
-          _localDocumentsFilter = DocumentsFilter(base: _localBaseFilter);
+          _localDocumentsFilter = DocumentFilter(base: _localBaseFilter);
           break;
         case EntityType.apiKey:
-          _localApiKeysFilter = ApiKeysFilter(base: _localBaseFilter);
+          _localApiKeysFilter = ApiKeyFilter(base: _localBaseFilter);
           break;
         case EntityType.contact:
-          _localContactsFilter = ContactsFilter(base: _localBaseFilter);
+          _localContactsFilter = ContactFilter(base: _localBaseFilter);
           break;
         case EntityType.sshKey:
-          _localSshKeysFilter = SshKeysFilter(base: _localBaseFilter);
+          _localSshKeysFilter = SshKeyFilter(base: _localBaseFilter);
           break;
         case EntityType.certificate:
-          _localCertificatesFilter = CertificatesFilter(base: _localBaseFilter);
+          _localCertificatesFilter = CertificateFilter(base: _localBaseFilter);
           break;
         case EntityType.cryptoWallet:
-          _localCryptoWalletsFilter = CryptoWalletsFilter(
+          _localCryptoWalletsFilter = CryptoWalletFilter(
             base: _localBaseFilter,
           );
           break;
         case EntityType.wifi:
-          _localWifisFilter = WifisFilter(base: _localBaseFilter);
+          _localWifisFilter = WifiFilter(base: _localBaseFilter);
           break;
         case EntityType.identity:
-          _localIdentitiesFilter = IdentitiesFilter(base: _localBaseFilter);
+          _localIdentitiesFilter = IdentityFilter(base: _localBaseFilter);
           break;
         case EntityType.licenseKey:
-          _localLicenseKeysFilter = LicenseKeysFilter(base: _localBaseFilter);
+          _localLicenseKeysFilter = LicenseKeyFilter(base: _localBaseFilter);
           break;
         case EntityType.recoveryCodes:
           _localRecoveryCodesFilter = RecoveryCodesFilter(
@@ -1620,7 +1541,7 @@ class _FilterModalContentState extends ConsumerState<_FilterModalContent> {
           );
           break;
         case EntityType.loyaltyCard:
-          _localLoyaltyCardsFilter = LoyaltyCardsFilter(base: _localBaseFilter);
+          _localLoyaltyCardsFilter = LoyaltyCardFilter(base: _localBaseFilter);
           break;
       }
     });

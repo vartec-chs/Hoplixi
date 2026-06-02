@@ -1,5 +1,5 @@
 import 'package:hoplixi/core/errors/app_error.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 final class DashboardListState {
   const DashboardListState({
@@ -13,14 +13,14 @@ final class DashboardListState {
 
   factory DashboardListState.empty({required int pageSize}) {
     return DashboardListState(
-      items: const <BaseCardDto>[],
+      items: const <VaultEntityCardDto>[],
       totalCount: 0,
       page: 0,
       pageSize: pageSize,
     );
   }
 
-  final List<BaseCardDto> items;
+  final List<VaultEntityCardDto> items;
   final int totalCount;
   final int page;
   final int pageSize;
@@ -31,7 +31,7 @@ final class DashboardListState {
   bool get isEmpty => items.isEmpty;
 
   DashboardListState copyWith({
-    List<BaseCardDto>? items,
+    List<VaultEntityCardDto>? items,
     int? totalCount,
     int? page,
     int? pageSize,

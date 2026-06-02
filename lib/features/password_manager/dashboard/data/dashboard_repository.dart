@@ -1,10 +1,11 @@
 import 'package:hoplixi/core/errors/app_error.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../models/entity_type.dart';
 import '../models/dashboard_query.dart';
 
-typedef DashboardLoadResult = ({List<BaseCardDto> items, int totalCount});
+typedef DashboardLoadResult = ({List<VaultEntityCardDto> items, int totalCount});
 
 abstract interface class DashboardRepository {
   Future<ResultDart<DashboardLoadResult, AppError>> load(DashboardQuery query);

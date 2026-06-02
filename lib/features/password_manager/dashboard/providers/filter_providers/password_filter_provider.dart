@@ -2,23 +2,23 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 
 import 'base_filter_provider.dart';
 
 /// Провайдер для управления фильтром паролей
 final passwordsFilterProvider =
-    NotifierProvider.autoDispose<PasswordFilterNotifier, PasswordsFilter>(
+    NotifierProvider.autoDispose<PasswordFilterNotifier, PasswordFilter>(
       PasswordFilterNotifier.new,
     );
 
-class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
+class PasswordFilterNotifier extends Notifier<PasswordFilter> {
   static const String _logTag = 'PasswordFilterNotifier';
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
   @override
-  PasswordsFilter build() {
+  PasswordFilter build() {
     logDebug('Инициализация фильтра паролей', tag: _logTag);
 
     // Подписываемся на изменения базового фильтра
@@ -32,10 +32,10 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
       _debounceTimer?.cancel();
     });
 
-    return PasswordsFilter(base: ref.read(baseFilterProvider));
+    return PasswordFilter(base: ref.read(baseFilterProvider));
   }
 
-  void updateFilterDebounced(PasswordsFilter newFilter) {
+  void updateFilterDebounced(PasswordFilter newFilter) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(_debounceDuration, () {
       logDebug('Фильтр паролей обновлен с дебаунсом', tag: _logTag);
@@ -170,22 +170,13 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
   }
 
   // ============================================================================
-  // Методы фильтрации по содержимому
+  // Методы фильтрации по наличию пароля
   // ============================================================================
 
-  /// Установить фильтр по наличию описания
-  void setHasDescription(bool? hasDescription) {
-    logDebug(
-      'Фильтр "имеет описание" установлен: $hasDescription',
-      tag: _logTag,
-    );
-    state = state.copyWith(hasDescription: hasDescription);
-  }
-
-  /// Установить фильтр по наличию заметок
-  void setHasNotes(bool? hasNotes) {
-    logDebug('Фильтр "имеет заметки" установлен: $hasNotes', tag: _logTag);
-    state = state.copyWith(hasNotes: hasNotes);
+  /// Фильтр по наличию пароля
+  void setHasPassword(bool? hasPassword) {
+    logDebug('Фильтр "имеет пароль" установлен: $hasPassword', tag: _logTag);
+    state = state.copyWith(hasPassword: hasPassword);
   }
 
   // ============================================================================
@@ -193,13 +184,13 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
   // ============================================================================
 
   /// Установить поле сортировки
-  void setSortField(PasswordsSortField? sortField) {
+  void setSortField(PasswordSortField? sortField) {
     logDebug('Поле сортировки установлено: $sortField', tag: _logTag);
     state = state.copyWith(sortField: sortField);
   }
 
   /// Переключить поле сортировки между несколькими
-  void cycleSortField(List<PasswordsSortField> fields) {
+  void cycleSortField(List<PasswordSortField> fields) {
     if (fields.isEmpty) return;
 
     final currentIndex = fields.indexWhere((f) => f == state.sortField);
@@ -220,11 +211,10 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
     if (state.login != null) return true;
     if (state.email != null) return true;
     if (state.url != null) return true;
-    if (state.hasDescription != null) return true;
-    if (state.hasNotes != null) return true;
     if (state.hasUrl != null) return true;
     if (state.hasLogin != null) return true;
     if (state.hasEmail != null) return true;
+    if (state.hasPassword != null) return true;
     return false;
   }
 
@@ -232,29 +222,20 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
   bool get hasActiveConstraints => state.hasActiveConstraints;
 
   /// Получить текущий фильтр
-  PasswordsFilter get currentFilter => state;
+  PasswordFilter get currentFilter => state;
 
   /// Получить базовый фильтр
   BaseFilter get baseFilter => state.base;
 
-  /// Проверить валидность email
-  bool get isEmailValid => state.isValidEmail;
-
-  /// Проверить валидность URL
-  bool get isUrlValid => state.isValidUrl;
-
-  /// Имеет ли логин или email
-  bool get hasLoginOrEmail => state.hasLoginOrEmail;
-
   /// Обновить весь фильтр паролей сразу
-  void updateFilter(PasswordsFilter filter) {
+  void updateFilter(PasswordFilter filter) {
     _debounceTimer?.cancel();
     logDebug('Фильтр обновлен полностью', tag: _logTag);
     state = filter;
   }
 
-  /// Применить новый фильтр (создать через PasswordsFilter.create)
-  void applyFilter(PasswordsFilter newFilter) {
+  /// Применить новый фильтр (создать через PasswordFilter.create)
+  void applyFilter(PasswordFilter newFilter) {
     _debounceTimer?.cancel();
     logDebug('Применен новый фильтр', tag: _logTag);
     state = newFilter;
@@ -264,7 +245,7 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
   void reset() {
     _debounceTimer?.cancel();
     logDebug('Фильтр сброшен к начальному состоянию', tag: _logTag);
-    state = PasswordsFilter(base: ref.read(baseFilterProvider));
+    state = PasswordFilter(base: ref.read(baseFilterProvider));
   }
 
   /// Сбросить только фильтры специфичные для паролей
@@ -276,11 +257,10 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
       login: null,
       email: null,
       url: null,
-      hasDescription: null,
-      hasNotes: null,
       hasUrl: null,
       hasLogin: null,
       hasEmail: null,
+      hasPassword: null,
     );
   }
 
@@ -296,11 +276,11 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
     );
   }
 
-  /// Сбросить фильтры по местоположению (url, description)
+  /// Сбросить фильтры по местоположению (url)
   void clearLocationFilters() {
     _debounceTimer?.cancel();
     logDebug('Фильтры местоположения очищены', tag: _logTag);
-    state = state.copyWith(url: null, hasUrl: null, hasDescription: null);
+    state = state.copyWith(url: null, hasUrl: null);
   }
 
   /// Фильтр только логины
@@ -319,12 +299,6 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
   void showOnlyWithUrl() {
     logDebug('Показать только с URL', tag: _logTag);
     state = state.copyWith(hasUrl: true);
-  }
-
-  /// Фильтр только с описанием
-  void showOnlyWithDescription() {
-    logDebug('Показать только с описанием', tag: _logTag);
-    state = state.copyWith(hasDescription: true);
   }
 
   /// Применить быстрые фильтры для поиска по идентификации
@@ -346,18 +320,17 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
   }
 
   /// Получить копию фильтра с изменениями
-  PasswordsFilter copyFilter({
+  PasswordFilter copyFilter({
     BaseFilter? base,
     String? name,
     String? login,
     String? email,
     String? url,
-    bool? hasDescription,
-    bool? hasNotes,
     bool? hasUrl,
     bool? hasLogin,
     bool? hasEmail,
-    PasswordsSortField? sortField,
+    bool? hasPassword,
+    PasswordSortField? sortField,
   }) {
     return state.copyWith(
       base: base ?? state.base,
@@ -365,11 +338,10 @@ class PasswordFilterNotifier extends Notifier<PasswordsFilter> {
       login: login ?? state.login,
       email: email ?? state.email,
       url: url ?? state.url,
-      hasDescription: hasDescription ?? state.hasDescription,
-      hasNotes: hasNotes ?? state.hasNotes,
       hasUrl: hasUrl ?? state.hasUrl,
       hasLogin: hasLogin ?? state.hasLogin,
       hasEmail: hasEmail ?? state.hasEmail,
+      hasPassword: hasPassword ?? state.hasPassword,
       sortField: sortField ?? state.sortField,
     );
   }

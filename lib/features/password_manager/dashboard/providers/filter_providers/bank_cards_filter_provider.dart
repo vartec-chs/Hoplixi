@@ -2,24 +2,24 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/bank_card/bank_card_items.dart';
 
 import 'base_filter_provider.dart';
 
 /// Провайдер для управления фильтром банковских карт
 final bankCardsFilterProvider =
-    NotifierProvider.autoDispose<BankCardsFilterNotifier, BankCardsFilter>(
+    NotifierProvider.autoDispose<BankCardsFilterNotifier, BankCardFilter>(
       BankCardsFilterNotifier.new,
     );
 
-class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
+class BankCardsFilterNotifier extends Notifier<BankCardFilter> {
   static const String _logTag = 'BankCardsFilterNotifier';
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 300);
 
   @override
-  BankCardsFilter build() {
+  BankCardFilter build() {
     logDebug('Инициализация фильтра банковских карт', tag: _logTag);
 
     // Подписываемся на изменения базового фильтра
@@ -33,13 +33,13 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
       _debounceTimer?.cancel();
     });
 
-    return BankCardsFilter(base: ref.read(baseFilterProvider));
+    return BankCardFilter(base: ref.read(baseFilterProvider));
   }
 
-  void updateFilterDebounced(BankCardsFilter newFilter) {
+  void updateFilterDebounced(BankCardFilter newFilter) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(_debounceDuration, () {
-      logDebug('Фильтр обновлен с дебаунсом', tag: _logTag);
+      logDebug('Фильтр банковских карт обновлен с дебаунсом', tag: _logTag);
       state = newFilter;
     });
   }
@@ -48,158 +48,68 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
   // Методы фильтрации по типам карт
   // ============================================================================
 
-  /// Добавить тип карты в фильтр
-  void addCardType(CardType type) {
-    if (state.cardTypes.contains(type)) return;
-    final updated = [...state.cardTypes, type];
-    logDebug('Добавлен тип карты: $type', tag: _logTag);
-    state = state.copyWith(cardTypes: updated);
-  }
-
-  /// Удалить тип карты из фильтра
-  void removeCardType(CardType type) {
-    final updated = state.cardTypes.where((t) => t != type).toList();
-    logDebug('Удален тип карты: $type', tag: _logTag);
-    state = state.copyWith(cardTypes: updated);
-  }
-
-  /// Переключить тип карты в фильтре
-  void toggleCardType(CardType type) {
-    if (state.cardTypes.contains(type)) {
-      removeCardType(type);
-    } else {
-      addCardType(type);
-    }
-  }
-
-  /// Установить типы карт (заменить все)
-  void setCardTypes(List<CardType> types) {
-    logDebug('Установлены типы карт: $types', tag: _logTag);
-    state = state.copyWith(cardTypes: types);
+  /// Установить тип карты в фильтре
+  void setCardType(CardType? type) {
+    logDebug('Установлен тип карты: $type', tag: _logTag);
+    state = state.copyWith(cardType: type);
   }
 
   /// Показать только дебетовые карты
   void showOnlyDebitCards() {
     logDebug('Фильтр: только дебетовые карты', tag: _logTag);
-    state = state.copyWith(cardTypes: [CardType.debit]);
+    state = state.copyWith(cardType: CardType.debit);
   }
 
   /// Показать только кредитные карты
   void showOnlyCreditCards() {
     logDebug('Фильтр: только кредитные карты', tag: _logTag);
-    state = state.copyWith(cardTypes: [CardType.credit]);
+    state = state.copyWith(cardType: CardType.credit);
   }
 
   /// Показать только виртуальные карты
   void showOnlyVirtualCards() {
     logDebug('Фильтр: только виртуальные карты', tag: _logTag);
-    state = state.copyWith(cardTypes: [CardType.virtual]);
-  }
-
-  /// Показать все типы карт
-  void showAllCardTypes() {
-    logDebug('Фильтр: все типы карт', tag: _logTag);
-    state = state.copyWith(
-      cardTypes: [
-        CardType.debit,
-        CardType.credit,
-        CardType.prepaid,
-        CardType.virtual,
-      ],
-    );
+    state = state.copyWith(cardType: CardType.virtual);
   }
 
   /// Очистить фильтр типов карт
-  void clearCardTypes() {
-    logDebug('Очищены типы карт', tag: _logTag);
-    state = state.copyWith(cardTypes: []);
+  void clearCardType() {
+    logDebug('Очищен тип карты', tag: _logTag);
+    state = state.copyWith(cardType: null);
   }
 
   // ============================================================================
   // Методы фильтрации по платежным сетям
   // ============================================================================
 
-  /// Добавить платежную сеть в фильтр
-  void addCardNetwork(CardNetwork network) {
-    if (state.cardNetworks.contains(network)) return;
-    final updated = [...state.cardNetworks, network];
-    logDebug('Добавлена платежная сеть: $network', tag: _logTag);
-    state = state.copyWith(cardNetworks: updated);
-  }
-
-  /// Удалить платежную сеть из фильтра
-  void removeCardNetwork(CardNetwork network) {
-    final updated = state.cardNetworks.where((n) => n != network).toList();
-    logDebug('Удалена платежная сеть: $network', tag: _logTag);
-    state = state.copyWith(cardNetworks: updated);
-  }
-
-  /// Переключить платежную сеть в фильтре
-  void toggleCardNetwork(CardNetwork network) {
-    if (state.cardNetworks.contains(network)) {
-      removeCardNetwork(network);
-    } else {
-      addCardNetwork(network);
-    }
-  }
-
-  /// Установить платежные сети (заменить все)
-  void setCardNetworks(List<CardNetwork> networks) {
-    logDebug('Установлены платежные сети: $networks', tag: _logTag);
-    state = state.copyWith(cardNetworks: networks);
+  /// Установить платежную сеть в фильтре
+  void setCardNetwork(CardNetwork? network) {
+    logDebug('Установлена платежная сеть: $network', tag: _logTag);
+    state = state.copyWith(cardNetwork: network);
   }
 
   /// Показать только Visa
   void showOnlyVisa() {
     logDebug('Фильтр: только Visa', tag: _logTag);
-    state = state.copyWith(cardNetworks: [CardNetwork.visa]);
+    state = state.copyWith(cardNetwork: CardNetwork.visa);
   }
 
   /// Показать только Mastercard
   void showOnlyMastercard() {
     logDebug('Фильтр: только Mastercard', tag: _logTag);
-    state = state.copyWith(cardNetworks: [CardNetwork.mastercard]);
+    state = state.copyWith(cardNetwork: CardNetwork.mastercard);
   }
 
   /// Показать только American Express
   void showOnlyAmex() {
     logDebug('Фильтр: только American Express', tag: _logTag);
-    state = state.copyWith(cardNetworks: [CardNetwork.amex]);
-  }
-
-  /// Показать основные сети (Visa, Mastercard, Amex)
-  void showMajorNetworks() {
-    logDebug('Фильтр: основные сети', tag: _logTag);
-    state = state.copyWith(
-      cardNetworks: [
-        CardNetwork.visa,
-        CardNetwork.mastercard,
-        CardNetwork.amex,
-      ],
-    );
-  }
-
-  /// Показать все платежные сети
-  void showAllCardNetworks() {
-    logDebug('Фильтр: все платежные сети', tag: _logTag);
-    state = state.copyWith(
-      cardNetworks: [
-        CardNetwork.visa,
-        CardNetwork.mastercard,
-        CardNetwork.amex,
-        CardNetwork.discover,
-        CardNetwork.dinersclub,
-        CardNetwork.jcb,
-        CardNetwork.unionpay,
-        CardNetwork.other,
-      ],
-    );
+    state = state.copyWith(cardNetwork: CardNetwork.amex);
   }
 
   /// Очистить фильтр платежных сетей
-  void clearCardNetworks() {
-    logDebug('Очищены платежные сети', tag: _logTag);
-    state = state.copyWith(cardNetworks: []);
+  void clearCardNetwork() {
+    logDebug('Очищена платежная сеть', tag: _logTag);
+    state = state.copyWith(cardNetwork: null);
   }
 
   // ============================================================================
@@ -260,46 +170,34 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
   // Методы фильтрации по сроку действия
   // ============================================================================
 
-  /// Установить фильтр по истекшим датам
-  void setHasExpiryDatePassed(bool? hasExpiryDatePassed) {
-    logDebug(
-      'Фильтр "срок истек" установлен: $hasExpiryDatePassed',
-      tag: _logTag,
-    );
-    state = state.copyWith(hasExpiryDatePassed: hasExpiryDatePassed);
+  /// Фильтр по наличию срока действия
+  void setHasExpiry(bool? hasExpiry) {
+    logDebug('Фильтр "имеет срок действия" установлен: $hasExpiry', tag: _logTag);
+    state = state.copyWith(hasExpiry: hasExpiry);
+  }
+
+  /// Установить дату истечения (с)
+  void setExpiresAfter(DateTime? date) {
+    logDebug('Срок действия от: $date', tag: _logTag);
+    state = state.copyWith(expiresAfter: date);
+  }
+
+  /// Установить дату истечения (по)
+  void setExpiresBefore(DateTime? date) {
+    logDebug('Срок действия по: $date', tag: _logTag);
+    state = state.copyWith(expiresBefore: date);
   }
 
   /// Показать только истекшие карты
   void showOnlyExpiredCards() {
     logDebug('Фильтр: только истекшие карты', tag: _logTag);
-    state = state.copyWith(hasExpiryDatePassed: true);
+    state = state.copyWith(expiresBefore: DateTime.now());
   }
 
   /// Показать только активные карты
   void showOnlyValidCards() {
     logDebug('Фильтр: только активные карты', tag: _logTag);
-    state = state.copyWith(hasExpiryDatePassed: false);
-  }
-
-  /// Установить фильтр по карточкам, истекающим скоро (в течение 3 месяцев)
-  void setIsExpiringSoon(bool? isExpiringSoon) {
-    logDebug(
-      'Фильтр "истекает скоро" установлен: $isExpiringSoon',
-      tag: _logTag,
-    );
-    state = state.copyWith(isExpiringSoon: isExpiringSoon);
-  }
-
-  /// Показать только карты, истекающие скоро
-  void showOnlyExpiringCardssoon() {
-    logDebug('Фильтр: только карты, истекающие скоро', tag: _logTag);
-    state = state.copyWith(isExpiringSoon: true);
-  }
-
-  /// Показать только карты с далеким сроком действия
-  void showOnlyCardsWithLongValidity() {
-    logDebug('Фильтр: карты с далеким сроком действия', tag: _logTag);
-    state = state.copyWith(isExpiringSoon: false);
+    state = state.copyWith(expiresAfter: DateTime.now());
   }
 
   // ============================================================================
@@ -307,7 +205,7 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
   // ============================================================================
 
   /// Установить поле сортировки
-  void setSortField(BankCardsSortField? sortField) {
+  void setSortField(BankCardSortField? sortField) {
     logDebug('Поле сортировки установлено: $sortField', tag: _logTag);
     state = state.copyWith(sortField: sortField);
   }
@@ -315,41 +213,29 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
   /// Сортировать по названию
   void sortByName() {
     logDebug('Сортировка по названию', tag: _logTag);
-    state = state.copyWith(sortField: BankCardsSortField.name);
+    state = state.copyWith(sortField: BankCardSortField.name);
   }
 
   /// Сортировать по имени владельца
   void sortByCardholderName() {
     logDebug('Сортировка по имени владельца', tag: _logTag);
-    state = state.copyWith(sortField: BankCardsSortField.cardholderName);
+    state = state.copyWith(sortField: BankCardSortField.cardholderName);
   }
 
   /// Сортировать по названию банка
   void sortByBankName() {
     logDebug('Сортировка по названию банка', tag: _logTag);
-    state = state.copyWith(sortField: BankCardsSortField.bankName);
-  }
-
-  /// Сортировать по дате истечения
-  void sortByExpiryDate() {
-    logDebug('Сортировка по дате истечения', tag: _logTag);
-    state = state.copyWith(sortField: BankCardsSortField.expiryDate);
-  }
-
-  /// Сортировать по дате создания
-  void sortByCreatedAt() {
-    logDebug('Сортировка по дате создания', tag: _logTag);
-    state = state.copyWith(sortField: BankCardsSortField.createdAt);
+    state = state.copyWith(sortField: BankCardSortField.bankName);
   }
 
   /// Сортировать по дате изменения
   void sortByModifiedAt() {
     logDebug('Сортировка по дате изменения', tag: _logTag);
-    state = state.copyWith(sortField: BankCardsSortField.modifiedAt);
+    state = state.copyWith(sortField: BankCardSortField.modifiedAt);
   }
 
   /// Переключить поле сортировки между несколькими
-  void cycleSortField(List<BankCardsSortField> fields) {
+  void cycleSortField(List<BankCardSortField> fields) {
     if (fields.isEmpty) return;
 
     final currentIndex = fields.indexWhere((f) => f == state.sortField);
@@ -365,34 +251,26 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
   // ============================================================================
 
   /// Проверить есть ли активные фильтры специфичные для карт
-  bool get hasBankCardsSpecificConstraints {
-    if (state.cardTypes.isNotEmpty) return true;
-    if (state.cardNetworks.isNotEmpty) return true;
-    if (state.bankName != null) return true;
-    if (state.cardholderName != null) return true;
-    if (state.hasExpiryDatePassed != null) return true;
-    if (state.isExpiringSoon != null) return true;
-    return false;
-  }
+  bool get hasBankCardsSpecificConstraints => state.hasActiveConstraints;
 
   /// Проверить есть ли активные фильтры (включая базовые)
   bool get hasActiveConstraints => state.hasActiveConstraints;
 
   /// Получить текущий фильтр
-  BankCardsFilter get currentFilter => state;
+  BankCardFilter get currentFilter => state;
 
   /// Получить базовый фильтр
   BaseFilter get baseFilter => state.base;
 
   /// Обновить весь фильтр карт сразу
-  void updateFilter(BankCardsFilter filter) {
+  void updateFilter(BankCardFilter filter) {
     _debounceTimer?.cancel();
     logDebug('Фильтр обновлен полностью', tag: _logTag);
     state = filter;
   }
 
-  /// Применить новый фильтр (создать через BankCardsFilter.create)
-  void applyFilter(BankCardsFilter newFilter) {
+  /// Применить новый фильтр (создать через BankCardFilter.create)
+  void applyFilter(BankCardFilter newFilter) {
     _debounceTimer?.cancel();
     logDebug('Применен новый фильтр', tag: _logTag);
     state = newFilter;
@@ -402,7 +280,7 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
   void reset() {
     _debounceTimer?.cancel();
     logDebug('Фильтр сброшен к начальному состоянию', tag: _logTag);
-    state = BankCardsFilter(base: ref.read(baseFilterProvider));
+    state = BankCardFilter(base: ref.read(baseFilterProvider));
   }
 
   /// Сбросить только фильтры специфичные для карт
@@ -410,12 +288,13 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
     _debounceTimer?.cancel();
     logDebug('Фильтры карт очищены', tag: _logTag);
     state = state.copyWith(
-      cardTypes: [],
-      cardNetworks: [],
+      cardType: null,
+      cardNetwork: null,
       bankName: null,
       cardholderName: null,
-      hasExpiryDatePassed: null,
-      isExpiringSoon: null,
+      hasExpiry: null,
+      expiresBefore: null,
+      expiresAfter: null,
     );
   }
 
@@ -426,39 +305,27 @@ class BankCardsFilterNotifier extends Notifier<BankCardsFilter> {
     state = state.copyWith(bankName: null, cardholderName: null);
   }
 
-  /// Применить пресет для поиска проблемных карт (истекшие или истекающие)
-  void applyProblematicCardsPreset() {
-    _debounceTimer?.cancel();
-    logDebug('Применен пресет для проблемных карт', tag: _logTag);
-    state = state.copyWith(hasExpiryDatePassed: true, isExpiringSoon: true);
-  }
-
-  /// Применить пресет для поиска активных карт
-  void applyActiveCardsPreset() {
-    _debounceTimer?.cancel();
-    logDebug('Применен пресет для активных карт', tag: _logTag);
-    state = state.copyWith(hasExpiryDatePassed: false, isExpiringSoon: false);
-  }
-
   /// Получить копию фильтра с изменениями
-  BankCardsFilter copyFilter({
+  BankCardFilter copyFilter({
     BaseFilter? base,
-    List<CardType>? cardTypes,
-    List<CardNetwork>? cardNetworks,
+    CardType? cardType,
+    CardNetwork? cardNetwork,
     String? bankName,
     String? cardholderName,
-    bool? hasExpiryDatePassed,
-    bool? isExpiringSoon,
-    BankCardsSortField? sortField,
+    bool? hasExpiry,
+    DateTime? expiresBefore,
+    DateTime? expiresAfter,
+    BankCardSortField? sortField,
   }) {
     return state.copyWith(
       base: base ?? state.base,
-      cardTypes: cardTypes ?? state.cardTypes,
-      cardNetworks: cardNetworks ?? state.cardNetworks,
+      cardType: cardType ?? state.cardType,
+      cardNetwork: cardNetwork ?? state.cardNetwork,
       bankName: bankName ?? state.bankName,
       cardholderName: cardholderName ?? state.cardholderName,
-      hasExpiryDatePassed: hasExpiryDatePassed ?? state.hasExpiryDatePassed,
-      isExpiringSoon: isExpiringSoon ?? state.isExpiringSoon,
+      hasExpiry: hasExpiry ?? state.hasExpiry,
+      expiresBefore: expiresBefore ?? state.expiresBefore,
+      expiresAfter: expiresAfter ?? state.expiresAfter,
       sortField: sortField ?? state.sortField,
     );
   }
