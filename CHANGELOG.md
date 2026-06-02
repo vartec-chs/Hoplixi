@@ -70,6 +70,9 @@
   `performStoreCleanupProvider` удалён, а startup cleanup после
   create/open/unlock планируется из `VaultDBManagerNotifier` через
   `scheduleMicrotask`.
+- Логика close-sync и release cloud lock перенесена из
+  `vaultCloseSyncEffectProvider` в `VaultDBManagerNotifier.closeStore/lockStore`;
+  сам effect provider удалён, чтобы убрать цикл с `vaultDBManagerStateProvider`.
 - Добавлен начальный API-слой `lib/vault_db/core/api` с root-фасадом
   `VaultCoreApi` и system API для категорий, тегов, icon refs и custom icons.
 - Добавлен read-only `VaultItemsApi` для карточных фильтров и счетчиков vault
@@ -144,7 +147,7 @@
     `vaultDBProvider`, сделав их полностью реактивными и независимыми от
     UI-состояния.
   - Фоновые побочные эффекты облачной синхронизации и сброса облачных
-    блокировок вынесены в реактивный слушатель `vaultCloseSyncEffectProvider`;
+    блокировок теперь выполняются из `VaultDBManagerNotifier` при close/lock;
     cleanup хранилища запускается после открытия сессии через API.
   - Разрушена циклическая зависимость между `PerformStoreCleanup` и провайдером
     сессии.
@@ -153,8 +156,7 @@
   - Выделенные провайдеры и эффекты распределены по независимым файлам в папке
     `lib/vault_db/providers/`:
     [session_providers.dart](lib/vault_db/providers/session_providers.dart),
-    [vault_ui_state_provider.dart](lib/vault_db/providers/vault_ui_state_provider.dart),
-    [effects/vault_close_sync_effect.dart](lib/vault_db/providers/effects/vault_close_sync_effect.dart).
+    [vault_ui_state_provider.dart](lib/vault_db/providers/vault_ui_state_provider.dart).
   - Файл
     [main_store_manager_provider.dart](lib/vault_db/providers/main_store_manager_provider.dart)
     превращен в barrel-экспорт для сохранения 100% обратной совместимости.

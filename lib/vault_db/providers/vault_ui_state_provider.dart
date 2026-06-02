@@ -6,11 +6,11 @@ import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart' hide Session;
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_cloud_lock_provider.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'package:hoplixi/vault_db/providers/effects/vault_close_sync_effect.dart';
 import 'package:hoplixi/vault_db/providers/session_providers.dart';
 import 'package:hoplixi/vault_db/services/main_store_manager.dart';
 import 'package:result_dart/result_dart.dart';
@@ -95,8 +95,6 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
   Future<DatabaseState> build() async {
     final manager = await ref.watch(vaultDBManagerProvider.future);
     _manager = manager;
-
-    ref.watch(vaultCloseSyncEffectProvider);
 
     return _stateFromManager(manager) ??
         const DatabaseState(status: DatabaseStatus.idle);
@@ -206,6 +204,8 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
       final stateBeforeClose = _currentState;
       logInfo('Closing store', tag: _logTag);
 
+      _prepareCloseSync(stateBeforeClose);
+
       _setState(
         stateBeforeClose.copyWith(status: DatabaseStatus.closing, error: null),
       );
@@ -221,6 +221,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
       }
 
       _setState(const DatabaseState(status: DatabaseStatus.closed));
+      _runCloseSyncAfterClose(stateBeforeClose);
       logInfo('Store closed', tag: _logTag);
       return true;
     } catch (error, stackTrace) {
@@ -270,12 +271,9 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
 
       final storeInfo = storeInfoResult.getOrThrow();
       if (!skipSnapshotSync) {
-        ref
-            .read(vaultDBCloseSyncProvider.notifier)
-            .markCurrentStoreUploadRequiredIfLocalNewer(
-              storeUuid: storeInfo.id,
-              storePath: storePath,
-            );
+        _prepareCloseSync(
+          stateBeforeLock.copyWith(path: storePath, info: storeInfo),
+        );
       }
 
       _setState(
@@ -303,6 +301,9 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
           info: storeInfo,
           modifiedAt: storeInfo.modifiedAt,
         ),
+      );
+      _runCloseSyncAfterClose(
+        stateBeforeLock.copyWith(path: storePath, info: storeInfo),
       );
       logInfo('Store locked successfully', tag: _logTag);
     } catch (error, stackTrace) {
@@ -565,6 +566,75 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   void _setState(DatabaseState newState) {
     state = AsyncData(newState);
+  }
+
+  void _prepareCloseSync(DatabaseState openState) {
+    final storeInfo = openState.info;
+    final storePath = openState.path;
+    if (storeInfo == null || storePath == null || storePath.isEmpty) {
+      return;
+    }
+
+    logInfo('Preparing close sync', tag: _logTag);
+    ref
+        .read(vaultDBCloseSyncProvider.notifier)
+        .markCurrentStoreUploadRequiredIfLocalNewer(
+          storeUuid: storeInfo.id,
+          storePath: storePath,
+        );
+  }
+
+  void _runCloseSyncAfterClose(DatabaseState closingState) {
+    final storeInfo = closingState.info;
+    final storePath = closingState.path;
+    if (storeInfo == null || storePath == null || storePath.isEmpty) {
+      return;
+    }
+
+    unawaited(
+      _finalizeCloseSyncAfterClose(storeInfo: storeInfo, storePath: storePath),
+    );
+  }
+
+  Future<void> _finalizeCloseSyncAfterClose({
+    required StoreInfoDto storeInfo,
+    required String storePath,
+  }) async {
+    final shouldSync = ref
+        .read(closeSyncTrackingProvider)
+        .hasLogicalChanges(storeInfo.modifiedAt);
+
+    if (shouldSync) {
+      logInfo('Uploading database snapshot after close...', tag: _logTag);
+      final syncResult = await ref
+          .read(vaultDBCloseSyncProvider.notifier)
+          .uploadSnapshotAfterClose(
+            storeInfo: storeInfo,
+            currentStorePath: storePath,
+          );
+
+      if (syncResult.isError()) {
+        final error = syncResult.exceptionOrNull()!;
+        logError(
+          'Snapshot sync after close failed: ${error.message}',
+          tag: _logTag,
+        );
+      }
+    }
+
+    final releaseResult = await ref
+        .read(currentStoreCloudLockProvider.notifier)
+        .releaseCurrentLock();
+    if (releaseResult.isError()) {
+      logError(
+        'Failed to release cloud store lock: ${releaseResult.exceptionOrNull()!.message}',
+        tag: _logTag,
+      );
+    }
+
+    ref.read(closeSyncTrackingProvider.notifier).closeSession();
+    ref.read(vaultDBCloseSyncProvider.notifier).clearPublishedStatus();
+    logInfo('Close sync process and lock release finalized', tag: _logTag);
   }
 
   void _finalizeDeletedCurrentStore() {

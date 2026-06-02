@@ -145,7 +145,7 @@ class VaultSnapshotsHistory extends Table {
     '''
         CONSTRAINT ${VaultSnapshotHistoryConstraint.categoryHistoryRequiresCategoryId.constraintName}
         CHECK (
-          category_history_id IS NULL
+          category_revision_id IS NULL
           OR category_id IS NOT NULL
         )
         ''',
