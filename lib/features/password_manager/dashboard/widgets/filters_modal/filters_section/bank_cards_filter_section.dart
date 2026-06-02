@@ -318,7 +318,9 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
-        _updateFilter((f) => f.copyWith(cardNetwork: selected ? network : null));
+        _updateFilter(
+          (f) => f.copyWith(cardNetwork: selected ? network : null),
+        );
       },
     );
   }

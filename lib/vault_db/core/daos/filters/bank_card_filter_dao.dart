@@ -156,7 +156,7 @@ class BankCardFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        bankCard: BankCardCardDataDto(
+        data: BankCardCardDataDto(
           cardholderName: row.read(bankCardItems.cardholderName),
           cardType: row.readWithConverter<CardType?, String>(
             bankCardItems.cardType,

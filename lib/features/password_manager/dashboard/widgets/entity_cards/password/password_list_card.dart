@@ -1,18 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import 'package:otp/otp.dart';
+import 'package:hoplixi/vault_db/core/models/dto/password_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class PasswordListCard extends ConsumerStatefulWidget {
-  final PasswordCardDto password;
+  final FilteredCardDto<PasswordCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -24,7 +19,7 @@ class PasswordListCard extends ConsumerStatefulWidget {
 
   const PasswordListCard({
     super.key,
-    required this.password,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -43,141 +38,14 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
   bool _passwordCopied = false;
   bool _loginCopied = false;
   bool _urlCopied = false;
-  bool _isLoadingOtp = false;
-  bool _codeCopied = false;
 
-  (VaultItemsData, OtpItemsData)? _linkedOtp;
-  Uint8List? _secret;
-  String? _currentCode;
-  int _remainingSeconds = 0;
-  Timer? _totpTimer;
-
-  @override
-  void dispose() {
-    _stopTimerAndCleanupOtp();
-    super.dispose();
-  }
-
-  Future<void> _onExpandedChanged(bool expanded) async {
-    if (expanded) {
-      await _checkAndLoadOtp();
-    } else {
-      _stopTimerAndCleanupOtp();
-    }
-  }
-
-  Future<void> _checkAndLoadOtp() async {
-    setState(() => _isLoadingOtp = true);
-
-    try {
-      final otpDao = await ref.read(otpDaoProvider.future);
-      final otp = await otpDao.getByPasswordItemId(widget.password.id);
-      if (otp == null || !mounted) return;
-
-      _linkedOtp = otp;
-      final (_, otpItem) = otp;
-      final secretBytes = await otpDao.getOtpSecretById(otpItem.itemId);
-      if (secretBytes == null || !mounted) return;
-
-      setState(() {
-        _secret = secretBytes;
-      });
-      _generateCode();
-      _startTimer();
-    } finally {
-      if (mounted) setState(() => _isLoadingOtp = false);
-    }
-  }
-
-  void _stopTimerAndCleanupOtp() {
-    _totpTimer?.cancel();
-    _totpTimer = null;
-    if (_secret != null) {
-      for (int i = 0; i < _secret!.length; i++) {
-        _secret![i] = 0;
-      }
-      _secret = null;
-    }
-    _currentCode = null;
-    _linkedOtp = null;
-    _remainingSeconds = 0;
-  }
-
-  void _startTimer() {
-    _totpTimer?.cancel();
-    if (_linkedOtp == null) return;
-    _updateRemainingSeconds();
-
-    _totpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      _updateRemainingSeconds();
-      final (_, linkedOtpItem) = _linkedOtp!;
-      if (_remainingSeconds == linkedOtpItem.period || _remainingSeconds == 0) {
-        _generateCode();
-      }
-    });
-  }
-
-  void _updateRemainingSeconds() {
-    if (_linkedOtp == null) return;
-    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final (_, linkedOtpItem) = _linkedOtp!;
-    setState(() {
-      _remainingSeconds = linkedOtpItem.period - (now % linkedOtpItem.period);
-    });
-  }
-
-  void _generateCode() {
-    if (_secret == null || _linkedOtp == null) return;
-    final (_, linkedOtp) = _linkedOtp!;
-    final secretBase32 = String.fromCharCodes(_secret!);
-
-    final code = OTP.generateTOTPCodeString(
-      secretBase32,
-      DateTime.now().millisecondsSinceEpoch,
-      length: linkedOtp.digits,
-      interval: linkedOtp.period,
-      isGoogle: true,
-      algorithm: Algorithm.SHA1,
-    );
-
-    setState(() {
-      _currentCode = code;
-    });
-  }
-
-  Future<void> _copyCode() async {
-    if (_currentCode == null) return;
-    final linkedOtp = _linkedOtp;
-    if (linkedOtp == null) return;
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: linkedOtp.$1.id,
-      text: _currentCode,
-    );
-    if (!copied) return;
-    setState(() => _codeCopied = true);
-    Toaster.success(title: 'Код скопирован');
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _codeCopied = false);
-    });
-  }
+  String get _itemId => widget.data.card.item.itemId;
+  PasswordCardDataDto get _password => widget.data.card.data;
 
   Future<void> _copyPassword() async {
-    final passwordDao = await ref.read(passwordDaoProvider.future);
-    final passwordText = await passwordDao.getPasswordFieldById(
-      widget.password.id,
-    );
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.password.id,
-      text: passwordText,
-    );
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: null);
     if (!copied) {
-      Toaster.error(title: 'Не удалось получить пароль');
+      Toaster.warning(title: 'Пароль недоступен');
       return;
     }
     setState(() => _passwordCopied = true);
@@ -188,13 +56,9 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
   }
 
   Future<void> _copyLogin() async {
-    final text = widget.password.email ?? widget.password.login;
+    final text = _password.email ?? _password.login;
     if (text == null || text.isEmpty) return;
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.password.id,
-      text: text,
-    );
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: text);
     if (!copied) return;
     setState(() => _loginCopied = true);
     Toaster.success(title: 'Логин скопирован');
@@ -204,13 +68,9 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
   }
 
   Future<void> _copyUrl() async {
-    final text = widget.password.url;
+    final text = _password.url;
     if (text == null || text.isEmpty) return;
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.password.id,
-      text: text,
-    );
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: text);
     if (!copied) return;
     setState(() => _urlCopied = true);
     Toaster.success(title: 'URL скопирован');
@@ -219,97 +79,32 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
     });
   }
 
-  Widget? _buildTotpSection(ThemeData theme) {
-    if (_isLoadingOtp) {
-      return const SizedBox(
-        height: 56,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (_linkedOtp == null || _currentCode == null) return null;
-
-    final (_, linkedOtpForProgress) = _linkedOtp!;
-    final progress = _remainingSeconds / linkedOtpForProgress.period;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.security, size: 16, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                'TOTP Code',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-              Text('$_remainingSecondsс'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Text(
-                _currentCode!,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontFamily: 'monospace',
-                  letterSpacing: 2,
-                ),
-              ),
-              const Spacer(),
-              IconButton.filled(
-                onPressed: _copyCode,
-                icon: Icon(_codeCopied ? Icons.check : Icons.copy, size: 18),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(value: progress),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final password = widget.password;
-    final displayLogin = password.email ?? password.login;
-    final hostUrl = CardUtils.extractHost(password.url);
+    final item = widget.data.card.item;
+    final displayLogin = _password.email ?? _password.login;
+    final hostUrl = CardUtils.extractHost(_password.url);
     final now = DateTime.now();
     final isExpired =
-        password.expireAt != null && password.expireAt!.isBefore(now);
+        _password.expiresAt != null && _password.expiresAt!.isBefore(now);
     final isExpiringSoon =
         !isExpired &&
-        password.expireAt != null &&
-        password.expireAt!.difference(now).inDays <= 30;
+        _password.expiresAt != null &&
+        _password.expiresAt!.difference(now).inDays <= 30;
 
     return ExpandableListCard(
-      title: password.name,
+      title: item.name,
       subtitle: displayLogin,
       trailingSubtitle: hostUrl.isEmpty ? null : hostUrl,
       fallbackIcon: Icons.lock,
-      iconSource: password.iconSource,
-      iconValue: password.iconValue,
-      category: password.category,
-      description: password.description,
-      tags: password.tags,
-      usedCount: password.usedCount,
-      modifiedAt: password.modifiedAt,
-      isFavorite: password.isFavorite,
-      isPinned: password.isPinned,
-      isArchived: password.isArchived,
-      isDeleted: password.isDeleted,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       isExpired: isExpired,
       isExpiringSoon: isExpiringSoon,
       onToggleFavorite: widget.onToggleFavorite,
@@ -319,8 +114,6 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
       onRestore: widget.onRestore,
       onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
-      onExpandedChanged: _onExpandedChanged,
-      customExpandedContent: _buildTotpSection(Theme.of(context)),
       copyActions: [
         CardActionItem(
           label: 'Пароль',
@@ -329,7 +122,7 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
           successIcon: Icons.check,
           isSuccess: _passwordCopied,
         ),
-        if (displayLogin != null)
+        if (displayLogin != null && displayLogin.isNotEmpty)
           CardActionItem(
             label: 'Логин',
             onPressed: _copyLogin,
@@ -337,7 +130,7 @@ class _PasswordListCardState extends ConsumerState<PasswordListCard> {
             successIcon: Icons.check,
             isSuccess: _loginCopied,
           ),
-        if ((password.url ?? '').isNotEmpty)
+        if ((_password.url ?? '').isNotEmpty)
           CardActionItem(
             label: 'URL',
             onPressed: _copyUrl,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_cards/shared/shared.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 /// Универсальный компонент для отображения списка тегов в карточке
 class CardTagsList extends StatelessWidget {

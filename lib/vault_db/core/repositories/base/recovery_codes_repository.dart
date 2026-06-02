@@ -460,7 +460,7 @@ class RecoveryCodesRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      recoveryCodes: RecoveryCodesCardDataDto(
+      data: RecoveryCodesCardDataDto(
         generatedAt: row.read(db.recoveryCodesItems.generatedAt),
         oneTime: row.read(db.recoveryCodesItems.oneTime)!,
         hasCodes: false,

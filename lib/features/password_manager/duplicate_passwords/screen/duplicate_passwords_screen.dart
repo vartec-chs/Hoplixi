@@ -251,8 +251,8 @@ class _DuplicatePasswordItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final login = password.password.email ?? password.password.login;
-    final url = password.password.url;
+    final login = password.data.email ?? password.data.login;
+    final url = password.data.url;
 
     return Material(
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),

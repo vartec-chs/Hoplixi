@@ -4,6 +4,19 @@
 
 ### password_manager
 
+- Полный рефакторинг всех 32 карточных виджетов в `lib/features/password_manager/dashboard/widgets/entity_cards/` (16 grid + 16 list) на новые sealed DTO из `vault_db/core/models/dto/`:
+  - Все виджеты теперь принимают `FilteredCardDto<T>` напрямую, без слоя `dynamic`/кастов в shared-виджетах.
+  - Введён единый sealed-фасад `BaseCardDto` в `lib/features/password_manager/dashboard/models/dashboard_card_compat.dart` с общими геттерами (`id`, `name`, `description`, `displayName`, флаги, даты, `category`, `tags`) и операцией `withBase(...)` для оптимистичных апдейтов.
+  - Диспетчер `dashboard_entity_card_builder.dart` переписан под pattern matching по подтипам `*CardEntry` с wildcard-фолбэком `UnimplementedError` для exhaustiveness.
+  - Поля, недоступные в новых DTO (`usedCount`, `iconSource`/`iconValue`, отсутствующие секреты), приведены к безопасным дефолтам.
+  - Вызовы сломанных DAO-провайдеров (которые ещё не реализованы в data layer) заменены на заглушку `value = null` с показом toast «недоступно» — карточки компилируются и не падают.
+  - Обновлены `BaseGridCard`/`ExpandableListCard` (`usedCount` и `copyActions` сделаны опциональными), `card_utils.parseColor` (поддержка `int` ARGB и HEX-строки), `card_category_badge`, `card_tags_list`.
+  - Чистка ворнингов: удалены неиспользуемые импорты `dashboard_card_compat.dart` в карточках, неиспользуемые `_itemId`/роутер-импорты в `recovery_codes_list_card` и `password_list_card`.
+  - В `dashboard_list_controller.dart` и `dashboard_home_screen.dart` добавлен импорт нового `BaseCardDto`, переименовано `copyWithBase` → `withBase` для совместимости с фасадом.
+  - Удалён устаревший `loyalty_card_grid.dart`, вместо него используется `loyalty_card_grid_card.dart`.
+  - Сборка `entity_cards/`: 0 ошибок, остаются только ожидаемые `dead_code`/`dead_null_aware` от временных DAO-заглушек.
+
+
 - Проведен рефакторинг всех 7 экранов просмотра сущностей (`*_view_screen.dart` для Password, BankCard, Document, File, LoyaltyCard, Note, Otp):
   - Полностью устранены `dynamic` типы, код переведен на строгую типизацию с использованием `VaultRepositories` и новых DTO из `vault_db`.
   - Исправлены критические опечатки копипасты в методах `_share` (замена `_document == null` на корректную проверку сущности).

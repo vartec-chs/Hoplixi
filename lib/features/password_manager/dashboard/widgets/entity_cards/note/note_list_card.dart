@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/note_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class NoteListCard extends ConsumerStatefulWidget {
-  final NoteCardDto note;
+  final FilteredCardDto<NoteCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -21,7 +22,7 @@ class NoteListCard extends ConsumerStatefulWidget {
 
   const NoteListCard({
     super.key,
-    required this.note,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -39,12 +40,11 @@ class NoteListCard extends ConsumerStatefulWidget {
 class _NoteListCardState extends ConsumerState<NoteListCard> {
   bool _titleCopied = false;
 
+  String get _itemId => widget.data.card.item.itemId;
+  String get _title => widget.data.card.item.name;
+
   Future<void> _copyTitle() async {
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.note.id,
-      text: widget.note.title,
-    );
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: _title);
     if (!copied) return;
     setState(() => _titleCopied = true);
     Toaster.success(title: 'Заголовок скопирован');
@@ -56,23 +56,21 @@ class _NoteListCardState extends ConsumerState<NoteListCard> {
 
   @override
   Widget build(BuildContext context) {
-    final note = widget.note;
+    final item = widget.data.card.item;
+    final note = widget.data.card.data;
 
     return ExpandableListCard(
-      title: note.title,
-      subtitle: note.description,
+      title: item.name,
+      subtitle: note.content,
       fallbackIcon: Icons.note,
-      iconSource: note.iconSource,
-      iconValue: note.iconValue,
-      category: note.category,
-      description: note.description,
-      tags: note.tags,
-      usedCount: note.usedCount,
-      modifiedAt: note.modifiedAt,
-      isFavorite: note.isFavorite,
-      isPinned: note.isPinned,
-      isArchived: note.isArchived,
-      isDeleted: note.isDeleted,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -92,7 +90,7 @@ class _NoteListCardState extends ConsumerState<NoteListCard> {
           label: 'Открыть',
           onPressed: () {
             context.push(
-              AppRoutesPaths.dashboardEntityEdit(EntityType.note, note.id),
+              AppRoutesPaths.dashboardEntityEdit(EntityType.note, _itemId),
             );
           },
           icon: Icons.open_in_new,

@@ -9,9 +9,10 @@ import 'base_filter_provider.dart';
 
 /// Провайдер для управления фильтром криптокошельков
 final cryptoWalletsFilterProvider =
-    NotifierProvider.autoDispose<CryptoWalletsFilterNotifier, CryptoWalletFilter>(
-      CryptoWalletsFilterNotifier.new,
-    );
+    NotifierProvider.autoDispose<
+      CryptoWalletsFilterNotifier,
+      CryptoWalletFilter
+    >(CryptoWalletsFilterNotifier.new);
 
 class CryptoWalletsFilterNotifier extends Notifier<CryptoWalletFilter> {
   static const String _logTag = 'CryptoWalletsFilterNotifier';

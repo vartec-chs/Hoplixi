@@ -69,7 +69,6 @@ enum EntityType {
         return EntityType.loyaltyCard;
     }
   }
-
 }
 
 extension VaultItemTypeX on VaultItemType {

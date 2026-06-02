@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/crypto_wallet_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class CryptoWalletGridCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<CryptoWalletCardDto> data;
+  final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onTogglePin;
+  final VoidCallback? onToggleArchive;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
+
   const CryptoWalletGridCard({
     super.key,
-    required this.wallet,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -21,60 +32,52 @@ class CryptoWalletGridCard extends ConsumerStatefulWidget {
     this.onOpenView,
   });
 
-  final CryptoWalletCardDto wallet;
-  final VoidCallback? onToggleFavorite;
-  final VoidCallback? onTogglePin;
-  final VoidCallback? onToggleArchive;
-  final VoidCallback? onDelete;
-  final VoidCallback? onRestore;
-  final VoidCallback? onOpenView;
-
   @override
   ConsumerState<CryptoWalletGridCard> createState() =>
       _CryptoWalletGridCardState();
 }
 
 class _CryptoWalletGridCardState extends ConsumerState<CryptoWalletGridCard> {
-  bool _privateKeyCopied = false;
+  bool _addressCopied = false;
 
-  Future<void> _copyPrivateKey() async {
-    final dao = await ref.read(cryptoWalletDaoProvider.future);
-    final text = await dao.getPrivateKeyFieldById(widget.wallet.id);
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.wallet.id,
-      text: text,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Private key не найден');
+  String get _itemId => widget.data.card.item.itemId;
+  CryptoWalletCardDataDto get _wallet => widget.data.card.data;
+
+  Future<void> _copyAddress() async {
+    final value = null;
+    if (value == null || value.isEmpty) {
+      Toaster.warning(title: 'Адрес недоступен');
       return;
     }
-    setState(() => _privateKeyCopied = true);
-    Toaster.success(title: 'Private key скопирован');
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: value);
+    if (!copied) return;
+    setState(() => _addressCopied = true);
+    Toaster.success(title: 'Адрес скопирован');
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _privateKeyCopied = false);
+      if (mounted) setState(() => _addressCopied = false);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final wallet = widget.wallet;
-    final subtitle = [
-      wallet.walletType,
-      if (wallet.network?.isNotEmpty == true) wallet.network!,
-    ].join(' • ');
+    final item = widget.data.card.item;
+    final subtitleParts = [
+      if (_wallet.walletType != null) _wallet.walletType!.name,
+      if (_wallet.network != null) _wallet.network!.name,
+      if (_wallet.watchOnly) 'Только просмотр',
+    ];
 
     return BaseGridCard(
-      title: wallet.name,
-      subtitle: subtitle,
-      fallbackIcon: Icons.currency_bitcoin,
-      category: wallet.category,
-      tags: wallet.tags,
-      usedCount: wallet.usedCount,
-      isFavorite: wallet.isFavorite,
-      isPinned: wallet.isPinned,
-      isArchived: wallet.isArchived,
-      isDeleted: wallet.isDeleted,
+      title: item.name,
+      subtitle: subtitleParts.join(' • '),
+      fallbackIcon: Icons.account_balance_wallet,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
+      onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -83,21 +86,17 @@ class _CryptoWalletGridCardState extends ConsumerState<CryptoWalletGridCard> {
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(
-            EntityType.cryptoWallet,
-            wallet.id,
-          ),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.cryptoWallet, _itemId),
         );
       },
       copyActions: [
-        if (wallet.hasPrivateKey)
-          CardActionItem(
-            label: 'PrivKey',
-            onPressed: _copyPrivateKey,
-            icon: Icons.vpn_key,
-            successIcon: Icons.check,
-            isSuccess: _privateKeyCopied,
-          ),
+        CardActionItem(
+          label: 'Адрес',
+          onPressed: _copyAddress,
+          icon: Icons.copy,
+          successIcon: Icons.check,
+          isSuccess: _addressCopied,
+        ),
       ],
     );
   }

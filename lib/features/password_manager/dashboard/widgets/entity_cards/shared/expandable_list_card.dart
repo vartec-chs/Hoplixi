@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_dto_helpers.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import 'card_action_buttons.dart';
 import 'card_category_badge.dart';
@@ -55,7 +55,7 @@ class ExpandableListCard extends StatefulWidget {
     this.category,
     this.description,
     this.tags,
-    required this.usedCount,
+    this.usedCount = 0,
     required this.modifiedAt,
     required this.isFavorite,
     required this.isPinned,
@@ -70,7 +70,7 @@ class ExpandableListCard extends StatefulWidget {
     this.onRestore,
     this.onOpenHistory,
     this.onOpenView,
-    required this.copyActions,
+    this.copyActions = const [],
     this.customExpandedContent,
     this.onExpandedChanged,
   });
@@ -187,7 +187,7 @@ class _ExpandableListCardState extends State<ExpandableListCard>
                 ),
                 child: IconRefPreview(
                   iconRef:
-                      IconRefDto.fromFields(
+                      IconRefDtoFactoryX.fromFields(
                         iconSource: widget.iconSource,
                         iconValue: widget.iconValue,
                       ) ??

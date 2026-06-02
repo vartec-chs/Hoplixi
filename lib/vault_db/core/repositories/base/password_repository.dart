@@ -237,7 +237,7 @@ class PasswordRepository {
               .add(
                 PasswordCardDto(
                   item: item.toVaultItemCardDto(),
-                  password: password.toPasswordCardDataDto(),
+                  data: password.toPasswordCardDataDto(),
                 ),
               );
         }
@@ -339,7 +339,7 @@ class PasswordRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      password: PasswordCardDataDto(
+      data: PasswordCardDataDto(
         login: row.read(db.passwordItems.login),
         email: row.read(db.passwordItems.email),
         url: row.read(db.passwordItems.url),

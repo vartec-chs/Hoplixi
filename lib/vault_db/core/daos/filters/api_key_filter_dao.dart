@@ -165,7 +165,7 @@ class ApiKeyFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        apiKey: ApiKeyCardDataDto(
+        data: ApiKeyCardDataDto(
           service: row.read(apiKeyItems.service)!,
           tokenType: row.readWithConverter<ApiKeyTokenType?, String>(
             apiKeyItems.tokenType,

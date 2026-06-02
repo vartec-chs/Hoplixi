@@ -16,8 +16,8 @@ class OtpListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = otp.otp.issuer ?? otp.otp.accountName ?? otp.item.name;
-    final subtitle = otp.otp.issuer != null ? otp.otp.accountName : null;
+    final title = otp.data.issuer ?? otp.data.accountName ?? otp.item.name;
+    final subtitle = otp.data.issuer != null ? otp.data.accountName : null;
 
     return ListTile(
       title: Text(

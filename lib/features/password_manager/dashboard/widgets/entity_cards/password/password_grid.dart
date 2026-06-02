@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/password_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class PasswordGridCard extends ConsumerStatefulWidget {
-  final PasswordCardDto password;
+  final FilteredCardDto<PasswordCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -22,7 +22,7 @@ class PasswordGridCard extends ConsumerStatefulWidget {
 
   const PasswordGridCard({
     super.key,
-    required this.password,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -42,17 +42,12 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
   bool _loginCopied = false;
   bool _urlCopied = false;
 
-  Future<void> _copyPassword() async {
-    final passwordDao = await ref.read(passwordDaoProvider.future);
-    final passwordText = await passwordDao.getPasswordFieldById(
-      widget.password.id,
-    );
+  String get _itemId => widget.data.card.item.itemId;
 
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.password.id,
-      text: passwordText,
-    );
+  Future<void> _copyPassword() async {
+    final value = null;
+
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: value);
     if (!copied) {
       Toaster.error(title: 'Не удалось получить пароль');
       return;
@@ -66,13 +61,9 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
   }
 
   Future<void> _copyLogin() async {
-    final text = widget.password.email ?? widget.password.login;
+    final text = widget.data.card.data.email ?? widget.data.card.data.login;
     if (text == null || text.isEmpty) return;
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.password.id,
-      text: text,
-    );
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: text);
     if (!copied) return;
     setState(() => _loginCopied = true);
     Toaster.success(title: 'Логин скопирован');
@@ -83,16 +74,13 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
   }
 
   Future<void> _copyUrl() async {
-    final text = widget.password.url;
+    final text = widget.data.card.data.url;
     if (text == null || text.isEmpty) return;
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.password.id,
-      text: text,
-    );
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: text);
     if (!copied) return;
     setState(() => _urlCopied = true);
     Toaster.success(title: 'URL скопирован');
+
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _urlCopied = false);
     });
@@ -100,33 +88,31 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
 
   @override
   Widget build(BuildContext context) {
-    final password = widget.password;
-    final displayLogin = password.email ?? password.login;
-    final hostUrl = CardUtils.extractHost(password.url);
+    final card = widget.data.card;
+    final item = card.item;
+    final value = card.data;
+    final displayLogin = value.email ?? value.login;
+    final hostUrl = CardUtils.extractHost(value.url);
     final now = DateTime.now();
-    final isExpired =
-        password.expireAt != null && password.expireAt!.isBefore(now);
+    final isExpired = value.expiresAt != null && value.expiresAt!.isBefore(now);
     final isExpiringSoon =
         !isExpired &&
-        password.expireAt != null &&
-        password.expireAt!.difference(now).inDays <= 30;
+        value.expiresAt != null &&
+        value.expiresAt!.difference(now).inDays <= 30;
 
     return BaseGridCard(
-      title: password.name,
+      title: item.name,
       subtitle: displayLogin,
       trailingSubtitle: hostUrl.isEmpty ? null : hostUrl,
       fallbackIcon: Icons.lock,
-      iconSource: password.iconSource,
-      iconValue: password.iconValue,
-      category: password.category,
-      description: password.description,
-      tags: password.tags,
-      usedCount: password.usedCount,
-      modifiedAt: password.modifiedAt,
-      isFavorite: password.isFavorite,
-      isPinned: password.isPinned,
-      isArchived: password.isArchived,
-      isDeleted: password.isDeleted,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       isExpired: isExpired,
       isExpiringSoon: isExpiringSoon,
       onTap: widget.onTap,
@@ -139,7 +125,7 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(EntityType.password, password.id),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.password, _itemId),
         );
       },
       copyActions: [
@@ -158,7 +144,7 @@ class _PasswordGridCardState extends ConsumerState<PasswordGridCard> {
             successIcon: Icons.check,
             isSuccess: _loginCopied,
           ),
-        if ((password.url ?? '').isNotEmpty)
+        if ((value.url ?? '').isNotEmpty)
           CardActionItem(
             label: 'URL',
             onPressed: _copyUrl,

@@ -172,7 +172,7 @@ class LicenseKeyFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        licenseKey: LicenseKeyCardDataDto(
+        data: LicenseKeyCardDataDto(
           productName: row.read(licenseKeyItems.productName)!,
           vendor: row.read(licenseKeyItems.vendor),
           licenseType: row.readWithConverter<LicenseType?, String>(

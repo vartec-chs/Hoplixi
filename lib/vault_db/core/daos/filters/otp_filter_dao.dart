@@ -148,7 +148,7 @@ class OtpFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        otp: OtpCardDataDto(
+        data: OtpCardDataDto(
           type: row.readWithConverter<OtpType, String>(otpItems.type)!,
           issuer: row.read(otpItems.issuer),
           accountName: row.read(otpItems.accountName),

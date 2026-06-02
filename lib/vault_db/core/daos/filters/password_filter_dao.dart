@@ -158,7 +158,7 @@ class PasswordFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        password: PasswordCardDataDto(
+        data: PasswordCardDataDto(
           login: row.read(passwordItems.login),
           email: row.read(passwordItems.email),
           url: row.read(passwordItems.url),

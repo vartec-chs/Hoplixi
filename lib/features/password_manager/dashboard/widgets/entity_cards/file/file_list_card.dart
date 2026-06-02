@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/file_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class FileListCard extends ConsumerStatefulWidget {
-  final FileCardDto file;
+  final FilteredCardDto<FileCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -23,7 +24,7 @@ class FileListCard extends ConsumerStatefulWidget {
 
   const FileListCard({
     super.key,
-    required this.file,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -49,21 +50,22 @@ class _FileListCardState extends ConsumerState<FileListCard> {
 
   @override
   Widget build(BuildContext context) {
-    final file = widget.file;
+    final item = widget.data.card.item;
+    final file = widget.data.card.data;
 
     return ExpandableListCard(
-      title: file.name,
+      title: item.name,
       subtitle: file.fileName,
       trailingSubtitle: _formatFileSize(file.fileSize ?? 0),
       fallbackIcon: Icons.insert_drive_file,
-      category: file.category,
-      tags: file.tags,
-      usedCount: file.usedCount,
-      modifiedAt: file.modifiedAt,
-      isFavorite: file.isFavorite,
-      isPinned: file.isPinned,
-      isArchived: file.isArchived,
-      isDeleted: file.isDeleted,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -82,7 +84,7 @@ class _FileListCardState extends ConsumerState<FileListCard> {
           label: 'Открыть',
           onPressed: () {
             context.push(
-              AppRoutesPaths.dashboardEntityEdit(EntityType.file, file.id),
+              AppRoutesPaths.dashboardEntityEdit(EntityType.file, item.itemId),
             );
           },
           icon: Icons.open_in_new,

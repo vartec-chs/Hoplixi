@@ -134,7 +134,7 @@ class SshKeyFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        sshKey: SshKeyCardDataDto(
+        data: SshKeyCardDataDto(
           publicKey: row.read(sshKeyItems.publicKey),
           keyType: row.readWithConverter<SshKeyType?, String>(
             sshKeyItems.keyType,

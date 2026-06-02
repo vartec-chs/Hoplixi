@@ -316,7 +316,9 @@ class _OtpsFilterSectionState extends State<OtpsFilterSection> {
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
-        _updateFilter((f) => f.copyWith(algorithm: selected ? algorithm : null));
+        _updateFilter(
+          (f) => f.copyWith(algorithm: selected ? algorithm : null),
+        );
       },
     );
   }

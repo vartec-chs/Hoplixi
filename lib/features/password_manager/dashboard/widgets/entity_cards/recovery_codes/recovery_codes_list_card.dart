@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/dto/recovery_codes_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class RecoveryCodesListCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<RecoveryCodesCardDto> data;
+  final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onTogglePin;
+  final VoidCallback? onToggleArchive;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRestore;
+  final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
+
   const RecoveryCodesListCard({
     super.key,
-    required this.recoveryCodes,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -18,65 +29,34 @@ class RecoveryCodesListCard extends ConsumerStatefulWidget {
     this.onOpenView,
   });
 
-  final RecoveryCodesCardDto recoveryCodes;
-  final VoidCallback? onToggleFavorite;
-  final VoidCallback? onTogglePin;
-  final VoidCallback? onToggleArchive;
-  final VoidCallback? onDelete;
-  final VoidCallback? onRestore;
-  final VoidCallback? onOpenHistory;
-  final VoidCallback? onOpenView;
-
   @override
   ConsumerState<RecoveryCodesListCard> createState() =>
       _RecoveryCodesListCardState();
 }
 
 class _RecoveryCodesListCardState extends ConsumerState<RecoveryCodesListCard> {
-  bool _hintCopied = false;
-
-  Future<void> _copyHint() async {
-    final hint = widget.recoveryCodes.displayHint;
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.recoveryCodes.id,
-      text: hint,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Подсказка отсутствует');
-      return;
-    }
-    setState(() => _hintCopied = true);
-    Toaster.success(title: 'Подсказка скопирована');
-
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _hintCopied = false);
-    });
-  }
+  RecoveryCodesCardDataDto get _codes => widget.data.card.data;
 
   @override
   Widget build(BuildContext context) {
-    final recoveryCodes = widget.recoveryCodes;
-    final codesCount = recoveryCodes.codesCount ?? 0;
-    final usedCount = recoveryCodes.codesUsedCount ?? 0;
-    final subtitle = 'Использовано: $usedCount/$codesCount';
+    final item = widget.data.card.item;
+    final subtitleParts = [
+      if (_codes.oneTime) 'Одноразовые',
+      if (_codes.hasCodes) 'Коды сохранены',
+    ];
 
     return ExpandableListCard(
-      title: recoveryCodes.name,
-      subtitle: subtitle,
-      trailingSubtitle: recoveryCodes.oneTime == true
-          ? 'one-time'
-          : 'multi-use',
-      fallbackIcon: Icons.security,
-      category: recoveryCodes.category,
-      description: recoveryCodes.description,
-      tags: recoveryCodes.tags,
-      usedCount: recoveryCodes.usedCount,
-      modifiedAt: recoveryCodes.modifiedAt,
-      isFavorite: recoveryCodes.isFavorite,
-      isPinned: recoveryCodes.isPinned,
-      isArchived: recoveryCodes.isArchived,
-      isDeleted: recoveryCodes.isDeleted,
+      title: item.name,
+      subtitle: subtitleParts.join(' • '),
+      fallbackIcon: Icons.vpn_key,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -84,16 +64,6 @@ class _RecoveryCodesListCardState extends ConsumerState<RecoveryCodesListCard> {
       onRestore: widget.onRestore,
       onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
-      copyActions: [
-        if ((recoveryCodes.displayHint ?? '').isNotEmpty)
-          CardActionItem(
-            label: 'Hint',
-            onPressed: _copyHint,
-            icon: Icons.copy,
-            successIcon: Icons.check,
-            isSuccess: _hintCopied,
-          ),
-      ],
     );
   }
 }

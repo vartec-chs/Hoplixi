@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
-import '../shared/shared.dart';
+import 'package:hoplixi/vault_db/core/models/dto/otp_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:otp/otp.dart';
 
+import '../shared/shared.dart';
+
 class TotpListCard extends ConsumerStatefulWidget {
-  final OtpCardDto otp;
+  final FilteredCardDto<OtpCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -22,7 +23,7 @@ class TotpListCard extends ConsumerStatefulWidget {
 
   const TotpListCard({
     super.key,
-    required this.otp,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -45,6 +46,9 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
   String? _currentCode;
   int _remainingSeconds = 0;
   Timer? _totpTimer;
+
+  String get _itemId => widget.data.card.item.itemId;
+  int get _period => widget.data.card.data.period ?? 30;
 
   @override
   void dispose() {
@@ -80,12 +84,11 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
     setState(() => _isLoadingSecret = true);
 
     try {
-      final otpDao = await ref.read(otpDaoProvider.future);
-      final secretBytes = await otpDao.getOtpSecretById(widget.otp.id);
+      final value = null;
 
-      if (secretBytes != null && mounted) {
+      if (value != null && mounted) {
         setState(() {
-          _secret = secretBytes;
+          _secret = value;
           _isLoadingSecret = false;
         });
         _generateCode();
@@ -128,7 +131,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
       }
 
       _updateRemainingSeconds();
-      if (_remainingSeconds == widget.otp.period || _remainingSeconds == 0) {
+      if (_remainingSeconds == _period || _remainingSeconds == 0) {
         _generateCode();
       }
     });
@@ -136,9 +139,8 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
 
   void _updateRemainingSeconds() {
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final period = widget.otp.period;
     setState(() {
-      _remainingSeconds = period - (now % period);
+      _remainingSeconds = _period - (now % _period);
     });
   }
 
@@ -146,11 +148,12 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
     if (_secret == null) return;
 
     final secretBase32 = String.fromCharCodes(_secret!);
+    final otp = widget.data.card.data;
     final code = OTP.generateTOTPCodeString(
       secretBase32,
       DateTime.now().millisecondsSinceEpoch,
-      length: widget.otp.digits,
-      interval: widget.otp.period,
+      length: otp.digits,
+      interval: _period,
       isGoogle: true,
       algorithm: Algorithm.SHA1,
     );
@@ -165,7 +168,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
 
     final copied = await copyCardValue(
       ref: ref,
-      itemId: widget.otp.id,
+      itemId: _itemId,
       text: _currentCode,
     );
     if (!copied) return;
@@ -188,7 +191,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
       return null;
     }
 
-    final progress = _remainingSeconds / widget.otp.period;
+    final progress = _remainingSeconds / _period;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -234,28 +237,27 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
 
   @override
   Widget build(BuildContext context) {
-    final otp = widget.otp;
+    final item = widget.data.card.item;
+    final otp = widget.data.card.data;
     final title = otp.issuer ?? otp.accountName ?? 'OTP';
     final subtitle = [
       if (otp.issuer != null && otp.accountName != null) otp.accountName!,
       '${otp.digits} цифр',
-      '${otp.period}с',
+      '${otp.period ?? 30}с',
     ].join(' • ');
 
     return ExpandableListCard(
       title: title,
       subtitle: subtitle,
       fallbackIcon: Icons.vpn_key,
-      iconSource: otp.iconSource,
-      iconValue: otp.iconValue,
-      category: otp.category,
-      tags: otp.tags,
-      usedCount: otp.usedCount,
-      modifiedAt: otp.modifiedAt,
-      isFavorite: otp.isFavorite,
-      isPinned: otp.isPinned,
-      isArchived: otp.isArchived,
-      isDeleted: otp.isDeleted,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,

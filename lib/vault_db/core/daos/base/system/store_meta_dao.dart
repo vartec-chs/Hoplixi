@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/errors/db_error.dart';
-import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/store_meta_dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';

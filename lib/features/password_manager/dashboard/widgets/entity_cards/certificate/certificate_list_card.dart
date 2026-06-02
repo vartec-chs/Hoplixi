@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/vault_db/core/models/dto/certificate_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+
 import '../shared/shared.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 
 class CertificateListCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<CertificateCardDto> data;
+  final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onTogglePin;
+  final VoidCallback? onToggleArchive;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRestore;
+  final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
+
   const CertificateListCard({
     super.key,
-    required this.certificate,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -18,124 +30,69 @@ class CertificateListCard extends ConsumerStatefulWidget {
     this.onOpenView,
   });
 
-  final CertificateCardDto certificate;
-  final VoidCallback? onToggleFavorite;
-  final VoidCallback? onTogglePin;
-  final VoidCallback? onToggleArchive;
-  final VoidCallback? onDelete;
-  final VoidCallback? onRestore;
-  final VoidCallback? onOpenHistory;
-  final VoidCallback? onOpenView;
-
   @override
   ConsumerState<CertificateListCard> createState() =>
       _CertificateListCardState();
 }
 
 class _CertificateListCardState extends ConsumerState<CertificateListCard> {
-  bool _privateKeyCopied = false;
-  bool _pfxPasswordCopied = false;
+  bool _pemCopied = false;
+  bool _serialCopied = false;
 
-  Future<void> _copyPrivateKey() async {
-    final dao = await ref.read(certificateDaoProvider.future);
-    final privateKey = await dao.getPrivateKeyFieldById(widget.certificate.id);
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.certificate.id,
-      text: privateKey,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Приватный ключ не найден');
+  String get _itemId => widget.data.card.item.itemId;
+  CertificateCardDataDto get _cert => widget.data.card.data;
+
+  Future<void> _copyPem() async {
+    final value = null;
+    if (value == null || value.isEmpty) {
+      Toaster.warning(title: 'value недоступен');
       return;
     }
-    setState(() => _privateKeyCopied = true);
-    Toaster.success(title: 'Приватный ключ скопирован');
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: value);
+    if (!copied) return;
+    setState(() => _pemCopied = true);
+    Toaster.success(title: 'value скопирован');
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _privateKeyCopied = false);
+      if (mounted) setState(() => _pemCopied = false);
     });
   }
 
-  Future<void> _copyPfxPassword() async {
-    final dao = await ref.read(certificateDaoProvider.future);
-    final pfxPassword = await dao.getPasswordForPfxFieldById(
-      widget.certificate.id,
-    );
-
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.certificate.id,
-      text: pfxPassword,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Пароль PFX не найден');
+  Future<void> _copySerial() async {
+    final serial = _cert.serialNumber;
+    if (serial == null || serial.isEmpty) {
+      Toaster.warning(title: 'Серийный номер отсутствует');
       return;
     }
-    setState(() => _pfxPasswordCopied = true);
-    Toaster.success(title: 'Пароль PFX скопирован');
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: serial);
+    if (!copied) return;
+    setState(() => _serialCopied = true);
+    Toaster.success(title: 'Серийный номер скопирован');
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _pfxPasswordCopied = false);
+      if (mounted) setState(() => _serialCopied = false);
     });
-  }
-
-  List<CardActionItem> _buildCopyActions() {
-    final actions = <CardActionItem>[];
-    if (widget.certificate.hasPrivateKey) {
-      actions.add(
-        CardActionItem(
-          label: 'PrivKey',
-          onPressed: _copyPrivateKey,
-          icon: Icons.vpn_key,
-          successIcon: Icons.check,
-          isSuccess: _privateKeyCopied,
-        ),
-      );
-    }
-    if (widget.certificate.hasPfx) {
-      actions.add(
-        CardActionItem(
-          label: 'PFX pass',
-          onPressed: _copyPfxPassword,
-          icon: Icons.password,
-          successIcon: Icons.check,
-          isSuccess: _pfxPasswordCopied,
-        ),
-      );
-    }
-    return actions;
   }
 
   @override
   Widget build(BuildContext context) {
-    final certificate = widget.certificate;
-    final now = DateTime.now();
-    final isExpired =
-        certificate.validTo != null && certificate.validTo!.isBefore(now);
-    final isExpiringSoon =
-        !isExpired &&
-        certificate.validTo != null &&
-        certificate.validTo!.difference(now).inDays <= 30;
-
+    final item = widget.data.card.item;
     final subtitleParts = [
-      if (certificate.issuer?.isNotEmpty == true) certificate.issuer!,
-      if (certificate.subject?.isNotEmpty == true) certificate.subject!,
+      if (_cert.certificateFormat != null) _cert.certificateFormat!.name,
+      if (_cert.keyAlgorithm != null) _cert.keyAlgorithm!.name,
+      if (_cert.keySize != null) '${_cert.keySize} бит',
     ];
 
     return ExpandableListCard(
-      title: certificate.name,
-      subtitle: subtitleParts.isEmpty ? null : subtitleParts.join(' • '),
-      trailingSubtitle: certificate.fingerprint,
-      fallbackIcon: Icons.verified,
-      category: certificate.category,
-      description: certificate.description,
-      tags: certificate.tags,
-      usedCount: certificate.usedCount,
-      modifiedAt: certificate.modifiedAt,
-      isFavorite: certificate.isFavorite,
-      isPinned: certificate.isPinned,
-      isArchived: certificate.isArchived,
-      isDeleted: certificate.isDeleted,
-      isExpired: isExpired,
-      isExpiringSoon: isExpiringSoon,
+      title: item.name,
+      subtitle: subtitleParts.join(' • '),
+      fallbackIcon: Icons.verified_user,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -143,7 +100,24 @@ class _CertificateListCardState extends ConsumerState<CertificateListCard> {
       onRestore: widget.onRestore,
       onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
-      copyActions: _buildCopyActions(),
+      copyActions: [
+        if ((_cert.serialNumber ?? '').isNotEmpty)
+          CardActionItem(
+            label: 'Серийный №',
+            onPressed: _copySerial,
+            icon: Icons.tag,
+            successIcon: Icons.check,
+            isSuccess: _serialCopied,
+          ),
+        if (_cert.hasCertificatePem)
+          CardActionItem(
+            label: 'value',
+            onPressed: _copyPem,
+            icon: Icons.copy,
+            successIcon: Icons.check,
+            isSuccess: _pemCopied,
+          ),
+      ],
     );
   }
 }

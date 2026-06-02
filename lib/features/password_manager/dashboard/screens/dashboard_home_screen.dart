@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer_scope.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../models/dashboard_view_mode.dart';
 import '../models/entity_type.dart';
@@ -205,11 +207,11 @@ final class _DashboardHomeScreenState
     ref.read(dashboardListControllerProvider(_entityType).notifier).loadMore();
   }
 
-  void _openItem(BaseCardDto item) {
-    widget.onOpenItem?.call(_entityType, item.id);
+  void _openItem(VaultEntityCardDto item) {
+    widget.onOpenItem?.call(_entityType, item.item.itemId);
   }
 
-  void _openEditItem(BaseCardDto item) {
+  void _openEditItem(VaultEntityCardDto item) {
     final editPath = AppRoutesPaths.dashboardEntityEdit(_entityType, item.id);
     if (GoRouter.of(context).state.matchedLocation != editPath) {
       context.push(editPath);

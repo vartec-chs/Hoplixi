@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../../scheme/tables/ssh_key/ssh_key_items.dart';
 import '../field_update.dart';
@@ -58,11 +59,18 @@ sealed class SshKeyViewDto with _$SshKeyViewDto implements VaultEntityViewDto {
 }
 
 @freezed
-sealed class SshKeyCardDto with _$SshKeyCardDto implements VaultEntityCardDto {
+sealed class SshKeyCardDto
+    with _$SshKeyCardDto
+    implements VaultEntityCardDto<SshKeyCardDataDto> {
+  const SshKeyCardDto._();
+
   const factory SshKeyCardDto({
     required VaultItemCardDto item,
-    required SshKeyCardDataDto sshKey,
+    required SshKeyCardDataDto data,
   }) = _SshKeyCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.sshKey;
 
   factory SshKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$SshKeyCardDtoFromJson(json);

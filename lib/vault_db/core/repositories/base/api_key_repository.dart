@@ -314,7 +314,7 @@ class ApiKeyRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      apiKey: ApiKeyCardDataDto(
+      data: ApiKeyCardDataDto(
         service: row.read(db.apiKeyItems.service)!,
         tokenType: row.readWithConverter<ApiKeyTokenType?, String>(
           db.apiKeyItems.tokenType,

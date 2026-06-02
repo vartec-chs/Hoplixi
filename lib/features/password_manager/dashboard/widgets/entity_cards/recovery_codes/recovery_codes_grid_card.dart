@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/recovery_codes_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class RecoveryCodesGridCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<RecoveryCodesCardDto> data;
+  final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onTogglePin;
+  final VoidCallback? onToggleArchive;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
+
   const RecoveryCodesGridCard({
     super.key,
-    required this.recoveryCodes,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -20,58 +30,34 @@ class RecoveryCodesGridCard extends ConsumerStatefulWidget {
     this.onOpenView,
   });
 
-  final RecoveryCodesCardDto recoveryCodes;
-  final VoidCallback? onToggleFavorite;
-  final VoidCallback? onTogglePin;
-  final VoidCallback? onToggleArchive;
-  final VoidCallback? onDelete;
-  final VoidCallback? onRestore;
-  final VoidCallback? onOpenView;
-
   @override
   ConsumerState<RecoveryCodesGridCard> createState() =>
       _RecoveryCodesGridCardState();
 }
 
 class _RecoveryCodesGridCardState extends ConsumerState<RecoveryCodesGridCard> {
-  bool _hintCopied = false;
-
-  Future<void> _copyHint() async {
-    final hint = widget.recoveryCodes.displayHint;
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.recoveryCodes.id,
-      text: hint,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Подсказка отсутствует');
-      return;
-    }
-    setState(() => _hintCopied = true);
-    Toaster.success(title: 'Подсказка скопирована');
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _hintCopied = false);
-    });
-  }
+  String get _itemId => widget.data.card.item.itemId;
+  RecoveryCodesCardDataDto get _codes => widget.data.card.data;
 
   @override
   Widget build(BuildContext context) {
-    final recoveryCodes = widget.recoveryCodes;
-    final codesCount = recoveryCodes.codesCount ?? 0;
-    final usedCount = recoveryCodes.codesUsedCount ?? 0;
+    final item = widget.data.card.item;
+    final subtitleParts = [
+      if (_codes.oneTime) 'Одноразовые',
+      if (_codes.hasCodes) 'Коды сохранены',
+    ];
 
     return BaseGridCard(
-      title: recoveryCodes.name,
-      subtitle:
-          '$usedCount / $codesCount • ${recoveryCodes.oneTime == true ? 'one-time' : 'multi-use'}',
-      fallbackIcon: Icons.security,
-      category: recoveryCodes.category,
-      tags: recoveryCodes.tags,
-      usedCount: recoveryCodes.usedCount,
-      isFavorite: recoveryCodes.isFavorite,
-      isPinned: recoveryCodes.isPinned,
-      isArchived: recoveryCodes.isArchived,
-      isDeleted: recoveryCodes.isDeleted,
+      title: item.name,
+      subtitle: subtitleParts.join(' • '),
+      fallbackIcon: Icons.vpn_key,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
+      onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -80,22 +66,9 @@ class _RecoveryCodesGridCardState extends ConsumerState<RecoveryCodesGridCard> {
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(
-            EntityType.recoveryCodes,
-            recoveryCodes.id,
-          ),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.recoveryCodes, _itemId),
         );
       },
-      copyActions: [
-        if ((recoveryCodes.displayHint ?? '').isNotEmpty)
-          CardActionItem(
-            label: 'Hint',
-            onPressed: _copyHint,
-            icon: Icons.copy,
-            successIcon: Icons.check,
-            isSuccess: _hintCopied,
-          ),
-      ],
     );
   }
 }

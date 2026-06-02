@@ -130,7 +130,7 @@ class NoteFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        note: NoteCardDataDto(content: row.read(noteItems.content)!),
+        data: NoteCardDataDto(content: row.read(noteItems.content)!),
       );
 
       return FilteredCardDto(card: cardDto, meta: meta);

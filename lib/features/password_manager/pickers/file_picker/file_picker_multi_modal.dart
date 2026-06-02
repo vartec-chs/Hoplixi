@@ -105,7 +105,7 @@ class _FilePickerMultiContentState
 
   void _toggleSelection(FileCardDto file) {
     final id = file.item.itemId;
-    final name = file.file.fileName ?? file.item.name;
+    final name = file.data.fileName ?? file.item.name;
     setState(() {
       if (_selectedIds.contains(id)) {
         _selectedIds.remove(id);

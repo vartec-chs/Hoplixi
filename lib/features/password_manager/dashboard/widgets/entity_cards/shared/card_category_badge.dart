@@ -6,8 +6,8 @@ class CardCategoryBadge extends StatelessWidget {
   /// Название категории
   final String name;
 
-  /// HEX цвет категории
-  final String? color;
+  /// Цвет категории в формате ARGB int (0xAARRGGBB) или HEX-строка
+  final Object? color;
 
   /// Размер шрифта
   final double fontSize;
@@ -26,7 +26,7 @@ class CardCategoryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final categoryColor = CardUtils.parseColor(color);
+    final categoryColor = _resolveColor(color);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -53,5 +53,17 @@ class CardCategoryBadge extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _resolveColor(Object? raw) {
+    if (raw == null) return Colors.grey;
+    if (raw is int) {
+      if (raw == 0) return Colors.grey;
+      return Color(raw);
+    }
+    if (raw is String) {
+      return CardUtils.parseColor(raw);
+    }
+    return Colors.grey;
   }
 }

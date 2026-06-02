@@ -232,7 +232,8 @@ class _IdentitiesFilterSectionState extends State<IdentitiesFilterSection> {
             onChanged: (value) {
               final trimmed = value.trim();
               _updateFilter(
-                (f) => f.copyWith(displayName: trimmed.isEmpty ? null : trimmed),
+                (f) =>
+                    f.copyWith(displayName: trimmed.isEmpty ? null : trimmed),
               );
             },
           ),
@@ -253,9 +254,7 @@ class _IdentitiesFilterSectionState extends State<IdentitiesFilterSection> {
                             icon: const Icon(Icons.clear, size: 18),
                             onPressed: () {
                               _usernameController.clear();
-                              _updateFilter(
-                                (f) => f.copyWith(username: null),
-                              );
+                              _updateFilter((f) => f.copyWith(username: null));
                             },
                           )
                         : null,
@@ -291,7 +290,8 @@ class _IdentitiesFilterSectionState extends State<IdentitiesFilterSection> {
                   onChanged: (value) {
                     final trimmed = value.trim();
                     _updateFilter(
-                      (f) => f.copyWith(email: trimmed.isEmpty ? null : trimmed),
+                      (f) =>
+                          f.copyWith(email: trimmed.isEmpty ? null : trimmed),
                     );
                   },
                 ),

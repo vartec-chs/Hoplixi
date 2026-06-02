@@ -304,7 +304,7 @@ class BankCardRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      bankCard: BankCardCardDataDto(
+      data: BankCardCardDataDto(
         cardholderName: row.read(db.bankCardItems.cardholderName),
         cardType: row.readWithConverter<CardType?, String>(
           db.bankCardItems.cardType,

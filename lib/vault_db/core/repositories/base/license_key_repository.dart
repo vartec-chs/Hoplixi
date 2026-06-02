@@ -315,7 +315,7 @@ class LicenseKeyRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      licenseKey: LicenseKeyCardDataDto(
+      data: LicenseKeyCardDataDto(
         productName: row.read(db.licenseKeyItems.productName)!,
         vendor: row.read(db.licenseKeyItems.vendor),
         licenseType: row.readWithConverter<LicenseType?, String>(

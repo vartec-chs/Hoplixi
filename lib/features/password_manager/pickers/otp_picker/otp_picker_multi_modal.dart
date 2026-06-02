@@ -109,7 +109,7 @@ class _OtpPickerMultiContentState
 
   void _toggleOtpSelection(OtpCardDto otp) {
     final id = otp.item.itemId;
-    final title = otp.otp.issuer ?? otp.otp.accountName ?? otp.item.name;
+    final title = otp.data.issuer ?? otp.data.accountName ?? otp.item.name;
     setState(() {
       if (_selectedOtpIds.contains(id)) {
         _selectedOtpIds.remove(id);

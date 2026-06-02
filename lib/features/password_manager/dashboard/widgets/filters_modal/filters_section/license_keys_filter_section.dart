@@ -389,7 +389,8 @@ class _LicenseKeysFilterSectionState extends State<LicenseKeysFilterSection> {
   }
 
   bool _hasActiveStatusFilters() {
-    return widget.filter.hasExpiration != null || widget.filter.hasRenewal != null;
+    return widget.filter.hasExpiration != null ||
+        widget.filter.hasRenewal != null;
   }
 
   // ============================================================================

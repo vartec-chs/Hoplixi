@@ -350,7 +350,7 @@ class OtpRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      otp: OtpCardDataDto(
+      data: OtpCardDataDto(
         type: row.readWithConverter<OtpType, String>(db.otpItems.type)!,
         issuer: row.read(db.otpItems.issuer),
         accountName: row.read(db.otpItems.accountName),

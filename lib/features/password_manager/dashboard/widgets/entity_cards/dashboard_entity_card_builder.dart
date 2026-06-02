@@ -20,7 +20,7 @@ import 'identity/identity_grid_card.dart';
 import 'identity/identity_list_card.dart';
 import 'license_key/license_key_grid_card.dart';
 import 'license_key/license_key_list_card.dart';
-import 'loyalty_card/loyalty_card_grid.dart';
+import 'loyalty_card/loyalty_card_grid_card.dart';
 import 'loyalty_card/loyalty_card_list_card.dart';
 import 'note/note_grid.dart';
 import 'note/note_list_card.dart';
@@ -94,8 +94,8 @@ final class DashboardEntityCardBuilder {
     required DashboardEntityCardActions actions,
   }) {
     return switch (item) {
-      PasswordCardDto() => PasswordListCard(
-        password: item,
+      PasswordCardEntry(:final data) => PasswordListCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -105,8 +105,8 @@ final class DashboardEntityCardBuilder {
         onOpenView: () => actions.onOpenView(item),
         onOpenHistory: () => actions.onOpenHistory(item),
       ),
-      NoteCardDto() => NoteListCard(
-        note: item,
+      NoteCardEntry(:final data) => NoteListCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -116,8 +116,8 @@ final class DashboardEntityCardBuilder {
         onOpenView: () => actions.onOpenView(item),
         onOpenHistory: () => actions.onOpenHistory(item),
       ),
-      BankCardCardDto() => BankCardListCard(
-        bankCard: item,
+      BankCardEntry(:final data) => BankCardListCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -127,8 +127,8 @@ final class DashboardEntityCardBuilder {
         onOpenView: () => actions.onOpenView(item),
         onOpenHistory: () => actions.onOpenHistory(item),
       ),
-      FileCardDto() => FileListCard(
-        file: item,
+      FileCardEntry(:final data) => FileListCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -138,8 +138,8 @@ final class DashboardEntityCardBuilder {
         onOpenView: () => actions.onOpenView(item),
         onOpenHistory: () => actions.onOpenHistory(item),
       ),
-      OtpCardDto() => TotpListCard(
-        otp: item,
+      OtpCardEntry(:final data) => TotpListCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -149,8 +149,8 @@ final class DashboardEntityCardBuilder {
         onOpenView: () => actions.onOpenView(item),
         onOpenHistory: () => actions.onOpenHistory(item),
       ),
-      DocumentCardDto() => DocumentListCard(
-        document: item,
+      DocumentCardEntry(:final data) => DocumentListCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -160,98 +160,8 @@ final class DashboardEntityCardBuilder {
         onOpenView: () => actions.onOpenView(item),
         onOpenHistory: () => actions.onOpenHistory(item),
       ),
-      ContactCardDto() => ContactListCard(
-        contact: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      ApiKeyCardDto() => ApiKeyListCard(
-        apiKey: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      SshKeyCardDto() => SshKeyListCard(
-        sshKey: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      CertificateCardDto() => CertificateListCard(
-        certificate: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      CryptoWalletCardDto() => CryptoWalletListCard(
-        wallet: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      WifiCardDto() => WifiListCard(
-        wifi: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      IdentityCardDto() => IdentityListCard(
-        identity: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      LicenseKeyCardDto() => LicenseKeyListCard(
-        license: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      RecoveryCodesCardDto() => RecoveryCodesListCard(
-        recoveryCodes: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-        onOpenHistory: () => actions.onOpenHistory(item),
-      ),
-      LoyaltyCardCardDto() => LoyaltyCardListCard(
-        loyaltyCard: item,
+      ContactCardEntry(:final data) => ContactListCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -261,7 +171,106 @@ final class DashboardEntityCardBuilder {
         onOpenView: () => actions.onOpenView(item),
         onOpenHistory: () => actions.onOpenHistory(item),
       ),
-      _ => _UnsupportedEntityCard(item: item),
+      ApiKeyCardEntry(:final data) => ApiKeyListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      SshKeyCardEntry(:final data) => SshKeyListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      CertificateCardEntry(:final data) => CertificateListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      CryptoWalletCardEntry(:final data) => CryptoWalletListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      WifiCardEntry(:final data) => WifiListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      IdentityCardEntry(:final data) => IdentityListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      LicenseKeyCardEntry(:final data) => LicenseKeyListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      RecoveryCodesCardEntry(:final data) => RecoveryCodesListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      LoyaltyCardEntry(:final data) => LoyaltyCardListCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+        onOpenHistory: () => actions.onOpenHistory(item),
+      ),
+      _ => throw UnimplementedError('Unknown card entry: ${item.runtimeType}'),
     };
   }
 
@@ -270,8 +279,8 @@ final class DashboardEntityCardBuilder {
     required DashboardEntityCardActions actions,
   }) {
     return switch (item) {
-      PasswordCardDto() => PasswordGridCard(
-        password: item,
+      PasswordCardEntry(:final data) => PasswordGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -280,8 +289,8 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      NoteCardDto() => NoteGridCard(
-        note: item,
+      NoteCardEntry(:final data) => NoteGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -290,8 +299,8 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      BankCardCardDto() => BankCardGridCard(
-        bankCard: item,
+      BankCardEntry(:final data) => BankCardGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -300,8 +309,8 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      FileCardDto() => FileGridCard(
-        file: item,
+      FileCardEntry(:final data) => FileGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -310,8 +319,8 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      OtpCardDto() => TotpGridCard(
-        otp: item,
+      OtpCardEntry(:final data) => TotpGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -320,8 +329,8 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      DocumentCardDto() => DocumentGridCard(
-        document: item,
+      DocumentCardEntry(:final data) => DocumentGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -330,8 +339,8 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      ContactCardDto() => ContactGridCard(
-        contact: item,
+      ContactCardEntry(:final data) => ContactGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -340,8 +349,8 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      ApiKeyCardDto() => ApiKeyGridCard(
-        apiKey: item,
+      ApiKeyCardEntry(:final data) => ApiKeyGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -350,71 +359,8 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      SshKeyCardDto() => SshKeyGridCard(
-        sshKey: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-      ),
-      CertificateCardDto() => CertificateGridCard(
-        certificate: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-      ),
-      CryptoWalletCardDto() => CryptoWalletGridCard(
-        wallet: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-      ),
-      WifiCardDto() => WifiGridCard(
-        wifi: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-      ),
-      IdentityCardDto() => IdentityGridCard(
-        identity: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-      ),
-      LicenseKeyCardDto() => LicenseKeyGridCard(
-        license: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-      ),
-      RecoveryCodesCardDto() => RecoveryCodesGridCard(
-        recoveryCodes: item,
-        onToggleFavorite: () => actions.onToggleFavorite(item),
-        onTogglePin: () => actions.onTogglePinned(item),
-        onToggleArchive: () => actions.onToggleArchived(item),
-        onDelete: () => actions.onDelete(item),
-        onRestore: () => actions.onRestore(item),
-        onOpenView: () => actions.onOpenView(item),
-      ),
-      LoyaltyCardCardDto() => LoyaltyCardGridCard(
-        loyaltyCard: item,
+      SshKeyCardEntry(:final data) => SshKeyGridCard(
+        data: data,
         onTap: () => actions.onOpen(item),
         onToggleFavorite: () => actions.onToggleFavorite(item),
         onTogglePin: () => actions.onTogglePinned(item),
@@ -423,7 +369,77 @@ final class DashboardEntityCardBuilder {
         onRestore: () => actions.onRestore(item),
         onOpenView: () => actions.onOpenView(item),
       ),
-      _ => _UnsupportedEntityCard(item: item),
+      CertificateCardEntry(:final data) => CertificateGridCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+      ),
+      CryptoWalletCardEntry(:final data) => CryptoWalletGridCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+      ),
+      WifiCardEntry(:final data) => WifiGridCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+      ),
+      IdentityCardEntry(:final data) => IdentityGridCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+      ),
+      LicenseKeyCardEntry(:final data) => LicenseKeyGridCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+      ),
+      RecoveryCodesCardEntry(:final data) => RecoveryCodesGridCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+      ),
+      LoyaltyCardEntry(:final data) => LoyaltyCardGridCard(
+        data: data,
+        onTap: () => actions.onOpen(item),
+        onToggleFavorite: () => actions.onToggleFavorite(item),
+        onTogglePin: () => actions.onTogglePinned(item),
+        onToggleArchive: () => actions.onToggleArchived(item),
+        onDelete: () => actions.onDelete(item),
+        onRestore: () => actions.onRestore(item),
+        onOpenView: () => actions.onOpenView(item),
+      ),
+      _ => throw UnimplementedError('Unknown card entry: ${item.runtimeType}'),
     };
   }
 }
@@ -583,20 +599,6 @@ final class _SwipeActionBackground extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-final class _UnsupportedEntityCard extends StatelessWidget {
-  const _UnsupportedEntityCard({required this.item});
-
-  final BaseCardDto item;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(item.id),
-      subtitle: const Text('Неподдерживаемый тип элемента'),
     );
   }
 }

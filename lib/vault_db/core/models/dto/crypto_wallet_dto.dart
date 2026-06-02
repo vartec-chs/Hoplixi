@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../../scheme/tables/crypto_wallet/crypto_wallet_items.dart';
 import '../field_update.dart';
@@ -21,7 +22,9 @@ sealed class CryptoWalletDataDto with _$CryptoWalletDataDto {
     String? derivationSchemeOther,
     String? addresses,
     String? xpub,
+    String? xpubDerivationPath,
     String? xprv,
+    String? xprvDerivationPath,
     String? hardwareDevice,
     @Default(false) bool watchOnly,
   }) = _CryptoWalletDataDto;
@@ -76,11 +79,16 @@ sealed class CryptoWalletViewDto
 @freezed
 sealed class CryptoWalletCardDto
     with _$CryptoWalletCardDto
-    implements VaultEntityCardDto {
+    implements VaultEntityCardDto<CryptoWalletCardDataDto> {
+  const CryptoWalletCardDto._();
+
   const factory CryptoWalletCardDto({
     required VaultItemCardDto item,
-    required CryptoWalletCardDataDto cryptoWallet,
+    required CryptoWalletCardDataDto data,
   }) = _CryptoWalletCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.cryptoWallet;
 
   factory CryptoWalletCardDto.fromJson(Map<String, dynamic> json) =>
       _$CryptoWalletCardDtoFromJson(json);
@@ -101,7 +109,9 @@ sealed class PatchCryptoWalletDataDto with _$PatchCryptoWalletDataDto {
     @Default(FieldUpdate.keep()) FieldUpdate<String> derivationSchemeOther,
     @Default(FieldUpdate.keep()) FieldUpdate<String> addresses,
     @Default(FieldUpdate.keep()) FieldUpdate<String> xpub,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> xpubDerivationPath,
     @Default(FieldUpdate.keep()) FieldUpdate<String> xprv,
+    @Default(FieldUpdate.keep()) FieldUpdate<String> xprvDerivationPath,
     @Default(FieldUpdate.keep()) FieldUpdate<String> hardwareDevice,
     @Default(FieldUpdate.keep()) FieldUpdate<bool> watchOnly,
   }) = _PatchCryptoWalletDataDto;

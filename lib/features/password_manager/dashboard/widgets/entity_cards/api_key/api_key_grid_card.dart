@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/vault_db/core/models/dto/api_key_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class ApiKeyGridCard extends ConsumerStatefulWidget {
-  final ApiKeyCardDto apiKey;
+  final FilteredCardDto<ApiKeyCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -20,7 +22,7 @@ class ApiKeyGridCard extends ConsumerStatefulWidget {
 
   const ApiKeyGridCard({
     super.key,
-    required this.apiKey,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -37,23 +39,19 @@ class ApiKeyGridCard extends ConsumerStatefulWidget {
 class _ApiKeyGridCardState extends ConsumerState<ApiKeyGridCard> {
   bool _keyCopied = false;
 
-  Future<void> _copyKey() async {
-    final dao = await ref.read(apiKeyDaoProvider.future);
-    final keyText = await dao.getKeyFieldById(widget.apiKey.id);
+  String get _itemId => widget.data.card.item.itemId;
+  ApiKeyCardDataDto get _apiKey => widget.data.card.data;
 
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.apiKey.id,
-      text: keyText,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Не удалось получить ключ');
+  Future<void> _copyKey() async {
+    final value = null;
+    if (value == null || value.isEmpty) {
+      Toaster.warning(title: 'Ключ недоступен');
       return;
     }
-
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: value);
+    if (!copied) return;
     setState(() => _keyCopied = true);
-    Toaster.success(title: 'Ключ скопирован');
-
+    Toaster.success(title: 'API-ключ скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _keyCopied = false);
     });
@@ -61,37 +59,23 @@ class _ApiKeyGridCardState extends ConsumerState<ApiKeyGridCard> {
 
   @override
   Widget build(BuildContext context) {
-    final apiKey = widget.apiKey;
-
-    final DateTime now = DateTime.now();
-    final bool isExpired =
-        apiKey.expiresAt != null && apiKey.expiresAt!.isBefore(now);
-    final bool isExpiringSoon =
-        !isExpired &&
-        apiKey.expiresAt != null &&
-        apiKey.expiresAt!.difference(now).inDays <= 30;
-
+    final item = widget.data.card.item;
     final subtitleParts = [
-      apiKey.service,
-      if (apiKey.environment?.isNotEmpty == true) apiKey.environment!,
-      if (apiKey.tokenType?.isNotEmpty == true) apiKey.tokenType!,
+      if ((_apiKey.service ?? '').isNotEmpty) _apiKey.service!,
+      if (_apiKey.environment != null) _apiKey.environment!.name,
+      if (_apiKey.tokenType != null) _apiKey.tokenType!.name,
     ];
 
     return BaseGridCard(
-      title: apiKey.name,
+      title: item.name,
       subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.api,
-      iconSource: apiKey.iconSource,
-      iconValue: apiKey.iconValue,
-      category: apiKey.category,
-      tags: apiKey.tags,
-      usedCount: apiKey.usedCount,
-      isFavorite: apiKey.isFavorite,
-      isPinned: apiKey.isPinned,
-      isArchived: apiKey.isArchived,
-      isDeleted: apiKey.isDeleted,
-      isExpired: isExpired,
-      isExpiringSoon: isExpiringSoon,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
@@ -101,14 +85,14 @@ class _ApiKeyGridCardState extends ConsumerState<ApiKeyGridCard> {
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(EntityType.apiKey, apiKey.id),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.apiKey, _itemId),
         );
       },
       copyActions: [
         CardActionItem(
           label: 'Ключ',
           onPressed: _copyKey,
-          icon: Icons.key,
+          icon: Icons.copy,
           successIcon: Icons.check,
           isSuccess: _keyCopied,
         ),

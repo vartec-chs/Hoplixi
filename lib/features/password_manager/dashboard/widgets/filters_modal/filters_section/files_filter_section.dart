@@ -247,9 +247,9 @@ class _FilesFilterSectionState extends State<FilesFilterSection> {
             children: [
               Text(
                 'Доступность',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -272,9 +272,9 @@ class _FilesFilterSectionState extends State<FilesFilterSection> {
               const SizedBox(height: 16),
               Text(
                 'Целостность',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Wrap(

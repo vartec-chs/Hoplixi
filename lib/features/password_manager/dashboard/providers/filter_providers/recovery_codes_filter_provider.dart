@@ -8,9 +8,10 @@ import 'base_filter_provider.dart';
 
 /// Провайдер для управления фильтром кодов восстановления
 final recoveryCodesFilterProvider =
-    NotifierProvider.autoDispose<RecoveryCodesFilterNotifier, RecoveryCodesFilter>(
-      RecoveryCodesFilterNotifier.new,
-    );
+    NotifierProvider.autoDispose<
+      RecoveryCodesFilterNotifier,
+      RecoveryCodesFilter
+    >(RecoveryCodesFilterNotifier.new);
 
 class RecoveryCodesFilterNotifier extends Notifier<RecoveryCodesFilter> {
   static const String _logTag = 'RecoveryCodesFilterNotifier';

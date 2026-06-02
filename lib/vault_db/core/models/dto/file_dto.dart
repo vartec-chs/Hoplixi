@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
+
 import '../../scheme/tables/file/file_metadata.dart';
 import '../field_update.dart';
 import 'vault_item_base_dto.dart';
@@ -103,11 +105,18 @@ sealed class FileViewDto with _$FileViewDto implements VaultEntityViewDto {
 }
 
 @freezed
-sealed class FileCardDto with _$FileCardDto implements VaultEntityCardDto {
+sealed class FileCardDto
+    with _$FileCardDto
+    implements VaultEntityCardDto<FileCardDataDto> {
+  const FileCardDto._();
+
   const factory FileCardDto({
     required VaultItemCardDto item,
-    required FileCardDataDto file,
+    required FileCardDataDto data,
   }) = _FileCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.file;
 
   factory FileCardDto.fromJson(Map<String, dynamic> json) =>
       _$FileCardDtoFromJson(json);

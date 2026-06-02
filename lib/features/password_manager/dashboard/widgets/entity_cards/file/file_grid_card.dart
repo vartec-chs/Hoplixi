@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/file_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class FileGridCard extends ConsumerStatefulWidget {
-  final FileCardDto file;
+  final FilteredCardDto<FileCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -22,7 +23,7 @@ class FileGridCard extends ConsumerStatefulWidget {
 
   const FileGridCard({
     super.key,
-    required this.file,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -47,20 +48,24 @@ class _FileGridCardState extends ConsumerState<FileGridCard> {
 
   @override
   Widget build(BuildContext context) {
-    final file = widget.file;
+    final item = widget.data.card.item;
+    final file = widget.data.card.data;
+    final fileName = file.fileName ?? '';
+    final size = file.fileSize ?? 0;
+    final subtitle = fileName.isEmpty
+        ? _formatFileSize(size)
+        : '$fileName • ${_formatFileSize(size)}';
 
     return BaseGridCard(
-      title: file.name,
-      subtitle:
-          '${file.fileName ?? ''} • ${_formatFileSize(file.fileSize ?? 0)}',
+      title: item.name,
+      subtitle: subtitle,
       fallbackIcon: Icons.insert_drive_file,
-      category: file.category,
-      tags: file.tags,
-      usedCount: file.usedCount,
-      isFavorite: file.isFavorite,
-      isPinned: file.isPinned,
-      isArchived: file.isArchived,
-      isDeleted: file.isDeleted,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
@@ -70,7 +75,7 @@ class _FileGridCardState extends ConsumerState<FileGridCard> {
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(EntityType.file, file.id),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.file, item.itemId),
         );
       },
       copyActions: [

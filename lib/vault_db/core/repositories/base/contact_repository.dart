@@ -294,7 +294,7 @@ class ContactRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      contact: ContactCardDataDto(
+      data: ContactCardDataDto(
         firstName: row.read(db.contactItems.firstName)!,
         middleName: row.read(db.contactItems.middleName),
         lastName: row.read(db.contactItems.lastName),

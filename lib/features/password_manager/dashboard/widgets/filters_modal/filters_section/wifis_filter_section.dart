@@ -328,7 +328,8 @@ class _WifisFilterSectionState extends State<WifisFilterSection> {
   }
 
   bool _hasActiveStatusFilters() {
-    return widget.filter.hasPassword != null || widget.filter.hiddenSsid != null;
+    return widget.filter.hasPassword != null ||
+        widget.filter.hiddenSsid != null;
   }
 
   // ============================================================================

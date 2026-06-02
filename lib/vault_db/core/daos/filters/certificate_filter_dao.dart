@@ -179,7 +179,7 @@ class CertificateFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        certificate: CertificateCardDataDto(
+        data: CertificateCardDataDto(
           certificateFormat: row.readWithConverter<CertificateFormat?, String>(
             certificateItems.certificateFormat,
           ),

@@ -4,15 +4,22 @@ import 'package:flutter/material.dart';
 class CardUtils {
   CardUtils._();
 
-  /// Парсит HEX-цвет строку в Color
-  static Color parseColor(String? colorHex) {
-    if (colorHex == null || colorHex.isEmpty) return Colors.grey;
-    try {
-      final hex = colorHex.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return Colors.grey;
+  /// Парсит цвет (HEX-строка или ARGB int) в Color
+  static Color parseColor(Object? color) {
+    if (color == null) return Colors.grey;
+    if (color is int) {
+      return Color(color);
     }
+    if (color is String) {
+      if (color.isEmpty) return Colors.grey;
+      try {
+        final hex = color.replaceAll('#', '');
+        return Color(int.parse('FF$hex', radix: 16));
+      } catch (e) {
+        return Colors.grey;
+      }
+    }
+    return Colors.grey;
   }
 
   /// Форматирует дату в человекочитаемый формат

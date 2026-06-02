@@ -3,15 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/license_key_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class LicenseKeyGridCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<LicenseKeyCardDto> data;
+  final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onTogglePin;
+  final VoidCallback? onToggleArchive;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
+
   const LicenseKeyGridCard({
     super.key,
-    required this.license,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -20,59 +31,51 @@ class LicenseKeyGridCard extends ConsumerStatefulWidget {
     this.onOpenView,
   });
 
-  final LicenseKeyCardDto license;
-  final VoidCallback? onToggleFavorite;
-  final VoidCallback? onTogglePin;
-  final VoidCallback? onToggleArchive;
-  final VoidCallback? onDelete;
-  final VoidCallback? onRestore;
-  final VoidCallback? onOpenView;
-
   @override
   ConsumerState<LicenseKeyGridCard> createState() => _LicenseKeyGridCardState();
 }
 
 class _LicenseKeyGridCardState extends ConsumerState<LicenseKeyGridCard> {
-  bool _productCopied = false;
+  bool _keyCopied = false;
 
-  Future<void> _copyProduct() async {
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.license.id,
-      text: widget.license.product,
-    );
+  String get _itemId => widget.data.card.item.itemId;
+  LicenseKeyCardDataDto get _license => widget.data.card.data;
+
+  Future<void> _copyKey() async {
+    final value = null;
+    if (value == null || value.isEmpty) {
+      Toaster.warning(title: 'Лицензионный ключ недоступен');
+      return;
+    }
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: value);
     if (!copied) return;
-    setState(() => _productCopied = true);
-    Toaster.success(title: 'Продукт скопирован');
+    setState(() => _keyCopied = true);
+    Toaster.success(title: 'Лицензионный ключ скопирован');
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _productCopied = false);
+      if (mounted) setState(() => _keyCopied = false);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final license = widget.license;
-    final now = DateTime.now();
-    final isExpired =
-        license.expiresAt != null && license.expiresAt!.isBefore(now);
-    final isExpiringSoon =
-        !isExpired &&
-        license.expiresAt != null &&
-        license.expiresAt!.difference(now).inDays <= 30;
+    final item = widget.data.card.item;
+    final subtitleParts = [
+      if ((_license.vendor ?? '').isNotEmpty) _license.vendor!,
+      if ((_license.productName ?? '').isNotEmpty) _license.productName!,
+      if (_license.licenseType != null) _license.licenseType!.name,
+    ];
 
     return BaseGridCard(
-      title: license.name,
-      subtitle: '${license.product} • ${license.licenseType ?? 'license'}',
-      fallbackIcon: Icons.workspace_premium,
-      category: license.category,
-      tags: license.tags,
-      usedCount: license.usedCount,
-      isFavorite: license.isFavorite,
-      isPinned: license.isPinned,
-      isArchived: license.isArchived,
-      isDeleted: license.isDeleted,
-      isExpired: isExpired,
-      isExpiringSoon: isExpiringSoon,
+      title: item.name,
+      subtitle: subtitleParts.join(' • '),
+      fallbackIcon: Icons.vpn_key,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
+      onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -81,17 +84,18 @@ class _LicenseKeyGridCardState extends ConsumerState<LicenseKeyGridCard> {
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(EntityType.licenseKey, license.id),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.licenseKey, _itemId),
         );
       },
       copyActions: [
-        CardActionItem(
-          label: 'Product',
-          onPressed: _copyProduct,
-          icon: Icons.copy,
-          successIcon: Icons.check,
-          isSuccess: _productCopied,
-        ),
+        if (_license.hasKey)
+          CardActionItem(
+            label: 'Ключ',
+            onPressed: _copyKey,
+            icon: Icons.copy,
+            successIcon: Icons.check,
+            isSuccess: _keyCopied,
+          ),
       ],
     );
   }

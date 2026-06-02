@@ -264,7 +264,7 @@ class NoteRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      note: NoteCardDataDto(content: row.read(db.noteItems.content)!),
+      data: NoteCardDataDto(content: row.read(db.noteItems.content)!),
     );
   }
 }

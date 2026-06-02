@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
+import 'package:hoplixi/vault_db/core/models/dto/ssh_key_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+
 import '../shared/shared.dart';
 
 class SshKeyListCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<SshKeyCardDto> data;
+  final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onTogglePin;
+  final VoidCallback? onToggleArchive;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRestore;
+  final VoidCallback? onOpenHistory;
+  final VoidCallback? onOpenView;
+
   const SshKeyListCard({
     super.key,
-    required this.sshKey,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -18,29 +30,23 @@ class SshKeyListCard extends ConsumerStatefulWidget {
     this.onOpenView,
   });
 
-  final SshKeyCardDto sshKey;
-  final VoidCallback? onToggleFavorite;
-  final VoidCallback? onTogglePin;
-  final VoidCallback? onToggleArchive;
-  final VoidCallback? onDelete;
-  final VoidCallback? onRestore;
-  final VoidCallback? onOpenHistory;
-  final VoidCallback? onOpenView;
-
   @override
   ConsumerState<SshKeyListCard> createState() => _SshKeyListCardState();
 }
 
 class _SshKeyListCardState extends ConsumerState<SshKeyListCard> {
   bool _publicKeyCopied = false;
-  bool _privateKeyCopied = false;
+
+  String get _itemId => widget.data.card.item.itemId;
+  SshKeyCardDataDto get _sshKey => widget.data.card.data;
 
   Future<void> _copyPublicKey() async {
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.sshKey.id,
-      text: widget.sshKey.publicKey,
-    );
+    final value = null;
+    if (value == null || value.isEmpty) {
+      Toaster.warning(title: 'Публичный ключ недоступен');
+      return;
+    }
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: value);
     if (!copied) return;
     setState(() => _publicKeyCopied = true);
     Toaster.success(title: 'Публичный ключ скопирован');
@@ -49,49 +55,27 @@ class _SshKeyListCardState extends ConsumerState<SshKeyListCard> {
     });
   }
 
-  Future<void> _copyPrivateKey() async {
-    final dao = await ref.read(sshKeyDaoProvider.future);
-    final privateKey = await dao.getPrivateKeyFieldById(widget.sshKey.id);
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.sshKey.id,
-      text: privateKey,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Приватный ключ не найден');
-      return;
-    }
-    setState(() => _privateKeyCopied = true);
-    Toaster.success(title: 'Приватный ключ скопирован');
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _privateKeyCopied = false);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final sshKey = widget.sshKey;
-    final subtitle = [
-      if (sshKey.keyType?.isNotEmpty == true) sshKey.keyType!,
-      if (sshKey.usage?.isNotEmpty == true) sshKey.usage!,
-    ].join(' • ');
+    final item = widget.data.card.item;
+    final subtitleParts = [
+      if (_sshKey.keyType != null) _sshKey.keyType!.name,
+      if (_sshKey.keySize != null) '${_sshKey.keySize} бит',
+      if (_sshKey.hasPrivateKey) '🔒 Приватный',
+    ];
 
     return ExpandableListCard(
-      title: sshKey.name,
-      subtitle: subtitle.isEmpty ? null : subtitle,
-      trailingSubtitle: sshKey.fingerprint,
+      title: item.name,
+      subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.key,
-      iconSource: sshKey.iconSource,
-      iconValue: sshKey.iconValue,
-      category: sshKey.category,
-      description: sshKey.description,
-      tags: sshKey.tags,
-      usedCount: sshKey.usedCount,
-      modifiedAt: sshKey.modifiedAt,
-      isFavorite: sshKey.isFavorite,
-      isPinned: sshKey.isPinned,
-      isArchived: sshKey.isArchived,
-      isDeleted: sshKey.isDeleted,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -101,18 +85,11 @@ class _SshKeyListCardState extends ConsumerState<SshKeyListCard> {
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
         CardActionItem(
-          label: 'PubKey',
+          label: 'Публичный ключ',
           onPressed: _copyPublicKey,
           icon: Icons.copy,
           successIcon: Icons.check,
           isSuccess: _publicKeyCopied,
-        ),
-        CardActionItem(
-          label: 'PrivKey',
-          onPressed: _copyPrivateKey,
-          icon: Icons.vpn_key,
-          successIcon: Icons.check,
-          isSuccess: _privateKeyCopied,
         ),
       ],
     );

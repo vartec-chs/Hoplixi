@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../field_update.dart';
 import 'vault_item_base_dto.dart';
@@ -49,11 +50,18 @@ sealed class NoteViewDto with _$NoteViewDto implements VaultEntityViewDto {
 }
 
 @freezed
-sealed class NoteCardDto with _$NoteCardDto implements VaultEntityCardDto {
+sealed class NoteCardDto
+    with _$NoteCardDto
+    implements VaultEntityCardDto<NoteCardDataDto> {
+  const NoteCardDto._();
+
   const factory NoteCardDto({
     required VaultItemCardDto item,
-    required NoteCardDataDto note,
+    required NoteCardDataDto data,
   }) = _NoteCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.note;
 
   factory NoteCardDto.fromJson(Map<String, dynamic> json) =>
       _$NoteCardDtoFromJson(json);

@@ -166,7 +166,7 @@ class IdentityFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        identity: IdentityCardDataDto(
+        data: IdentityCardDataDto(
           displayName: row.read(identityItems.displayName),
           username: row.read(identityItems.username),
           email: row.read(identityItems.email),

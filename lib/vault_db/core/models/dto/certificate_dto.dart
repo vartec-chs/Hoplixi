@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../../scheme/tables/certificate/certificate_items.dart';
 import '../field_update.dart';
@@ -84,11 +85,16 @@ sealed class CertificateViewDto
 @freezed
 sealed class CertificateCardDto
     with _$CertificateCardDto
-    implements VaultEntityCardDto {
+    implements VaultEntityCardDto<CertificateCardDataDto> {
+  const CertificateCardDto._();
+
   const factory CertificateCardDto({
     required VaultItemCardDto item,
-    required CertificateCardDataDto certificate,
+    required CertificateCardDataDto data,
   }) = _CertificateCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.certificate;
 
   factory CertificateCardDto.fromJson(Map<String, dynamic> json) =>
       _$CertificateCardDtoFromJson(json);

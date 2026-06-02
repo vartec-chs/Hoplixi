@@ -164,7 +164,7 @@ class LoyaltyCardFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        loyaltyCard: LoyaltyCardCardDataDto(
+        data: LoyaltyCardCardDataDto(
           programName: row.read(loyaltyCardItems.programName)!,
           barcodeType: row.readWithConverter<LoyaltyBarcodeType?, String>(
             loyaltyCardItems.barcodeType,

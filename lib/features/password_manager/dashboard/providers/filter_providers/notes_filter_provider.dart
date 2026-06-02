@@ -194,11 +194,7 @@ class NotesFilterNotifier extends Notifier<NoteFilter> {
   void clearNotesSpecificFilters() {
     _debounceTimer?.cancel();
     logDebug('Фильтры заметок очищены', tag: _logTag);
-    state = state.copyWith(
-      name: null,
-      contentQuery: null,
-      hasContent: null,
-    );
+    state = state.copyWith(name: null, contentQuery: null, hasContent: null);
   }
 
   /// Сбросить фильтры текстовых полей (name, contentQuery)

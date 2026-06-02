@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
+import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/vault_db/core/models/dto/loyalty_card_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
-class LoyaltyCardListCard extends ConsumerStatefulWidget {
+class LoyaltyCardGridCard extends ConsumerStatefulWidget {
   final FilteredCardDto<LoyaltyCardCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
@@ -14,10 +17,9 @@ class LoyaltyCardListCard extends ConsumerStatefulWidget {
   final VoidCallback? onToggleArchive;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
-  final VoidCallback? onOpenHistory;
   final VoidCallback? onOpenView;
 
-  const LoyaltyCardListCard({
+  const LoyaltyCardGridCard({
     super.key,
     required this.data,
     this.onTap,
@@ -26,16 +28,15 @@ class LoyaltyCardListCard extends ConsumerStatefulWidget {
     this.onToggleArchive,
     this.onDelete,
     this.onRestore,
-    this.onOpenHistory,
     this.onOpenView,
   });
 
   @override
-  ConsumerState<LoyaltyCardListCard> createState() =>
-      _LoyaltyCardListCardState();
+  ConsumerState<LoyaltyCardGridCard> createState() =>
+      _LoyaltyCardGridCardState();
 }
 
-class _LoyaltyCardListCardState extends ConsumerState<LoyaltyCardListCard> {
+class _LoyaltyCardGridCardState extends ConsumerState<LoyaltyCardGridCard> {
   bool _cardNumberCopied = false;
   bool _barcodeCopied = false;
   bool _passwordCopied = false;
@@ -96,25 +97,28 @@ class _LoyaltyCardListCardState extends ConsumerState<LoyaltyCardListCard> {
       if (_loyalty.barcodeType != null) _loyalty.barcodeType!.name,
     ];
 
-    return ExpandableListCard(
+    return BaseGridCard(
       title: item.name,
       subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.card_giftcard,
       category: widget.data.meta.category,
-      description: item.description,
       tags: widget.data.meta.tags,
-      modifiedAt: item.modifiedAt,
       isFavorite: item.isFavorite,
       isPinned: item.isPinned,
       isArchived: item.isArchived,
       isDeleted: item.isDeleted,
+      onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
       onDelete: widget.onDelete,
       onRestore: widget.onRestore,
       onOpenView: widget.onOpenView,
-      onOpenHistory: widget.onOpenHistory,
+      onEdit: () {
+        context.push(
+          AppRoutesPaths.dashboardEntityEdit(EntityType.loyaltyCard, _itemId),
+        );
+      },
       copyActions: [
         if (_loyalty.hasCardNumber)
           CardActionItem(

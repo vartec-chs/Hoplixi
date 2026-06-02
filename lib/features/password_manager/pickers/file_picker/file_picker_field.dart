@@ -132,7 +132,7 @@ class _FilePickerFieldState extends ConsumerState<FilePickerField> {
     if (!mounted || widget.selectedFileId != fileId) return;
 
     setState(() {
-      _resolvedFileName = file?.file.fileName ?? file?.item.name;
+      _resolvedFileName = file?.data.fileName ?? file?.item.name;
       _isResolvingFileName = false;
     });
   }

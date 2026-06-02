@@ -160,7 +160,7 @@ class FileFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        file: FileCardDataDto(
+        data: FileCardDataDto(
           metadataId: row.read(fileItems.metadataId),
           fileName: row.read(fileMetadata.fileName),
           fileExtension: row.read(fileMetadata.fileExtension),

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/dto/bank_card_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+
 import '../shared/shared.dart';
 
 class BankCardListCard extends ConsumerStatefulWidget {
-  final BankCardCardDto bankCard;
+  final FilteredCardDto<BankCardCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -17,7 +19,7 @@ class BankCardListCard extends ConsumerStatefulWidget {
 
   const BankCardListCard({
     super.key,
-    required this.bankCard,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -37,16 +39,13 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
   bool _holderNameCopied = false;
   bool _expiryCopied = false;
 
-  String _maskCardNumber(String cardNumber) {
-    final digitsOnly = cardNumber.replaceAll(RegExp(r'\D'), '');
-    if (digitsOnly.length < 4) return '•••• ••••';
-    return digitsOnly.substring(digitsOnly.length - 4);
-  }
+  String get _itemId => widget.data.card.item.itemId;
 
   bool _isExpired() {
     final now = DateTime.now();
-    final expiryYear = int.tryParse(widget.bankCard.expiryYear) ?? 0;
-    final expiryMonth = int.tryParse(widget.bankCard.expiryMonth) ?? 0;
+    final card = widget.data.card.data;
+    final expiryYear = int.tryParse(card.expiryYear ?? '') ?? 0;
+    final expiryMonth = int.tryParse(card.expiryMonth ?? '') ?? 0;
     if (expiryYear < now.year) return true;
     if (expiryYear == now.year && expiryMonth < now.month) return true;
     return false;
@@ -55,17 +54,23 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
   bool _isExpiringSoon() {
     if (_isExpired()) return false;
     final now = DateTime.now();
-    final expiryYear = int.tryParse(widget.bankCard.expiryYear) ?? 0;
-    final expiryMonth = int.tryParse(widget.bankCard.expiryMonth) ?? 0;
+    final card = widget.data.card.data;
+    final expiryYear = int.tryParse(card.expiryYear ?? '') ?? 0;
+    final expiryMonth = int.tryParse(card.expiryMonth ?? '') ?? 0;
     final expiryDate = DateTime(expiryYear, expiryMonth + 1, 0);
     return expiryDate.isBefore(now.add(const Duration(days: 90)));
   }
 
   Future<void> _copyCardNumber() async {
+    final value = null;
+    if (value == null) {
+      Toaster.error(title: 'Номер карты недоступен');
+      return;
+    }
     final copied = await copyCardValue(
       ref: ref,
-      itemId: widget.bankCard.id,
-      text: widget.bankCard.cardNumber.replaceAll(RegExp(r'\D'), ''),
+      itemId: _itemId,
+      text: value.replaceAll(RegExp(r'\D'), ''),
     );
     if (!copied) return;
     setState(() => _cardNumberCopied = true);
@@ -76,11 +81,9 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
   }
 
   Future<void> _copyHolderName() async {
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.bankCard.id,
-      text: widget.bankCard.cardholderName,
-    );
+    final holder = widget.data.card.data.cardholderName ?? '';
+    if (holder.isEmpty) return;
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: holder);
     if (!copied) return;
     setState(() => _holderNameCopied = true);
     Toaster.success(title: 'Имя держателя скопировано');
@@ -90,13 +93,10 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
   }
 
   Future<void> _copyExpiry() async {
-    final expiry =
-        '${widget.bankCard.expiryMonth}/${widget.bankCard.expiryYear}';
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.bankCard.id,
-      text: expiry,
-    );
+    final card = widget.data.card.data;
+    final expiry = '${card.expiryMonth ?? ''}/${card.expiryYear ?? ''}';
+    if (expiry == '/') return;
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: expiry);
     if (!copied) return;
     setState(() => _expiryCopied = true);
     Toaster.success(title: 'Срок действия скопирован');
@@ -107,23 +107,32 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
 
   @override
   Widget build(BuildContext context) {
-    final card = widget.bankCard;
+    final item = widget.data.card.item;
+    final card = widget.data.card.data;
+    final hasHolder = (card.cardholderName ?? '').isNotEmpty;
+    final hasNumber = card.hasCardNumber;
+    final hasExpiry =
+        (card.expiryMonth ?? '').isNotEmpty &&
+        (card.expiryYear ?? '').isNotEmpty;
+    final subtitle = hasHolder
+        ? '${hasNumber ? '•••• ••••' : '—'} • ${card.cardholderName}'
+        : (hasNumber ? '•••• ••••' : 'Номер не задан');
 
     return ExpandableListCard(
-      title: card.name,
-      subtitle: '${_maskCardNumber(card.cardNumber)} • ${card.cardholderName}',
-      trailingSubtitle: '${card.expiryMonth}/${card.expiryYear}',
+      title: item.name,
+      subtitle: subtitle,
+      trailingSubtitle: hasExpiry
+          ? '${card.expiryMonth}/${card.expiryYear}'
+          : null,
       fallbackIcon: Icons.credit_card,
-      iconSource: card.iconSource,
-      iconValue: card.iconValue,
-      category: card.category,
-      tags: card.tags,
-      usedCount: card.usedCount,
-      modifiedAt: card.modifiedAt,
-      isFavorite: card.isFavorite,
-      isPinned: card.isPinned,
-      isArchived: card.isArchived,
-      isDeleted: card.isDeleted,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       isExpired: _isExpired(),
       isExpiringSoon: _isExpiringSoon(),
       onToggleFavorite: widget.onToggleFavorite,
@@ -134,27 +143,30 @@ class _BankCardListCardState extends ConsumerState<BankCardListCard> {
       onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
-        CardActionItem(
-          label: 'Номер',
-          onPressed: _copyCardNumber,
-          icon: Icons.credit_card,
-          successIcon: Icons.check,
-          isSuccess: _cardNumberCopied,
-        ),
-        CardActionItem(
-          label: 'Держатель',
-          onPressed: _copyHolderName,
-          icon: Icons.person,
-          successIcon: Icons.check,
-          isSuccess: _holderNameCopied,
-        ),
-        CardActionItem(
-          label: 'Срок',
-          onPressed: _copyExpiry,
-          icon: Icons.calendar_today,
-          successIcon: Icons.check,
-          isSuccess: _expiryCopied,
-        ),
+        if (hasNumber)
+          CardActionItem(
+            label: 'Номер',
+            onPressed: _copyCardNumber,
+            icon: Icons.credit_card,
+            successIcon: Icons.check,
+            isSuccess: _cardNumberCopied,
+          ),
+        if (hasHolder)
+          CardActionItem(
+            label: 'Держатель',
+            onPressed: _copyHolderName,
+            icon: Icons.person,
+            successIcon: Icons.check,
+            isSuccess: _holderNameCopied,
+          ),
+        if (hasExpiry)
+          CardActionItem(
+            label: 'Срок',
+            onPressed: _copyExpiry,
+            icon: Icons.calendar_today,
+            successIcon: Icons.check,
+            isSuccess: _expiryCopied,
+          ),
       ],
     );
   }

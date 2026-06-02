@@ -88,7 +88,7 @@ class _FilePickerContentState extends ConsumerState<_FilePickerContent> {
     Navigator.of(context).pop(
       FilePickerResult(
         id: file.item.itemId,
-        name: file.file.fileName ?? file.item.name,
+        name: file.data.fileName ?? file.item.name,
       ),
     );
   }

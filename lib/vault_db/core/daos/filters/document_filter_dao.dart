@@ -155,7 +155,7 @@ class DocumentFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        document: DocumentCurrentVersionCardDataDto(
+        data: DocumentCurrentVersionCardDataDto(
           currentVersionId: row.read(documentItems.currentVersionId),
           currentVersionNumber: row.read(documentVersions.versionNumber),
           documentType: row.readWithConverter<DocumentType?, String>(

@@ -86,7 +86,10 @@ class ApiKeysFilterNotifier extends Notifier<ApiKeyFilter> {
 
   /// Фильтр по наличию срока действия
   void setHasExpiration(bool? hasExpiration) {
-    logDebug('Фильтр "есть срок действия" установлен: $hasExpiration', tag: _logTag);
+    logDebug(
+      'Фильтр "есть срок действия" установлен: $hasExpiration',
+      tag: _logTag,
+    );
     state = state.copyWith(hasExpiration: hasExpiration);
   }
 

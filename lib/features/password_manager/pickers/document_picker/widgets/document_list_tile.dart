@@ -16,11 +16,11 @@ class DocumentListTile extends StatelessWidget {
 
   String? _buildSubtitle() {
     final parts = <String>[];
-    if (document.document.documentType != null) {
-      parts.add(document.document.documentType!.name);
+    if (document.data.documentType != null) {
+      parts.add(document.data.documentType!.name);
     }
-    if ((document.document.pageCount ?? 0) > 0) {
-      parts.add('${document.document.pageCount} стр.');
+    if ((document.data.pageCount ?? 0) > 0) {
+      parts.add('${document.data.pageCount} стр.');
     }
     return parts.isEmpty ? null : parts.join(' · ');
   }

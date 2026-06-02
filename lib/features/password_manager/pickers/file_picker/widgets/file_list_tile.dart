@@ -27,12 +27,12 @@ class FileListTile extends StatelessWidget {
   /// Формирует subtitle из расширения и размера файла
   String? _buildSubtitle() {
     final parts = <String>[];
-    if (file.file.fileExtension != null &&
-        file.file.fileExtension!.isNotEmpty) {
-      parts.add(file.file.fileExtension!.toUpperCase());
+    if (file.data.fileExtension != null &&
+        file.data.fileExtension!.isNotEmpty) {
+      parts.add(file.data.fileExtension!.toUpperCase());
     }
-    if (file.file.fileSize != null) {
-      parts.add(_formatFileSize(file.file.fileSize!));
+    if (file.data.fileSize != null) {
+      parts.add(_formatFileSize(file.data.fileSize!));
     }
     return parts.isEmpty ? null : parts.join(' · ');
   }
@@ -49,7 +49,7 @@ class FileListTile extends StatelessWidget {
         child: Icon(Icons.attach_file, color: colorScheme.onPrimaryContainer),
       ),
       title: Text(
-        file.file.fileName ?? file.item.name,
+        file.data.fileName ?? file.item.name,
         style: textTheme.bodyLarge,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

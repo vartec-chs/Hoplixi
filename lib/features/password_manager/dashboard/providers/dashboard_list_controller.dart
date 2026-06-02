@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/errors/app_error.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_filter_tab.dart';
 import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_filter_tab.dart';
 import 'package:result_dart/result_dart.dart';
 
-import '../data/main_db_dashboard_repository.dart';
+import '../data/dashboard_repository.dart';
 import '../models/entity_type.dart';
 import '../models/dashboard_filter_state.dart';
 import '../models/dashboard_list_state.dart';
@@ -113,7 +113,7 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
 
     return _applyItemMutation(
       item,
-      optimisticValue: item.copyWithBase(isFavorite: isNowFavorite),
+      optimisticValue: item.withBase(isFavorite: isNowFavorite),
       removeFromList: removeFromList,
       operation: () => ref
           .read(dashboardRepositoryProvider)
@@ -129,7 +129,7 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
     final isNowPinned = !item.isPinned;
     return _applyItemMutation(
       item,
-      optimisticValue: item.copyWithBase(isPinned: isNowPinned),
+      optimisticValue: item.withBase(isPinned: isNowPinned),
       moveToFront: isNowPinned,
       moveToEnd: !isNowPinned,
       operation: () => ref
@@ -147,7 +147,7 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
 
     return _applyItemMutation(
       item,
-      optimisticValue: item.copyWithBase(isArchived: isNowArchived),
+      optimisticValue: item.withBase(isArchived: isNowArchived),
       removeFromList: removeFromList,
       operation: () => ref
           .read(dashboardRepositoryProvider)
@@ -182,7 +182,7 @@ final class DashboardListController extends AsyncNotifier<DashboardListState> {
   Future<AppError?> restore(BaseCardDto item) {
     return _applyItemMutation(
       item,
-      optimisticValue: item.copyWithBase(isDeleted: false),
+      optimisticValue: item.withBase(isDeleted: false),
       removeFromList: true,
       operation: () => ref
           .read(dashboardRepositoryProvider)

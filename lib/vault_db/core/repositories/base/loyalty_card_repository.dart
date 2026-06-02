@@ -304,7 +304,7 @@ class LoyaltyCardRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      loyaltyCard: LoyaltyCardCardDataDto(
+      data: LoyaltyCardCardDataDto(
         programName: row.read(db.loyaltyCardItems.programName)!,
         barcodeType: row.readWithConverter<LoyaltyBarcodeType?, String>(
           db.loyaltyCardItems.barcodeType,

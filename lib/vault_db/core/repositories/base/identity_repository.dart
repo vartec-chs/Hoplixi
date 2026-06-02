@@ -303,7 +303,7 @@ class IdentityRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      identity: IdentityCardDataDto(
+      data: IdentityCardDataDto(
         displayName: row.read(db.identityItems.displayName),
         username: row.read(db.identityItems.username),
         email: row.read(db.identityItems.email),

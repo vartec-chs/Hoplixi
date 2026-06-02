@@ -323,7 +323,7 @@ class CertificateRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      certificate: CertificateCardDataDto(
+      data: CertificateCardDataDto(
         certificateFormat: row.readWithConverter<CertificateFormat?, String>(
           db.certificateItems.certificateFormat,
         ),

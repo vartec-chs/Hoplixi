@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../../scheme/tables/loyalty_card/loyalty_card_items.dart';
 import '../field_update.dart';
@@ -90,11 +91,16 @@ sealed class LoyaltyCardViewDto
 @freezed
 sealed class LoyaltyCardCardDto
     with _$LoyaltyCardCardDto
-    implements VaultEntityCardDto {
+    implements VaultEntityCardDto<LoyaltyCardCardDataDto> {
+  const LoyaltyCardCardDto._();
+
   const factory LoyaltyCardCardDto({
     required VaultItemCardDto item,
-    required LoyaltyCardCardDataDto loyaltyCard,
+    required LoyaltyCardCardDataDto data,
   }) = _LoyaltyCardCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.loyaltyCard;
 
   factory LoyaltyCardCardDto.fromJson(Map<String, dynamic> json) =>
       _$LoyaltyCardCardDtoFromJson(json);

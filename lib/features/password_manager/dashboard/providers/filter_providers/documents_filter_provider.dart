@@ -153,7 +153,10 @@ class DocumentsFilterNotifier extends Notifier<DocumentFilter> {
 
   /// Установить фильтр по актуальной версии
   void setHasCurrentVersion(bool? hasCurrentVersion) {
-    logDebug('Фильтр "актуальная версия" установлен: $hasCurrentVersion', tag: _logTag);
+    logDebug(
+      'Фильтр "актуальная версия" установлен: $hasCurrentVersion',
+      tag: _logTag,
+    );
     state = state.copyWith(hasCurrentVersion: hasCurrentVersion);
   }
 
@@ -270,7 +273,9 @@ class DocumentsFilterNotifier extends Notifier<DocumentFilter> {
     }
 
     if (state.hasCurrentVersion != null) {
-      parts.add(state.hasCurrentVersion! ? 'Только актуальные' : 'Только архивные');
+      parts.add(
+        state.hasCurrentVersion! ? 'Только актуальные' : 'Только архивные',
+      );
     }
 
     if (parts.isEmpty) {

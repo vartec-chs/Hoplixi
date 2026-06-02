@@ -18,7 +18,9 @@ class RecoveryCodesFilterSection extends StatefulWidget {
 
 class _RecoveryCodesFilterSectionState
     extends State<RecoveryCodesFilterSection> {
-  void _updateFilter(RecoveryCodesFilter Function(RecoveryCodesFilter) updater) {
+  void _updateFilter(
+    RecoveryCodesFilter Function(RecoveryCodesFilter) updater,
+  ) {
     widget.onFilterChanged(updater(widget.filter));
   }
 

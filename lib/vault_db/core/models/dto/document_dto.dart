@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
+
 import '../../scheme/tables/document/document_types.dart';
 import '../field_update.dart';
 import 'vault_item_base_dto.dart';
@@ -72,16 +74,23 @@ sealed class DocumentViewDto
 @freezed
 sealed class DocumentCardDto
     with _$DocumentCardDto
-    implements VaultEntityCardDto {
+    implements VaultEntityCardDto<DocumentCurrentVersionCardDataDto> {
+  const DocumentCardDto._();
+
   const factory DocumentCardDto({
     required VaultItemCardDto item,
-    required DocumentCurrentVersionCardDataDto document,
+    required DocumentCurrentVersionCardDataDto data,
   }) = _DocumentCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.document;
 
   factory DocumentCardDto.fromJson(Map<String, dynamic> json) =>
       _$DocumentCardDtoFromJson(json);
 }
+
 // --- Live Pages ---
+
 
 @freezed
 sealed class DocumentPageDataDto with _$DocumentPageDataDto {

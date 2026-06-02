@@ -284,7 +284,7 @@ class DocumentRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      document: DocumentCurrentVersionCardDataDto(
+      data: DocumentCurrentVersionCardDataDto(
         currentVersionId: currentVersionId,
         currentVersionNumber: row.read(db.documentVersions.versionNumber),
         documentType: row.readWithConverter<DocumentType?, String>(

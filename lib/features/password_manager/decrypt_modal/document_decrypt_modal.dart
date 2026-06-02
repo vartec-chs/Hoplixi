@@ -65,7 +65,7 @@ class _DocumentDecryptTarget {
       return _DocumentDecryptTarget(
         id: value.item.itemId,
         title: value.item.name,
-        pageCount: value.document.pageCount ?? 0,
+        pageCount: value.data.pageCount ?? 0,
       );
     }
 

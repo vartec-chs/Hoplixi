@@ -315,7 +315,7 @@ class CryptoWalletRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      cryptoWallet: CryptoWalletCardDataDto(
+      data: CryptoWalletCardDataDto(
         walletType: row.readWithConverter<CryptoWalletType?, String>(
           db.cryptoWalletItems.walletType,
         ),

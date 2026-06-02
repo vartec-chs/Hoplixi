@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../../scheme/tables/otp/otp_items.dart';
 import '../field_update.dart';
@@ -68,11 +69,18 @@ sealed class OtpViewDto with _$OtpViewDto implements VaultEntityViewDto {
 }
 
 @freezed
-sealed class OtpCardDto with _$OtpCardDto implements VaultEntityCardDto {
+sealed class OtpCardDto
+    with _$OtpCardDto
+    implements VaultEntityCardDto<OtpCardDataDto> {
+  const OtpCardDto._();
+
   const factory OtpCardDto({
     required VaultItemCardDto item,
-    required OtpCardDataDto otp,
+    required OtpCardDataDto data,
   }) = _OtpCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.otp;
 
   factory OtpCardDto.fromJson(Map<String, dynamic> json) =>
       _$OtpCardDtoFromJson(json);

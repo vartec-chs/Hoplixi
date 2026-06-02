@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../../scheme/tables/license_key/license_key_items.dart';
 import '../field_update.dart';
@@ -78,11 +79,16 @@ sealed class LicenseKeyViewDto
 @freezed
 sealed class LicenseKeyCardDto
     with _$LicenseKeyCardDto
-    implements VaultEntityCardDto {
+    implements VaultEntityCardDto<LicenseKeyCardDataDto> {
+  const LicenseKeyCardDto._();
+
   const factory LicenseKeyCardDto({
     required VaultItemCardDto item,
-    required LicenseKeyCardDataDto licenseKey,
+    required LicenseKeyCardDataDto data,
   }) = _LicenseKeyCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.licenseKey;
 
   factory LicenseKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$LicenseKeyCardDtoFromJson(json);

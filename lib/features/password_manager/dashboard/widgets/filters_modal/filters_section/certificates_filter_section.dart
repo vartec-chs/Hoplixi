@@ -241,9 +241,9 @@ class _CertificatesFilterSectionState extends State<CertificatesFilterSection> {
             children: [
               Text(
                 'Формат',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -266,9 +266,9 @@ class _CertificatesFilterSectionState extends State<CertificatesFilterSection> {
               const SizedBox(height: 16),
               Text(
                 'Алгоритм ключа',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Wrap(

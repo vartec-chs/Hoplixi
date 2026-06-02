@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import '../shared/shared.dart';
 import 'package:hoplixi/vault_db/core/models/dto/document_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+
+import '../shared/shared.dart';
 
 class DocumentGridCard extends ConsumerStatefulWidget {
-  final DocumentCardDto document;
+  final FilteredCardDto<DocumentCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -17,7 +19,7 @@ class DocumentGridCard extends ConsumerStatefulWidget {
 
   const DocumentGridCard({
     super.key,
-    required this.document,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -35,13 +37,11 @@ class DocumentGridCard extends ConsumerStatefulWidget {
 class _DocumentGridCardState extends ConsumerState<DocumentGridCard> {
   bool _titleCopied = false;
 
+  String get _itemId => widget.data.card.item.itemId;
+  String get _title => widget.data.card.item.name;
+
   Future<void> _copyTitle() async {
-    final title = widget.document.item.name;
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.document.item.itemId,
-      text: title,
-    );
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: _title);
     if (!copied) return;
     setState(() => _titleCopied = true);
     Toaster.success(title: 'Название документа скопировано');
@@ -52,21 +52,21 @@ class _DocumentGridCardState extends ConsumerState<DocumentGridCard> {
 
   @override
   Widget build(BuildContext context) {
-    final document = widget.document;
-    final title = document.item.name;
-    final typeLabel = document.document.documentType?.name ?? 'Документ';
+    final item = widget.data.card.item;
+    final document = widget.data.card.data;
+    final typeLabel = document.documentType?.name ?? 'Документ';
+    final pageCount = document.pageCount ?? 0;
 
     return BaseGridCard(
-      title: title,
-      subtitle: '$typeLabel • ${document.document.pageCount ?? 0} стр.',
+      title: item.name,
+      subtitle: '$typeLabel • $pageCount стр.',
       fallbackIcon: Icons.description,
-      category: null, // TODO: Map new category structure if needed
-      tags: null, // TODO: Map new tags structure
-      usedCount: 0,
-      isFavorite: document.item.isFavorite,
-      isPinned: document.item.isPinned,
-      isArchived: document.item.isArchived,
-      isDeleted: document.item.isDeleted,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,

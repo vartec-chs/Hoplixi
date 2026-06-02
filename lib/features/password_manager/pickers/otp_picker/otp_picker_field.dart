@@ -134,7 +134,7 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
 
     setState(() {
       _resolvedOtpName =
-          otp?.otp.issuer ?? otp?.otp.accountName ?? otp?.item.name;
+          otp?.data.issuer ?? otp?.data.accountName ?? otp?.item.name;
       _isResolvingOtpName = false;
     });
   }

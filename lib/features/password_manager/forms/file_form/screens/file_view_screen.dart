@@ -126,7 +126,7 @@ class _FileViewScreenState extends ConsumerState<FileViewScreen> {
         deletedAt: item.deletedAt,
         recentScore: item.recentScore,
       ),
-      file: FileCardDataDto(
+      data: FileCardDataDto(
         metadataId: file.metadataId,
         fileName: metadata?.fileName,
         fileExtension: metadata?.fileExtension,

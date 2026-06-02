@@ -142,7 +142,7 @@ class RecoveryCodesFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        recoveryCodes: RecoveryCodesCardDataDto(
+        data: RecoveryCodesCardDataDto(
           generatedAt: row.read(recoveryCodesItems.generatedAt),
           oneTime: row.read(recoveryCodesItems.oneTime) ?? false,
           hasCodes: row.read(hasCodesExpr) ?? false,

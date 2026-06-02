@@ -172,7 +172,10 @@ class BankCardsFilterNotifier extends Notifier<BankCardFilter> {
 
   /// Фильтр по наличию срока действия
   void setHasExpiry(bool? hasExpiry) {
-    logDebug('Фильтр "имеет срок действия" установлен: $hasExpiry', tag: _logTag);
+    logDebug(
+      'Фильтр "имеет срок действия" установлен: $hasExpiry',
+      tag: _logTag,
+    );
     state = state.copyWith(hasExpiry: hasExpiry);
   }
 

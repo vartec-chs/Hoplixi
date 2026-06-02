@@ -157,7 +157,7 @@ class CryptoWalletFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        cryptoWallet: CryptoWalletCardDataDto(
+        data: CryptoWalletCardDataDto(
           walletType: row.readWithConverter<CryptoWalletType?, String>(
             cryptoWalletItems.walletType,
           ),

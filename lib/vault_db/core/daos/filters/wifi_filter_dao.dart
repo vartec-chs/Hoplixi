@@ -140,7 +140,7 @@ class WifiFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        wifi: WifiCardDataDto(
+        data: WifiCardDataDto(
           ssid: row.read(wifiItems.ssid)!,
           securityType: row.readWithConverter<WifiSecurityType?, String>(
             wifiItems.securityType,

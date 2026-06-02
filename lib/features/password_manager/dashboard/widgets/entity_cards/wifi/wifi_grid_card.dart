@@ -3,16 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/wifi_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class WifiGridCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<WifiCardDto> data;
+  final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onTogglePin;
+  final VoidCallback? onToggleArchive;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRestore;
+  final VoidCallback? onOpenView;
+
   const WifiGridCard({
     super.key,
-    required this.wifi,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -21,61 +31,67 @@ class WifiGridCard extends ConsumerStatefulWidget {
     this.onOpenView,
   });
 
-  final WifiCardDto wifi;
-  final VoidCallback? onToggleFavorite;
-  final VoidCallback? onTogglePin;
-  final VoidCallback? onToggleArchive;
-  final VoidCallback? onDelete;
-  final VoidCallback? onRestore;
-  final VoidCallback? onOpenView;
-
   @override
   ConsumerState<WifiGridCard> createState() => _WifiGridCardState();
 }
 
 class _WifiGridCardState extends ConsumerState<WifiGridCard> {
   bool _passwordCopied = false;
+  bool _ssidCopied = false;
+
+  String get _itemId => widget.data.card.item.itemId;
+  WifiCardDataDto get _wifi => widget.data.card.data;
 
   Future<void> _copyPassword() async {
-    final dao = await ref.read(wifiDaoProvider.future);
-    final text = await dao.getPasswordFieldById(widget.wifi.id);
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.wifi.id,
-      text: text,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Пароль Wi-Fi не найден');
+    final value = null;
+    if (value == null || value.isEmpty) {
+      Toaster.warning(title: 'Пароль недоступен');
       return;
     }
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: value);
+    if (!copied) return;
     setState(() => _passwordCopied = true);
-    Toaster.success(title: 'Пароль Wi-Fi скопирован');
+    Toaster.success(title: 'Пароль скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _passwordCopied = false);
     });
   }
 
+  Future<void> _copySsid() async {
+    final ssid = _wifi.ssid;
+    if (ssid == null || ssid.isEmpty) {
+      Toaster.warning(title: 'SSID не указан');
+      return;
+    }
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: ssid);
+    if (!copied) return;
+    setState(() => _ssidCopied = true);
+    Toaster.success(title: 'SSID скопирован');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _ssidCopied = false);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final wifi = widget.wifi;
-    final subtitle = [
-      wifi.ssid,
-      if (wifi.security?.isNotEmpty == true) wifi.security! else 'Open',
-    ].join(' • ');
+    final item = widget.data.card.item;
+    final subtitleParts = [
+      if (_wifi.securityType != null) _wifi.securityType!.name,
+      if (_wifi.encryption != null) _wifi.encryption!.name,
+      if (_wifi.hiddenSsid) 'Скрытая',
+    ];
 
     return BaseGridCard(
-      title: wifi.name,
-      subtitle: subtitle,
+      title: _wifi.ssid ?? item.name,
+      subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.wifi,
-      iconSource: wifi.iconSource,
-      iconValue: wifi.iconValue,
-      category: wifi.category,
-      tags: wifi.tags,
-      usedCount: wifi.usedCount,
-      isFavorite: wifi.isFavorite,
-      isPinned: wifi.isPinned,
-      isArchived: wifi.isArchived,
-      isDeleted: wifi.isDeleted,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
+      onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -84,11 +100,19 @@ class _WifiGridCardState extends ConsumerState<WifiGridCard> {
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(EntityType.wifi, wifi.id),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.wifi, _itemId),
         );
       },
       copyActions: [
-        if (wifi.hasPassword)
+        if ((_wifi.ssid ?? '').isNotEmpty)
+          CardActionItem(
+            label: 'SSID',
+            onPressed: _copySsid,
+            icon: Icons.wifi,
+            successIcon: Icons.check,
+            isSuccess: _ssidCopied,
+          ),
+        if (_wifi.hasWifiPassword)
           CardActionItem(
             label: 'Пароль',
             onPressed: _copyPassword,

@@ -87,7 +87,7 @@ class _OtpPickerContentState extends ConsumerState<_OtpPickerContent> {
   }
 
   void _onOtpSelected(OtpCardDto otp) {
-    final name = otp.otp.issuer ?? otp.otp.accountName ?? otp.item.name;
+    final name = otp.data.issuer ?? otp.data.accountName ?? otp.item.name;
     Navigator.of(context).pop(OtpPickerResult(id: otp.item.itemId, name: name));
   }
 

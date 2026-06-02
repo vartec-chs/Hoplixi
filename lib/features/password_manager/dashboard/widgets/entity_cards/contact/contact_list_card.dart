@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import '../shared/shared.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
+import 'package:hoplixi/vault_db/core/models/dto/contact_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
-class ContactListCard extends StatelessWidget {
-  final ContactCardDto contact;
+import '../shared/shared.dart';
+
+class ContactListCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<ContactCardDto> data;
+  final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
   final VoidCallback? onToggleArchive;
@@ -16,7 +19,8 @@ class ContactListCard extends StatelessWidget {
 
   const ContactListCard({
     super.key,
-    required this.contact,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -26,64 +30,87 @@ class ContactListCard extends StatelessWidget {
     this.onOpenView,
   });
 
+  @override
+  ConsumerState<ContactListCard> createState() => _ContactListCardState();
+}
+
+class _ContactListCardState extends ConsumerState<ContactListCard> {
+  String get _itemId => widget.data.card.item.itemId;
+  ContactCardDataDto get _contact => widget.data.card.data;
+
+  String get _displayName {
+    final parts = <String>[
+      _contact.firstName,
+      _contact.middleName ?? '',
+      _contact.lastName ?? '',
+    ].where((s) => s.isNotEmpty).toList();
+    return parts.isEmpty ? widget.data.card.item.name : parts.join(' ');
+  }
+
   Future<void> _copyPhone() async {
-    if (contact.phone == null || contact.phone!.isEmpty) {
+    final phone = _contact.phone;
+    if (phone == null || phone.isEmpty) {
       Toaster.warning(title: 'Телефон не указан');
       return;
     }
-    await Clipboard.setData(ClipboardData(text: contact.phone!));
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: phone);
+    if (!copied) return;
     Toaster.success(title: 'Телефон скопирован');
   }
 
   Future<void> _copyEmail() async {
-    if (contact.email == null || contact.email!.isEmpty) {
+    final email = _contact.email;
+    if (email == null || email.isEmpty) {
       Toaster.warning(title: 'Email не указан');
       return;
     }
-    await Clipboard.setData(ClipboardData(text: contact.email!));
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: email);
+    if (!copied) return;
     Toaster.success(title: 'Email скопирован');
   }
 
   @override
   Widget build(BuildContext context) {
+    final item = widget.data.card.item;
     final subtitleParts = [
-      if (contact.isEmergencyContact == true) 'Экстренный',
-      if (contact.company?.isNotEmpty == true) contact.company!,
-      if (contact.phone?.isNotEmpty == true) contact.phone!,
-      if (contact.email?.isNotEmpty == true) contact.email!,
+      if (_contact.isEmergencyContact) 'Экстренный',
+      if ((_contact.company ?? '').isNotEmpty) _contact.company!,
+      if ((_contact.phone ?? '').isNotEmpty) _contact.phone!,
+      if ((_contact.email ?? '').isNotEmpty) _contact.email!,
     ];
 
     return ExpandableListCard(
-      title: contact.name,
+      title: _displayName,
       subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.contact_phone,
-      category: contact.category,
-      description: contact.description,
-      tags: contact.tags,
-      usedCount: contact.usedCount,
-      modifiedAt: contact.modifiedAt,
-      isFavorite: contact.isFavorite,
-      isPinned: contact.isPinned,
-      isArchived: contact.isArchived,
-      isDeleted: contact.isDeleted,
-      onToggleFavorite: onToggleFavorite,
-      onTogglePin: onTogglePin,
-      onToggleArchive: onToggleArchive,
-      onDelete: onDelete,
-      onRestore: onRestore,
-      onOpenView: onOpenView,
-      onOpenHistory: onOpenHistory,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
+      onToggleFavorite: widget.onToggleFavorite,
+      onTogglePin: widget.onTogglePin,
+      onToggleArchive: widget.onToggleArchive,
+      onDelete: widget.onDelete,
+      onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
+      onOpenHistory: widget.onOpenHistory,
       copyActions: [
-        CardActionItem(
-          label: 'Телефон',
-          onPressed: _copyPhone,
-          icon: Icons.phone,
-        ),
-        CardActionItem(
-          label: 'Email',
-          onPressed: _copyEmail,
-          icon: Icons.email,
-        ),
+        if ((_contact.phone ?? '').isNotEmpty)
+          CardActionItem(
+            label: 'Телефон',
+            onPressed: _copyPhone,
+            icon: Icons.phone,
+          ),
+        if ((_contact.email ?? '').isNotEmpty)
+          CardActionItem(
+            label: 'Email',
+            onPressed: _copyEmail,
+            icon: Icons.email,
+          ),
       ],
     );
   }

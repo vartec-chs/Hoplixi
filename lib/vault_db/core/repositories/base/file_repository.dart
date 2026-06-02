@@ -341,7 +341,7 @@ class FileRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      file: FileCardDataDto(
+      data: FileCardDataDto(
         metadataId: row.read(db.fileItems.metadataId),
         fileName: row.read(db.fileMetadata.fileName),
         fileExtension: row.read(db.fileMetadata.fileExtension),

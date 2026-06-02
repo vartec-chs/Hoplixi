@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_dto_helpers.dart';
 import 'package:hoplixi/features/password_manager/dashboard/widgets/entity_cards/shared/shared.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 class BaseGridCard extends StatelessWidget {
   final String title;
@@ -47,7 +47,7 @@ class BaseGridCard extends StatelessWidget {
     this.category,
     this.description,
     this.tags,
-    required this.usedCount,
+    this.usedCount = 0,
     this.modifiedAt,
     required this.isFavorite,
     required this.isPinned,
@@ -64,7 +64,7 @@ class BaseGridCard extends StatelessWidget {
     this.onEdit,
     this.onOpenView,
     this.onOpenHistory,
-    required this.copyActions,
+    this.copyActions = const [],
   });
 
   @override
@@ -103,7 +103,7 @@ class BaseGridCard extends StatelessWidget {
                           ),
                           child: IconRefPreview(
                             iconRef:
-                                IconRefDto.fromFields(
+                                IconRefDtoFactoryX.fromFields(
                                   iconSource: iconSource,
                                   iconValue: iconValue,
                                 ) ??

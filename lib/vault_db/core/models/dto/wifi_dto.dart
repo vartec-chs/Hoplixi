@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../../scheme/tables/wifi/wifi_items.dart';
 import '../field_update.dart';
@@ -61,11 +62,18 @@ sealed class WifiViewDto with _$WifiViewDto implements VaultEntityViewDto {
 }
 
 @freezed
-sealed class WifiCardDto with _$WifiCardDto implements VaultEntityCardDto {
+sealed class WifiCardDto
+    with _$WifiCardDto
+    implements VaultEntityCardDto<WifiCardDataDto> {
+  const WifiCardDto._();
+
   const factory WifiCardDto({
     required VaultItemCardDto item,
-    required WifiCardDataDto wifi,
+    required WifiCardDataDto data,
   }) = _WifiCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.wifi;
 
   factory WifiCardDto.fromJson(Map<String, dynamic> json) =>
       _$WifiCardDtoFromJson(json);

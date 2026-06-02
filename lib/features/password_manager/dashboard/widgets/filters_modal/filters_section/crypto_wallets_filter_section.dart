@@ -26,7 +26,9 @@ class _CryptoWalletsFilterSectionState
   @override
   void initState() {
     super.initState();
-    _hardwareController = TextEditingController(text: widget.filter.hardwareDevice);
+    _hardwareController = TextEditingController(
+      text: widget.filter.hardwareDevice,
+    );
   }
 
   @override
@@ -147,8 +149,9 @@ class _CryptoWalletsFilterSectionState
             onChanged: (value) {
               final trimmed = value.trim();
               _updateFilter(
-                (f) =>
-                    f.copyWith(hardwareDevice: trimmed.isEmpty ? null : trimmed),
+                (f) => f.copyWith(
+                  hardwareDevice: trimmed.isEmpty ? null : trimmed,
+                ),
               );
             },
           ),

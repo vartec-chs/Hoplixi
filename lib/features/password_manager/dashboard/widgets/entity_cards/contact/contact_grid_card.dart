@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/contact_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
-class ContactGridCard extends StatelessWidget {
-  final ContactCardDto contact;
+class ContactGridCard extends ConsumerStatefulWidget {
+  final FilteredCardDto<ContactCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -20,7 +21,7 @@ class ContactGridCard extends StatelessWidget {
 
   const ContactGridCard({
     super.key,
-    required this.contact,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -30,67 +31,90 @@ class ContactGridCard extends StatelessWidget {
     this.onOpenView,
   });
 
+  @override
+  ConsumerState<ContactGridCard> createState() => _ContactGridCardState();
+}
+
+class _ContactGridCardState extends ConsumerState<ContactGridCard> {
+  String get _itemId => widget.data.card.item.itemId;
+  ContactCardDataDto get _contact => widget.data.card.data;
+
+  String get _displayName {
+    final parts = <String>[
+      _contact.firstName,
+      _contact.middleName ?? '',
+      _contact.lastName ?? '',
+    ].where((s) => s.isNotEmpty).toList();
+    return parts.isEmpty ? widget.data.card.item.name : parts.join(' ');
+  }
+
   Future<void> _copyPhone() async {
-    if (contact.phone == null || contact.phone!.isEmpty) {
+    final phone = _contact.phone;
+    if (phone == null || phone.isEmpty) {
       Toaster.warning(title: 'Телефон не указан');
       return;
     }
-    await Clipboard.setData(ClipboardData(text: contact.phone!));
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: phone);
+    if (!copied) return;
     Toaster.success(title: 'Телефон скопирован');
   }
 
   Future<void> _copyEmail() async {
-    if (contact.email == null || contact.email!.isEmpty) {
+    final email = _contact.email;
+    if (email == null || email.isEmpty) {
       Toaster.warning(title: 'Email не указан');
       return;
     }
-    await Clipboard.setData(ClipboardData(text: contact.email!));
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: email);
+    if (!copied) return;
     Toaster.success(title: 'Email скопирован');
   }
 
   @override
   Widget build(BuildContext context) {
+    final item = widget.data.card.item;
     final subtitleParts = [
-      if (contact.isEmergencyContact == true) 'Экстренный',
-      if (contact.company?.isNotEmpty == true) contact.company!,
-      if (contact.phone?.isNotEmpty == true) contact.phone!,
-      if (contact.email?.isNotEmpty == true) contact.email!,
+      if (_contact.isEmergencyContact) 'Экстренный',
+      if ((_contact.company ?? '').isNotEmpty) _contact.company!,
+      if ((_contact.phone ?? '').isNotEmpty) _contact.phone!,
+      if ((_contact.email ?? '').isNotEmpty) _contact.email!,
     ];
 
     return BaseGridCard(
-      title: contact.name,
+      title: _displayName,
       subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.contact_phone,
-      category: contact.category,
-      tags: contact.tags,
-      usedCount: contact.usedCount,
-      isFavorite: contact.isFavorite,
-      isPinned: contact.isPinned,
-      isArchived: contact.isArchived,
-      isDeleted: contact.isDeleted,
-      onTap: onTap,
-      onToggleFavorite: onToggleFavorite,
-      onTogglePin: onTogglePin,
-      onToggleArchive: onToggleArchive,
-      onDelete: onDelete,
-      onRestore: onRestore,
-      onOpenView: onOpenView,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
+      onTap: widget.onTap,
+      onToggleFavorite: widget.onToggleFavorite,
+      onTogglePin: widget.onTogglePin,
+      onToggleArchive: widget.onToggleArchive,
+      onDelete: widget.onDelete,
+      onRestore: widget.onRestore,
+      onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(EntityType.contact, contact.id),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.contact, _itemId),
         );
       },
       copyActions: [
-        CardActionItem(
-          label: 'Телефон',
-          onPressed: _copyPhone,
-          icon: Icons.phone,
-        ),
-        CardActionItem(
-          label: 'Email',
-          onPressed: _copyEmail,
-          icon: Icons.email,
-        ),
+        if ((_contact.phone ?? '').isNotEmpty)
+          CardActionItem(
+            label: 'Телефон',
+            onPressed: _copyPhone,
+            icon: Icons.phone,
+          ),
+        if ((_contact.email ?? '').isNotEmpty)
+          CardActionItem(
+            label: 'Email',
+            onPressed: _copyEmail,
+            icon: Icons.email,
+          ),
       ],
     );
   }

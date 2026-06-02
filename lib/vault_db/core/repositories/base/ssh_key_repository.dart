@@ -284,7 +284,7 @@ class SshKeyRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      sshKey: SshKeyCardDataDto(
+      data: SshKeyCardDataDto(
         publicKey: row.read(db.sshKeyItems.publicKey),
         keyType: row.readWithConverter<SshKeyType?, String>(
           db.sshKeyItems.keyType,

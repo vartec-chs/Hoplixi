@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/vault_db/core/models/dto/api_key_dto.dart';
-import 'package:intl/intl.dart' show DateFormat;
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
 import '../shared/shared.dart';
 
 class ApiKeyListCard extends ConsumerStatefulWidget {
-  final ApiKeyCardDto apiKey;
+  final FilteredCardDto<ApiKeyCardDto> data;
+  final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
   final VoidCallback? onToggleArchive;
@@ -18,7 +19,8 @@ class ApiKeyListCard extends ConsumerStatefulWidget {
 
   const ApiKeyListCard({
     super.key,
-    required this.apiKey,
+    required this.data,
+    this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
     this.onToggleArchive,
@@ -35,106 +37,45 @@ class ApiKeyListCard extends ConsumerStatefulWidget {
 class _ApiKeyListCardState extends ConsumerState<ApiKeyListCard> {
   bool _keyCopied = false;
 
-  Future<void> _copyKey() async {
-    final dao = await ref.read(apiKeyDaoProvider.future);
-    final keyText = await dao.getKeyFieldById(widget.apiKey.id);
+  String get _itemId => widget.data.card.item.itemId;
+  ApiKeyCardDataDto get _apiKey => widget.data.card.data;
 
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.apiKey.id,
-      text: keyText,
-    );
-    if (!copied) {
-      Toaster.error(title: 'Не удалось получить ключ');
+  Future<void> _copyKey() async {
+    final value = null;
+    if (value == null || value.isEmpty) {
+      Toaster.warning(title: 'Ключ недоступен');
       return;
     }
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: value);
+    if (!copied) return;
     setState(() => _keyCopied = true);
-    Toaster.success(title: 'Ключ скопирован');
-
+    Toaster.success(title: 'API-ключ скопирован');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _keyCopied = false);
     });
   }
 
-  List<CardActionItem> _buildCopyActions() {
-    return [
-      CardActionItem(
-        label: 'Ключ',
-        onPressed: _copyKey,
-        icon: Icons.key,
-        successIcon: Icons.check,
-        isSuccess: _keyCopied,
-      ),
-    ];
-  }
-
-  Widget? _buildExpirySection(
-    ThemeData theme,
-    DateTime? expiresAt,
-    bool isExpired,
-    bool isExpiringSoon,
-  ) {
-    if (expiresAt == null) return null;
-    final dateStr = DateFormat('dd.MM.yyyy HH:mm').format(expiresAt);
-    final Color color;
-    final String label;
-    if (isExpired) {
-      color = theme.colorScheme.error;
-      label = 'Истёк: $dateStr';
-    } else if (isExpiringSoon) {
-      color = Colors.orange;
-      label = 'Истекает: $dateStr';
-    } else {
-      color = theme.colorScheme.onSurfaceVariant;
-      label = 'Срок действия: $dateStr';
-    }
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Icon(Icons.schedule, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(label, style: theme.textTheme.bodySmall?.copyWith(color: color)),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final apiKey = widget.apiKey;
-
-    final DateTime now = DateTime.now();
-    final bool isExpired =
-        apiKey.expiresAt != null && apiKey.expiresAt!.isBefore(now);
-    final bool isExpiringSoon =
-        !isExpired &&
-        apiKey.expiresAt != null &&
-        apiKey.expiresAt!.difference(now).inDays <= 30;
-
+    final item = widget.data.card.item;
     final subtitleParts = [
-      apiKey.service,
-      if (apiKey.environment?.isNotEmpty == true) apiKey.environment!,
-      if (apiKey.tokenType?.isNotEmpty == true) apiKey.tokenType!,
+      if ((_apiKey.service ?? '').isNotEmpty) _apiKey.service!,
+      if (_apiKey.environment != null) _apiKey.environment!.name,
+      if (_apiKey.tokenType != null) _apiKey.tokenType!.name,
     ];
 
     return ExpandableListCard(
-      title: apiKey.name,
+      title: item.name,
       subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.api,
-      iconSource: apiKey.iconSource,
-      iconValue: apiKey.iconValue,
-      category: apiKey.category,
-      description: apiKey.description,
-      tags: apiKey.tags,
-      usedCount: apiKey.usedCount,
-      modifiedAt: apiKey.modifiedAt,
-      isFavorite: apiKey.isFavorite,
-      isPinned: apiKey.isPinned,
-      isArchived: apiKey.isArchived,
-      isDeleted: apiKey.isDeleted,
-      isExpired: isExpired,
-      isExpiringSoon: isExpiringSoon,
+      category: widget.data.meta.category,
+      description: item.description,
+      tags: widget.data.meta.tags,
+      modifiedAt: item.modifiedAt,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
       onToggleArchive: widget.onToggleArchive,
@@ -142,13 +83,15 @@ class _ApiKeyListCardState extends ConsumerState<ApiKeyListCard> {
       onRestore: widget.onRestore,
       onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
-      customExpandedContent: _buildExpirySection(
-        Theme.of(context),
-        apiKey.expiresAt,
-        isExpired,
-        isExpiringSoon,
-      ),
-      copyActions: _buildCopyActions(),
+      copyActions: [
+        CardActionItem(
+          label: 'Ключ',
+          onPressed: _copyKey,
+          icon: Icons.copy,
+          successIcon: Icons.check,
+          isSuccess: _keyCopied,
+        ),
+      ],
     );
   }
 }

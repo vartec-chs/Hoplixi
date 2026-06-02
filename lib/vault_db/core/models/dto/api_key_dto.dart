@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../../scheme/tables/api_key/api_key_items.dart';
 import '../field_update.dart';
@@ -82,11 +83,18 @@ sealed class ApiKeyViewDto with _$ApiKeyViewDto implements VaultEntityViewDto {
 }
 
 @freezed
-sealed class ApiKeyCardDto with _$ApiKeyCardDto implements VaultEntityCardDto {
+sealed class ApiKeyCardDto
+    with _$ApiKeyCardDto
+    implements VaultEntityCardDto<ApiKeyCardDataDto> {
+  const ApiKeyCardDto._();
+
   const factory ApiKeyCardDto({
     required VaultItemCardDto item,
-    required ApiKeyCardDataDto apiKey,
+    required ApiKeyCardDataDto data,
   }) = _ApiKeyCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.apiKey;
 
   factory ApiKeyCardDto.fromJson(Map<String, dynamic> json) =>
       _$ApiKeyCardDtoFromJson(json);

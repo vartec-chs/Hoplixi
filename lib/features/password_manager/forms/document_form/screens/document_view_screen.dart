@@ -139,7 +139,7 @@ class _DocumentViewScreenState extends ConsumerState<DocumentViewScreen> {
         deletedAt: item.deletedAt,
         recentScore: item.recentScore,
       ),
-      document: DocumentCurrentVersionCardDataDto(
+      data: DocumentCurrentVersionCardDataDto(
         currentVersionId: curVer?.id,
         currentVersionNumber: curVer?.versionNumber,
         documentType: curVer?.documentType,

@@ -90,14 +90,14 @@ sealed class VaultItemViewDto
       _$VaultItemViewDtoFromJson(json);
 }
 
-abstract interface class VaultEntityCardDto {
+abstract interface class VaultEntityCardDto<TData> {
   VaultItemCardDto get item;
+  TData get data;
+  VaultItemType get type;
 }
 
 @freezed
-sealed class VaultItemCardDto
-    with _$VaultItemCardDto
-    implements VaultEntityCardDto {
+sealed class VaultItemCardDto with _$VaultItemCardDto {
   const factory VaultItemCardDto({
     required String itemId,
     required VaultItemType type,
@@ -123,9 +123,6 @@ sealed class VaultItemCardDto
   }) = _VaultItemCardDto;
 
   const VaultItemCardDto._();
-
-  @override
-  VaultItemCardDto get item => this;
 
   factory VaultItemCardDto.fromJson(Map<String, dynamic> json) =>
       _$VaultItemCardDtoFromJson(json);

@@ -154,7 +154,7 @@ class ContactFilterDao extends DatabaseAccessor<VaultDB>
           deletedAt: row.read(vaultItems.deletedAt),
           recentScore: row.read(vaultItems.recentScore),
         ),
-        contact: ContactCardDataDto(
+        data: ContactCardDataDto(
           firstName: row.read(contactItems.firstName)!,
           middleName: row.read(contactItems.middleName),
           lastName: row.read(contactItems.lastName),

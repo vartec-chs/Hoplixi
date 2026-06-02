@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 
 import '../field_update.dart';
 import 'vault_item_base_dto.dart';
@@ -70,11 +71,16 @@ sealed class ContactViewDto
 @freezed
 sealed class ContactCardDto
     with _$ContactCardDto
-    implements VaultEntityCardDto {
+    implements VaultEntityCardDto<ContactCardDataDto> {
+  const ContactCardDto._();
+
   const factory ContactCardDto({
     required VaultItemCardDto item,
-    required ContactCardDataDto contact,
+    required ContactCardDataDto data,
   }) = _ContactCardDto;
+
+  @override
+  VaultItemType get type => VaultItemType.contact;
 
   factory ContactCardDto.fromJson(Map<String, dynamic> json) =>
       _$ContactCardDtoFromJson(json);

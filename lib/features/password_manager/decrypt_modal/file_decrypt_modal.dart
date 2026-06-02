@@ -54,7 +54,7 @@ class _FileDecryptTarget {
       return _FileDecryptTarget(
         id: value.item.itemId,
         name: value.item.name,
-        fileName: value.file.fileName,
+        fileName: value.data.fileName,
       );
     }
 

@@ -282,7 +282,7 @@ class WifiRepository {
         deletedAt: row.read(db.vaultItems.deletedAt),
         recentScore: row.read(db.vaultItems.recentScore),
       ),
-      wifi: WifiCardDataDto(
+      data: WifiCardDataDto(
         ssid: row.read(db.wifiItems.ssid)!,
         securityType: row.readWithConverter<WifiSecurityType?, String>(
           db.wifiItems.securityType,

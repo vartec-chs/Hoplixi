@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
-import 'package:hoplixi/main_db/providers/other/dao_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/vault_db/core/models/dto/otp_dto.dart';
+import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:otp/otp.dart';
 
 import '../shared/shared.dart';
 
 class TotpGridCard extends ConsumerStatefulWidget {
-  final OtpCardDto otp;
+  final FilteredCardDto<OtpCardDto> data;
   final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onTogglePin;
@@ -22,7 +22,7 @@ class TotpGridCard extends ConsumerStatefulWidget {
 
   const TotpGridCard({
     super.key,
-    required this.otp,
+    required this.data,
     this.onTap,
     this.onToggleFavorite,
     this.onTogglePin,
@@ -39,30 +39,28 @@ class TotpGridCard extends ConsumerStatefulWidget {
 class _TotpGridCardState extends ConsumerState<TotpGridCard> {
   bool _codeCopied = false;
 
-  Future<void> _copyCode() async {
-    final otpDao = await ref.read(otpDaoProvider.future);
-    final secretBytes = await otpDao.getOtpSecretById(widget.otp.id);
+  String get _itemId => widget.data.card.item.itemId;
 
-    if (secretBytes == null) {
+  Future<void> _copyCode() async {
+    final value = null;
+
+    if (value == null) {
       Toaster.error(title: 'Не удалось получить секрет OTP');
       return;
     }
 
-    final secretBase32 = String.fromCharCodes(secretBytes);
+    final otp = widget.data.card.data;
+    final secretBase32 = String.fromCharCodes(value);
     final code = OTP.generateTOTPCodeString(
       secretBase32,
       DateTime.now().millisecondsSinceEpoch,
-      length: widget.otp.digits,
-      interval: widget.otp.period,
+      length: otp.digits,
+      interval: otp.period ?? 30,
       isGoogle: true,
       algorithm: Algorithm.SHA1,
     );
 
-    final copied = await copyCardValue(
-      ref: ref,
-      itemId: widget.otp.id,
-      text: code,
-    );
+    final copied = await copyCardValue(ref: ref, itemId: _itemId, text: code);
     if (!copied) return;
     setState(() => _codeCopied = true);
     Toaster.success(title: 'Код скопирован');
@@ -74,27 +72,25 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard> {
 
   @override
   Widget build(BuildContext context) {
-    final otp = widget.otp;
+    final item = widget.data.card.item;
+    final otp = widget.data.card.data;
     final title = otp.issuer ?? otp.accountName ?? 'OTP';
     final subtitle = [
       if (otp.issuer != null && otp.accountName != null) otp.accountName!,
       '${otp.digits} цифр',
-      '${otp.period}с',
+      '${otp.period ?? 30}с',
     ].join(' • ');
 
     return BaseGridCard(
       title: title,
       subtitle: subtitle,
       fallbackIcon: Icons.vpn_key,
-      iconSource: otp.iconSource,
-      iconValue: otp.iconValue,
-      category: otp.category,
-      tags: otp.tags,
-      usedCount: otp.usedCount,
-      isFavorite: otp.isFavorite,
-      isPinned: otp.isPinned,
-      isArchived: otp.isArchived,
-      isDeleted: otp.isDeleted,
+      category: widget.data.meta.category,
+      tags: widget.data.meta.tags,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      isArchived: item.isArchived,
+      isDeleted: item.isDeleted,
       onTap: widget.onTap,
       onToggleFavorite: widget.onToggleFavorite,
       onTogglePin: widget.onTogglePin,
@@ -104,7 +100,7 @@ class _TotpGridCardState extends ConsumerState<TotpGridCard> {
       onOpenView: widget.onOpenView,
       onEdit: () {
         context.push(
-          AppRoutesPaths.dashboardEntityEdit(EntityType.otp, otp.id),
+          AppRoutesPaths.dashboardEntityEdit(EntityType.otp, _itemId),
         );
       },
       copyActions: [
