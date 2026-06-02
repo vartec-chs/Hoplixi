@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/vault_db/providers/session_providers.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
+import 'package:hoplixi/vault_db/core/vault_db.dart';
+import 'package:hoplixi/vault_db/providers/session_providers.dart';
 
 /// Загрузить кастомные поля vault-элемента из БД.
 Future<List<CustomFieldEntry>> loadCustomFields(
   Object ref,
   String itemId,
 ) async {
-  final db = await _readVaultDb(ref);
+  final db =  _readVaultDb(ref);
   final rows = await db.vaultItemCustomFieldsDao.getCustomFieldsByItemId(
     itemId,
   );
@@ -23,7 +23,7 @@ Future<void> saveCustomFields(
   String itemId,
   List<CustomFieldEntry> fields,
 ) async {
-  final db = await _readVaultDb(ref);
+  final db =  _readVaultDb(ref);
   await db.vaultItemCustomFieldsDao.replaceCustomFieldsForItem(
     itemId: itemId,
     fields: fields.asMap().entries.map((e) {
@@ -32,12 +32,12 @@ Future<void> saveCustomFields(
   );
 }
 
-Future<VaultDB> _readVaultDb(Object ref) {
+VaultDB _readVaultDb(Object ref) {
   if (ref is Ref) {
-    return ref.read(vaultDBProvider.future);
+    return ref.watch(requiredVaultDBProvider);
   }
   if (ref is WidgetRef) {
-    return ref.read(vaultDBProvider.future);
+    return ref.read(requiredVaultDBProvider);
   }
 
   throw ArgumentError.value(ref, 'ref', 'Expected Ref or WidgetRef');

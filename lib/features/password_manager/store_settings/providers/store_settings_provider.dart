@@ -38,7 +38,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       String? currentDbCipherDescription;
 
       try {
-        final db = await ref.read(vaultDBProvider.future);
+        final db = ref.watch(requiredVaultDBProvider);
 
         final pragmaRows = await db.customSelect('PRAGMA cipher;').get();
         if (pragmaRows.isNotEmpty) {
@@ -95,7 +95,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         StoreSettingsKey.pinnedEntityTypes,
       )).getOrThrow();
 
-      final dbState = await ref.read(vaultDBStateProvider.future);
+      final dbState = await ref.read(vaultDBManagerStateProvider.future);
       final manifest = dbState.path == null
           ? null
           : await StoreManifestService.readFrom(dbState.path!);
@@ -308,7 +308,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       }
 
       if (shouldCleanupHistory) {
-        final dbState = await ref.read(vaultDBStateProvider.future);
+        final dbState = await ref.read(vaultDBManagerStateProvider.future);
         final storePath = dbState.path;
         if (storePath == null) {
           return const Failure('Не удалось определить текущее хранилище');
@@ -430,7 +430,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
 
     try {
       final storeMetaService = await ref.read(storeMetaServiceProvider.future);
-      final dbState = await ref.read(vaultDBStateProvider.future);
+      final dbState = await ref.read(vaultDBManagerStateProvider.future);
       final currentPath = dbState.path;
 
       if (currentPath == null) {
@@ -711,7 +711,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         throw StateError('Текущий мастер пароль неверен');
       }
 
-      final dbState = await ref.read(vaultDBStateProvider.future);
+      final dbState = await ref.read(vaultDBManagerStateProvider.future);
       final currentPath = dbState.path;
       if (currentPath == null) {
         throw StateError('Не удалось определить текущее хранилище');
@@ -796,7 +796,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
         throw StateError('Текущий мастер пароль неверен');
       }
 
-      final dbState = await ref.read(vaultDBStateProvider.future);
+      final dbState = await ref.read(vaultDBManagerStateProvider.future);
       final currentPath = dbState.path;
       if (currentPath == null) {
         throw StateError('Не удалось определить текущее хранилище');
@@ -864,7 +864,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
   Future<void> _updateDatabaseHistory() async {
     try {
       // Получаем текущее состояние базы данных
-      final dbState = await ref.read(vaultDBStateProvider.future);
+      final dbState = await ref.read(vaultDBManagerStateProvider.future);
       final currentPath = dbState.path;
 
       if (currentPath == null) {

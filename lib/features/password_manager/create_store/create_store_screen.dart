@@ -304,7 +304,7 @@ class _CreateStoreScreenState extends ConsumerState<CreateStoreScreen>
         // Редирект на dashboard произойдёт автоматически через router.dart
         // когда состояние БД изменится на isOpen
       } else {
-        final storeState = await ref.read(vaultDBStateProvider.future);
+        final storeState = await ref.read(vaultDBManagerStateProvider.future);
         final errorMessage =
             storeState.error?.message ?? 'Не удалось создать хранилище';
 

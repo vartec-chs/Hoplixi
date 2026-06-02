@@ -3,7 +3,7 @@ import 'package:hoplixi/vault_db/core/api/api.dart';
 import 'package:hoplixi/vault_db/providers/session_providers.dart';
 
 final vaultApiProvider = FutureProvider<VaultCoreApi>((ref) async {
-  final session = await ref.watch(vaultDBSessionProvider.future);
+  final session = ref.watch(requiredVaultDBSessionProvider);
   return session.api;
 });
 

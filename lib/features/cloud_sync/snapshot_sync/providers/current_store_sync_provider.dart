@@ -88,7 +88,7 @@ class CurrentStoreSyncManualReauthIssueNotifier
 class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
   @override
   Future<StoreSyncStatus> build() async {
-    final storeState = await ref.watch(vaultDBStateProvider.future);
+    final storeState = await ref.watch(vaultDBManagerStateProvider.future);
     final status = await _loadCurrentStatus(storeState, useWatch: true);
     _publishCachedSyncStatus(status);
     _syncCloseStoreUploadPromptRequirement(status);
@@ -99,7 +99,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     final previous = state.value;
     state = const AsyncLoading();
     try {
-      final storeState = await ref.read(vaultDBStateProvider.future);
+      final storeState = await ref.read(vaultDBManagerStateProvider.future);
       final next = await _loadCurrentStatus(storeState, useWatch: false);
       _setSyncState(next);
     } catch (error, stackTrace) {

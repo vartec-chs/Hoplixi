@@ -75,10 +75,8 @@ UI верхнего уровня может подписаться на этот
 
 `CurrentStoreSyncNotifier` опирается на несколько других слоёв:
 
-- `vaultDBProvider` Даёт текущее состояние хранилища: открыто оно или нет, путь
-  и имя.
-- `vaultDBManagerProvider` Даёт доступ к `StoreInfoDto` и операциям над открытым
-  store.
+- `vaultDBManagerStateProvider` Даёт текущее состояние хранилища: открыто оно
+  или нет, путь и имя; операции выполняются через notifier этого provider-а.
 - `snapshotSyncServiceProvider` Выполняет основную sync-логику: build snapshot,
   compare, upload, download, resolve conflict.
 - `storeSyncBindingServiceProvider` Читает и пишет binding
@@ -125,11 +123,12 @@ UI верхнего уровня может подписаться на этот
 
 Никаких remote операций в этом случае не выполняется.
 
-### Шаг 2. Получение `VaultDBManager`
+### Шаг 2. Получение manager notifier-а
 
-Если store открыт, берётся `vaultDBManagerProvider`.
+Если store открыт, операции берутся через
+`vaultDBManagerStateProvider.notifier`.
 
-Если manager недоступен, возвращается безопасный fallback:
+Если notifier не может вернуть текущий store, возвращается безопасный fallback:
 
 - `StoreSyncStatus(isStoreOpen: false)`
 

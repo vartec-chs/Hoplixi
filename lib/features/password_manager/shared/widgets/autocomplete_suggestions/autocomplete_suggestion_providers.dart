@@ -75,9 +75,9 @@ class CurrentStoreAutocompleteSuggestionsNotifier
 
     final List<String> suggestions;
     try {
-      final store = await ref.read(vaultDBProvider.future);
+      final db = ref.watch(requiredVaultDBProvider);
       suggestions = await _selectSuggestions(
-        store,
+        db,
         _loginSuggestionsSql,
         normalizedQuery,
       );
@@ -115,9 +115,9 @@ class CurrentStoreAutocompleteSuggestionsNotifier
 
     final List<String> suggestions;
     try {
-      final store = await ref.read(vaultDBProvider.future);
+      final db = ref.watch(requiredVaultDBProvider);
       suggestions = await _selectSuggestions(
-        store,
+        db,
         _emailSuggestionsSql,
         normalizedQuery,
       );

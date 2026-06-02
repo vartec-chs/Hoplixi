@@ -256,7 +256,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 return;
               }
 
-              final storeState = await ref.read(vaultDBStateProvider.future);
+              final storeState = await ref.read(
+                vaultDBManagerStateProvider.future,
+              );
               if (!context.mounted) {
                 return;
               }

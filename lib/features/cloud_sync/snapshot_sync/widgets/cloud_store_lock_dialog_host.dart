@@ -14,7 +14,7 @@ class CloudStoreLockDialogHost extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lockState = ref.watch(currentStoreCloudLockProvider);
-    final storeState = ref.watch(vaultDBStateProvider).value;
+    final storeState = ref.watch(vaultDBManagerStateProvider).value;
     _scheduleLockCheck(ref, lockState, storeState);
     final isStoreOpen = storeState?.isOpen ?? false;
     final visible = isStoreOpen && _shouldShow(lockState);

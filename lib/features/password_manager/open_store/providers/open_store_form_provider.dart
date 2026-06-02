@@ -257,7 +257,7 @@ class OpenStoreFormNotifier extends AsyncNotifier<OpenStoreState> {
         return true;
       }
 
-      final storeState = await ref.read(vaultDBStateProvider.future);
+      final storeState = await ref.read(vaultDBManagerStateProvider.future);
       if (!_isMounted) {
         return false;
       }

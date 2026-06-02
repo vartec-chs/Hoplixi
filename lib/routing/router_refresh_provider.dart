@@ -10,7 +10,7 @@ final routerRefreshNotifierProvider =
 class RouterRefreshNotifier extends Notifier<int> with ChangeNotifier {
   @override
   int build() {
-    ref.listen<AsyncValue<DatabaseState>>(vaultDBStateProvider, (
+    ref.listen<AsyncValue<DatabaseState>>(vaultDBManagerStateProvider, (
       previous,
       next,
     ) {

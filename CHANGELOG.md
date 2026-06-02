@@ -4,6 +4,10 @@
 
 ### password_manager
 
+- Drawer-фильтры категорий и тегов больше не читают vault repositories, пока
+  vault-сессия не открыта; это убирает `notInitialized` ошибки при построении
+  dashboard drawer до открытия/после закрытия базы.
+
 - Доделан переход `lib/features/password_manager/dashboard` на текущий слой
   `vault_db` repositories/services без использования нового API-слоя:
   - Восстановлен `dashboardRepositoryProvider` как адаптер к
@@ -59,6 +63,13 @@
 
 ### vault_db
 
+- `vaultDBManagerProvider` переведён во внутренний `_vaultDBManagerProvider`
+  для `vaultDBManagerStateProvider`; публичные session/db/api providers теперь
+  получают изменения от `vaultDBManagerStateProvider` и берут текущую сессию
+  через его notifier.
+- `vaultDBSessionProvider` больше не переводит штатное отсутствие активной
+  vault-сессии в `AsyncError`; compatibility `FutureProvider<Session>` теперь
+  остаётся в loading до появления открытой сессии.
 - При открытии vault database `PRAGMA memory_security = ON` теперь выполняется в
   raw SQLite setup до `PRAGMA key`, а закрытие `VaultDB` обязательно пытается
   выполнить `PRAGMA wal_checkpoint(TRUNCATE)` перед `super.close()`.

@@ -18,7 +18,7 @@ final iconPackCatalogServiceProvider = Provider<IconPackCatalogService>((ref) {
 });
 
 final storeMetaServiceProvider = FutureProvider<StoreMetaService>((ref) async {
-  final db = await ref.watch(vaultDBProvider.future);
+  final db = ref.watch(requiredVaultDBProvider);
   final repos = await ref.watch(vaultRepositories.future);
   return StoreMetaService(db: db, repository: repos.storeMeta);
 });
@@ -26,26 +26,26 @@ final storeMetaServiceProvider = FutureProvider<StoreMetaService>((ref) async {
 final documentVersionServiceProvider = FutureProvider<DocumentVersionService>((
   ref,
 ) async {
-  final db = await ref.watch(vaultDBProvider.future);
+  final db = ref.watch(requiredVaultDBProvider);
   return DocumentVersionService(db);
 });
 
 final vaultCardFilterServiceProvider = FutureProvider<VaultCardFilterService>((
   ref,
 ) async {
-  final db = await ref.watch(vaultDBProvider.future);
+  final db = ref.watch(requiredVaultDBProvider);
   return VaultCardFilterService(db);
 });
 
 final vaultItemRelationsServiceProvider =
     FutureProvider<VaultItemRelationsService>((ref) async {
-      final db = await ref.watch(vaultDBProvider.future);
+      final db = ref.watch(requiredVaultDBProvider);
       return VaultItemRelationsService(db);
     });
 
 final vaultHistoryServiceAssemblyProvider =
     FutureProvider<VaultHistoryServiceAssembly>((ref) async {
-      final db = await ref.watch(vaultDBProvider.future);
+      final db = ref.watch(requiredVaultDBProvider);
       final repos = await ref.watch(vaultRepositories.future);
       return VaultHistoryServiceAssembly(db: db, repos: repos);
     });
@@ -53,7 +53,7 @@ final vaultHistoryServiceAssemblyProvider =
 final vaultItemsStateServiceProvider = FutureProvider<VaultItemsStateService>((
   ref,
 ) async {
-  final db = await ref.watch(vaultDBProvider.future);
+  final db = ref.watch(requiredVaultDBProvider);
   final vaultHistoryServiceAssembly = await ref.watch(
     vaultHistoryServiceAssemblyProvider.future,
   );
@@ -65,7 +65,7 @@ final vaultItemsStateServiceProvider = FutureProvider<VaultItemsStateService>((
 });
 
 final vaultEntityServices = FutureProvider<VaultEntityServices>((ref) async {
-  final db = await ref.watch(vaultDBProvider.future);
+  final db = ref.watch(requiredVaultDBProvider);
   final repositories = await ref.watch(vaultRepositories.future);
 
   final vaultHistoryServiceAssembly = await ref.watch(
@@ -85,8 +85,8 @@ final vaultEntityServices = FutureProvider<VaultEntityServices>((ref) async {
 final fileStorageServiceProvider = FutureProvider<FileStorageService>((
   ref,
 ) async {
-  final db = await ref.watch(vaultDBProvider.future);
-  final state = await ref.watch(vaultDBStateProvider.future);
+  final db = ref.watch(requiredVaultDBProvider);
+  final state = await ref.watch(vaultDBManagerStateProvider.future);
 
   if (state.path == null) {
     throw Exception('Vault path is null');
@@ -111,7 +111,7 @@ final fileStorageServiceProvider = FutureProvider<FileStorageService>((
 final documentStorageServiceProvider = FutureProvider<DocumentStorageService>((
   ref,
 ) async {
-  final db = await ref.watch(vaultDBProvider.future);
+  final db = ref.watch(requiredVaultDBProvider);
   final fileStorageService = await ref.watch(fileStorageServiceProvider.future);
   final entityServices = await ref.watch(vaultEntityServices.future);
   final documentVersionService = await ref.watch(
@@ -129,4 +129,3 @@ final documentStorageServiceProvider = FutureProvider<DocumentStorageService>((
     relationsService: relationsService,
   );
 });
-

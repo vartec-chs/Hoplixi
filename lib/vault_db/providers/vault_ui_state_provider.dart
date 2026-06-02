@@ -11,11 +11,20 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'package:hoplixi/vault_db/providers/session_providers.dart';
+import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
 import 'package:hoplixi/vault_db/services/main_store_manager.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../../../features/cloud_sync/snapshot_sync/providers/close_sync_tracking_provider.dart';
+
+/// Внутренний provider фасада vault database.
+///
+/// Публичным источником состояния остаётся [vaultDBManagerStateProvider].
+final _vaultDBManagerProvider = FutureProvider<VaultDBManager>((ref) async {
+  final dbHistory = await ref.watch(dbHistoryProvider.future);
+  final manager = VaultDBManagerFactory(dbHistoryService: dbHistory).create();
+  return manager;
+});
 
 /// Главный провайдер для управления UI состоянием базы данных.
 final vaultDBManagerStateProvider =
@@ -93,7 +102,7 @@ class VaultDBManagerNotifier extends AsyncNotifier<DatabaseState> {
 
   @override
   Future<DatabaseState> build() async {
-    final manager = await ref.watch(vaultDBManagerProvider.future);
+    final manager = await ref.watch(_vaultDBManagerProvider.future);
     _manager = manager;
 
     return _stateFromManager(manager) ??

@@ -24,7 +24,7 @@ class _CloseDatabaseButtonState extends ConsumerState<CloseDatabaseButton> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(vaultDBStateProvider);
+    final state = ref.watch(vaultDBManagerStateProvider);
     final dbState = state.value;
     final isOpen = dbState?.isOpen ?? false;
     final isBusy = _isClosing;
@@ -77,7 +77,7 @@ class _CloseDatabaseButtonState extends ConsumerState<CloseDatabaseButton> {
       }
 
       final errorMessage =
-          ref.read(vaultDBStateProvider).value?.error?.message ??
+          ref.read(vaultDBManagerStateProvider).value?.error?.message ??
           'Не удалось закрыть хранилище.';
       Toaster.error(title: 'Закрытие хранилища', description: errorMessage);
     } finally {

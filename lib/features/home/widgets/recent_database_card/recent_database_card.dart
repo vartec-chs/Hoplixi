@@ -65,7 +65,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
 
   Widget _buildCard(BuildContext context, WidgetRef ref, DatabaseEntry entry) {
     final colorScheme = Theme.of(context).colorScheme;
-    final dbStateAsync = ref.watch(vaultDBStateProvider);
+    final dbStateAsync = ref.watch(vaultDBManagerStateProvider);
     final dbState = dbStateAsync.value;
     final lockState = ref.watch(currentStoreCloudLockProvider);
     final manifestAsync = ref.watch(
@@ -700,7 +700,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
         return;
       }
 
-      final state = ref.read(vaultDBStateProvider);
+      final state = ref.read(vaultDBManagerStateProvider);
       var errorMessage =
           state.value?.error?.message ?? 'Не удалось открыть базу данных';
 

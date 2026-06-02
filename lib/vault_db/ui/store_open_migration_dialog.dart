@@ -18,7 +18,7 @@ Future<bool> promptStoreMigrationAndOpen({
   required OpenStoreDto dto,
   Future<void> Function()? onOpened,
 }) async {
-  final error = ref.read(vaultDBStateProvider).value?.error;
+  final error = ref.read(vaultDBManagerStateProvider).value?.error;
   if (!isStoreMigrationRequiredError(error)) {
     return false;
   }
@@ -65,7 +65,7 @@ Future<bool> promptStoreMigrationAndOpen({
     return true;
   }
 
-  final state = await ref.read(vaultDBStateProvider.future);
+  final state = await ref.read(vaultDBManagerStateProvider.future);
   if (!context.mounted) {
     return true;
   }

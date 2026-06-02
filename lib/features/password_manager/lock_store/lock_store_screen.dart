@@ -39,7 +39,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
   }
 
   Future<void> _checkSavedPassword() async {
-    final dbState = ref.read(vaultDBStateProvider).value;
+    final dbState = ref.read(vaultDBManagerStateProvider).value;
     if (dbState?.path == null) return;
 
     final historyService = await ref.read(dbHistoryProvider.future);
@@ -80,7 +80,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
     });
 
     try {
-      final dbState = await ref.read(vaultDBStateProvider.future);
+      final dbState = await ref.read(vaultDBManagerStateProvider.future);
       final storePath = dbState.path;
       VaultKeyFile? keyFile;
       if (storePath != null) {
@@ -166,7 +166,7 @@ class _LockStoreScreenState extends ConsumerState<LockStoreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dbState = ref.watch(vaultDBStateProvider).value;
+    final dbState = ref.watch(vaultDBManagerStateProvider).value;
     final syncState = ref.watch(currentStoreSyncProvider);
     final syncStatus = syncState.value;
     final isSyncStatusLoading = syncState.isLoading && syncStatus == null;

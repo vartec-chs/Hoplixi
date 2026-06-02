@@ -49,7 +49,7 @@ class AppLifecycleNotifier extends Notifier<AppLifecycleState> {
   Future<AppExitResponse> onExitRequested() async {
     logInfo('App lifecycle: exit requested', tag: _logTag);
     // Закрываем базу данных, если она открыта
-    final dbState = await ref.read(vaultDBStateProvider.future);
+    final dbState = await ref.read(vaultDBManagerStateProvider.future);
     if (dbState.isOpen) {
       logInfo('Closing database before app exit', tag: _logTag);
       await ref.read(vaultDBManagerStateProvider.notifier).closeStore();

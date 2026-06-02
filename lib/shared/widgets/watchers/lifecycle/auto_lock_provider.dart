@@ -78,7 +78,7 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
     });
 
     // Слушаем изменения состояния БД
-    ref.listen(vaultDBStateProvider, (previous, next) {
+    ref.listen(vaultDBManagerStateProvider, (previous, next) {
       next.whenData((dbState) {
         // Если БД закрылась или заблокировалась, останавливаем таймер
         if (!dbState.isOpen) {
@@ -96,7 +96,7 @@ class AutoLockNotifier extends Notifier<AutoLockState> {
   }
 
   void _handleLifecycleChange(AppLifecycleState lifecycleState) {
-    final dbState = ref.read(vaultDBStateProvider).value;
+    final dbState = ref.read(vaultDBManagerStateProvider).value;
     final isDbOpen = dbState?.isOpen ?? false;
 
     // Проверяем, что таймаут не равен 0 (отключено)

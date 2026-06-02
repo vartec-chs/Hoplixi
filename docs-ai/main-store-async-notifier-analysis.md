@@ -66,7 +66,7 @@
   - главный entrypoint.
 - `vaultDBOpeningOverlayProvider`
   - UI-overlay во время открытия/миграции стора.
-- `vaultDBStateProvider`
+- `vaultDBManagerStateProvider `
   - `FutureProvider`, читает итоговое состояние из `vaultDBProvider.future`.
 - `vaultDBManagerProvider`
   - отдаёт `VaultDBManager?`, если store реально открыт.

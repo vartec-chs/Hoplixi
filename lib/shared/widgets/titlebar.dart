@@ -88,7 +88,7 @@ class _TitleBarState extends ConsumerState<TitleBar> {
     final theme = Theme.of(context);
     final titlebarState = ref.watch(titlebarStateProvider);
     final isStoreOpen = ref
-        .watch(vaultDBStateProvider)
+        .watch(vaultDBManagerStateProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
     return DragToMoveArea(
       child: AnimatedContainer(

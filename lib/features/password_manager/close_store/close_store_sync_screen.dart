@@ -228,7 +228,7 @@ class _CloseStoreSyncContentState extends ConsumerState<CloseStoreSyncContent>
 
   @override
   Widget build(BuildContext context) {
-    final dbState = ref.watch(vaultDBStateProvider).value;
+    final dbState = ref.watch(vaultDBManagerStateProvider).value;
     final closeSyncState = ref.watch(vaultDBCloseSyncProvider).value;
     final closeSyncStatus = closeSyncState?.status;
     final isCompleted =

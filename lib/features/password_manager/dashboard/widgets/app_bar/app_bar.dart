@@ -98,7 +98,7 @@ final class _DashboardSliverAppBarState
     final currentType = widget.entityType;
     final hasActiveFilters = _hasActiveFilters(filters);
     final isStoreOpen = ref
-        .watch(vaultDBStateProvider)
+        .watch(vaultDBManagerStateProvider)
         .maybeWhen(data: (state) => state.isOpen, orElse: () => false);
 
     if (_searchController.text != filters.query) {
