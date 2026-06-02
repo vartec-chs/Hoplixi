@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/base_filter.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 import 'controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -238,15 +238,6 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
                   _updateFilter((f) => f.copyWith(isPinned: value));
                 },
               ),
-              const SizedBox(height: 8),
-              _buildTriStateCheckbox(
-                label: 'С заметками',
-                value: widget.filter.hasNotes,
-                icon: Icons.note,
-                onChanged: (value) {
-                  _updateFilter((f) => f.copyWith(hasNotes: value));
-                },
-              ),
             ],
           ),
         ),
@@ -328,8 +319,7 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
     return widget.filter.isFavorite != null ||
         widget.filter.isArchived != null ||
         widget.filter.isDeleted != null ||
-        widget.filter.isPinned != null ||
-        widget.filter.hasNotes != null;
+        widget.filter.isPinned != null;
   }
 
   // ============================================================================
@@ -645,7 +635,7 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
           Wrap(
             spacing: 8.0,
             runSpacing: 8.0,
-            children: SortBy.values.map((sortBy) {
+            children: BaseSortBy.values.map((sortBy) {
               final isSelected = widget.filter.sortBy == sortBy;
               return ChoiceChip(
                 label: Text(_getSortByLabel(sortBy)),
@@ -664,29 +654,37 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
     );
   }
 
-  String _getSortByLabel(SortBy sortBy) {
+  String _getSortByLabel(BaseSortBy sortBy) {
     switch (sortBy) {
-      case SortBy.createdAt:
+      case BaseSortBy.name:
+        return 'Название';
+      case BaseSortBy.createdAt:
         return 'Дата создания';
-      case SortBy.modifiedAt:
+      case BaseSortBy.modifiedAt:
         return 'Дата изменения';
-      case SortBy.lastUsedAt:
+      case BaseSortBy.lastUsedAt:
         return 'Последнее использование';
-      case SortBy.recentScore:
+      case BaseSortBy.recentScore:
         return 'По активности';
+      case BaseSortBy.usedCount:
+        return 'Количество использований';
     }
   }
 
-  IconData _getSortByIcon(SortBy sortBy) {
+  IconData _getSortByIcon(BaseSortBy sortBy) {
     switch (sortBy) {
-      case SortBy.createdAt:
+      case BaseSortBy.name:
+        return Icons.title;
+      case BaseSortBy.createdAt:
         return Icons.add_circle_outline;
-      case SortBy.modifiedAt:
+      case BaseSortBy.modifiedAt:
         return Icons.edit;
-      case SortBy.lastUsedAt:
+      case BaseSortBy.lastUsedAt:
         return Icons.access_time;
-      case SortBy.recentScore:
+      case BaseSortBy.recentScore:
         return Icons.trending_up;
+      case BaseSortBy.usedCount:
+        return Icons.bar_chart;
     }
   }
 

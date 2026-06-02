@@ -181,7 +181,7 @@ class OtpFormNotifier extends Notifier<OtpFormState> {
 
   void setIconRef(IconRefDto? iconRef) {
     state = state.copyWith(
-      iconSource: iconRef?.iconSourceType?.name,
+      iconSource: iconRef?.iconSourceType.name,
       iconValue: iconRef?.iconValue,
     );
   }

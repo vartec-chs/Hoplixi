@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 import 'controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class PasswordFilterSection extends StatefulWidget {
-  final PasswordsFilter filter;
-  final Function(PasswordsFilter) onFilterChanged;
+  final PasswordFilter filter;
+  final Function(PasswordFilter) onFilterChanged;
 
   const PasswordFilterSection({
     super.key,
@@ -66,7 +66,7 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
     super.dispose();
   }
 
-  void _updateFilter(PasswordsFilter Function(PasswordsFilter) updater) {
+  void _updateFilter(PasswordFilter Function(PasswordFilter) updater) {
     widget.onFilterChanged(updater(widget.filter));
   }
 
@@ -209,9 +209,6 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
                       },
                     )
                   : null,
-              errorText: !widget.filter.isValidEmail
-                  ? 'Неверный формат email'
-                  : null,
             ),
             keyboardType: TextInputType.emailAddress,
             onChanged: (value) {
@@ -239,9 +236,6 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
                         _updateFilter((f) => f.copyWith(url: null));
                       },
                     )
-                  : null,
-              errorText: !widget.filter.isValidUrl
-                  ? 'Неверный формат URL'
                   : null,
             ),
             keyboardType: TextInputType.url,
@@ -272,20 +266,11 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
           child: Column(
             children: [
               _buildTriStateCheckbox(
-                label: 'С описанием',
-                value: widget.filter.hasDescription,
-                icon: Icons.description,
+                label: 'С паролем',
+                value: widget.filter.hasPassword,
+                icon: Icons.password,
                 onChanged: (value) {
-                  _updateFilter((f) => f.copyWith(hasDescription: value));
-                },
-              ),
-              const SizedBox(height: 8),
-              _buildTriStateCheckbox(
-                label: 'С заметками',
-                value: widget.filter.hasNotes,
-                icon: Icons.note,
-                onChanged: (value) {
-                  _updateFilter((f) => f.copyWith(hasNotes: value));
+                  _updateFilter((f) => f.copyWith(hasPassword: value));
                 },
               ),
               const SizedBox(height: 8),
@@ -393,11 +378,10 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
   }
 
   bool _hasActiveStatusFilters() {
-    return widget.filter.hasDescription != null ||
-        widget.filter.hasNotes != null ||
-        widget.filter.hasUrl != null ||
+    return widget.filter.hasUrl != null ||
         widget.filter.hasLogin != null ||
-        widget.filter.hasEmail != null;
+        widget.filter.hasEmail != null ||
+        widget.filter.hasPassword != null;
   }
 
   // ============================================================================
@@ -423,37 +407,37 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
             children: [
               _buildSortChip(
                 label: 'По названию',
-                field: PasswordsSortField.name,
+                field: PasswordSortField.name,
                 icon: Icons.title,
               ),
               _buildSortChip(
                 label: 'По логину',
-                field: PasswordsSortField.login,
+                field: PasswordSortField.login,
                 icon: Icons.person,
               ),
               _buildSortChip(
                 label: 'По email',
-                field: PasswordsSortField.email,
+                field: PasswordSortField.email,
                 icon: Icons.email,
               ),
               _buildSortChip(
                 label: 'По URL',
-                field: PasswordsSortField.url,
+                field: PasswordSortField.url,
                 icon: Icons.link,
               ),
               _buildSortChip(
                 label: 'По дате создания',
-                field: PasswordsSortField.createdAt,
+                field: PasswordSortField.createdAt,
                 icon: Icons.create,
               ),
               _buildSortChip(
                 label: 'По дате изменения',
-                field: PasswordsSortField.modifiedAt,
+                field: PasswordSortField.modifiedAt,
                 icon: Icons.edit,
               ),
               _buildSortChip(
                 label: 'По дате доступа',
-                field: PasswordsSortField.lastAccessed,
+                field: PasswordSortField.lastUsedAt,
                 icon: Icons.access_time,
               ),
             ],
@@ -478,7 +462,7 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
 
   Widget _buildSortChip({
     required String label,
-    required PasswordsSortField field,
+    required PasswordSortField field,
     required IconData icon,
   }) {
     final isSelected = widget.filter.sortField == field;
@@ -516,11 +500,10 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
         widget.filter.login != null ||
         widget.filter.email != null ||
         widget.filter.url != null ||
-        widget.filter.hasDescription != null ||
-        widget.filter.hasNotes != null ||
         widget.filter.hasUrl != null ||
         widget.filter.hasLogin != null ||
         widget.filter.hasEmail != null ||
+        widget.filter.hasPassword != null ||
         widget.filter.sortField != null;
   }
 
@@ -536,11 +519,10 @@ class _PasswordFilterSectionState extends State<PasswordFilterSection> {
         login: null,
         email: null,
         url: null,
-        hasDescription: null,
-        hasNotes: null,
         hasUrl: null,
         hasLogin: null,
         hasEmail: null,
+        hasPassword: null,
         sortField: null,
       ),
     );

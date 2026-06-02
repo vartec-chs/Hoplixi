@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
@@ -197,7 +197,7 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
           IconSourcePickerButton(
             iconRef: state.iconSource == null
                 ? null
-                : CreateIconRefDto(
+                : IconRefDto(
                     iconSourceType: IconSourceType.values.byName(
                       state.iconSource!,
                     ),
@@ -205,7 +205,7 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
                   ),
             fallbackIcon: Icons.lock_clock,
             title: 'Иконка записи',
-            onChanged: ref.read(otpFormProvider(null).notifier).setIconRef,
+            onChanged: ref.read(otpFormProvider.notifier).setIconRef,
           ),
           const SizedBox(height: 16),
           CategoryPickerField(

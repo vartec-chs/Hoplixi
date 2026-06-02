@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:hoplixi/main_db/core/models/enums/entity_types.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 enum EntityType {
@@ -70,79 +70,6 @@ enum EntityType {
     }
   }
 
-  CategoryType toCategoryType() {
-    switch (this) {
-      case EntityType.password:
-        return CategoryType.password;
-      case EntityType.note:
-        return CategoryType.note;
-      case EntityType.bankCard:
-        return CategoryType.bankCard;
-      case EntityType.file:
-        return CategoryType.file;
-      case EntityType.otp:
-        return CategoryType.totp;
-      case EntityType.document:
-        return CategoryType.document;
-      case EntityType.contact:
-        return CategoryType.contact;
-      case EntityType.apiKey:
-        return CategoryType.apiKey;
-      case EntityType.sshKey:
-        return CategoryType.sshKey;
-      case EntityType.certificate:
-        return CategoryType.certificate;
-      case EntityType.cryptoWallet:
-        return CategoryType.cryptoWallet;
-      case EntityType.wifi:
-        return CategoryType.wifi;
-      case EntityType.identity:
-        return CategoryType.identity;
-      case EntityType.licenseKey:
-        return CategoryType.licenseKey;
-      case EntityType.recoveryCodes:
-        return CategoryType.recoveryCodes;
-      case EntityType.loyaltyCard:
-        return CategoryType.loyaltyCard;
-    }
-  }
-
-  TagType toTagType() {
-    switch (this) {
-      case EntityType.password:
-        return TagType.password;
-      case EntityType.note:
-        return TagType.note;
-      case EntityType.bankCard:
-        return TagType.bankCard;
-      case EntityType.file:
-        return TagType.file;
-      case EntityType.otp:
-        return TagType.totp;
-      case EntityType.document:
-        return TagType.document;
-      case EntityType.contact:
-        return TagType.contact;
-      case EntityType.apiKey:
-        return TagType.apiKey;
-      case EntityType.sshKey:
-        return TagType.sshKey;
-      case EntityType.certificate:
-        return TagType.certificate;
-      case EntityType.cryptoWallet:
-        return TagType.cryptoWallet;
-      case EntityType.wifi:
-        return TagType.wifi;
-      case EntityType.identity:
-        return TagType.identity;
-      case EntityType.licenseKey:
-        return TagType.licenseKey;
-      case EntityType.recoveryCodes:
-        return TagType.recoveryCodes;
-      case EntityType.loyaltyCard:
-        return TagType.loyaltyCard;
-    }
-  }
 }
 
 extension VaultItemTypeX on VaultItemType {

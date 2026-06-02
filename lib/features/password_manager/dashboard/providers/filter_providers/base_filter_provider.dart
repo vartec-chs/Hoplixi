@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 
 /// Провайдер для управления базовым фильтром
 final baseFilterProvider =

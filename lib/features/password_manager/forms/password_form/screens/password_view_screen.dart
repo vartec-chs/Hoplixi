@@ -10,8 +10,8 @@ import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_viewer.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
@@ -274,7 +274,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
         subtitle: Text(
           _obscurePassword
               ? '••••••••••••'
-              : _password!.password.password ?? '',
+              : _password!.password.password,
           style: t.textTheme.bodyLarge,
         ),
         trailing: Row(
@@ -290,7 +290,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
             IconButton(
               icon: const Icon(LucideIcons.copy),
               onPressed: () =>
-                  _copy(_password!.password.password ?? '', 'Пароль'),
+                  _copy(_password!.password.password, 'Пароль'),
             ),
           ],
         ),

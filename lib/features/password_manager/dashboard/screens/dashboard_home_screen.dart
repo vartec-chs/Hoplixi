@@ -5,8 +5,6 @@ import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer_scope.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
-import 'package:hoplixi/main_db/core/old/models/dto/index.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 
@@ -230,9 +228,6 @@ final class _DashboardHomeScreenState
     ref.read(dashboardSelectionProvider(_entityType).notifier).clear();
   }
 
-  EntityType get _legacyEntityType =>
-      EntityType.values.firstWhere((type) => type.id == _entityType.id);
-
   Future<void> _applyBulkArchive(bool shouldArchive) async {
     await _runBulkAction(
       action: (controller, ids) =>
@@ -317,7 +312,6 @@ final class _DashboardHomeScreenState
 
     String? selectedCategoryId;
     String? selectedCategoryName;
-    final legacyType = _legacyEntityType;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -331,10 +325,6 @@ final class _DashboardHomeScreenState
                 child: CategoryPickerField(
                   selectedCategoryId: selectedCategoryId,
                   selectedCategoryName: selectedCategoryName,
-                  filterByType: [
-                    legacyType.toCategoryType(),
-                    CategoryType.mixed,
-                  ],
                   onCategorySelected: (categoryId, categoryName) {
                     setDialogState(() {
                       selectedCategoryId = categoryId;
@@ -379,7 +369,6 @@ final class _DashboardHomeScreenState
 
     var selectedTagIds = <String>[];
     var selectedTagNames = <String>[];
-    final legacyType = _legacyEntityType;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -393,7 +382,6 @@ final class _DashboardHomeScreenState
                 child: TagPickerField(
                   selectedTagIds: selectedTagIds,
                   selectedTagNames: selectedTagNames,
-                  filterByType: [legacyType.toTagType(), TagType.mixed],
                   onTagsSelected: (tagIds, tagNames) {
                     setDialogState(() {
                       selectedTagIds = List<String>.from(tagIds);

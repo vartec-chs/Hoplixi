@@ -1,5 +1,8 @@
-﻿{
+{
 	"@@locale": "ru",
+	"keySizeLabel": "Размер ключа",
+	"commonNotSet": "Не задан",
+	"wifiEncryptionLabel": "Шифрование",
 	"certificatePemLabel": "Сертификат PEM *",
 	"jobTitleLabel": "Должность",
 	"generatedAtIsoLabel": "Дата генерации (ISO8601)",

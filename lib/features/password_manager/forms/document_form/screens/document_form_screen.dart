@@ -615,9 +615,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
     ];
 
     return DropdownButtonFormField<String>(
-      initialValue: state.documentType == null
-          ? null
-          : state.documentType.toString(),
+      initialValue: state.documentType?.toString(),
       decoration: primaryInputDecoration(
         context,
         labelText: context.t.dashboard_forms.document_type_required_label,

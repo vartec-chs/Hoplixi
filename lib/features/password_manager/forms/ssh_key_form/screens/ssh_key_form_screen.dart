@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
@@ -32,8 +31,6 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
   late final TextEditingController _publicKeyController;
   late final TextEditingController _privateKeyController;
   late final TextEditingController _keyTypeController;
-  late final TextEditingController _fingerprintController;
-  late final TextEditingController _usageController;
   late final TextEditingController _descriptionController;
 
   @override
@@ -43,8 +40,6 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
     _publicKeyController = TextEditingController();
     _privateKeyController = TextEditingController();
     _keyTypeController = TextEditingController();
-    _fingerprintController = TextEditingController();
-    _usageController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
@@ -54,8 +49,6 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
     _publicKeyController.dispose();
     _privateKeyController.dispose();
     _keyTypeController.dispose();
-    _fingerprintController.dispose();
-    _usageController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -118,12 +111,6 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
         }
         if (_keyTypeController.text != state.keyType) {
           _keyTypeController.text = state.keyType;
-        }
-        if (_fingerprintController.text != state.fingerprint) {
-          _fingerprintController.text = state.fingerprint;
-        }
-        if (_usageController.text != state.usage) {
-          _usageController.text = state.usage;
         }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
@@ -207,26 +194,7 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                   onChanged: notifier.setKeyType,
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _fingerprintController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.fingerprint_label,
-                    prefixIcon: const Icon(LucideIcons.fingerprintPattern),
-                  ),
-                  onChanged: notifier.setFingerprint,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _usageController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: context.t.dashboard_forms.usage_label,
-                    prefixIcon: const Icon(LucideIcons.info),
-                  ),
-                  onChanged: notifier.setUsage,
-                ),
-                const SizedBox(height: 12),
+
                 IconSourcePickerButton(
                   iconRef: (state.iconSource == null
                       ? null
@@ -271,14 +239,6 @@ class _SshKeyFormScreenState extends ConsumerState<SshKeyFormScreen> {
                     prefixIcon: const Icon(LucideIcons.fileText),
                   ),
                   onChanged: notifier.setDescription,
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  value: state.addedToAgent,
-                  onChanged: notifier.setAddedToAgent,
-                  title: Text(
-                    context.t.dashboard_forms.added_to_ssh_agent_label,
-                  ),
                 ),
                 const SizedBox(height: 12),
                 CustomFieldsEditor(

@@ -9,7 +9,6 @@ import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/otp_form_state.dart';
@@ -225,8 +224,9 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
   }
 
   Future<void> _loadNoteName(String noteId) async {
-    final noteDao = await ref.read(noteDaoProvider.future);
-    final record = await noteDao.getById(noteId);
+    final repos = await ref.read(vaultRepositories.future);
+    final recordResult = await repos.note.getViewById(noteId);
+    final record = recordResult.getOrNull()?.getOrNull();
     if (!mounted ||
         _isDisposing ||
         ref.read(otpFormProvider).noteId != noteId) {
@@ -234,7 +234,7 @@ class _OtpFormScreenState extends ConsumerState<OtpFormScreen>
     }
 
     setState(() {
-      _noteName = record?.$1.name;
+      _noteName = record?.item.name;
     });
   }
 

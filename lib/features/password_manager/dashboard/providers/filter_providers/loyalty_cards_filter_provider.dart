@@ -1,7 +1,7 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/loyalty_cards_filter.dart';
+import 'package:hoplixi/features/password_manager/dashboard/models/dashboard_card_compat.dart';
 
 import 'base_filter_provider.dart';
 

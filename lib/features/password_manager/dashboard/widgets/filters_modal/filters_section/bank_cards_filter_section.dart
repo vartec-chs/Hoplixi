@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
-import 'package:hoplixi/main_db/core/old/models/enums/index.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/bank_card/bank_card_items.dart';
 import 'controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class BankCardsFilterSection extends StatefulWidget {
-  final BankCardsFilter filter;
-  final Function(BankCardsFilter) onFilterChanged;
+  final BankCardFilter filter;
+  final Function(BankCardFilter) onFilterChanged;
 
   const BankCardsFilterSection({
     super.key,
@@ -53,7 +53,7 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
     super.dispose();
   }
 
-  void _updateFilter(BankCardsFilter Function(BankCardsFilter) updater) {
+  void _updateFilter(BankCardFilter Function(BankCardFilter) updater) {
     widget.onFilterChanged(updater(widget.filter));
   }
 
@@ -107,12 +107,7 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
         const Divider(height: 1),
 
         // Срок действия
-        _buildExpiryFilters(),
-
-        const Divider(height: 1),
-
-        // Пресеты
-        _buildPresetsSection(),
+        _buildExpirySection(),
 
         const Divider(height: 1),
 
@@ -204,48 +199,62 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
   // ============================================================================
 
   Widget _buildCardTypesSection() {
-    return ExpansionTile(
-      leading: const Icon(Icons.category),
-      title: const Text('Типы карт'),
-      subtitle: widget.filter.cardTypes.isNotEmpty
-          ? Text(
-              '${widget.filter.cardTypes.length} выбрано',
-              style: Theme.of(context).textTheme.bodySmall,
-            )
-          : null,
-      initiallyExpanded: widget.filter.cardTypes.isNotEmpty,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Wrap(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Тип карты',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: [
-              _buildCardTypeChip(
-                label: 'Дебетовая',
-                type: CardType.debit,
-                icon: Icons.account_balance_wallet,
-              ),
-              _buildCardTypeChip(
-                label: 'Кредитная',
-                type: CardType.credit,
-                icon: Icons.credit_score,
-              ),
-              _buildCardTypeChip(
-                label: 'Предоплаченная',
-                type: CardType.prepaid,
-                icon: Icons.payment,
-              ),
-              _buildCardTypeChip(
-                label: 'Виртуальная',
-                type: CardType.virtual,
-                icon: Icons.credit_card_off,
-              ),
-            ],
+            children: CardType.values.map((type) {
+              return _buildCardTypeChip(
+                label: _getCardTypeLabel(type),
+                type: type,
+                icon: _getCardTypeIcon(type),
+              );
+            }).toList(),
           ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  String _getCardTypeLabel(CardType type) {
+    switch (type) {
+      case CardType.debit:
+        return 'Дебетовая';
+      case CardType.credit:
+        return 'Кредитная';
+      case CardType.prepaid:
+        return 'Предоплаченная';
+      case CardType.virtual:
+        return 'Виртуальная';
+      case CardType.other:
+        return 'Другая';
+    }
+  }
+
+  IconData _getCardTypeIcon(CardType type) {
+    switch (type) {
+      case CardType.debit:
+        return Icons.account_balance_wallet;
+      case CardType.credit:
+        return Icons.credit_score;
+      case CardType.prepaid:
+        return Icons.payment;
+      case CardType.virtual:
+        return Icons.credit_card_off;
+      case CardType.other:
+        return Icons.more_horiz;
+    }
   }
 
   Widget _buildCardTypeChip({
@@ -253,24 +262,16 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
     required CardType type,
     required IconData icon,
   }) {
-    final isSelected = widget.filter.cardTypes.contains(type);
+    final isSelected = widget.filter.cardType == type;
 
-    return FilterChip(
+    return ChoiceChip(
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [Icon(icon, size: 16), const SizedBox(width: 4), Text(label)],
       ),
       selected: isSelected,
       onSelected: (selected) {
-        if (selected) {
-          _updateFilter((f) => f.copyWith(cardTypes: [...f.cardTypes, type]));
-        } else {
-          _updateFilter(
-            (f) => f.copyWith(
-              cardTypes: f.cardTypes.where((t) => t != type).toList(),
-            ),
-          );
-        }
+        _updateFilter((f) => f.copyWith(cardType: selected ? type : null));
       },
     );
   }
@@ -280,84 +281,30 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
   // ============================================================================
 
   Widget _buildCardNetworksSection() {
-    return ExpansionTile(
-      leading: const Icon(Icons.credit_card),
-      title: const Text('Платежные системы'),
-      subtitle: widget.filter.cardNetworks.isNotEmpty
-          ? Text(
-              '${widget.filter.cardNetworks.length} выбрано',
-              style: Theme.of(context).textTheme.bodySmall,
-            )
-          : null,
-      initiallyExpanded: widget.filter.cardNetworks.isNotEmpty,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Популярные',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildCardNetworkChip(
-                    label: 'Visa',
-                    network: CardNetwork.visa,
-                  ),
-                  _buildCardNetworkChip(
-                    label: 'Mastercard',
-                    network: CardNetwork.mastercard,
-                  ),
-                  _buildCardNetworkChip(
-                    label: 'American Express',
-                    network: CardNetwork.amex,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Другие',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildCardNetworkChip(
-                    label: 'Discover',
-                    network: CardNetwork.discover,
-                  ),
-                  _buildCardNetworkChip(
-                    label: 'Diners Club',
-                    network: CardNetwork.dinersclub,
-                  ),
-                  _buildCardNetworkChip(label: 'JCB', network: CardNetwork.jcb),
-                  _buildCardNetworkChip(
-                    label: 'UnionPay',
-                    network: CardNetwork.unionpay,
-                  ),
-                  _buildCardNetworkChip(
-                    label: 'Другая',
-                    network: CardNetwork.other,
-                  ),
-                ],
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Платежная система',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: CardNetwork.values.map((network) {
+              return _buildCardNetworkChip(
+                label: network.name.toUpperCase(),
+                network: network,
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -365,56 +312,37 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
     required String label,
     required CardNetwork network,
   }) {
-    final isSelected = widget.filter.cardNetworks.contains(network);
+    final isSelected = widget.filter.cardNetwork == network;
 
-    return FilterChip(
+    return ChoiceChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
-        if (selected) {
-          _updateFilter(
-            (f) => f.copyWith(cardNetworks: [...f.cardNetworks, network]),
-          );
-        } else {
-          _updateFilter(
-            (f) => f.copyWith(
-              cardNetworks: f.cardNetworks.where((n) => n != network).toList(),
-            ),
-          );
-        }
+        _updateFilter((f) => f.copyWith(cardNetwork: selected ? network : null));
       },
     );
   }
 
   // ============================================================================
-  // Фильтры срока действия
+  // Срок действия
   // ============================================================================
 
-  Widget _buildExpiryFilters() {
+  Widget _buildExpirySection() {
     return ExpansionTile(
       leading: const Icon(Icons.event),
       title: const Text('Срок действия'),
-      initiallyExpanded: _hasActiveExpiryFilters(),
+      initiallyExpanded: widget.filter.hasExpiry != null,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Column(
             children: [
               _buildTriStateCheckbox(
-                label: 'Срок истёк',
-                value: widget.filter.hasExpiryDatePassed,
-                icon: Icons.event_busy,
+                label: 'Есть срок действия',
+                value: widget.filter.hasExpiry,
+                icon: Icons.calendar_today,
                 onChanged: (value) {
-                  _updateFilter((f) => f.copyWith(hasExpiryDatePassed: value));
-                },
-              ),
-              const SizedBox(height: 8),
-              _buildTriStateCheckbox(
-                label: 'Истекает скоро (3 месяца)',
-                value: widget.filter.isExpiringSoon,
-                icon: Icons.warning,
-                onChanged: (value) {
-                  _updateFilter((f) => f.copyWith(isExpiringSoon: value));
+                  _updateFilter((f) => f.copyWith(hasExpiry: value));
                 },
               ),
             ],
@@ -494,99 +422,6 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
     );
   }
 
-  bool _hasActiveExpiryFilters() {
-    return widget.filter.hasExpiryDatePassed != null ||
-        widget.filter.isExpiringSoon != null;
-  }
-
-  // ============================================================================
-  // Пресеты
-  // ============================================================================
-
-  Widget _buildPresetsSection() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Быстрые пресеты',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ActionChip(
-                label: const Text('Проблемные карты'),
-                avatar: const Icon(Icons.warning, size: 18),
-                onPressed: () {
-                  _updateFilter(
-                    (f) => f.copyWith(
-                      hasExpiryDatePassed: true,
-                      isExpiringSoon: true,
-                    ),
-                  );
-                },
-              ),
-              ActionChip(
-                label: const Text('Активные карты'),
-                avatar: const Icon(Icons.check_circle, size: 18),
-                onPressed: () {
-                  _updateFilter(
-                    (f) => f.copyWith(
-                      hasExpiryDatePassed: false,
-                      isExpiringSoon: false,
-                    ),
-                  );
-                },
-              ),
-              ActionChip(
-                label: const Text('Дебетовые карты'),
-                avatar: const Icon(Icons.account_balance_wallet, size: 18),
-                onPressed: () {
-                  _updateFilter((f) => f.copyWith(cardTypes: [CardType.debit]));
-                },
-              ),
-              ActionChip(
-                label: const Text('Кредитные карты'),
-                avatar: const Icon(Icons.credit_score, size: 18),
-                onPressed: () {
-                  _updateFilter(
-                    (f) => f.copyWith(cardTypes: [CardType.credit]),
-                  );
-                },
-              ),
-              ActionChip(
-                label: const Text('Виртуальные карты'),
-                avatar: const Icon(Icons.credit_card_off, size: 18),
-                onPressed: () {
-                  _updateFilter(
-                    (f) => f.copyWith(cardTypes: [CardType.virtual]),
-                  );
-                },
-              ),
-              ActionChip(
-                label: const Text('Visa & Mastercard'),
-                avatar: const Icon(Icons.credit_card, size: 18),
-                onPressed: () {
-                  _updateFilter(
-                    (f) => f.copyWith(
-                      cardNetworks: [CardNetwork.visa, CardNetwork.mastercard],
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   // ============================================================================
   // Сортировка
   // ============================================================================
@@ -610,37 +445,32 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
             children: [
               _buildSortChip(
                 label: 'По названию',
-                field: BankCardsSortField.name,
+                field: BankCardSortField.name,
                 icon: Icons.title,
               ),
               _buildSortChip(
                 label: 'По держателю',
-                field: BankCardsSortField.cardholderName,
+                field: BankCardSortField.cardholderName,
                 icon: Icons.person,
               ),
               _buildSortChip(
                 label: 'По банку',
-                field: BankCardsSortField.bankName,
+                field: BankCardSortField.bankName,
                 icon: Icons.account_balance,
               ),
               _buildSortChip(
-                label: 'По сроку действия',
-                field: BankCardsSortField.expiryDate,
-                icon: Icons.event,
-              ),
-              _buildSortChip(
                 label: 'По дате создания',
-                field: BankCardsSortField.createdAt,
+                field: BankCardSortField.createdAt,
                 icon: Icons.create,
               ),
               _buildSortChip(
                 label: 'По дате изменения',
-                field: BankCardsSortField.modifiedAt,
+                field: BankCardSortField.modifiedAt,
                 icon: Icons.edit,
               ),
               _buildSortChip(
                 label: 'По дате доступа',
-                field: BankCardsSortField.lastAccessed,
+                field: BankCardSortField.lastUsedAt,
                 icon: Icons.access_time,
               ),
             ],
@@ -665,7 +495,7 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
 
   Widget _buildSortChip({
     required String label,
-    required BankCardsSortField field,
+    required BankCardSortField field,
     required IconData icon,
   }) {
     final isSelected = widget.filter.sortField == field;
@@ -701,10 +531,9 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
   bool _hasBankCardsSpecificFilters() {
     return widget.filter.bankName != null ||
         widget.filter.cardholderName != null ||
-        widget.filter.cardTypes.isNotEmpty ||
-        widget.filter.cardNetworks.isNotEmpty ||
-        widget.filter.hasExpiryDatePassed != null ||
-        widget.filter.isExpiringSoon != null ||
+        widget.filter.cardType != null ||
+        widget.filter.cardNetwork != null ||
+        widget.filter.hasExpiry != null ||
         widget.filter.sortField != null;
   }
 
@@ -716,10 +545,9 @@ class _BankCardsFilterSectionState extends State<BankCardsFilterSection> {
       (f) => f.copyWith(
         bankName: null,
         cardholderName: null,
-        cardTypes: [],
-        cardNetworks: [],
-        hasExpiryDatePassed: null,
-        isExpiringSoon: null,
+        cardType: null,
+        cardNetwork: null,
+        hasExpiry: null,
         sortField: null,
       ),
     );

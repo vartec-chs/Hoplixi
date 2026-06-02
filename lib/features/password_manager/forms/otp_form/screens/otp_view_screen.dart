@@ -180,15 +180,17 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
       secret = null;
     }
 
+    final commonFields = buildCommonShareFields(
+      context,
+      name: record.item.name,
+      categoryName: _categoryName,
+      tagNames: _tagNames,
+      description: record.item.description,
+    );
     final customFields = await loadCustomShareableFields(ref, widget.otpId);
+    if (!mounted) return;
     final fields = [
-      ...buildCommonShareFields(
-        context,
-        name: record.item.name,
-        categoryName: _categoryName,
-        tagNames: _tagNames,
-        description: record.item.description,
-      ),
+      ...commonFields,
       ...compactShareableFields([
         shareableField(
           id: 'current_code',
@@ -295,7 +297,7 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                                   width: 24,
                                   height: 24,
                                   child: CircularProgressIndicator(
-                                    value: _remainingSeconds / _otp!.otp.period,
+                                    value: _remainingSeconds / (_otp!.otp.period ?? 30),
                                     strokeWidth: 3,
                                     color: _remainingSeconds <= 5
                                         ? cs.error

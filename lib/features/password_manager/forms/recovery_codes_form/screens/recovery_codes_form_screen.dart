@@ -8,7 +8,6 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/catego
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -209,7 +208,7 @@ class _RecoveryCodesFormScreenState
                       code: c.code,
                       used: c.used,
                       position: c.position,
-                      onDelete: () => notifier.markCodeForDeletion(c.id),
+                      onDelete: () => notifier.markCodeForDeletion(c.id!),
                     ),
                   ),
                   const SizedBox(height: 12),

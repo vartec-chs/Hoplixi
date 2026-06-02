@@ -8,10 +8,9 @@ import 'package:hoplixi/features/password_manager/forms/form_close_button.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/note_picker/note_picker_field.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/features/password_manager/shared/widgets/login_autocomplete_field/login_autocomplete_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/wifi/wifi_items.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_editor.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
@@ -35,14 +34,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _ssidController;
   late final TextEditingController _passwordController;
-  late final TextEditingController _securityController;
-  late final TextEditingController _eapMethodController;
-  late final TextEditingController _usernameController;
-  late final TextEditingController _identityController;
-  late final TextEditingController _domainController;
-  late final TextEditingController _bssidController;
-  late final TextEditingController _priorityController;
-  late final TextEditingController _qrPayloadController;
+  late final TextEditingController _securityTypeOtherController;
+  late final TextEditingController _encryptionOtherController;
   late final TextEditingController _descriptionController;
 
   @override
@@ -51,14 +44,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
     _nameController = TextEditingController();
     _ssidController = TextEditingController();
     _passwordController = TextEditingController();
-    _securityController = TextEditingController();
-    _eapMethodController = TextEditingController();
-    _usernameController = TextEditingController();
-    _identityController = TextEditingController();
-    _domainController = TextEditingController();
-    _bssidController = TextEditingController();
-    _priorityController = TextEditingController();
-    _qrPayloadController = TextEditingController();
+    _securityTypeOtherController = TextEditingController();
+    _encryptionOtherController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
@@ -67,14 +54,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
     _nameController.dispose();
     _ssidController.dispose();
     _passwordController.dispose();
-    _securityController.dispose();
-    _eapMethodController.dispose();
-    _usernameController.dispose();
-    _identityController.dispose();
-    _domainController.dispose();
-    _bssidController.dispose();
-    _priorityController.dispose();
-    _qrPayloadController.dispose();
+    _securityTypeOtherController.dispose();
+    _encryptionOtherController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -196,29 +177,11 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
         if (_passwordController.text != state.password) {
           _passwordController.text = state.password;
         }
-        if (_securityController.text != state.security) {
-          _securityController.text = state.security;
+        if (_securityTypeOtherController.text != state.securityTypeOther) {
+          _securityTypeOtherController.text = state.securityTypeOther;
         }
-        if (_eapMethodController.text != state.eapMethod) {
-          _eapMethodController.text = state.eapMethod;
-        }
-        if (_usernameController.text != state.username) {
-          _usernameController.text = state.username;
-        }
-        if (_identityController.text != state.identity) {
-          _identityController.text = state.identity;
-        }
-        if (_domainController.text != state.domain) {
-          _domainController.text = state.domain;
-        }
-        if (_bssidController.text != state.lastConnectedBssid) {
-          _bssidController.text = state.lastConnectedBssid;
-        }
-        if (_priorityController.text != state.priority) {
-          _priorityController.text = state.priority;
-        }
-        if (_qrPayloadController.text != state.qrCodePayload) {
-          _qrPayloadController.text = state.qrCodePayload;
+        if (_encryptionOtherController.text != state.encryptionOther) {
+          _encryptionOtherController.text = state.encryptionOther;
         }
         if (_descriptionController.text != state.description) {
           _descriptionController.text = state.description;
@@ -296,6 +259,74 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   ),
                   onChanged: notifier.setPassword,
                 ),
+                 const SizedBox(height: 12),
+                DropdownButtonFormField<WifiSecurityType>(
+                  value: WifiSecurityType.values.map((e) => e.name).contains(state.securityType)
+                      ? WifiSecurityType.values.byName(state.securityType)
+                      : null,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.wifi_security_label,
+                    prefixIcon: const Icon(LucideIcons.shield),
+                  ),
+                  items: WifiSecurityType.values.map((type) {
+                    return DropdownMenuItem<WifiSecurityType>(
+                      value: type,
+                      child: Text(type.name),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      notifier.setSecurityType(val.name);
+                    }
+                  },
+                ),
+                if (state.securityType == 'other') ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _securityTypeOtherController,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Другой тип безопасности',
+                      prefixIcon: const Icon(LucideIcons.shieldAlert),
+                    ),
+                    onChanged: notifier.setSecurityTypeOther,
+                  ),
+                ],
+                const SizedBox(height: 12),
+                DropdownButtonFormField<WifiEncryptionType>(
+                  value: WifiEncryptionType.values.map((e) => e.name).contains(state.encryption)
+                      ? WifiEncryptionType.values.byName(state.encryption)
+                      : null,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: context.t.dashboard_forms.wifi_encryption_label,
+                    prefixIcon: const Icon(LucideIcons.keyRound),
+                  ),
+                  items: WifiEncryptionType.values.map((type) {
+                    return DropdownMenuItem<WifiEncryptionType>(
+                      value: type,
+                      child: Text(type.name),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      notifier.setEncryption(val.name);
+                    }
+                  },
+                ),
+                if (state.encryption == 'other') ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _encryptionOtherController,
+                    decoration: primaryInputDecoration(
+                      context,
+                      labelText: 'Другой тип шифрования',
+                      prefixIcon: const Icon(LucideIcons.shieldAlert),
+                    ),
+                    onChanged: notifier.setEncryptionOther,
+                  ),
+                ],
                 const SizedBox(height: 12),
                 IconSourcePickerButton(
                   iconRef: (state.iconSource == null
@@ -339,83 +370,6 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 ExpansionTile(
                   title: Text(context.t.dashboard_forms.advanced_settings),
                   children: [
-                    TextField(
-                      controller: _eapMethodController,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText:
-                            context.t.dashboard_forms.wifi_eap_method_label,
-                        prefixIcon: const Icon(LucideIcons.settings),
-                      ),
-                      onChanged: notifier.setEapMethod,
-                    ),
-                    const SizedBox(height: 12),
-                    LoginAutocompleteField(
-                      controller: _usernameController,
-                      labelText: context.t.dashboard_forms.wifi_username_label,
-                      prefixIcon: const Icon(LucideIcons.user),
-                      onChanged: notifier.setUsername,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _identityController,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText:
-                            context.t.dashboard_forms.wifi_identity_label,
-                        prefixIcon: const Icon(LucideIcons.idCard),
-                      ),
-                      onChanged: notifier.setIdentity,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _domainController,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText: context.t.dashboard_forms.wifi_domain_label,
-                        prefixIcon: const Icon(LucideIcons.globe),
-                      ),
-                      onChanged: notifier.setDomain,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _bssidController,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText: context
-                            .t
-                            .dashboard_forms
-                            .wifi_last_connected_bssid_label,
-                        prefixIcon: const Icon(LucideIcons.monitor),
-                      ),
-                      onChanged: notifier.setLastConnectedBssid,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _priorityController,
-                      keyboardType: TextInputType.number,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText:
-                            context.t.dashboard_forms.wifi_priority_label,
-                        errorText: state.priorityError,
-                        prefixIcon: const Icon(LucideIcons.arrowUpDown),
-                      ),
-                      onChanged: notifier.setPriority,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _qrPayloadController,
-                      maxLines: 2,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText:
-                            context.t.dashboard_forms.wifi_qr_payload_label,
-                        prefixIcon: const Icon(LucideIcons.qrCode),
-                      ),
-                      onChanged: notifier.setQrCodePayload,
-                    ),
-                    const SizedBox(height: 12),
                     NotePickerField(
                       selectedNoteId: state.noteId,
                       selectedNoteName: state.noteName,
@@ -423,8 +377,8 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                     ),
                     const SizedBox(height: 12),
                     SwitchListTile(
-                      value: state.hidden,
-                      onChanged: notifier.setHidden,
+                      value: state.hiddenSsid,
+                      onChanged: notifier.setHiddenSsid,
                       title: Text(
                         context.t.dashboard_forms.wifi_hidden_network_label,
                       ),

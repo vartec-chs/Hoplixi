@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/category_picker.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/tags_picker.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -194,7 +194,7 @@ class _NoteMetadataFormState extends ConsumerState<_NoteMetadataForm> {
           IconSourcePickerButton(
             iconRef: state.iconSource == null
                 ? null
-                : CreateIconRefDto(
+                : IconRefDto(
                     iconSourceType: IconSourceType.values.byName(
                       state.iconSource!,
                     ),

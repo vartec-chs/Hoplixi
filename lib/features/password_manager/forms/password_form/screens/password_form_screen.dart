@@ -23,9 +23,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/email_autocompl
 import 'package:hoplixi/features/password_manager/shared/widgets/login_autocomplete_field/login_autocomplete_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
@@ -162,19 +160,20 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
   }
 
   Future<void> _loadNoteName(String noteId) async {
-    final dao = await ref.read(noteDaoProvider.future);
-    final record = await dao.getById(noteId);
+    final repos = await ref.read(vaultRepositories.future);
+    final recordResult = await repos.note.getViewById(noteId);
+    final record = recordResult.getOrNull()?.getOrNull();
     if (mounted) {
-      setState(() => _noteName = record?.$1.name);
+      setState(() => _noteName = record?.item.name);
     }
   }
 
   Future<void> _loadOtpName(String otpId) async {
-    final dao = await ref.read(otpDaoProvider.future);
-    final record = await dao.getById(otpId);
+    final repos = await ref.read(vaultRepositories.future);
+    final recordResult = await repos.otp.getViewById(otpId);
+    final record = recordResult.getOrNull()?.getOrNull();
     if (mounted && record != null) {
-      final (vault, otp) = record;
-      setState(() => _otpName = otp.issuer ?? otp.accountName ?? vault.name);
+      setState(() => _otpName = record.otp.issuer ?? record.otp.accountName ?? record.item.name);
     }
   }
 

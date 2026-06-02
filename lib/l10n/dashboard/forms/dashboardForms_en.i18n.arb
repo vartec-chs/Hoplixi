@@ -1,5 +1,8 @@
 {
 	"@@locale": "en",
+	"keySizeLabel": "Key size",
+	"commonNotSet": "Not set",
+	"wifiEncryptionLabel": "Encryption",
 	"certificatePemLabel": "Certificate PEM *",
 	"jobTitleLabel": "Job title",
 	"generatedAtIsoLabel": "Generated at (ISO8601)",

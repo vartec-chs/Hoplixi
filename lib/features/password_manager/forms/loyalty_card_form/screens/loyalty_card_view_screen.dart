@@ -201,18 +201,20 @@ class _LoyaltyCardViewScreenState extends ConsumerState<LoyaltyCardViewScreen> {
     if (record == null) return;
 
     final l10n = context.t.dashboard_forms;
+    final commonFields = buildCommonShareFields(
+      context,
+      name: record.item.name,
+      categoryName: _categoryName,
+      tagNames: _tagNames,
+      description: record.item.description,
+    );
     final customFields = await loadCustomShareableFields(
       ref,
       widget.loyaltyCardId,
     );
+    if (!mounted) return;
     final fields = [
-      ...buildCommonShareFields(
-        context,
-        name: record.item.name,
-        categoryName: _categoryName,
-        tagNames: _tagNames,
-        description: record.item.description,
-      ),
+      ...commonFields,
       ...compactShareableFields([
         shareableField(
           id: 'program',

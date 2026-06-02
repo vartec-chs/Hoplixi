@@ -4,11 +4,9 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_list_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
-import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
-import 'package:result_dart/result_dart.dart';
 
 import '../models/password_form_state.dart';
 
@@ -153,7 +151,7 @@ class PasswordFormNotifier extends Notifier<PasswordFormState> {
 
   void setIconRef(IconRefDto? iconRef) {
     state = state.copyWith(
-      iconSource: iconRef?.iconSourceType?.name,
+      iconSource: iconRef?.iconSourceType.name,
       iconValue: iconRef?.iconValue,
     );
   }

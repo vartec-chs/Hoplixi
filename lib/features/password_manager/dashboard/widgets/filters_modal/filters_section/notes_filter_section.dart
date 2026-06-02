@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 import 'controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class NotesFilterSection extends StatefulWidget {
-  final NotesFilter filter;
-  final Function(NotesFilter) onFilterChanged;
+  final NoteFilter filter;
+  final Function(NoteFilter) onFilterChanged;
 
   const NotesFilterSection({
     super.key,
@@ -19,21 +18,15 @@ class NotesFilterSection extends StatefulWidget {
 }
 
 class _NotesFilterSectionState extends State<NotesFilterSection> {
-  late TextEditingController _titleController;
-  late TextEditingController _contentController;
-  late TextEditingController _minContentLengthController;
-  late TextEditingController _maxContentLengthController;
+  late TextEditingController _nameController;
+  late TextEditingController _contentQueryController;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.filter.title);
-    _contentController = TextEditingController(text: widget.filter.content);
-    _minContentLengthController = TextEditingController(
-      text: widget.filter.minContentLength?.toString() ?? '',
-    );
-    _maxContentLengthController = TextEditingController(
-      text: widget.filter.maxContentLength?.toString() ?? '',
+    _nameController = TextEditingController(text: widget.filter.name);
+    _contentQueryController = TextEditingController(
+      text: widget.filter.contentQuery,
     );
   }
 
@@ -41,37 +34,25 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
   void didUpdateWidget(NotesFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
     syncTextController(
-      controller: _titleController,
-      oldValue: oldWidget.filter.title ?? '',
-      newValue: widget.filter.title ?? '',
+      controller: _nameController,
+      oldValue: oldWidget.filter.name ?? '',
+      newValue: widget.filter.name ?? '',
     );
     syncTextController(
-      controller: _contentController,
-      oldValue: oldWidget.filter.content ?? '',
-      newValue: widget.filter.content ?? '',
-    );
-    syncTextController(
-      controller: _minContentLengthController,
-      oldValue: oldWidget.filter.minContentLength?.toString() ?? '',
-      newValue: widget.filter.minContentLength?.toString() ?? '',
-    );
-    syncTextController(
-      controller: _maxContentLengthController,
-      oldValue: oldWidget.filter.maxContentLength?.toString() ?? '',
-      newValue: widget.filter.maxContentLength?.toString() ?? '',
+      controller: _contentQueryController,
+      oldValue: oldWidget.filter.contentQuery ?? '',
+      newValue: widget.filter.contentQuery ?? '',
     );
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _contentController.dispose();
-    _minContentLengthController.dispose();
-    _maxContentLengthController.dispose();
+    _nameController.dispose();
+    _contentQueryController.dispose();
     super.dispose();
   }
 
-  void _updateFilter(NotesFilter Function(NotesFilter) updater) {
+  void _updateFilter(NoteFilter Function(NoteFilter) updater) {
     widget.onFilterChanged(updater(widget.filter));
   }
 
@@ -119,16 +100,6 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
 
         const Divider(height: 1),
 
-        // Длина контента
-        _buildContentLengthSection(),
-
-        const Divider(height: 1),
-
-        // Пресеты
-        _buildPresetsSection(),
-
-        const Divider(height: 1),
-
         // Сортировка
         _buildSortingSection(),
       ],
@@ -146,27 +117,27 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Поиск',
+            'Поиск по полям',
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
 
-          // Заголовок
+          // Название
           TextField(
-            controller: _titleController,
+            controller: _nameController,
             decoration: primaryInputDecoration(
               context,
-              labelText: 'Заголовок',
-              hintText: 'Введите заголовок заметки...',
+              labelText: 'Название',
+              hintText: 'Введите название...',
               prefixIcon: const Icon(Icons.title),
-              suffixIcon: _titleController.text.isNotEmpty
+              suffixIcon: _nameController.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),
                       onPressed: () {
-                        _titleController.clear();
-                        _updateFilter((f) => f.copyWith(title: null));
+                        _nameController.clear();
+                        _updateFilter((f) => f.copyWith(name: null));
                       },
                     )
                   : null,
@@ -174,7 +145,7 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
             onChanged: (value) {
               final trimmed = value.trim();
               _updateFilter(
-                (f) => f.copyWith(title: trimmed.isEmpty ? null : trimmed),
+                (f) => f.copyWith(name: trimmed.isEmpty ? null : trimmed),
               );
             },
           ),
@@ -182,27 +153,27 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
 
           // Содержимое
           TextField(
-            controller: _contentController,
+            controller: _contentQueryController,
             decoration: primaryInputDecoration(
               context,
               labelText: 'Содержимое',
-              hintText: 'Введите текст для поиска в содержимом...',
+              hintText: 'Поиск по тексту заметки...',
               prefixIcon: const Icon(Icons.text_fields),
-              suffixIcon: _contentController.text.isNotEmpty
+              suffixIcon: _contentQueryController.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),
                       onPressed: () {
-                        _contentController.clear();
-                        _updateFilter((f) => f.copyWith(content: null));
+                        _contentQueryController.clear();
+                        _updateFilter((f) => f.copyWith(contentQuery: null));
                       },
                     )
                   : null,
             ),
-            maxLines: 3,
             onChanged: (value) {
               final trimmed = value.trim();
               _updateFilter(
-                (f) => f.copyWith(content: trimmed.isEmpty ? null : trimmed),
+                (f) =>
+                    f.copyWith(contentQuery: trimmed.isEmpty ? null : trimmed),
               );
             },
           ),
@@ -218,28 +189,19 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
   Widget _buildStatusFilters() {
     return ExpansionTile(
       leading: const Icon(Icons.check_circle_outline),
-      title: const Text('Наличие полей'),
-      initiallyExpanded: _hasActiveStatusFilters(),
+      title: const Text('Наличие данных'),
+      initiallyExpanded: widget.filter.hasContent != null,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Column(
             children: [
               _buildTriStateCheckbox(
-                label: 'С описанием',
-                value: widget.filter.hasDescription,
-                icon: Icons.description,
+                label: 'С содержимым',
+                value: widget.filter.hasContent,
+                icon: Icons.notes,
                 onChanged: (value) {
-                  _updateFilter((f) => f.copyWith(hasDescription: value));
-                },
-              ),
-              const SizedBox(height: 8),
-              _buildTriStateCheckbox(
-                label: 'С форматированием (Delta JSON)',
-                value: widget.filter.hasDeltaJson,
-                icon: Icons.format_paint,
-                onChanged: (value) {
-                  _updateFilter((f) => f.copyWith(hasDeltaJson: value));
+                  _updateFilter((f) => f.copyWith(hasContent: value));
                 },
               ),
             ],
@@ -319,252 +281,6 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
     );
   }
 
-  bool _hasActiveStatusFilters() {
-    return widget.filter.hasDescription != null ||
-        widget.filter.hasDeltaJson != null;
-  }
-
-  // ============================================================================
-  // Длина контента
-  // ============================================================================
-
-  Widget _buildContentLengthSection() {
-    return ExpansionTile(
-      leading: const Icon(Icons.text_fields),
-      title: const Text('Длина содержимого'),
-      initiallyExpanded:
-          widget.filter.minContentLength != null ||
-          widget.filter.maxContentLength != null,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _minContentLengthController,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText: 'Минимум символов',
-                        prefixIcon: const Icon(Icons.arrow_upward),
-                        errorText: !widget.filter.isValidContentLengthRange
-                            ? 'Неверный диапазон'
-                            : null,
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) {
-                        final intValue = int.tryParse(value);
-                        _updateFilter(
-                          (f) => f.copyWith(minContentLength: intValue),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _maxContentLengthController,
-                      decoration: primaryInputDecoration(
-                        context,
-                        labelText: 'Максимум символов',
-                        prefixIcon: const Icon(Icons.arrow_downward),
-                        errorText: !widget.filter.isValidContentLengthRange
-                            ? 'Неверный диапазон'
-                            : null,
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) {
-                        final intValue = int.tryParse(value);
-                        _updateFilter(
-                          (f) => f.copyWith(maxContentLength: intValue),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-
-              // Быстрые пресеты длины
-              const SizedBox(height: 12),
-              Text(
-                'Быстрый выбор',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildLengthPresetChip(
-                    label: 'Короткие (< 500)',
-                    onTap: () {
-                      _minContentLengthController.text = '';
-                      _maxContentLengthController.text = '500';
-                      _updateFilter(
-                        (f) => f.copyWith(
-                          minContentLength: null,
-                          maxContentLength: 500,
-                        ),
-                      );
-                    },
-                  ),
-                  _buildLengthPresetChip(
-                    label: 'Средние (500-5000)',
-                    onTap: () {
-                      _minContentLengthController.text = '500';
-                      _maxContentLengthController.text = '5000';
-                      _updateFilter(
-                        (f) => f.copyWith(
-                          minContentLength: 500,
-                          maxContentLength: 5000,
-                        ),
-                      );
-                    },
-                  ),
-                  _buildLengthPresetChip(
-                    label: 'Длинные (> 5000)',
-                    onTap: () {
-                      _minContentLengthController.text = '5000';
-                      _maxContentLengthController.text = '';
-                      _updateFilter(
-                        (f) => f.copyWith(
-                          minContentLength: 5000,
-                          maxContentLength: null,
-                        ),
-                      );
-                    },
-                  ),
-                  _buildLengthPresetChip(
-                    label: 'Пустые (= 0)',
-                    onTap: () {
-                      _minContentLengthController.text = '0';
-                      _maxContentLengthController.text = '0';
-                      _updateFilter(
-                        (f) => f.copyWith(
-                          minContentLength: 0,
-                          maxContentLength: 0,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-
-              if (widget.filter.minContentLength != null ||
-                  widget.filter.maxContentLength != null) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      _minContentLengthController.clear();
-                      _maxContentLengthController.clear();
-                      _updateFilter(
-                        (f) => f.copyWith(
-                          minContentLength: null,
-                          maxContentLength: null,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.clear, size: 16),
-                    label: const Text('Сбросить длину'),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLengthPresetChip({
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return ActionChip(
-      label: Text(label),
-      onPressed: onTap,
-      avatar: const Icon(Icons.filter_alt, size: 18),
-    );
-  }
-
-  // ============================================================================
-  // Пресеты
-  // ============================================================================
-
-  Widget _buildPresetsSection() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Быстрые пресеты',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ActionChip(
-                label: const Text('Пустые заметки'),
-                avatar: const Icon(Icons.note_outlined, size: 18),
-                onPressed: () {
-                  _updateFilter(
-                    (f) => f.copyWith(minContentLength: 0, maxContentLength: 0),
-                  );
-                },
-              ),
-              ActionChip(
-                label: const Text('С форматированием'),
-                avatar: const Icon(Icons.format_paint, size: 18),
-                onPressed: () {
-                  _updateFilter((f) => f.copyWith(hasDeltaJson: true));
-                },
-              ),
-              ActionChip(
-                label: const Text('Простой текст'),
-                avatar: const Icon(Icons.text_fields, size: 18),
-                onPressed: () {
-                  _updateFilter((f) => f.copyWith(hasDeltaJson: false));
-                },
-              ),
-              ActionChip(
-                label: const Text('С описанием'),
-                avatar: const Icon(Icons.description, size: 18),
-                onPressed: () {
-                  _updateFilter((f) => f.copyWith(hasDescription: true));
-                },
-              ),
-              ActionChip(
-                label: const Text('Детальные заметки'),
-                avatar: const Icon(Icons.article, size: 18),
-                onPressed: () {
-                  _updateFilter(
-                    (f) =>
-                        f.copyWith(hasDescription: true, minContentLength: 100),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   // ============================================================================
   // Сортировка
   // ============================================================================
@@ -587,33 +303,23 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
             runSpacing: 8,
             children: [
               _buildSortChip(
-                label: 'По заголовку',
-                field: NotesSortField.title,
+                label: 'По названию',
+                field: NoteSortField.name,
                 icon: Icons.title,
               ),
               _buildSortChip(
-                label: 'По описанию',
-                field: NotesSortField.description,
-                icon: Icons.description,
-              ),
-              _buildSortChip(
-                label: 'По длине',
-                field: NotesSortField.contentLength,
-                icon: Icons.text_fields,
-              ),
-              _buildSortChip(
                 label: 'По дате создания',
-                field: NotesSortField.createdAt,
+                field: NoteSortField.createdAt,
                 icon: Icons.create,
               ),
               _buildSortChip(
                 label: 'По дате изменения',
-                field: NotesSortField.modifiedAt,
+                field: NoteSortField.modifiedAt,
                 icon: Icons.edit,
               ),
               _buildSortChip(
                 label: 'По дате доступа',
-                field: NotesSortField.lastAccessed,
+                field: NoteSortField.lastUsedAt,
                 icon: Icons.access_time,
               ),
             ],
@@ -638,7 +344,7 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
 
   Widget _buildSortChip({
     required String label,
-    required NotesSortField field,
+    required NoteSortField field,
     required IconData icon,
   }) {
     final isSelected = widget.filter.sortField == field;
@@ -672,29 +378,21 @@ class _NotesFilterSectionState extends State<NotesFilterSection> {
   // ============================================================================
 
   bool _hasNotesSpecificFilters() {
-    return widget.filter.title != null ||
-        widget.filter.content != null ||
-        widget.filter.hasDescription != null ||
-        widget.filter.hasDeltaJson != null ||
-        widget.filter.minContentLength != null ||
-        widget.filter.maxContentLength != null ||
+    return widget.filter.name != null ||
+        widget.filter.contentQuery != null ||
+        widget.filter.hasContent != null ||
         widget.filter.sortField != null;
   }
 
   void _clearNotesFilters() {
-    _titleController.clear();
-    _contentController.clear();
-    _minContentLengthController.clear();
-    _maxContentLengthController.clear();
+    _nameController.clear();
+    _contentQueryController.clear();
 
     _updateFilter(
       (f) => f.copyWith(
-        title: null,
-        content: null,
-        hasDescription: null,
-        hasDeltaJson: null,
-        minContentLength: null,
-        maxContentLength: null,
+        name: null,
+        contentQuery: null,
+        hasContent: null,
         sortField: null,
       ),
     );

@@ -5,6 +5,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/c
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/wifi/wifi_items.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
@@ -137,7 +138,7 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
 
   void setIconRef(IconRefDto? iconRef) => _update(
     (s) => s.copyWith(
-      iconSource: iconRef?.iconSourceType?.name,
+      iconSource: iconRef?.iconSourceType.name,
       iconValue: iconRef?.iconValue,
     ),
   );
@@ -175,7 +176,6 @@ class WifiFormNotifier extends AsyncNotifier<WifiFormState> {
 
     try {
       final services = await ref.read(vaultEntityServices.future);
-      final priority = int.tryParse(current.priority.trim());
 
       if (current.isEditMode && current.editingWifiId != null) {
         final res = await services.wifi.update(

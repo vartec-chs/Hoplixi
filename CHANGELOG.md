@@ -18,8 +18,10 @@
   - В `wifi_form` устаревшие поля `security`, `hidden`, `eapMethod`, `username`, `identity`, `domain`, `lastConnectedBssid`, `priority`, `qrCodePayload` заменены на актуальные из `WifiDataDto`.
   - В `ssh_key_form` убраны несуществующие геттеры `fingerprint`, `usage`, `addedToAgent` и метод `getPrivateKeyFieldById`.
   - В `certificate_form` удалены несуществующие поля `fingerprint`, `ocspUrl`, `crlUrl`, `autoRenew`.
-  - Во всех формах добавлены проверки `mounted` после асинхронных вызовов.
-  - Статический анализ `flutter analyze` для всей папки форм возвращает `No errors`.
+  - Исправлены все предупреждения статического анализа (`warnings`) в коде форм и провайдеров: удалены неиспользуемые импорты (`db_result.dart`, `result_dart.dart`, `service_providers.dart`, `login_autocomplete_field.dart`, `vault_db.dart`), устранены избыточные null-aware операторы и мёртвый код (`dead code`).
+  - Исправлено небезопасное использование `BuildContext` после асинхронных вызовов (`use_build_context_synchronously`) при шеринге карточек в `loyalty_card_view_screen.dart`, `note_view_screen.dart` и `otp_view_screen.dart`.
+  - Устранены множественные подчёркивания (`unnecessary_underscores`) в обработчиках ошибок `AsyncValue`.
+  - Статический анализ `flutter analyze` для директории `lib/features/password_manager/forms/` не возвращает ни одного предупреждения компиляции, а все юнит-тесты успешно проходят.
 
 
 ## 2026-05-30

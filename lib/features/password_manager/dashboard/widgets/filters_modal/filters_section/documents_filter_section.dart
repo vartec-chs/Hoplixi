@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hoplixi/main_db/core/old/models/filter/index.dart';
+import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/document/document_types.dart';
 import 'controller_sync.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 
 class DocumentsFilterSection extends StatefulWidget {
-  final DocumentsFilter filter;
-  final Function(DocumentsFilter) onFilterChanged;
+  final DocumentFilter filter;
+  final Function(DocumentFilter) onFilterChanged;
 
   const DocumentsFilterSection({
     super.key,
@@ -19,50 +20,23 @@ class DocumentsFilterSection extends StatefulWidget {
 }
 
 class _DocumentsFilterSectionState extends State<DocumentsFilterSection> {
-  late TextEditingController _titleController;
-  late TextEditingController _descriptionController;
-  late TextEditingController _aggregatedTextController;
   late TextEditingController _minPageCountController;
   late TextEditingController _maxPageCountController;
-  late TextEditingController _documentTypeController;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.filter.titleQuery);
-    _descriptionController = TextEditingController(
-      text: widget.filter.descriptionQuery,
-    );
-    _aggregatedTextController = TextEditingController(
-      text: widget.filter.aggregatedTextQuery,
-    );
     _minPageCountController = TextEditingController(
       text: widget.filter.minPageCount?.toString() ?? '',
     );
     _maxPageCountController = TextEditingController(
       text: widget.filter.maxPageCount?.toString() ?? '',
     );
-    _documentTypeController = TextEditingController();
   }
 
   @override
   void didUpdateWidget(DocumentsFilterSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    syncTextController(
-      controller: _titleController,
-      oldValue: oldWidget.filter.titleQuery ?? '',
-      newValue: widget.filter.titleQuery ?? '',
-    );
-    syncTextController(
-      controller: _descriptionController,
-      oldValue: oldWidget.filter.descriptionQuery ?? '',
-      newValue: widget.filter.descriptionQuery ?? '',
-    );
-    syncTextController(
-      controller: _aggregatedTextController,
-      oldValue: oldWidget.filter.aggregatedTextQuery ?? '',
-      newValue: widget.filter.aggregatedTextQuery ?? '',
-    );
     syncTextController(
       controller: _minPageCountController,
       oldValue: oldWidget.filter.minPageCount?.toString() ?? '',
@@ -77,16 +51,12 @@ class _DocumentsFilterSectionState extends State<DocumentsFilterSection> {
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _aggregatedTextController.dispose();
     _minPageCountController.dispose();
     _maxPageCountController.dispose();
-    _documentTypeController.dispose();
     super.dispose();
   }
 
-  void _updateFilter(DocumentsFilter Function(DocumentsFilter) updater) {
+  void _updateFilter(DocumentFilter Function(DocumentFilter) updater) {
     widget.onFilterChanged(updater(widget.filter));
   }
 
@@ -124,184 +94,24 @@ class _DocumentsFilterSectionState extends State<DocumentsFilterSection> {
 
         const Divider(height: 1),
 
-        // Поиск по заголовку
-        _buildTitleFilter(),
-
-        const Divider(height: 1),
-
-        // Поиск по описанию
-        _buildDescriptionFilter(),
-
-        const Divider(height: 1),
-
-        // Поиск по тексту (OCR)
-        _buildAggregatedTextFilter(),
-
-        const Divider(height: 1),
-
         // Типы документов
-        _buildDocumentTypesSection(),
+        _buildDocumentTypeSection(),
 
         const Divider(height: 1),
 
         // Количество страниц
-        _buildPageCountFilter(),
+        _buildPageCountSection(),
 
         const Divider(height: 1),
 
-        // Сортировка по полям
-        _buildSortFieldFilter(),
+        // Статусные фильтры
+        _buildStatusFilters(),
+
+        const Divider(height: 1),
+
+        // Сортировка
+        _buildSortingSection(),
       ],
-    );
-  }
-
-  // ============================================================================
-  // Поиск по заголовку
-  // ============================================================================
-
-  Widget _buildTitleFilter() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Поиск по заголовку',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _titleController,
-            decoration: primaryInputDecoration(
-              context,
-              hintText: 'Введите текст для поиска в заголовке...',
-              prefixIcon: const Icon(Icons.title),
-              suffixIcon: _titleController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () {
-                        _titleController.clear();
-                        _updateFilter((f) => f.copyWith(titleQuery: null));
-                      },
-                    )
-                  : null,
-            ),
-            onChanged: (value) {
-              final trimmed = value.trim();
-              _updateFilter(
-                (f) => f.copyWith(titleQuery: trimmed.isEmpty ? null : trimmed),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================================
-  // Поиск по описанию
-  // ============================================================================
-
-  Widget _buildDescriptionFilter() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Поиск по описанию',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _descriptionController,
-            decoration: primaryInputDecoration(
-              context,
-              hintText: 'Введите текст для поиска в описании...',
-              prefixIcon: const Icon(Icons.notes),
-              suffixIcon: _descriptionController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () {
-                        _descriptionController.clear();
-                        _updateFilter(
-                          (f) => f.copyWith(descriptionQuery: null),
-                        );
-                      },
-                    )
-                  : null,
-            ),
-            onChanged: (value) {
-              final trimmed = value.trim();
-              _updateFilter(
-                (f) => f.copyWith(
-                  descriptionQuery: trimmed.isEmpty ? null : trimmed,
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================================
-  // Поиск по тексту (OCR)
-  // ============================================================================
-
-  Widget _buildAggregatedTextFilter() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Поиск по распознанному тексту',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Поиск в тексте, распознанном из изображений документа (OCR)',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _aggregatedTextController,
-            decoration: primaryInputDecoration(
-              context,
-              hintText: 'Введите текст для поиска в OCR...',
-              prefixIcon: const Icon(Icons.text_fields),
-              suffixIcon: _aggregatedTextController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () {
-                        _aggregatedTextController.clear();
-                        _updateFilter(
-                          (f) => f.copyWith(aggregatedTextQuery: null),
-                        );
-                      },
-                    )
-                  : null,
-            ),
-            onChanged: (value) {
-              final trimmed = value.trim();
-              _updateFilter(
-                (f) => f.copyWith(
-                  aggregatedTextQuery: trimmed.isEmpty ? null : trimmed,
-                ),
-              );
-            },
-          ),
-        ],
-      ),
     );
   }
 
@@ -309,87 +119,113 @@ class _DocumentsFilterSectionState extends State<DocumentsFilterSection> {
   // Типы документов
   // ============================================================================
 
-  Widget _buildDocumentTypesSection() {
+  Widget _buildDocumentTypeSection() {
     return ExpansionTile(
       leading: const Icon(Icons.category),
-      title: const Text('Типы документов'),
-      initiallyExpanded: widget.filter.documentTypes.isNotEmpty,
+      title: const Text('Тип документа'),
+      initiallyExpanded: widget.filter.documentType != null,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: DocumentType.values.map((type) {
+              return ChoiceChip(
+                label: Text(_getDocumentTypeLabel(type)),
+                selected: widget.filter.documentType == type,
+                onSelected: (selected) {
+                  _updateFilter(
+                    (f) => f.copyWith(documentType: selected ? type : null),
+                  );
+                },
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getDocumentTypeLabel(DocumentType type) {
+    switch (type) {
+      case DocumentType.passport:
+        return 'Паспорт';
+      case DocumentType.idCard:
+        return 'ID карта';
+      case DocumentType.driverLicense:
+        return 'Вод. удостоверение';
+      case DocumentType.contract:
+        return 'Контракт';
+      case DocumentType.invoice:
+        return 'Инвойс';
+      case DocumentType.receipt:
+        return 'Чек';
+      case DocumentType.certificate:
+        return 'Сертификат';
+      case DocumentType.insurance:
+        return 'Страховка';
+      case DocumentType.tax:
+        return 'Налоги';
+      case DocumentType.medical:
+        return 'Медицина';
+      case DocumentType.legal:
+        return 'Юридический';
+      case DocumentType.financial:
+        return 'Финансовый';
+      case DocumentType.other:
+        return 'Другое';
+    }
+  }
+
+  // ============================================================================
+  // Количество страниц
+  // ============================================================================
+
+  Widget _buildPageCountSection() {
+    return ExpansionTile(
+      leading: const Icon(Icons.auto_stories),
+      title: const Text('Количество страниц'),
+      initiallyExpanded:
+          widget.filter.minPageCount != null ||
+          widget.filter.maxPageCount != null,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
             children: [
-              // Список выбранных типов
-              if (widget.filter.documentTypes.isNotEmpty) ...[
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  children: widget.filter.documentTypes.map((type) {
-                    return Chip(
-                      label: Text(_getDocumentTypeLabel(type)),
-                      deleteIcon: const Icon(Icons.close, size: 18),
-                      onDeleted: () => _removeDocumentType(type),
-                    );
-                  }).toList(),
+              Expanded(
+                child: TextField(
+                  controller: _minPageCountController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'От',
+                    prefixIcon: const Icon(Icons.arrow_upward),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (value) {
+                    final intValue = int.tryParse(value);
+                    _updateFilter((f) => f.copyWith(minPageCount: intValue));
+                  },
                 ),
-                const SizedBox(height: 12),
-              ],
-
-              // Поле добавления нового типа
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _documentTypeController,
-                      decoration: primaryInputDecoration(
-                        context,
-                        hintText: 'Введите тип документа...',
-                        prefixIcon: const Icon(Icons.add),
-                      ),
-                      onSubmitted: (value) => _addDocumentType(value),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: () {
-                      _addDocumentType(_documentTypeController.text);
-                    },
-                    icon: const Icon(Icons.add_circle),
-                    tooltip: 'Добавить тип',
-                  ),
-                ],
               ),
-
-              const SizedBox(height: 12),
-
-              // Быстрые пресеты
-              Text(
-                'Быстрый выбор:',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                children: _commonDocumentTypes.map((type) {
-                  final isSelected = widget.filter.documentTypes.contains(
-                    type.toLowerCase(),
-                  );
-                  return FilterChip(
-                    label: Text(type),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) {
-                        _addDocumentType(type);
-                      } else {
-                        _removeDocumentType(type);
-                      }
-                    },
-                  );
-                }).toList(),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _maxPageCountController,
+                  decoration: primaryInputDecoration(
+                    context,
+                    labelText: 'До',
+                    prefixIcon: const Icon(Icons.arrow_downward),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (value) {
+                    final intValue = int.tryParse(value);
+                    _updateFilter((f) => f.copyWith(maxPageCount: intValue));
+                  },
+                ),
               ),
             ],
           ),
@@ -398,104 +234,172 @@ class _DocumentsFilterSectionState extends State<DocumentsFilterSection> {
     );
   }
 
-  final List<String> _commonDocumentTypes = [
-    'Паспорт',
-    'Водительское удостоверение',
-    'Договор',
-    'Сертификат',
-    'Диплом',
-    'Справка',
-    'Удостоверение',
-    'Квитанция',
-    'Чек',
-  ];
+  // ============================================================================
+  // Статусные фильтры
+  // ============================================================================
 
-  String _getDocumentTypeLabel(String type) {
-    // Первую букву делаем заглавной для отображения
-    if (type.isEmpty) return type;
-    return type[0].toUpperCase() + type.substring(1);
+  Widget _buildStatusFilters() {
+    return ExpansionTile(
+      leading: const Icon(Icons.check_circle_outline),
+      title: const Text('Наличие данных'),
+      initiallyExpanded: _hasActiveStatusFilters(),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Column(
+            children: [
+              _buildTriStateCheckbox(
+                label: 'Актуальная версия',
+                value: widget.filter.hasCurrentVersion,
+                icon: Icons.update,
+                onChanged: (value) {
+                  _updateFilter((f) => f.copyWith(hasCurrentVersion: value));
+                },
+              ),
+              const SizedBox(height: 8),
+              _buildTriStateCheckbox(
+                label: 'Есть хеш содержимого',
+                value: widget.filter.hasAggregateHash,
+                icon: Icons.fingerprint,
+                onChanged: (value) {
+                  _updateFilter((f) => f.copyWith(hasAggregateHash: value));
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
-  void _addDocumentType(String type) {
-    final trimmed = type.trim();
-    if (trimmed.isEmpty) return;
+  Widget _buildTriStateCheckbox({
+    required String label,
+    required bool? value,
+    required IconData icon,
+    required void Function(bool?) onChanged,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    final normalized = trimmed.toLowerCase();
-    if (widget.filter.documentTypes.contains(normalized)) return;
-
-    final updated = [...widget.filter.documentTypes, normalized];
-    _updateFilter((f) => f.copyWith(documentTypes: updated));
-
-    _documentTypeController.clear();
+    return InkWell(
+      onTap: () {
+        // Cycle: null -> true -> false -> null
+        if (value == null) {
+          onChanged(true);
+        } else if (value == true) {
+          onChanged(false);
+        } else {
+          onChanged(null);
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: value != null
+                ? colorScheme.primary.withOpacity(0.5)
+                : colorScheme.outline.withOpacity(0.3),
+          ),
+          borderRadius: BorderRadius.circular(8),
+          color: value == true
+              ? colorScheme.primary.withOpacity(0.1)
+              : value == false
+              ? colorScheme.error.withOpacity(0.1)
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: value == true
+                  ? colorScheme.primary
+                  : value == false
+                  ? colorScheme.error
+                  : colorScheme.onSurface.withOpacity(0.6),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: value != null
+                      ? colorScheme.onSurface
+                      : colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            ),
+            if (value != null)
+              Icon(
+                value ? Icons.check : Icons.close,
+                size: 18,
+                color: value ? colorScheme.primary : colorScheme.error,
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
-  void _removeDocumentType(String type) {
-    final updated = widget.filter.documentTypes
-        .where((t) => t != type.toLowerCase())
-        .toList();
-    _updateFilter((f) => f.copyWith(documentTypes: updated));
+  bool _hasActiveStatusFilters() {
+    return widget.filter.hasCurrentVersion != null ||
+        widget.filter.hasAggregateHash != null;
   }
 
   // ============================================================================
-  // Количество страниц
+  // Сортировка
   // ============================================================================
 
-  Widget _buildPageCountFilter() {
+  Widget _buildSortingSection() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Количество страниц',
+            'Сортировка',
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _minPageCountController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: 'От',
-                    hintText: '0',
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (value) {
-                    final count = int.tryParse(value);
-                    _updateFilter((f) => f.copyWith(minPageCount: count));
-                  },
-                ),
+              _buildSortChip(
+                label: 'По названию',
+                field: DocumentSortField.name,
+                icon: Icons.title,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: TextField(
-                  controller: _maxPageCountController,
-                  decoration: primaryInputDecoration(
-                    context,
-                    labelText: 'До',
-                    hintText: '∞',
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (value) {
-                    final count = int.tryParse(value);
-                    _updateFilter((f) => f.copyWith(maxPageCount: count));
-                  },
-                ),
+              _buildSortChip(
+                label: 'По дате создания',
+                field: DocumentSortField.createdAt,
+                icon: Icons.create,
+              ),
+              _buildSortChip(
+                label: 'По дате изменения',
+                field: DocumentSortField.modifiedAt,
+                icon: Icons.edit,
+              ),
+              _buildSortChip(
+                label: 'По дате доступа',
+                field: DocumentSortField.lastUsedAt,
+                icon: Icons.access_time,
               ),
             ],
           ),
-          if (!widget.filter.isValidPageCountRange) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Некорректный диапазон страниц',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.error,
+          if (widget.filter.sortField != null) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () {
+                  _updateFilter((f) => f.copyWith(sortField: null));
+                },
+                icon: const Icon(Icons.clear, size: 16),
+                label: const Text('Сбросить сортировку'),
               ),
             ),
           ],
@@ -504,91 +408,61 @@ class _DocumentsFilterSectionState extends State<DocumentsFilterSection> {
     );
   }
 
-  // ============================================================================
-  // Сортировка по полям
-  // ============================================================================
+  Widget _buildSortChip({
+    required String label,
+    required DocumentSortField field,
+    required IconData icon,
+  }) {
+    final isSelected = widget.filter.sortField == field;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-  Widget _buildSortFieldFilter() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return FilterChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'Сортировка документов',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          Icon(
+            icon,
+            size: 16,
+            color: isSelected ? colorScheme.onSecondaryContainer : null,
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 8.0,
-            children: DocumentsSortField.values.map((sortField) {
-              final isSelected = widget.filter.sortField == sortField;
-              return ChoiceChip(
-                label: Text(_getSortFieldLabel(sortField)),
-                selected: isSelected,
-                onSelected: (selected) {
-                  _updateFilter(
-                    (f) => f.copyWith(sortField: selected ? sortField : null),
-                  );
-                },
-              );
-            }).toList(),
-          ),
+          const SizedBox(width: 4),
+          Text(label),
         ],
       ),
+      selected: isSelected,
+      onSelected: (selected) {
+        _updateFilter((f) => f.copyWith(sortField: selected ? field : null));
+      },
+      selectedColor: colorScheme.secondaryContainer,
+      checkmarkColor: colorScheme.onSecondaryContainer,
     );
   }
 
-  String _getSortFieldLabel(DocumentsSortField sortField) {
-    switch (sortField) {
-      case DocumentsSortField.title:
-        return 'Заголовок';
-      case DocumentsSortField.documentType:
-        return 'Тип документа';
-      case DocumentsSortField.pageCount:
-        return 'Количество страниц';
-      case DocumentsSortField.createdAt:
-        return 'Дата создания';
-      case DocumentsSortField.modifiedAt:
-        return 'Дата изменения';
-      case DocumentsSortField.lastUsedAt:
-        return 'Последнее использование';
-    }
-  }
-
   // ============================================================================
-  // Утилиты
+  // Вспомогательные методы
   // ============================================================================
 
   bool _hasDocumentsSpecificFilters() {
-    return widget.filter.titleQuery != null ||
-        widget.filter.descriptionQuery != null ||
-        widget.filter.aggregatedTextQuery != null ||
-        widget.filter.documentTypes.isNotEmpty ||
+    return widget.filter.documentType != null ||
         widget.filter.minPageCount != null ||
         widget.filter.maxPageCount != null ||
+        widget.filter.hasCurrentVersion != null ||
+        widget.filter.hasAggregateHash != null ||
         widget.filter.sortField != null;
   }
 
   void _clearDocumentsFilters() {
-    _titleController.clear();
-    _descriptionController.clear();
-    _aggregatedTextController.clear();
     _minPageCountController.clear();
     _maxPageCountController.clear();
-    _documentTypeController.clear();
 
     _updateFilter(
       (f) => f.copyWith(
-        titleQuery: null,
-        descriptionQuery: null,
-        aggregatedTextQuery: null,
-        documentTypes: const [],
+        documentType: null,
         minPageCount: null,
         maxPageCount: null,
+        hasCurrentVersion: null,
+        hasAggregateHash: null,
         sortField: null,
       ),
     );
