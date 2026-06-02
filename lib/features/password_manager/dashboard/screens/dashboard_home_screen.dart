@@ -8,9 +8,7 @@ import 'package:hoplixi/features/password_manager/pickers/category_picker/widget
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/widgets/tag_picker_field.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 
-import '../models/dashboard_view_mode.dart';
 import '../models/entity_type.dart';
 import '../providers/dashboard_filter_provider.dart';
 import '../providers/dashboard_list_controller.dart';
@@ -207,11 +205,11 @@ final class _DashboardHomeScreenState
     ref.read(dashboardListControllerProvider(_entityType).notifier).loadMore();
   }
 
-  void _openItem(VaultEntityCardDto item) {
-    widget.onOpenItem?.call(_entityType, item.item.itemId);
+  void _openItem(BaseCardDto item) {
+    widget.onOpenItem?.call(_entityType, item.id);
   }
 
-  void _openEditItem(VaultEntityCardDto item) {
+  void _openEditItem(BaseCardDto item) {
     final editPath = AppRoutesPaths.dashboardEntityEdit(_entityType, item.id);
     if (GoRouter.of(context).state.matchedLocation != editPath) {
       context.push(editPath);
@@ -527,28 +525,5 @@ final class _DashboardHomeScreenState
     if (GoRouter.of(context).state.matchedLocation != viewPath) {
       context.push(viewPath);
     }
-  }
-}
-
-final class _ViewModeAction extends ConsumerWidget {
-  const _ViewModeAction({required this.viewMode});
-
-  final DashboardViewMode viewMode;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isGrid = viewMode.isGrid;
-
-    return IconButton(
-      tooltip: isGrid ? 'Показать списком' : 'Показать сеткой',
-      icon: Icon(isGrid ? Icons.view_list : Icons.grid_view),
-      onPressed: () {
-        ref
-            .read(dashboardFilterProvider.notifier)
-            .setViewMode(
-              isGrid ? DashboardViewMode.list : DashboardViewMode.grid,
-            );
-      },
-    );
   }
 }

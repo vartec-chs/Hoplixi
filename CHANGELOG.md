@@ -4,6 +4,19 @@
 
 ### password_manager
 
+- Доделан переход `lib/features/password_manager/dashboard` на текущий слой
+  `vault_db` repositories/services без использования нового API-слоя:
+  - Восстановлен `dashboardRepositoryProvider` как адаптер к
+    `VaultCardFilterService`, `VaultEntityServices`,
+    `VaultRepositories` и `VaultItemRelationsService`.
+  - Загрузка dashboard теперь возвращает единый `BaseCardDto` wrapper поверх
+    `FilteredCardDto<T>` с сохранением пагинации, вкладок и entity-фильтров.
+  - Одиночные и bulk-операции dashboard (`favorite`, `pinned`, `archive`,
+    `softDelete`, `restore`, permanent delete, назначение категории/тегов)
+    переведены на текущие services/repositories `vault_db`.
+  - Убраны оставшиеся ошибки типов в `dashboard_home_screen.dart` и
+    предупреждения в API key, license key, loyalty card и Wi-Fi карточках.
+
 - Полный рефакторинг всех 32 карточных виджетов в `lib/features/password_manager/dashboard/widgets/entity_cards/` (16 grid + 16 list) на новые sealed DTO из `vault_db/core/models/dto/`:
   - Все виджеты теперь принимают `FilteredCardDto<T>` напрямую, без слоя `dynamic`/кастов в shared-виджетах.
   - Введён единый sealed-фасад `BaseCardDto` в `lib/features/password_manager/dashboard/models/dashboard_card_compat.dart` с общими геттерами (`id`, `name`, `description`, `displayName`, флаги, даты, `category`, `tags`) и операцией `withBase(...)` для оптимистичных апдейтов.

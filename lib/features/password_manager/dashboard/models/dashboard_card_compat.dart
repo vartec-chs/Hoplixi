@@ -16,6 +16,7 @@ import 'package:hoplixi/vault_db/core/models/dto/recovery_codes_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/ssh_key_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/vault_item_base_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/wifi_dto.dart';
+export 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 
 sealed class BaseCardDto {
   const BaseCardDto();

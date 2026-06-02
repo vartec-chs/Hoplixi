@@ -59,7 +59,7 @@ class _ApiKeyListCardState extends ConsumerState<ApiKeyListCard> {
   Widget build(BuildContext context) {
     final item = widget.data.card.item;
     final subtitleParts = [
-      if ((_apiKey.service ?? '').isNotEmpty) _apiKey.service!,
+      if (_apiKey.service.isNotEmpty) _apiKey.service,
       if (_apiKey.environment != null) _apiKey.environment!.name,
       if (_apiKey.tokenType != null) _apiKey.tokenType!.name,
     ];

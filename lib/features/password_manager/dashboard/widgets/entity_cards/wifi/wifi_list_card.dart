@@ -58,7 +58,7 @@ class _WifiListCardState extends ConsumerState<WifiListCard> {
 
   Future<void> _copySsid() async {
     final ssid = _wifi.ssid;
-    if (ssid == null || ssid.isEmpty) {
+    if (ssid.isEmpty) {
       Toaster.warning(title: 'SSID не указан');
       return;
     }
@@ -81,7 +81,7 @@ class _WifiListCardState extends ConsumerState<WifiListCard> {
     ];
 
     return ExpandableListCard(
-      title: _wifi.ssid ?? item.name,
+      title: _wifi.ssid,
       subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.wifi,
       category: widget.data.meta.category,
@@ -100,7 +100,7 @@ class _WifiListCardState extends ConsumerState<WifiListCard> {
       onOpenView: widget.onOpenView,
       onOpenHistory: widget.onOpenHistory,
       copyActions: [
-        if ((_wifi.ssid ?? '').isNotEmpty)
+        if (_wifi.ssid.isNotEmpty)
           CardActionItem(
             label: 'SSID',
             onPressed: _copySsid,

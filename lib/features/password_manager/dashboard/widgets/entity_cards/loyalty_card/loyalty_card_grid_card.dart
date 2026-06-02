@@ -93,7 +93,7 @@ class _LoyaltyCardGridCardState extends ConsumerState<LoyaltyCardGridCard> {
   Widget build(BuildContext context) {
     final item = widget.data.card.item;
     final subtitleParts = [
-      if ((_loyalty.programName ?? '').isNotEmpty) _loyalty.programName!,
+      if (_loyalty.programName.isNotEmpty) _loyalty.programName,
       if (_loyalty.barcodeType != null) _loyalty.barcodeType!.name,
     ];
 

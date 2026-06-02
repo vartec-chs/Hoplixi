@@ -59,7 +59,7 @@ class _WifiGridCardState extends ConsumerState<WifiGridCard> {
 
   Future<void> _copySsid() async {
     final ssid = _wifi.ssid;
-    if (ssid == null || ssid.isEmpty) {
+    if (ssid.isEmpty) {
       Toaster.warning(title: 'SSID не указан');
       return;
     }
@@ -82,7 +82,7 @@ class _WifiGridCardState extends ConsumerState<WifiGridCard> {
     ];
 
     return BaseGridCard(
-      title: _wifi.ssid ?? item.name,
+      title: _wifi.ssid,
       subtitle: subtitleParts.join(' • '),
       fallbackIcon: Icons.wifi,
       category: widget.data.meta.category,
@@ -104,7 +104,7 @@ class _WifiGridCardState extends ConsumerState<WifiGridCard> {
         );
       },
       copyActions: [
-        if ((_wifi.ssid ?? '').isNotEmpty)
+        if (_wifi.ssid.isNotEmpty)
           CardActionItem(
             label: 'SSID',
             onPressed: _copySsid,

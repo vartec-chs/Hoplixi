@@ -60,7 +60,7 @@ class _LicenseKeyListCardState extends ConsumerState<LicenseKeyListCard> {
     final item = widget.data.card.item;
     final subtitleParts = [
       if ((_license.vendor ?? '').isNotEmpty) _license.vendor!,
-      if ((_license.productName ?? '').isNotEmpty) _license.productName!,
+      if (_license.productName.isNotEmpty) _license.productName,
       if (_license.licenseType != null) _license.licenseType!.name,
     ];
 
