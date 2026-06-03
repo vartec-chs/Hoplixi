@@ -13,9 +13,6 @@ import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/vault_db/services/other/document_storage_service.dart';
 import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
 
-final iconPackCatalogServiceProvider = Provider<IconPackCatalogService>((ref) {
-  return const IconPackCatalogService();
-});
 
 final storeMetaServiceProvider = FutureProvider<StoreMetaService>((ref) async {
   final db = ref.watch(requiredVaultDBProvider);

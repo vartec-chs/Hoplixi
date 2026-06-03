@@ -3,11 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/custom_icons.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/vault_db/providers/repository_providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 class IconRefPreview extends ConsumerStatefulWidget {
   const IconRefPreview({
