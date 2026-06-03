@@ -7,7 +7,7 @@ import 'package:hoplixi/features/custom_icon_packs/providers/icon_packs_provider
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/custom_icons.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 class IconRefPreview extends ConsumerStatefulWidget {
   const IconRefPreview({

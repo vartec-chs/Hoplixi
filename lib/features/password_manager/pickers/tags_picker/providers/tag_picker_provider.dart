@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/models/tag_picker_filter.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 import '../models/tag_pagination_state.dart';
 import 'tag_filter_provider.dart';

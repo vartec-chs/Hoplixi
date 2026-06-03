@@ -9,7 +9,7 @@ import 'package:hoplixi/setup/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
 import 'package:hoplixi/shared/widgets/language_switcher.dart';
 import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 import 'package:window_manager/window_manager.dart';

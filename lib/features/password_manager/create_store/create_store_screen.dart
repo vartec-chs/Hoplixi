@@ -21,7 +21,7 @@ import 'package:hoplixi/features/password_manager/create_store/widgets/step4_con
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/titlebar.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 /// Экран создания хранилища по шагам

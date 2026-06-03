@@ -8,7 +8,7 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/otp_form_state.dart';

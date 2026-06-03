@@ -6,7 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/custom_icon_dto.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/custom_icons.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 /// Виджет карточки иконки с асинхронной загрузкой данных
 class IconCard extends ConsumerWidget {

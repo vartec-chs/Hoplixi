@@ -11,7 +11,7 @@ import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/modal_sheet_close_button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 

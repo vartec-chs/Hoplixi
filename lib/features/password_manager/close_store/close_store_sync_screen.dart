@@ -8,7 +8,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/close_sync_p
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_progress_card.dart';
 import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 class CloseStoreSyncScreen extends ConsumerStatefulWidget {
   const CloseStoreSyncScreen({super.key});

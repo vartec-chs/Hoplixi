@@ -10,7 +10,7 @@ import 'package:hoplixi/features/password_manager/managers/providers/manager_ref
 import 'package:hoplixi/vault_db/core/models/dto/system/custom_icon_dto.dart';
 import 'package:hoplixi/vault_db/core/models/field_update.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/custom_icons.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:image/image.dart' as img;
 import 'package:drift/drift.dart' show Value;

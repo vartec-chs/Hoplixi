@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/custom_icon_packs/services/icon_pack_catalog_service.dart';
 import 'package:hoplixi/vault_db/core/services/document_versions/document_version_service.dart';
 import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
 import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
@@ -7,12 +6,26 @@ import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_se
 import 'package:hoplixi/vault_db/core/services/system/store_meta_service.dart';
 import 'package:hoplixi/vault_db/core/services/vault_entity_services.dart';
 import 'package:hoplixi/vault_db/core/services/vault_items_state_service.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/services/archive_service/archive_service.dart';
+import 'package:hoplixi/vault_db/services/db_history_services/db_history_services.dart';
 import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/vault_db/services/other/document_storage_service.dart';
 import 'package:hoplixi/vault_db/services/other/file_storage_service.dart';
 
+import 'api_providers.dart';
+import 'session_providers.dart';
+import 'vault_ui_state_provider.dart';
+
+/// Провайдер для сервиса архивации хранилищ
+final archiveServiceProvider = Provider<ArchiveService>((ref) {
+  return ArchiveService();
+});
+
+final dbHistoryProvider = FutureProvider<DatabaseHistoryService>((ref) async {
+  final databaseHistoryService = DatabaseHistoryService();
+  await databaseHistoryService.initialize();
+  return databaseHistoryService;
+});
 
 final storeMetaServiceProvider = FutureProvider<StoreMetaService>((ref) async {
   final db = ref.watch(requiredVaultDBProvider);

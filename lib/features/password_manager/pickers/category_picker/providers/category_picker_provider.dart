@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../models/category_pagination_state.dart';

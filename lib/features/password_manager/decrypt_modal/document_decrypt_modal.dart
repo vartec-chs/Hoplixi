@@ -7,7 +7,7 @@ import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/vault_db/core/models/dto/document_dto.dart';
 import 'package:hoplixi/vault_db/providers/decrypted_files_guard_provider.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';

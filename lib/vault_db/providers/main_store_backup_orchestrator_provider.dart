@@ -6,7 +6,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/main_store_backup_models.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'vault_ui_state_provider.dart';
 import 'package:hoplixi/vault_db/services/main_store_backup_service.dart';
 import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';

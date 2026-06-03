@@ -5,7 +5,7 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/forms/note_form/providers/note_form_provider.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 class NoteLinksData {
   final List<VaultItemViewDto> outgoing;

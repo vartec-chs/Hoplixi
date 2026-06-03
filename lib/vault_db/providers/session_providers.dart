@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'package:hoplixi/vault_db/providers/vault_ui_state_provider.dart';
+import 'vault_ui_state_provider.dart';
 
 final vaultDBSessionProvider = Provider<Session?>((ref) {
   final dbState = ref.watch(vaultDBManagerStateProvider);

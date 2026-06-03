@@ -11,7 +11,7 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
+import 'service_providers.dart';
 import 'package:hoplixi/vault_db/services/main_store_manager.dart';
 import 'package:result_dart/result_dart.dart';
 

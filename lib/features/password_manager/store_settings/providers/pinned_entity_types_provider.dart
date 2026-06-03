@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 /// Возвращает список закреплённых типов сущностей для отображения в
 /// [EntityTypeCompactDropdown]. Если настройка не задана — возвращает все типы.

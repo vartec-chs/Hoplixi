@@ -15,7 +15,7 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:image/image.dart' as imglib;

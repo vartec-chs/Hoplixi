@@ -20,7 +20,7 @@ import 'package:hoplixi/features/local_send/services/local_send_secure_payload_c
 import 'package:hoplixi/features/local_send/services/signaling_server.dart';
 import 'package:hoplixi/features/local_send/services/webrtc_transfer_service.dart';
 import 'package:hoplixi/vault_db/models/store_folder_info.dart';
-import 'package:hoplixi/vault_db/providers/archive_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/services/archive_service/archive_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';

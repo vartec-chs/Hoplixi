@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 

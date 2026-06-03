@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 /// State for login and email autocomplete suggestions.
 class AutocompleteSuggestionsState {

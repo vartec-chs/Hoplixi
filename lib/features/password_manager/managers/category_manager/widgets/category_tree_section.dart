@@ -7,7 +7,7 @@ import 'package:hoplixi/features/password_manager/managers/providers/manager_ref
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 import '../models/category_tree_node_ui.dart';
 import '../providers/category_tree_provider.dart';

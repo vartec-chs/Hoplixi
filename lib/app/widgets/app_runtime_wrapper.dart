@@ -18,7 +18,7 @@ import 'package:hoplixi/routing/router.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/vault_db/providers/decrypted_files_guard_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
 import 'app_bootstrap.dart';

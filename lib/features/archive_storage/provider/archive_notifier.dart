@@ -4,7 +4,7 @@ import 'package:hoplixi/core/app_paths.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/archive_storage/models/archive_state.dart';
 import 'package:hoplixi/vault_db/models/store_folder_info.dart';
-import 'package:hoplixi/vault_db/providers/archive_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 import 'package:path/path.dart' as p;
 

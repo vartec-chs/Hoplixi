@@ -9,7 +9,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/services/snapshot_sync
 import 'package:hoplixi/features/cloud_sync/storage/models/cloud_storage_exception.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 final currentStoreSyncProvider =
     AsyncNotifierProvider<CurrentStoreSyncNotifier, StoreSyncStatus>(

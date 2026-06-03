@@ -8,7 +8,7 @@ import 'package:hoplixi/features/password_manager/forms/shared/share/share_field
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 
 class LicenseKeyViewScreen extends ConsumerStatefulWidget {

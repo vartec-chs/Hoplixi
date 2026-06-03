@@ -6,7 +6,7 @@ import 'package:hoplixi/core/logger/app_logger.dart';
 import 'package:hoplixi/features/settings/providers/settings_prefs_providers.dart';
 import 'package:hoplixi/setup/setup_tray.dart';
 import 'package:hoplixi/shared/widgets/watchers/lifecycle/app_lifecycle_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 /// Состояние автоблокировки
 /// Хранит оставшееся время в секундах или null, если таймер не активен

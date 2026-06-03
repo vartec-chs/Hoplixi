@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/auth/providers/auth_flow_provider.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 final routerRefreshNotifierProvider =
     NotifierProvider<RouterRefreshNotifier, int>(() => RouterRefreshNotifier());

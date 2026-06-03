@@ -19,8 +19,7 @@ import 'package:hoplixi/features/password_manager/open_store/services/store_pass
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/services/db_history_services/model/db_history_model.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';

@@ -4,7 +4,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/contact_form_state.dart';

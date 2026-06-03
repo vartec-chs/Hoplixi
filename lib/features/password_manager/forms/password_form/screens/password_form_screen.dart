@@ -23,7 +23,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/email_autocompl
 import 'package:hoplixi/features/password_manager/shared/widgets/login_autocomplete_field/login_autocomplete_field.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';

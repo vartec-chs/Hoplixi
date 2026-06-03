@@ -9,8 +9,7 @@ import 'package:hoplixi/features/cloud_sync/snapshot_sync/widgets/snapshot_sync_
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 

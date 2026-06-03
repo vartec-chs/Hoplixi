@@ -6,7 +6,7 @@ import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/services/db_key_derivation_service.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';

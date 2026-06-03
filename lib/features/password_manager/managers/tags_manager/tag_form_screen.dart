@@ -9,7 +9,7 @@ import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/tag_dto.dart';
 import 'package:hoplixi/vault_db/core/models/field_update.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 
 /// Экран для создания/редактирования тега
 class TagFormScreen extends ConsumerStatefulWidget {

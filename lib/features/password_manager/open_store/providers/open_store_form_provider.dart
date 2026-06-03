@@ -8,8 +8,7 @@ import 'package:hoplixi/features/password_manager/open_store/models/open_store_s
 import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/db_history_provider.dart';
-import 'package:hoplixi/vault_db/providers/main_store_manager_provider.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';

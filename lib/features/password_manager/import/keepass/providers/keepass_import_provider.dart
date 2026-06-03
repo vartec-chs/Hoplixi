@@ -5,7 +5,7 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/import/keepass/services/keepass_import_service.dart';
 import 'package:hoplixi/rust/api/keepass_api.dart';
 import 'package:hoplixi/rust/api/keepass_api/types.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 const _messageNotChanged = Object();

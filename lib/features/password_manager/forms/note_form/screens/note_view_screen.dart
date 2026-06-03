@@ -14,7 +14,7 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/w
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/note_dto.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

@@ -6,7 +6,7 @@ import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
 import 'package:hoplixi/vault_db/core/services/vault_entity_services.dart';
-import 'package:hoplixi/vault_db/providers/repository_providers.dart';
+import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:result_dart/result_dart.dart';
 
