@@ -28,6 +28,7 @@ class VaultCoreApi {
   VaultDB get db => _db;
   VaultRepositories get repositories => _repositories;
   VaultEntityServices get entityServices => _entityServices;
+  VaultItemRelationsService get relationsService => _relationsService;
 
   late final VaultHistoryServiceAssembly _historyAssembly =
       VaultHistoryServiceAssembly(db: db, repos: _repositories);

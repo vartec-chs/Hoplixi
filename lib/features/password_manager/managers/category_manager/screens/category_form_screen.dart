@@ -1,21 +1,20 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_field.dart';
+import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/icon_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/icon_ref_dto.dart';
 import 'package:hoplixi/vault_db/core/models/field_update.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/routing/paths.dart';
-import 'package:hoplixi/shared/ui/button.dart';
-import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/shared/widgets/icon_source_picker_button.dart';
-import 'package:go_router/go_router.dart';
 
 /// Экран для создания/редактирования категории
 class CategoryFormScreen extends ConsumerStatefulWidget {
@@ -134,6 +133,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                 pickerColor = color;
               },
               pickerAreaHeightPercent: 0.8,
+              enableAlpha: false,
             ),
           ),
           actions: [
@@ -401,7 +401,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
         }
       }
 
-      final colorInt = _selectedColor?.toARGB32() ?? 0xFFFFFF;
+      final colorInt = (_selectedColor?.toARGB32() ?? 0xFFFFFF) & 0xFFFFFF;
 
       if (_isEditMode) {
         final dto = PatchCategoryDto(

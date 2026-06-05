@@ -8,6 +8,9 @@ import 'package:hoplixi/vault_db/core/errors/db_error.dart';
 import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/models/graph_data.dart';
+import 'package:hoplixi/vault_db/core/models/mappers/system/item_link_mapper.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:uuid/uuid.dart';
@@ -197,6 +200,150 @@ class VaultItemRelationsService {
   }
 
   // --- Item Links ---
+
+  AsyncDBResult<List<ItemLinkViewDto>> getLinksFromItem(String sourceItemId) {
+    return tryCatchAsync(
+      () async {
+        final rows = await itemLinksDao.getLinksFromItem(sourceItemId);
+        return rows.map((r) => r.toItemLinkViewDto()).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении исходящих связей элемента',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDBResult<List<ItemLinkViewDto>> getLinksToItem(String targetItemId) {
+    return tryCatchAsync(
+      () async {
+        final rows = await itemLinksDao.getLinksToItem(targetItemId);
+        return rows.map((r) => r.toItemLinkViewDto()).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении входящих связей элемента',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDBResult<List<ItemLinkViewDto>> getAllLinksForItem(String itemId) {
+    return tryCatchAsync(
+      () async {
+        final rows = await itemLinksDao.getAllLinksForItem(itemId);
+        return rows.map((r) => r.toItemLinkViewDto()).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении связей элемента',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDBResult<Set<String>> getActiveItemIdsByType({
+    required Iterable<String> itemIds,
+    required VaultItemType type,
+  }) {
+    return tryCatchAsync(
+      () async {
+        final uniqueItemIds = itemIds.toSet();
+        if (uniqueItemIds.isEmpty) return <String>{};
+
+        final rows =
+            await (db.select(db.vaultItems)
+                  ..where((t) => t.id.isIn(uniqueItemIds))
+                  ..where((t) => t.type.equalsValue(type))
+                  ..where((t) => t.isDeleted.equals(false))
+                  ..where((t) => t.isArchived.equals(false)))
+                .get();
+
+        return rows.map((item) => item.id).toSet();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении активных элементов по типу',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDBResult<GraphData> getNotesGraph() {
+    return getGraphForItemType(VaultItemType.note);
+  }
+
+  AsyncDBResult<GraphData> getGraphForItemType(VaultItemType type) {
+    return tryCatchAsync(
+      () async {
+        final items =
+            await (db.select(db.vaultItems)
+                  ..where((t) => t.type.equalsValue(type))
+                  ..where((t) => t.isDeleted.equals(false))
+                  ..where((t) => t.isArchived.equals(false))
+                  ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+                .get();
+
+        final itemIds = items.map((item) => item.id).toSet();
+        final vertexes = items
+            .map(
+              (item) => VertexData(
+                id: item.id,
+                tag: type.name,
+                tags: [type.name],
+                title: item.name,
+              ),
+            )
+            .toList();
+
+        if (itemIds.isEmpty) {
+          return GraphData(vertexes: vertexes, edges: const []);
+        }
+
+        final links =
+            await (db.select(db.itemLinks)
+                  ..where(
+                    (t) =>
+                        t.sourceItemId.isIn(itemIds) &
+                        t.targetItemId.isIn(itemIds),
+                  )
+                  ..orderBy([
+                    (t) => OrderingTerm.asc(t.sortOrder),
+                    (t) => OrderingTerm.asc(t.createdAt),
+                  ]))
+                .get();
+
+        final edges = links
+            .map(
+              (link) => EdgeData(
+                srcId: link.sourceItemId,
+                dstId: link.targetItemId,
+                edgeName: link.label ?? link.relationType.name,
+                ranking: link.createdAt.millisecondsSinceEpoch,
+              ),
+            )
+            .toList();
+
+        return GraphData(vertexes: vertexes, edges: edges);
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении графа связанных элементов',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
 
   Future<DBResult<String>> createLink(CreateItemLinkDto dto) async {
     try {

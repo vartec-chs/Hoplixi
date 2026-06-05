@@ -8,8 +8,9 @@ import 'package:hoplixi/features/password_manager/dashboard/providers/dashboard_
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/custom_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/models/custom_field_entry.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/item_link/item_links.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 
 import '../models/note_form_state.dart';
@@ -73,6 +74,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
       }
 
       final customFields = await loadCustomFields(ref, noteId);
+      final linkedItemIds = _extractLinkedItemIds(details.deltaJson);
 
       state = NoteFormState(
         isEditMode: true,
@@ -86,6 +88,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
         tagIds: tagIds,
         tagNames: tagNames,
         customFields: customFields,
+        linkedNoteIds: linkedItemIds,
         isLoading: false,
         originalTitle: item.name,
         originalDeltaJson: details.deltaJson,
@@ -293,6 +296,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
 
         res.getOrThrow();
 
+        await _syncLinkedNoteRelations(state.editingNoteId!);
         await saveCustomFields(ref, state.editingNoteId!, state.customFields);
 
         logInfo('Note updated: ${state.editingNoteId}', tag: _logTag);
@@ -332,6 +336,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
 
         final noteId = res.getOrThrow();
 
+        await _syncLinkedNoteRelations(noteId);
         await saveCustomFields(ref, noteId, state.customFields);
 
         logInfo('Note created: $noteId', tag: _logTag);
@@ -357,6 +362,49 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
       );
       state = state.copyWith(isSaving: false);
       return false;
+    }
+  }
+
+  Future<void> _syncLinkedNoteRelations(String noteId) async {
+    final relationsService = await ref.read(
+      vaultItemRelationsServiceProvider.future,
+    );
+    final linkedItemIds = state.linkedNoteIds.toSet()..remove(noteId);
+    final activeNoteIdsResult = await relationsService.getActiveItemIdsByType(
+      itemIds: linkedItemIds,
+      type: VaultItemType.note,
+    );
+    final activeNoteIds = activeNoteIdsResult.getOrThrow();
+
+    final outgoingLinksResult = await relationsService.getLinksFromItem(noteId);
+    final outgoingNoteLinks = outgoingLinksResult
+        .getOrThrow()
+        .where((link) => link.relationType == ItemLinkType.note)
+        .toList();
+    final currentTargetIds = outgoingNoteLinks
+        .map((link) => link.targetItemId)
+        .toSet();
+
+    final linksToDelete = outgoingNoteLinks.where(
+      (link) => !activeNoteIds.contains(link.targetItemId),
+    );
+    for (final link in linksToDelete) {
+      (await relationsService.deleteLink(link.id)).getOrThrow();
+    }
+
+    final targetIdsToCreate = activeNoteIds.difference(currentTargetIds);
+    var sortOrder = currentTargetIds.length;
+    for (final targetId in targetIdsToCreate) {
+      (await relationsService.createLink(
+        CreateItemLinkDto(
+          sourceItemId: noteId,
+          targetItemId: targetId,
+          relationType: ItemLinkType.note,
+          sortOrder: sortOrder,
+        ),
+      ))
+          .getOrThrow();
+      sortOrder++;
     }
   }
 

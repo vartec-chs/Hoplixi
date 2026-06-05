@@ -82,6 +82,7 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
                 pickerColor = color;
               },
               pickerAreaHeightPercent: 0.8,
+              enableAlpha: false,
             ),
           ),
           actions: [
@@ -218,7 +219,7 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
 
     try {
       final repositories = await ref.read(vaultRepositories.future);
-      final colorInt = _selectedColor?.toARGB32() ?? 0xFFFFFF;
+      final colorInt = (_selectedColor?.toARGB32() ?? 0xFFFFFF) & 0xFFFFFF;
 
       if (_isEditMode) {
         // Режим редактирования
