@@ -101,7 +101,9 @@ class IconSourcePickerButton extends ConsumerWidget {
                       iconRef: iconRef,
                       fallbackIcon: fallbackIcon,
                       size: size * 0.46,
-                      color: theme.colorScheme.onSurface,
+                      color: iconRef?.iconSourceType == IconSourceType.custom
+                          ? null
+                          : theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(width: 12),

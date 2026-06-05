@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:result_dart/result_dart.dart';
+
 import '../models/icon_picker_state.dart';
 import 'icon_picker_filter_provider.dart';
 
@@ -38,8 +39,18 @@ class IconPickerListNotifier extends AsyncNotifier<IconPickerState> {
     try {
       final searchQuery = ref.read(iconPickerSearchProvider);
       final repos = await ref.read(vaultRepositories.future);
-      final result = await repos.icon.getIconRefs();
-      final icons = result.getOrThrow();
+      final result = await repos.icon.getCustomIcons();
+      final icons = result
+          .getOrThrow()
+          .map(
+            (icon) => IconRefCardDto(
+              id: icon.id,
+              iconSourceType: IconSourceType.custom,
+              iconValue: icon.name,
+              customIconId: icon.id,
+            ),
+          )
+          .toList();
       final query = searchQuery.trim().toLowerCase();
       final filteredIcons = query.isEmpty
           ? icons
