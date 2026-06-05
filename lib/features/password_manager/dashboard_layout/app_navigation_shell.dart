@@ -22,9 +22,9 @@ import 'package:showcaseview/showcaseview.dart';
 import 'config/dashboard_layout_constants.dart';
 import 'dashboard_drawer_scope.dart';
 import 'desktop_three_column_layout.dart';
-import 'keyboard_shortcuts.dart';
-import 'widgets/fab_builder.dart';
-import 'widgets/floating_nav_bar.dart';
+import 'widgets/keyboard_shortcuts.dart';
+import 'widgets/fab/fab_builder.dart';
+import 'widgets/nav_bar/floating_nav_bar.dart';
 import 'widgets/mobile_cloud_sync_overlay.dart';
 
 const List<String> _fullCenterPaths = [AppRoutesPaths.notesGraph];

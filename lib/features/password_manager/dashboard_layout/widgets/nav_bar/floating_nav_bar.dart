@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../config/dashboard_layout_constants.dart';
+import '../../config/dashboard_layout_constants.dart';
 import 'floating_nav_item.dart';
 
 /// Плавающий навигационный бар со скользящим индикатором
