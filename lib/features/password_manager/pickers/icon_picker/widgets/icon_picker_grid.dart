@@ -6,9 +6,14 @@ import 'icon_picker_card.dart';
 
 /// Виджет сетки иконок с пагинацией
 class IconPickerGrid extends ConsumerStatefulWidget {
+  final String searchQuery;
   final Function(String iconId) onIconSelected;
 
-  const IconPickerGrid({super.key, required this.onIconSelected});
+  const IconPickerGrid({
+    super.key,
+    required this.searchQuery,
+    required this.onIconSelected,
+  });
 
   @override
   ConsumerState<IconPickerGrid> createState() => _IconPickerGridState();
@@ -37,13 +42,14 @@ class _IconPickerGridState extends ConsumerState<IconPickerGrid> {
   }
 
   void _loadMore() {
-    final notifier = ref.read(iconPickerListProvider.notifier);
+    final notifier =
+        ref.read(iconPickerListProvider(widget.searchQuery).notifier);
     notifier.loadMore();
   }
 
   @override
   Widget build(BuildContext context) {
-    final asyncState = ref.watch(iconPickerListProvider);
+    final asyncState = ref.watch(iconPickerListProvider(widget.searchQuery));
 
     return asyncState.when(
       data: (IconPickerState pickerState) {
@@ -120,7 +126,7 @@ class _IconPickerGridState extends ConsumerState<IconPickerGrid> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                ref.read(iconPickerListProvider.notifier).refresh();
+                ref.read(iconPickerListProvider(widget.searchQuery).notifier).refresh();
               },
               child: const Text('Повторить'),
             ),

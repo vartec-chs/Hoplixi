@@ -9,7 +9,6 @@ icon_picker/
 ├── models/
 │   └── icon_picker_state.dart          # Freezed модель состояния
 ├── provider/
-│   ├── icon_picker_filter_provider.dart # Провайдер поиска с дебаунсингом
 │   └── icon_picker_list_provider.dart   # Провайдер списка с пагинацией
 ├── widgets/
 │   ├── icon_picker_button.dart          # Основной компонент кнопки выбора
@@ -102,28 +101,16 @@ if (selectedIconId != null) {
 
 ## Провайдеры
 
-### iconPickerSearchProvider
-
-Управляет поисковым запросом с дебаунсингом.
-
-```dart
-// Обновить поиск
-ref.read(iconPickerSearchProvider.notifier).updateQuery('svg');
-
-// Очистить поиск
-ref.read(iconPickerSearchProvider.notifier).clear();
-
-// Получить текущий запрос
-final query = ref.watch(iconPickerSearchProvider);
-```
-
 ### iconPickerListProvider
 
-Управляет списком иконок с пагинацией.
+Управляет списком иконок с пагинацией. Принимает `searchQuery` в качестве аргумента (family).
 
 ```dart
-// Получить состояние
-final asyncState = ref.watch(iconPickerListProvider);
+// Получить состояние для пустого поиска
+final asyncState = ref.watch(iconPickerListProvider(''));
+
+// Получить состояние для конкретного запроса
+final filteredState = ref.watch(iconPickerListProvider('svg'));
 
 asyncState.when(
   data: (IconPickerState state) {
@@ -138,10 +125,10 @@ asyncState.when(
 );
 
 // Загрузить следующую страницу
-ref.read(iconPickerListProvider.notifier).loadMore();
+ref.read(iconPickerListProvider('').notifier).loadMore();
 
 // Обновить список
-ref.read(iconPickerListProvider.notifier).refresh();
+ref.read(iconPickerListProvider('').notifier).refresh();
 ```
 
 ## Особенности

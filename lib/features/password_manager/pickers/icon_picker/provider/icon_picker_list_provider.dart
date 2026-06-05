@@ -1,32 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
 
 import '../models/icon_picker_state.dart';
-import 'icon_picker_filter_provider.dart';
 
 /// Провайдер для управления списком иконок в picker
-final iconPickerListProvider =
-    AsyncNotifierProvider.autoDispose<IconPickerListNotifier, IconPickerState>(
-      () {
-        return IconPickerListNotifier();
-      },
+final iconPickerListProvider = AsyncNotifierProvider.autoDispose
+    .family<IconPickerListNotifier, IconPickerState, String>(
+      IconPickerListNotifier.new,
     );
 
 /// Notifier для управления списком иконок с пагинацией
 class IconPickerListNotifier extends AsyncNotifier<IconPickerState> {
   static const int _pageSize = 20;
 
-  @override
-  Future<IconPickerState> build() async {
-    // Слушаем изменения поискового запроса
-    ref.listen(iconPickerSearchProvider, (previous, next) {
-      if (previous != next) {
-        refresh();
-      }
-    });
+  IconPickerListNotifier(this.arg);
 
+  final String arg;
+
+  @override
+  FutureOr<IconPickerState> build() async {
     // Загружаем первую страницу
     return await _fetchIcons(page: 0);
   }
@@ -34,46 +29,30 @@ class IconPickerListNotifier extends AsyncNotifier<IconPickerState> {
   /// Получить иконки с применением текущего фильтра
   Future<IconPickerState> _fetchIcons({
     required int page,
-    List<IconRefCardDto>? existingItems,
+    List<CustomIconCardDto>? existingItems,
   }) async {
     try {
-      final searchQuery = ref.read(iconPickerSearchProvider);
+      final searchQuery = arg.trim();
       final repos = await ref.read(vaultRepositories.future);
-      final result = await repos.icon.getCustomIcons();
-      final icons = result
-          .getOrThrow()
-          .map(
-            (icon) => IconRefCardDto(
-              id: icon.id,
-              iconSourceType: IconSourceType.custom,
-              iconValue: icon.name,
-              customIconId: icon.id,
-            ),
-          )
-          .toList();
-      final query = searchQuery.trim().toLowerCase();
-      final filteredIcons = query.isEmpty
-          ? icons
-          : icons
-                .where(
-                  (icon) =>
-                      (icon.iconValue ?? '').toLowerCase().contains(query) ||
-                      (icon.iconPackId ?? '').toLowerCase().contains(query) ||
-                      (icon.customIconId ?? '').toLowerCase().contains(query),
-                )
-                .toList();
+      final offset = page * _pageSize;
+      final pageResult = await repos.icon.getCustomIconsForPicker(
+        query: searchQuery,
+        limit: _pageSize,
+        offset: offset,
+      );
+      final totalResult = await repos.icon.countCustomIconsForPicker(
+        query: searchQuery,
+      );
 
-      final newItems = filteredIcons
-          .skip(page * _pageSize)
-          .take(_pageSize)
-          .toList();
+      final newItems = pageResult.getOrThrow();
+      final totalItems = totalResult.getOrThrow();
       final allItems = existingItems != null
           ? [...existingItems, ...newItems]
           : newItems;
 
       return IconPickerState(
         items: allItems,
-        hasMore: allItems.length < filteredIcons.length,
+        hasMore: offset + newItems.length < totalItems,
         isLoading: false,
         error: null,
         currentPage: page,

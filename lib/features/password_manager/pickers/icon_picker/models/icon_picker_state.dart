@@ -6,7 +6,7 @@ part 'icon_picker_state.freezed.dart';
 @freezed
 sealed class IconPickerState with _$IconPickerState {
   const factory IconPickerState({
-    required List<IconRefCardDto> items,
+    required List<CustomIconCardDto> items,
     required bool hasMore,
     required bool isLoading,
     required Object? error,

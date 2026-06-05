@@ -30,6 +30,39 @@ class CustomIconsDao extends DatabaseAccessor<VaultDB>
     return select(customIcons).get();
   }
 
+  Future<List<CustomIconsData>> getCustomIconsPage({
+    String query = '',
+    required int limit,
+    required int offset,
+  }) {
+    final normalizedLimit = limit < 1 ? 1 : limit;
+    final normalizedOffset = offset < 0 ? 0 : offset;
+    final stmt = select(customIcons)
+      ..where((_) => _buildSearchExpression(query))
+      ..orderBy([
+        (t) => OrderingTerm(
+          expression: t.modifiedAt,
+          mode: OrderingMode.desc,
+        ),
+        (t) => OrderingTerm(
+          expression: t.name,
+          mode: OrderingMode.asc,
+        ),
+      ])
+      ..limit(normalizedLimit, offset: normalizedOffset);
+
+    return stmt.get();
+  }
+
+  Future<int> countCustomIcons({String query = ''}) async {
+    final countExp = countAll();
+    final stmt = selectOnly(customIcons)
+      ..addColumns([countExp])
+      ..where(_buildSearchExpression(query));
+    final row = await stmt.getSingle();
+    return row.read(countExp) ?? 0;
+  }
+
   Future<int> deleteCustomIconById(String id) {
     return (delete(customIcons)..where((t) => t.id.equals(id))).go();
   }
@@ -40,5 +73,15 @@ class CustomIconsDao extends DatabaseAccessor<VaultDB>
       ..where(customIcons.id.equals(id));
     final result = await query.get();
     return result.isNotEmpty;
+  }
+
+  Expression<bool> _buildSearchExpression(String query) {
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) {
+      return const Constant(true);
+    }
+
+    final pattern = '%$trimmedQuery%';
+    return customIcons.name.like(pattern) | customIcons.id.like(pattern);
   }
 }

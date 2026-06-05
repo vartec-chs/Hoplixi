@@ -123,6 +123,47 @@ class IconRepository {
     );
   }
 
+  AsyncDBResult<List<CustomIconCardDto>> getCustomIconsForPicker({
+    String query = '',
+    int limit = 20,
+    int offset = 0,
+  }) {
+    return tryCatchAsync(
+      () async {
+        final rows = await db.customIconsDao.getCustomIconsPage(
+          query: query,
+          limit: limit,
+          offset: offset,
+        );
+
+        return rows.map((icon) => icon.toCustomIconCardDto()).toList();
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении пользовательских иконок для picker',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDBResult<int> countCustomIconsForPicker({String query = ''}) {
+    return tryCatchAsync(
+      () async {
+        return db.customIconsDao.countCustomIcons(query: query);
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message:
+                  'Ошибка при подсчёте пользовательских иконок для picker',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
   AsyncDBResult<String> createIconRef(CreateIconRefDto dto) {
     return tryCatchAsync(
       () async {

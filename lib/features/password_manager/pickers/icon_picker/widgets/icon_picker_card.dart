@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/models/dto/system/icon_ref_dto.dart';
+import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
 
 /// Виджет карточки иконки для picker.
 class IconPickerCard extends StatelessWidget {
   const IconPickerCard({super.key, required this.icon, required this.onTap});
 
-  final IconRefCardDto icon;
+  final CustomIconCardDto icon;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final label =
-        icon.iconValue ?? icon.customIconId ?? icon.iconPackId ?? icon.id;
+    final label = icon.name;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -29,10 +28,8 @@ class IconPickerCard extends StatelessWidget {
                   child: IconRefPreview(
                     iconRef: IconRefDto(
                       id: icon.id,
-                      iconSourceType: icon.iconSourceType,
-                      iconPackId: icon.iconPackId,
-                      iconValue: icon.iconValue,
-                      customIconId: icon.customIconId,
+                      iconSourceType: IconSourceType.custom,
+                      customIconId: icon.id,
                     ),
                     fallbackIcon: Icons.image_outlined,
                     size: 44,

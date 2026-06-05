@@ -1,30 +1,45 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import '../provider/icon_picker_filter_provider.dart';
 
 /// Виджет поля поиска для icon picker
-class IconPickerSearchBar extends ConsumerStatefulWidget {
-  const IconPickerSearchBar({super.key});
+class IconPickerSearchBar extends StatefulWidget {
+  final ValueChanged<String> onChanged;
+  final String initialValue;
+
+  const IconPickerSearchBar({
+    super.key,
+    required this.onChanged,
+    this.initialValue = '',
+  });
 
   @override
-  ConsumerState<IconPickerSearchBar> createState() =>
-      _IconPickerSearchBarState();
+  State<IconPickerSearchBar> createState() => _IconPickerSearchBarState();
 }
 
-class _IconPickerSearchBarState extends ConsumerState<IconPickerSearchBar> {
+class _IconPickerSearchBarState extends State<IconPickerSearchBar> {
   late final TextEditingController _controller;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
+    _controller = TextEditingController(text: widget.initialValue);
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      widget.onChanged(value);
+    });
+    setState(() {}); // Для обновления кнопки очистки
   }
 
   @override
@@ -40,16 +55,12 @@ class _IconPickerSearchBarState extends ConsumerState<IconPickerSearchBar> {
                 icon: const Icon(Icons.clear),
                 onPressed: () {
                   _controller.clear();
-                  ref.read(iconPickerSearchProvider.notifier).clear();
-                  setState(() {});
+                  _onSearchChanged('');
                 },
               )
             : null,
       ),
-      onChanged: (value) {
-        ref.read(iconPickerSearchProvider.notifier).updateQuery(value);
-        setState(() {}); // Обновляем для показа/скрытия кнопки очистки
-      },
+      onChanged: _onSearchChanged,
     );
   }
 }

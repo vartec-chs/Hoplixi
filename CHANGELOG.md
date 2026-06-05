@@ -17,6 +17,16 @@
 - `IconSourcePickerButton` больше не применяет theme tint к иконкам из БД,
   поэтому пользовательские PNG/SVG отображаются с исходными цветами и
   прозрачностью вместо однотонного квадрата.
+- `IconPickerListProvider` переведён на репозиторные методы с SQL-поиском и
+  SQL-пагинацией вместо загрузки всего списка и `where/skip/take` в UI-слое.
+- В icon picker разделены модели `custom_icons` и `icon_refs`: список
+  пользовательских иконок хранит `CustomIconCardDto`, а `IconRefDto` создаётся
+  только локально для preview/выбора.
+- Убран дубль реализации `showIconPickerModal`: корневой
+  `icon_picker_modal.dart` теперь только реэкспортирует актуальную реализацию
+  из `widgets/icon_picker_modal.dart`.
+- `IconPickerGrid` в modal теперь пересоздаётся при изменении поисковой строки,
+  поэтому SQL-поиск в picker реагирует на ввод.
 
 ### vault_db
 
@@ -26,6 +36,9 @@
 - `VaultItemRelationsService` расширен read-методами для получения связей
   элемента и активных item ID по типу, чтобы UI мог синхронизировать связи без
   обращения к legacy repository-слою.
+- `IconRepository` и `CustomIconsDao` расширены методами для picker: выборка
+  пользовательских иконок теперь использует `WHERE`, `ORDER BY`, `LIMIT` и
+  `OFFSET` на уровне SQL, а также отдельный SQL `count`.
 
 ## 2026-06-02
 
