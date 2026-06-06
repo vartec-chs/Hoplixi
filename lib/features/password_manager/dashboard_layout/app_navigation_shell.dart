@@ -479,7 +479,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
                         ),
                       ),
                       backgroundColor: theme.colorScheme.surfaceContainerLowest
-                          .withOpacity(0.8),
+                          .withValues(alpha: 0.8),
                       selectedIndex: currentIndex,
                       onDestinationSelected: (index) =>
                           _onNavItemSelected(context, index, entity),

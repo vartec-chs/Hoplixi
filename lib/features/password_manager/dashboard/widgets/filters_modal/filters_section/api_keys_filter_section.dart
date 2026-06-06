@@ -345,14 +345,14 @@ class _ApiKeysFilterSectionState extends State<ApiKeysFilterSection> {
         decoration: BoxDecoration(
           border: Border.all(
             color: value != null
-                ? colorScheme.primary.withOpacity(0.5)
-                : colorScheme.outline.withOpacity(0.3),
+                ? colorScheme.primary.withValues(alpha: 0.5)
+                : colorScheme.outline.withValues(alpha: 0.3),
           ),
           borderRadius: BorderRadius.circular(8),
           color: value == true
-              ? colorScheme.primary.withOpacity(0.1)
+              ? colorScheme.primary.withValues(alpha: 0.1)
               : value == false
-              ? colorScheme.error.withOpacity(0.1)
+              ? colorScheme.error.withValues(alpha: 0.1)
               : null,
         ),
         child: Row(
@@ -364,7 +364,7 @@ class _ApiKeysFilterSectionState extends State<ApiKeysFilterSection> {
                   ? colorScheme.primary
                   : value == false
                   ? colorScheme.error
-                  : colorScheme.onSurface.withOpacity(0.6),
+                  : colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -373,7 +373,7 @@ class _ApiKeysFilterSectionState extends State<ApiKeysFilterSection> {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: value != null
                       ? colorScheme.onSurface
-                      : colorScheme.onSurface.withOpacity(0.6),
+                      : colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ),

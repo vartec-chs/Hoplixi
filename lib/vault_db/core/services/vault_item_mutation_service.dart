@@ -95,7 +95,7 @@ class VaultItemMutationService {
           );
         }
 
-        final VaultEntityViewDto oldView = untypedOldView as VaultEntityViewDto;
+        final VaultEntityViewDto oldView = untypedOldView;
 
         // 2. Пишем snapshot before update
         final snapshotRes = (await historyService.snapshotBeforeUpdate(

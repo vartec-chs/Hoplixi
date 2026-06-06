@@ -71,12 +71,10 @@ class VaultDBFacade {
   final IVaultStorageManager _storageManager;
 
   VaultDBFacade({
-    required IVaultSessionHolder sessionHolder,
-    required IVaultLifecycleService lifecycleService,
-    required IVaultStorageManager storageManager,
-  }) : _sessionHolder = sessionHolder,
-       _lifecycleService = lifecycleService,
-       _storageManager = storageManager;
+    required this._sessionHolder,
+    required this._lifecycleService,
+    required this._storageManager,
+  });
 
   // --- Управление состоянием сессии ---
 

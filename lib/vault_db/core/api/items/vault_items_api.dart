@@ -5,8 +5,7 @@ import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_servic
 
 /// Public read-only API boundary for vault item cards and counters.
 class VaultItemsApi {
-  const VaultItemsApi({required VaultCardFilterService cardFilters})
-    : _cardFilters = cardFilters;
+  const VaultItemsApi({required this._cardFilters});
 
   final VaultCardFilterService _cardFilters;
 

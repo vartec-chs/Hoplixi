@@ -160,7 +160,7 @@ class CrashReportsScreen extends ConsumerWidget {
                               selectedTileColor: theme
                                   .colorScheme
                                   .primaryContainer
-                                  .withOpacity(0.1),
+                                  .withValues(alpha: 0.1),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -260,7 +260,7 @@ class CrashReportsScreen extends ConsumerWidget {
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.errorContainer
-                                    .withOpacity(0.2),
+                                    .withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
                                   color: theme.colorScheme.errorContainer,
@@ -289,7 +289,7 @@ class CrashReportsScreen extends ConsumerWidget {
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.tertiaryContainer
-                                    .withOpacity(0.2),
+                                    .withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
                                   color: theme.colorScheme.tertiaryContainer,
@@ -437,7 +437,7 @@ class CrashReportsScreen extends ConsumerWidget {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surfaceContainerHighest
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: theme.dividerColor),
                           ),
@@ -457,12 +457,14 @@ class CrashReportsScreen extends ConsumerWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.errorContainer.withOpacity(
-                              0.3,
+                            color: theme.colorScheme.errorContainer.withValues(
+                              alpha: 0.3,
                             ),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: theme.colorScheme.error.withOpacity(0.5),
+                              color: theme.colorScheme.error.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                           ),
                           child: SelectableText(
@@ -483,7 +485,7 @@ class CrashReportsScreen extends ConsumerWidget {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surfaceContainerHighest
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: theme.dividerColor),
                           ),
@@ -520,7 +522,7 @@ class CrashReportsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: theme.dividerColor),
       ),

@@ -47,9 +47,6 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
 
     final state = ref.watch(keepassImportProvider);
     final notifier = ref.read(keepassImportProvider.notifier);
-    // final screenWidth = MediaQuery.sizeOf(context).width;
-    // final shouldConstrainBody = screenWidth > 600;
-    const shouldConstrainBody = false;
 
     final bodyContent = SafeArea(
       child: Column(
@@ -86,30 +83,7 @@ class _KeepassImportScreenState extends ConsumerState<KeepassImportScreen> {
         title: const Text('Импорт KeePass'),
         leading: const FormCloseButton(),
       ),
-      body: shouldConstrainBody
-          ? Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0, top: 12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withValues(alpha: 0.35),
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: bodyContent,
-                    ),
-                  ),
-                ),
-              ),
-            )
-          : bodyContent,
+      body: bodyContent,
     );
   }
 }

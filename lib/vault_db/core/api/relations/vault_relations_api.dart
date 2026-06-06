@@ -9,10 +9,9 @@ import 'package:hoplixi/vault_db/core/services/vault_item_mutation_service.dart'
 /// Public API boundary for vault item relations.
 class VaultRelationsApi {
   const VaultRelationsApi({
-    required VaultItemRelationsService relationsService,
-    required VaultItemMutationService mutationService,
-  }) : _relationsService = relationsService,
-       _mutationService = mutationService;
+    required this._relationsService,
+    required this._mutationService,
+  });
 
   final VaultItemRelationsService _relationsService;
   final VaultItemMutationService _mutationService;

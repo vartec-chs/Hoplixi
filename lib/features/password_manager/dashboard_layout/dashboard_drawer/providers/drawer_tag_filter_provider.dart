@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/filter_providers.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_tag_filter_state.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
@@ -12,17 +11,16 @@ import 'package:hoplixi/vault_db/providers/providers.dart';
 const int _kTagPageSize = 20;
 const Duration _kTagSearchDebounce = Duration(milliseconds: 300);
 
-final drawerTagFilterProvider = AsyncNotifierProvider.autoDispose
-    .family<DrawerTagFilterNotifier, DrawerTagFilterState, EntityType>(
-      DrawerTagFilterNotifier.new,
-    );
+final drawerTagFilterProvider =
+    AsyncNotifierProvider.autoDispose<
+      DrawerTagFilterNotifier,
+      DrawerTagFilterState
+    >(DrawerTagFilterNotifier.new);
 
 class DrawerTagFilterNotifier extends AsyncNotifier<DrawerTagFilterState> {
   static const String _logTag = 'DrawerTagFilterNotifier';
   Timer? _searchDebounce;
   List<TagCardDto> _allTags = const [];
-
-  DrawerTagFilterNotifier(EntityType _);
 
   @override
   Future<DrawerTagFilterState> build() async {

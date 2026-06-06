@@ -8,20 +8,17 @@ import 'package:uuid/uuid.dart';
 
 class CloudStoreLockService {
   CloudStoreLockService({
-    required CloudStoreLockRemoteStore repository,
+    required this._repository,
     Uuid? uuid,
-    String Function()? lockIdGenerator,
+    this._lockIdGenerator,
     Future<logger_models.DeviceInfo> Function()? deviceInfoLoader,
     Future<PackageInfo> Function()? packageInfoLoader,
     DateTime Function()? now,
-    Duration staleLockTtl = const Duration(hours: 24),
-  }) : _repository = repository,
-       _uuid = uuid ?? const Uuid(),
-       _lockIdGenerator = lockIdGenerator,
+    this._staleLockTtl = const Duration(hours: 24),
+  }) : _uuid = uuid ?? const Uuid(),
        _deviceInfoLoader = deviceInfoLoader ?? logger_models.DeviceInfo.collect,
        _packageInfoLoader = packageInfoLoader ?? PackageInfo.fromPlatform,
-       _now = now ?? (() => DateTime.now().toUtc()),
-       _staleLockTtl = staleLockTtl;
+       _now = now ?? (() => DateTime.now().toUtc());
 
   static const String _logTag = 'CloudStoreLockService';
   static const String _feature = 'cloud_sync';

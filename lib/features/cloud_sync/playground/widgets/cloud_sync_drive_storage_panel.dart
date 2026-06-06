@@ -125,7 +125,7 @@ class _DriveProviderCard extends StatelessWidget {
     final metadata = provider.metadata;
 
     return Material(
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.28),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.28),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),

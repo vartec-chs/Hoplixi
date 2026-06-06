@@ -14,7 +14,6 @@ import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра банковской карты (только чтение)

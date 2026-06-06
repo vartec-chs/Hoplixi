@@ -24,12 +24,7 @@ extension DBCoreErrorToAppError on DBCoreError {
         AppError.validation(
           code: ValidationErrorCode.invalidInput,
           message: message,
-          data: {
-            ...data,
-            'dbCode': code,
-            if (field != null) 'field': field,
-            if (entity != null) 'entity': entity,
-          },
+          data: {...data, 'dbCode': code, 'field': ?field, 'entity': ?entity},
           cause: this,
         ),
 
@@ -48,10 +43,10 @@ extension DBCoreErrorToAppError on DBCoreError {
           data: {
             ...data,
             'constraint': constraint,
-            if (table != null) 'table': table,
-            if (field != null) 'field': field,
-            if (entity != null) 'entity': entity,
-            if (code != null) 'dbCode': code,
+            'table': ?table,
+            'field': ?field,
+            'entity': ?entity,
+            'dbCode': ?code,
           },
           cause: this,
         ),
@@ -65,7 +60,7 @@ extension DBCoreErrorToAppError on DBCoreError {
         AppError.mainDatabase(
           code: MainDatabaseErrorCode.queryFailed,
           message: message,
-          data: {...data, 'dbCode': code, if (entity != null) 'entity': entity},
+          data: {...data, 'dbCode': code, 'entity': ?entity},
           cause: this,
         ),
 
@@ -79,7 +74,7 @@ extension DBCoreErrorToAppError on DBCoreError {
           code: MainDatabaseErrorCode.queryFailed,
           message: 'Ошибка базы данных',
           debugMessage: message,
-          data: {if (statement != null) 'statement': statement},
+          data: {'statement': ?statement},
           cause: cause ?? this,
           stackTrace: stackTrace,
         ),

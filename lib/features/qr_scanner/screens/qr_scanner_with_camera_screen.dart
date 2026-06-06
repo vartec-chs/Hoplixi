@@ -373,7 +373,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
               Icon(
                 Icons.camera_alt_outlined,
                 size: 80,
-                color: colorScheme.error.withOpacity(0.6),
+                color: colorScheme.error.withValues(alpha: 0.6),
               ),
               const SizedBox(height: 24),
               Text(
@@ -428,7 +428,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
         ),
       ),
       child: SafeArea(
@@ -529,7 +529,7 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -577,7 +577,9 @@ class _QrScannerWithCameraScreenState extends State<QrScannerWithCameraScreen>
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

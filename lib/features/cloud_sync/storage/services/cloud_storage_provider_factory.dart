@@ -10,10 +10,9 @@ import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provi
 
 class CloudStorageProviderFactory {
   const CloudStorageProviderFactory({
-    required CloudSyncTokenResolver tokenResolver,
-    required CloudSyncHttpClientFactory httpClientFactory,
-  }) : _tokenResolver = tokenResolver,
-       _httpClientFactory = httpClientFactory;
+    required this._tokenResolver,
+    required this._httpClientFactory,
+  });
 
   final CloudSyncTokenResolver _tokenResolver;
   final CloudSyncHttpClientFactory _httpClientFactory;

@@ -86,11 +86,11 @@ class _CategoryCardState extends State<CategoryCard>
         ? colorScheme.surfaceContainerHigh
         : colorScheme.surfaceContainerLowest;
     final gradientStart = Color.alphaBlend(
-      baseColor.withOpacity(isDark ? 0.35 : 0.2),
+      baseColor.withValues(alpha: isDark ? 0.35 : 0.2),
       cardBackground,
     );
     final gradientEnd = Color.alphaBlend(
-      baseColor.withOpacity(isDark ? 0.15 : 0.08),
+      baseColor.withValues(alpha: isDark ? 0.15 : 0.08),
       cardBackground,
     );
 
@@ -120,15 +120,15 @@ class _CategoryCardState extends State<CategoryCard>
               boxShadow: [
                 BoxShadow(
                   color: isDark
-                      ? Colors.black.withOpacity(_isHovered ? 0.4 : 0.25)
-                      : baseColor.withOpacity(_isHovered ? 0.2 : 0.1),
+                      ? Colors.black.withValues(alpha: _isHovered ? 0.4 : 0.25)
+                      : baseColor.withValues(alpha: _isHovered ? 0.2 : 0.1),
                   blurRadius: _isHovered ? 20 : 12,
                   offset: Offset(0, _isHovered ? 8 : 4),
                   spreadRadius: _isHovered ? 2 : 0,
                 ),
                 // Мягкое свечение в цвете карточки
                 BoxShadow(
-                  color: baseColor.withOpacity(_isHovered ? 0.15 : 0.08),
+                  color: baseColor.withValues(alpha: _isHovered ? 0.15 : 0.08),
                   blurRadius: 24,
                   offset: const Offset(0, 2),
                 ),
@@ -140,8 +140,8 @@ class _CategoryCardState extends State<CategoryCard>
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
                 onTap: widget.onTap,
-                splashColor: baseColor.withOpacity(0.2),
-                highlightColor: baseColor.withOpacity(0.1),
+                splashColor: baseColor.withValues(alpha: 0.2),
+                highlightColor: baseColor.withValues(alpha: 0.1),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -177,9 +177,9 @@ class _CategoryCardState extends State<CategoryCard>
                       const SizedBox(height: 8),
 
                       // Информация о типе (заглушка или удалена)
-                      Row(
+                      const Row(
                         children: [
-                          const Spacer(),
+                          Spacer(),
                           // Можно добавить счетчик элементов если будет реализован
                         ],
                       ),
@@ -200,12 +200,12 @@ class _CategoryCardState extends State<CategoryCard>
       width: 52,
       height: 52,
       decoration: BoxDecoration(
-        color: baseColor.withOpacity(isDark ? 0.3 : 0.2),
+        color: baseColor.withValues(alpha: isDark ? 0.3 : 0.2),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: baseColor.withOpacity(0.3), width: 1),
+        border: Border.all(color: baseColor.withValues(alpha: 0.3), width: 1),
         boxShadow: [
           BoxShadow(
-            color: baseColor.withOpacity(0.2),
+            color: baseColor.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -241,7 +241,7 @@ class _CategoryCardState extends State<CategoryCard>
     return PopupMenuButton<String>(
       icon: Icon(
         Icons.more_vert,
-        color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         size: 20,
       ),
       splashRadius: 20,

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/vault_db/core/models/dto/otp_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:otp/otp.dart';
 

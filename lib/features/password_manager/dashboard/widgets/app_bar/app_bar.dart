@@ -9,7 +9,6 @@ import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/vault_db/core/models/filters/base/base.dart';
-import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';

@@ -25,13 +25,13 @@ class NotificationCard extends StatelessWidget {
   Color _getBackgroundColor(ColorScheme colorScheme) {
     switch (type) {
       case NotificationType.error:
-        return colorScheme.error.withOpacity(0.12);
+        return colorScheme.error.withValues(alpha: 0.12);
       case NotificationType.success:
-        return const Color(0xFF4CAF50).withOpacity(0.12);
+        return const Color(0xFF4CAF50).withValues(alpha: 0.12);
       case NotificationType.info:
-        return colorScheme.primary.withOpacity(0.12);
+        return colorScheme.primary.withValues(alpha: 0.12);
       case NotificationType.warning:
-        return Colors.orange.withOpacity(0.12);
+        return Colors.orange.withValues(alpha: 0.12);
     }
   }
 
@@ -72,7 +72,7 @@ class NotificationCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: textColor.withOpacity(0.2), width: 1),
+        border: Border.all(color: textColor.withValues(alpha: 0.2), width: 1),
       ),
       padding: padding,
       child: Row(
@@ -94,7 +94,7 @@ class NotificationCard extends StatelessWidget {
               onPressed: onDismiss,
               icon: Icon(
                 Icons.close,
-                color: textColor.withOpacity(0.6),
+                color: textColor.withValues(alpha: 0.6),
                 size: 20,
               ),
               padding: EdgeInsets.zero,

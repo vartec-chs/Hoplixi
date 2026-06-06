@@ -6,8 +6,7 @@ import 'package:hoplixi/vault_db/core/repositories/base/system/category_reposito
 
 /// Public API boundary for category queries and commands.
 class CategoriesApi {
-  const CategoriesApi({required CategoryRepository repository})
-    : _repository = repository;
+  const CategoriesApi({required this._repository});
 
   final CategoryRepository _repository;
 

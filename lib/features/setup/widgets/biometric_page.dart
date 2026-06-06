@@ -97,8 +97,8 @@ class _BiometricPageState extends ConsumerState<BiometricPage>
                       boxShadow: [
                         BoxShadow(
                           color: setupState.biometricEnabled
-                              ? Colors.teal.withOpacity(0.3)
-                              : colorScheme.shadow.withOpacity(0.1),
+                              ? Colors.teal.withValues(alpha: 0.3)
+                              : colorScheme.shadow.withValues(alpha: 0.1),
                           blurRadius: 24,
                           offset: const Offset(0, 8),
                         ),
@@ -184,9 +184,9 @@ class _BiometricPageState extends ConsumerState<BiometricPage>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -309,9 +309,9 @@ class _BiometricPageState extends ConsumerState<BiometricPage>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colorScheme.errorContainer.withOpacity(0.3),
+        color: colorScheme.errorContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.error.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.error.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -329,7 +329,7 @@ class _BiometricPageState extends ConsumerState<BiometricPage>
             'Вы можете настроить биометрическую\n'
             'аутентификацию позже в настройках',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onErrorContainer.withOpacity(0.8),
+              color: colorScheme.onErrorContainer.withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),

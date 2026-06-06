@@ -54,9 +54,9 @@ class ActionButton extends StatelessWidget {
         ? colorScheme.onPrimary
         : colorScheme.onSurface;
     final disabledBackgroundColor = isPrimary
-        ? colorScheme.primary.withOpacity(0.38)
-        : colorScheme.surfaceContainerLow.withOpacity(0.38);
-    final disabledForegroundColor = foregroundColor.withOpacity(0.38);
+        ? colorScheme.primary.withValues(alpha: 0.38)
+        : colorScheme.surfaceContainerLow.withValues(alpha: 0.38);
+    final disabledForegroundColor = foregroundColor.withValues(alpha: 0.38);
 
     // Адаптивная высота: если не указана, используем в зависимости от наличия описания
     final buttonHeight = height ?? (description != null ? 100.0 : 70.0);
@@ -68,7 +68,7 @@ class ActionButton extends StatelessWidget {
         boxShadow: isPrimary && !isDisabled
             ? [
                 BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.3),
+                  color: colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -96,8 +96,8 @@ class ActionButton extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isDisabled
-                        ? disabledForegroundColor.withOpacity(0.1)
-                        : foregroundColor.withOpacity(0.1),
+                        ? disabledForegroundColor.withValues(alpha: 0.1)
+                        : foregroundColor.withValues(alpha: 0.1),
                   ),
                   child: Icon(
                     icon,
@@ -137,7 +137,7 @@ class ActionButton extends StatelessWidget {
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: isDisabled
                                   ? disabledForegroundColor
-                                  : foregroundColor.withOpacity(0.65),
+                                  : foregroundColor.withValues(alpha: 0.65),
                               height: 1.3,
                             ),
                             maxLines: 1,
@@ -154,7 +154,7 @@ class ActionButton extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,
-                    color: foregroundColor.withOpacity(0.6),
+                    color: foregroundColor.withValues(alpha: 0.6),
                   ),
                 ],
               ],

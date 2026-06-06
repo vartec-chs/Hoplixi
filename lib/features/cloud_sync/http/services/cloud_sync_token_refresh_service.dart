@@ -9,12 +9,10 @@ import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_resol
 
 class CloudSyncTokenRefreshService {
   CloudSyncTokenRefreshService({
-    required CloudSyncTokenResolver tokenResolver,
-    required AppCredentialsService appCredentialsService,
+    required this._tokenResolver,
+    required this._appCredentialsService,
     Dio? refreshDio,
-  }) : _tokenResolver = tokenResolver,
-       _appCredentialsService = appCredentialsService,
-       _refreshDio =
+  }) : _refreshDio =
            refreshDio ??
            Dio(
              BaseOptions(

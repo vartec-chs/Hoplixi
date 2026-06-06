@@ -23,7 +23,7 @@ class TagPickerItem extends StatelessWidget {
 
     return Material(
       color: isSelected
-          ? colorScheme.primaryContainer.withOpacity(0.1)
+          ? colorScheme.primaryContainer.withValues(alpha: 0.1)
           : Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -38,10 +38,10 @@ class TagPickerItem extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: tagColor.withOpacity(0.15),
+                  color: tagColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: tagColor.withOpacity(0.3),
+                    color: tagColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -79,7 +79,7 @@ class TagPickerItem extends StatelessWidget {
                   Text(
                     'Тег',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -93,7 +93,7 @@ class TagPickerItem extends StatelessWidget {
               else
                 Icon(
                   Icons.circle_outlined,
-                  color: colorScheme.onSurface.withOpacity(0.3),
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
                   size: 24,
                 ),
             ],

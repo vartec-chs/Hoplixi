@@ -24,10 +24,12 @@ class AuthProviderListTile extends StatelessWidget {
       elevation: 0,
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.55),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.7)),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -147,8 +149,8 @@ class _SupportChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: isEnabled
-              ? colorScheme.primary.withOpacity(0.25)
-              : colorScheme.outlineVariant.withOpacity(0.8),
+              ? colorScheme.primary.withValues(alpha: 0.25)
+              : colorScheme.outlineVariant.withValues(alpha: 0.8),
         ),
       ),
       child: Text(

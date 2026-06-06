@@ -32,10 +32,12 @@ class AuthCredentialListTile extends StatelessWidget {
         margin: EdgeInsets.zero,
         elevation: 0,
         clipBehavior: Clip.antiAlias,
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.55),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.7)),
+          side: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.7),
+          ),
         ),
         child: Material(
           color: Colors.transparent,
@@ -125,12 +127,12 @@ class AuthCredentialListTile extends StatelessWidget {
                             width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: colorScheme.errorContainer.withOpacity(
-                                0.55,
+                              color: colorScheme.errorContainer.withValues(
+                                alpha: 0.55,
                               ),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: colorScheme.error.withOpacity(0.2),
+                                color: colorScheme.error.withValues(alpha: 0.2),
                               ),
                             ),
                             child: Text(
@@ -217,8 +219,8 @@ class _SupportChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: isEnabled
-              ? colorScheme.secondary.withOpacity(0.25)
-              : colorScheme.outlineVariant.withOpacity(0.8),
+              ? colorScheme.secondary.withValues(alpha: 0.25)
+              : colorScheme.outlineVariant.withValues(alpha: 0.8),
         ),
       ),
       child: Text(

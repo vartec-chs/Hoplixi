@@ -29,20 +29,14 @@ class VaultLifecycleService implements IVaultLifecycleService {
   final UpdateVaultDB _updateVaultDB;
 
   VaultLifecycleService({
-    required IVaultSessionHolder sessionHolder,
-    required IVaultStorageManager storageManager,
-    required DatabaseHistoryService dbHistoryService,
-    required CreateVaultDB createVaultDB,
-    required OpenVaultDB openVaultDB,
-    required CloseVaultDB closeVaultDB,
-    required UpdateVaultDB updateVaultDB,
-  }) : _sessionHolder = sessionHolder,
-       _storageManager = storageManager,
-       _dbHistoryService = dbHistoryService,
-       _createVaultDB = createVaultDB,
-       _openVaultDB = openVaultDB,
-       _closeVaultDB = closeVaultDB,
-       _updateVaultDB = updateVaultDB;
+    required this._sessionHolder,
+    required this._storageManager,
+    required this._dbHistoryService,
+    required this._createVaultDB,
+    required this._openVaultDB,
+    required this._closeVaultDB,
+    required this._updateVaultDB,
+  });
 
   bool _isCurrentStorePath(String storePath) {
     return _sessionHolder.currentStorePath == storePath;

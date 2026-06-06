@@ -42,9 +42,11 @@ class _QrScannerShowcaseScreenState extends State<QrScannerShowcaseScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withOpacity(0.3),
+              color: colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.3),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

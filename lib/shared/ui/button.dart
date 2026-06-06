@@ -234,11 +234,11 @@ class SmoothButton extends StatelessWidget {
   }
 
   Color _disabledForegroundColor(BuildContext context) {
-    return Theme.of(context).colorScheme.onSurface.withOpacity(0.38);
+    return Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38);
   }
 
   Color _disabledBackgroundColor(BuildContext context) {
-    return Theme.of(context).colorScheme.onSurface.withOpacity(0.12);
+    return Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12);
   }
 
   Color _loadingIndicatorColor(BuildContext context) {
@@ -349,7 +349,7 @@ class SmoothButton extends StatelessWidget {
               if (states.contains(WidgetState.disabled)) {
                 return disabledBackgroundColor;
               }
-              return variantColor.withOpacity(0.2);
+              return variantColor.withValues(alpha: 0.2);
             }),
             foregroundColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.disabled)) {
@@ -364,7 +364,7 @@ class SmoothButton extends StatelessWidget {
             side: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.disabled)) {
                 return BorderSide(
-                  color: theme.colorScheme.onSurface.withOpacity(0.12),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
                   width: 1,
                 );
               }
@@ -374,7 +374,7 @@ class SmoothButton extends StatelessWidget {
               if (states.contains(WidgetState.disabled)) {
                 return Colors.transparent;
               }
-              return variantColor.withOpacity(0.1);
+              return variantColor.withValues(alpha: 0.1);
             }),
             foregroundColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.disabled)) {
@@ -396,7 +396,7 @@ class SmoothButton extends StatelessWidget {
               if (states.contains(WidgetState.disabled)) {
                 return Colors.transparent;
               }
-              return variantColor.withOpacity(0.1);
+              return variantColor.withValues(alpha: 0.1);
             }),
           );
           break;
@@ -465,8 +465,9 @@ class SmoothButton extends StatelessWidget {
           clipBehavior: clipBehavior,
           style: styledWithVariant.copyWith(
             side: WidgetStateProperty.resolveWith((states) {
-              final defaultBorderColor = theme.colorScheme.onSurface
-                  .withOpacity(0.12);
+              final defaultBorderColor = theme.colorScheme.onSurface.withValues(
+                alpha: 0.12,
+              );
 
               if (states.contains(WidgetState.disabled)) {
                 return BorderSide(color: defaultBorderColor, width: 1.5);
@@ -489,7 +490,7 @@ class SmoothButton extends StatelessWidget {
         final isActuallyDisabled = onPressed == null && !loading;
         final dashColor =
             isActuallyDisabled || variant == SmoothButtonVariant.normal
-            ? theme.colorScheme.onSurface.withOpacity(0.12)
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
             : variantColor;
 
         final button = TextButton(

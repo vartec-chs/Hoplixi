@@ -16,16 +16,12 @@ import 'package:hoplixi/vault_db/usecases/perform_store_cleanup.dart';
 /// Public API boundary for store metadata and settings.
 class VaultStoreApi {
   const VaultStoreApi({
-    required VaultDB db,
-    required StoreMetaService metaService,
-    required StoreSettingsRepository settingsRepository,
-    required VaultEntityServices entityServices,
-    required VaultRepositories repositories,
-  }) : _db = db,
-       _metaService = metaService,
-       _settingsRepository = settingsRepository,
-       _entityServices = entityServices,
-       _repositories = repositories;
+    required this._db,
+    required this._metaService,
+    required this._settingsRepository,
+    required this._entityServices,
+    required this._repositories,
+  });
 
   final VaultDB _db;
   final StoreMetaService _metaService;

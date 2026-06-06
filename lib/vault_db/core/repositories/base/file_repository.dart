@@ -136,7 +136,7 @@ class FileRepository {
           }
 
           if (targetMetadataId == null) {
-            throw DBCoreError.validation(
+            throw const DBCoreError.validation(
               code: 'metadata_id_required',
               message: 'Cannot update metadata because metadataId is null',
             );

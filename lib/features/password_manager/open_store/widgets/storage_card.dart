@@ -63,8 +63,8 @@ class StorageCard extends StatelessWidget {
                           storage.formattedModifiedDate,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: isSelected
-                                ? colorScheme.onPrimaryContainer.withOpacity(
-                                    0.7,
+                                ? colorScheme.onPrimaryContainer.withValues(
+                                    alpha: 0.7,
                                   )
                                 : colorScheme.onSurfaceVariant,
                           ),
@@ -79,13 +79,13 @@ class StorageCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.secondary.withOpacity(0.2),
+                        color: colorScheme.secondary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'Недавние',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSecondary.withOpacity(0.6),
+                          color: colorScheme.onSecondary.withValues(alpha: 0.6),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -109,7 +109,7 @@ class StorageCard extends StatelessWidget {
                     Icons.storage_outlined,
                     size: 16,
                     color: isSelected
-                        ? colorScheme.onPrimaryContainer.withOpacity(0.7)
+                        ? colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
                         : colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
@@ -117,7 +117,9 @@ class StorageCard extends StatelessWidget {
                     storage.formattedSize,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isSelected
-                          ? colorScheme.onPrimaryContainer.withOpacity(0.7)
+                          ? colorScheme.onPrimaryContainer.withValues(
+                              alpha: 0.7,
+                            )
                           : colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -127,7 +129,9 @@ class StorageCard extends StatelessWidget {
                       Icons.info_outline,
                       size: 16,
                       color: isSelected
-                          ? colorScheme.onPrimaryContainer.withOpacity(0.7)
+                          ? colorScheme.onPrimaryContainer.withValues(
+                              alpha: 0.7,
+                            )
                           : colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
@@ -136,7 +140,9 @@ class StorageCard extends StatelessWidget {
                         storage.description!,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isSelected
-                              ? colorScheme.onPrimaryContainer.withOpacity(0.7)
+                              ? colorScheme.onPrimaryContainer.withValues(
+                                  alpha: 0.7,
+                                )
                               : colorScheme.onSurfaceVariant,
                         ),
                         maxLines: 1,

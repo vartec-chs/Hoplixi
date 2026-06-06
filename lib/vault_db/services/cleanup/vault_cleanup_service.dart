@@ -4,9 +4,7 @@ class VaultCleanupService {
   final Future<void> Function(VaultDB db, String storePath)?
   _performStoreCleanup;
 
-  const VaultCleanupService({
-    Future<void> Function(VaultDB db, String storePath)? performStoreCleanup,
-  }) : _performStoreCleanup = performStoreCleanup;
+  const VaultCleanupService({this._performStoreCleanup});
 
   Future<void> cleanup(VaultDB db, String storePath) async {
     final cleanupFn = _performStoreCleanup;

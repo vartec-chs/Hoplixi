@@ -7,7 +7,6 @@ import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/ssh_key/ssh_key_items.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/ssh_key_form_state.dart';
 

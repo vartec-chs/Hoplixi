@@ -22,9 +22,9 @@ class UdpBroadcastTransport {
   final Map<String, RawDatagramSocket> _sockets = {};
 
   UdpBroadcastTransport({
-    required NetworkInterfaceCache ifaceCache,
+    required this._ifaceCache,
     this.port = kBroadcastPort,
-  }) : _ifaceCache = ifaceCache;
+  });
 
   bool get isRunning => _sockets.isNotEmpty;
 

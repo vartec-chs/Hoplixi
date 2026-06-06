@@ -92,7 +92,7 @@ class ThemeSwitcher extends ConsumerWidget {
               color: isDark ? Colors.blue.shade600 : Colors.grey.shade300,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -113,7 +113,7 @@ class ThemeSwitcher extends ConsumerWidget {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 3,
                           offset: const Offset(0, 1),
                         ),
@@ -201,7 +201,7 @@ class ThemeSwitcher extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
         color: Theme.of(context).colorScheme.surface,
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -280,7 +280,7 @@ class ThemeSwitcher extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               color: isSelected
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
                   : Colors.transparent,
             ),
             child: Icon(
@@ -288,7 +288,9 @@ class ThemeSwitcher extends ConsumerWidget {
               size: size * 0.5,
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         );
@@ -356,8 +358,8 @@ class ThemeSwitcher extends ConsumerWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (isDark ? Colors.purple : Colors.orange).withOpacity(
-                    0.3,
+                  color: (isDark ? Colors.purple : Colors.orange).withValues(
+                    alpha: 0.3,
                   ),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
@@ -384,7 +386,7 @@ class ThemeSwitcher extends ConsumerWidget {
                       color: isDark ? Colors.grey.shade200 : Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -416,7 +418,7 @@ class ThemeSwitcher extends ConsumerWidget {
         child: Icon(
           Icons.star,
           size: size * 0.1,
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
         ),
       ),
       Positioned(
@@ -425,7 +427,7 @@ class ThemeSwitcher extends ConsumerWidget {
         child: Icon(
           Icons.star,
           size: size * 0.08,
-          color: Colors.white.withOpacity(0.6),
+          color: Colors.white.withValues(alpha: 0.6),
         ),
       ),
       Positioned(
@@ -434,7 +436,7 @@ class ThemeSwitcher extends ConsumerWidget {
         child: Icon(
           Icons.star,
           size: size * 0.06,
-          color: Colors.white.withOpacity(0.7),
+          color: Colors.white.withValues(alpha: 0.7),
         ),
       ),
     ];

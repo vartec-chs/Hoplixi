@@ -251,7 +251,9 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.secondary.withValues(alpha: 0.3),
               ),
             ),
             child: Column(
@@ -300,7 +302,7 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
                   Divider(
                     color: Theme.of(
                       context,
-                    ).colorScheme.outline.withOpacity(0.2),
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                     height: 1,
                   ),
                   const SizedBox(height: 16),
@@ -337,7 +339,9 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.secondary.withValues(alpha: 0.3),
               ),
             ),
             child: Column(

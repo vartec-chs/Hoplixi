@@ -114,8 +114,8 @@ class _LogEntryTileState extends State<LogEntryTile> {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: _expanded
-              ? levelColor.withOpacity(0.35)
-              : colorScheme.outlineVariant.withOpacity(0.5),
+              ? levelColor.withValues(alpha: 0.35)
+              : colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),
       ),
       child: InkWell(
@@ -139,9 +139,11 @@ class _LogEntryTileState extends State<LogEntryTile> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: levelColor.withOpacity(0.14),
+                      color: levelColor.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: levelColor.withOpacity(0.4)),
+                      border: Border.all(
+                        color: levelColor.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Icon(
                       _getLogLevelIcon(),
@@ -300,7 +302,9 @@ class _LogEntryTileState extends State<LogEntryTile> {
                       _SectionTitle(title: 'Ошибка', color: colorScheme.error),
                       const SizedBox(height: 4),
                       _DetailBlock(
-                        color: colorScheme.errorContainer.withOpacity(0.5),
+                        color: colorScheme.errorContainer.withValues(
+                          alpha: 0.5,
+                        ),
                         borderColor: colorScheme.errorContainer,
                         child: SelectableText(
                           widget.entry.error.toString(),
@@ -319,7 +323,9 @@ class _LogEntryTileState extends State<LogEntryTile> {
                       ),
                       const SizedBox(height: 4),
                       _DetailBlock(
-                        color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                        color: colorScheme.tertiaryContainer.withValues(
+                          alpha: 0.3,
+                        ),
                         borderColor: colorScheme.tertiaryContainer,
                         child: SelectableText(
                           widget.entry.stackTrace.toString(),
@@ -339,7 +345,9 @@ class _LogEntryTileState extends State<LogEntryTile> {
                       ),
                       const SizedBox(height: 4),
                       _DetailBlock(
-                        color: colorScheme.primaryContainer.withOpacity(0.3),
+                        color: colorScheme.primaryContainer.withValues(
+                          alpha: 0.3,
+                        ),
                         borderColor: colorScheme.primaryContainer,
                         child: SelectableText(
                           _formatAdditionalData(),

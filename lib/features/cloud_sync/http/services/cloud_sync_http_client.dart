@@ -20,11 +20,10 @@ class CloudSyncHttpClient implements CloudSyncHttpTransport {
   CloudSyncHttpClient({
     required this.tokenId,
     required this.provider,
-    required CloudSyncTokenResolver tokenResolver,
-    required CloudSyncTokenRefreshService tokenRefreshService,
+    required this._tokenResolver,
+    required this._tokenRefreshService,
     Dio? dio,
-  }) : _tokenResolver = tokenResolver,
-       _tokenRefreshService = tokenRefreshService {
+  }) {
     _dio = dio ?? Dio(_createBaseOptions());
     _retryDio = Dio(_copyBaseOptions(_dio.options))
       ..httpClientAdapter = _dio.httpClientAdapter
@@ -540,16 +539,12 @@ Map<String, dynamic>? _decodeJsonMap(String text) {
 
 class _CloudSyncAuthInterceptor extends QueuedInterceptor {
   _CloudSyncAuthInterceptor({
-    required Dio retryDio,
-    required String tokenId,
-    required CloudSyncProvider provider,
-    required CloudSyncTokenResolver tokenResolver,
-    required CloudSyncTokenRefreshService tokenRefreshService,
-  }) : _retryDio = retryDio,
-       _tokenId = tokenId,
-       _provider = provider,
-       _tokenResolver = tokenResolver,
-       _tokenRefreshService = tokenRefreshService;
+    required this._retryDio,
+    required this._tokenId,
+    required this._provider,
+    required this._tokenResolver,
+    required this._tokenRefreshService,
+  });
 
   static const String _logTag = 'CloudSyncAuthInterceptor';
 

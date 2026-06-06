@@ -32,14 +32,14 @@ class HomeTopActions extends StatelessWidget {
             context,
             IconButton(
               icon: const Icon(LucideIcons.settings),
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               tooltip: 'Настройки',
               onPressed: () => context.push(AppRoutesPaths.settings),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.info_outline),
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             tooltip: 'О приложении',
             onPressed: () => showAppAboutModal(context),
           ),

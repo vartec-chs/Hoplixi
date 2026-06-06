@@ -23,8 +23,8 @@ import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provi
 class OneDriveCloudStorageProvider implements CloudStorageProvider {
   OneDriveCloudStorageProvider({
     required this.tokenId,
-    required CloudSyncHttpTransport httpClient,
-  }) : _httpClient = httpClient;
+    required this._httpClient,
+  });
 
   static const String _baseUrl = 'https://graph.microsoft.com/v1.0/me/drive';
   static const String _folderFacetKey = 'folder';

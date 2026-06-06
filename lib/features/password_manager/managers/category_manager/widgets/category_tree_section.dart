@@ -120,7 +120,7 @@ class _CategoryNodeFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final lineColor = colorScheme.outlineVariant.withOpacity(0.9);
+    final lineColor = colorScheme.outlineVariant.withValues(alpha: 0.9);
 
     return Padding(
       padding: EdgeInsets.only(left: depth * 24.0),
@@ -177,7 +177,7 @@ class _CategoryTreeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final highlight = hasChildren && isExpanded
-        ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.45)
+        ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45)
         : Colors.transparent;
 
     return Padding(
@@ -284,7 +284,7 @@ class _CategoryActions extends ConsumerWidget {
       padding: EdgeInsets.zero,
       icon: Icon(
         Icons.more_horiz,
-        color: colorScheme.onSurfaceVariant.withOpacity(0.76),
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.76),
         size: 18,
       ),
       splashRadius: 18,

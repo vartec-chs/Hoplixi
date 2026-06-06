@@ -222,7 +222,7 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     color: _isHovered && widget.enabled
-                        ? colorScheme.onSurface.withOpacity(0.04)
+                        ? colorScheme.onSurface.withValues(alpha: 0.04)
                         : Colors.transparent,
                   ),
                   child: InputDecorator(
@@ -250,7 +250,9 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
                               Icons.arrow_drop_down,
                               color: widget.enabled
                                   ? colorScheme.onSurface
-                                  : colorScheme.onSurface.withOpacity(0.38),
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.38,
+                                    ),
                             ),
                           ),
                         ],
@@ -266,7 +268,9 @@ class _OtpPickerFieldState extends ConsumerState<OtpPickerField> {
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: hasValue
                                   ? colorScheme.onSurface
-                                  : colorScheme.onSurface.withOpacity(0.6),
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

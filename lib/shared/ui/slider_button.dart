@@ -802,8 +802,8 @@ class _SliderButtonState extends State<SliderButton>
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(
-                                        widget.enabled ? 0.18 : 0.08,
+                                      color: Colors.black.withValues(
+                                        alpha: widget.enabled ? 0.18 : 0.08,
                                       ),
                                       blurRadius: 12,
                                       offset: const Offset(0, 4),
@@ -819,8 +819,10 @@ class _SliderButtonState extends State<SliderButton>
                                             strokeWidth: 2.0,
                                             valueColor:
                                                 AlwaysStoppedAnimation<Color>(
-                                                  thumbIconColor.withOpacity(
-                                                    widget.enabled ? 1.0 : 0.35,
+                                                  thumbIconColor.withValues(
+                                                    alpha: widget.enabled
+                                                        ? 1.0
+                                                        : 0.35,
                                                   ),
                                                 ),
                                           ),

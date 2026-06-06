@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_category_filter_state.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/providers/drawer_category_filter_provider.dart';
-import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
@@ -36,9 +36,7 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref
-          .read(drawerCategoryFilterProvider(widget.entityType).notifier)
-          .loadMore();
+      ref.read(drawerCategoryFilterProvider.notifier).loadMore();
     }
   }
 
@@ -63,12 +61,8 @@ class _CategorySectionState extends ConsumerState<CategorySection> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final categoryStateAsync = ref.watch(
-      drawerCategoryFilterProvider(widget.entityType),
-    );
-    final notifier = ref.read(
-      drawerCategoryFilterProvider(widget.entityType).notifier,
-    );
+    final categoryStateAsync = ref.watch(drawerCategoryFilterProvider);
+    final notifier = ref.read(drawerCategoryFilterProvider.notifier);
 
     final selectedIds = categoryStateAsync.whenOrNull(
       data: (state) => state.selectedIds,

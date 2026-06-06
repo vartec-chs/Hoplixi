@@ -160,7 +160,7 @@ class LogsViewerScreen extends ConsumerWidget {
                               selectedTileColor: theme
                                   .colorScheme
                                   .primaryContainer
-                                  .withOpacity(0.1),
+                                  .withValues(alpha: 0.1),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -209,8 +209,9 @@ class LogsViewerScreen extends ConsumerWidget {
                                   Icon(
                                     Icons.touch_app,
                                     size: 48,
-                                    color: theme.colorScheme.primary
-                                        .withOpacity(0.5),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.5,
+                                    ),
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
@@ -218,7 +219,7 @@ class LogsViewerScreen extends ConsumerWidget {
                                     style: theme.textTheme.titleMedium
                                         ?.copyWith(
                                           color: theme.colorScheme.onSurface
-                                              .withOpacity(0.7),
+                                              .withValues(alpha: 0.7),
                                         ),
                                   ),
                                 ],

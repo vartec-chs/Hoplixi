@@ -35,17 +35,15 @@ class _TagSectionState extends ConsumerState<TagSection> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(drawerTagFilterProvider(widget.entityType).notifier).loadMore();
+      ref.read(drawerTagFilterProvider.notifier).loadMore();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tagStateAsync = ref.watch(drawerTagFilterProvider(widget.entityType));
-    final notifier = ref.read(
-      drawerTagFilterProvider(widget.entityType).notifier,
-    );
+    final tagStateAsync = ref.watch(drawerTagFilterProvider);
+    final notifier = ref.read(drawerTagFilterProvider.notifier);
 
     final selectedIds = tagStateAsync.whenOrNull(
       data: (state) => state.selectedIds,

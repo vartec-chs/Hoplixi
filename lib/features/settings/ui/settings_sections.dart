@@ -56,7 +56,7 @@ class AppearanceSettingsSection extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(999),
                       boxShadow: [
                         BoxShadow(
-                          color: colorScheme.shadow.withOpacity(0.18),
+                          color: colorScheme.shadow.withValues(alpha: 0.18),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),

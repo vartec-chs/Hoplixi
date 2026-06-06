@@ -141,7 +141,7 @@ InputDecoration primaryInputDecoration(
     ),
     border: CustomOutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: fillColor.withOpacity(0.6), width: 1),
+      borderSide: BorderSide(color: fillColor.withValues(alpha: 0.6), width: 1),
     ),
     hintTextDirection: TextDirection.ltr,
     filled: filled,
@@ -169,7 +169,7 @@ InputDecoration primaryInputDecoration(
     fillColor: fillColor,
     enabledBorder: CustomOutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: fillColor.withOpacity(0.6), width: 1),
+      borderSide: BorderSide(color: fillColor.withValues(alpha: 0.6), width: 1),
     ),
     disabledBorder: CustomOutlineInputBorder(
       borderRadius: BorderRadius.circular(16),

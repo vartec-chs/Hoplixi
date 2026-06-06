@@ -412,7 +412,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               helpButton: ShowcaseHelpButton(
                 keys: _guideKeys.sequence,
                 scope: _homeShowcaseScope,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
             HomeActionsContentLayer(

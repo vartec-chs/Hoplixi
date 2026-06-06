@@ -26,10 +26,12 @@ class AuthTokenCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       elevation: 0,
       clipBehavior: Clip.antiAlias,
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.55),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.7)),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
       ),
       child: Material(
         color: Colors.transparent,

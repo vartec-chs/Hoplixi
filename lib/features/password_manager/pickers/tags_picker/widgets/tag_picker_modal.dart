@@ -276,7 +276,7 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
                         size: 64,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.3),
+                        ).colorScheme.onSurface.withValues(alpha: 0.3),
                       ),
                       const SizedBox(height: 16),
                       Text(

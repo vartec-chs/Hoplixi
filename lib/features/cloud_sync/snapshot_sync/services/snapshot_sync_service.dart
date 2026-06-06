@@ -45,11 +45,10 @@ class SnapshotSyncService {
   );
 
   SnapshotSyncService({
-    required SnapshotSyncRepository repository,
+    required this._repository,
     StoreSnapshotManifestBuilder? manifestBuilder,
     SnapshotSyncHashService? hashService,
-  }) : _repository = repository,
-       _manifestBuilder = manifestBuilder ?? StoreSnapshotManifestBuilder(),
+  }) : _manifestBuilder = manifestBuilder ?? StoreSnapshotManifestBuilder(),
        _hashService = hashService ?? const SnapshotSyncHashService();
 
   final SnapshotSyncRepository _repository;

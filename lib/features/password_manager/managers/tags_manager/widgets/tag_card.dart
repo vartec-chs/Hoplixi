@@ -82,11 +82,11 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
         ? colorScheme.surfaceContainerHigh
         : colorScheme.surfaceContainerLowest;
     final gradientStart = Color.alphaBlend(
-      baseColor.withOpacity(isDark ? 0.3 : 0.15),
+      baseColor.withValues(alpha: isDark ? 0.3 : 0.15),
       cardBackground,
     );
     final gradientMiddle = Color.alphaBlend(
-      baseColor.withOpacity(isDark ? 0.15 : 0.08),
+      baseColor.withValues(alpha: isDark ? 0.15 : 0.08),
       cardBackground,
     );
     final gradientEnd = cardBackground;
@@ -118,8 +118,8 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
               boxShadow: [
                 BoxShadow(
                   color: isDark
-                      ? Colors.black.withOpacity(_isHovered ? 0.35 : 0.2)
-                      : baseColor.withOpacity(_isHovered ? 0.15 : 0.08),
+                      ? Colors.black.withValues(alpha: _isHovered ? 0.35 : 0.2)
+                      : baseColor.withValues(alpha: _isHovered ? 0.15 : 0.08),
                   blurRadius: _isHovered ? 16 : 8,
                   offset: Offset(0, _isHovered ? 6 : 3),
                   spreadRadius: _isHovered ? 1 : 0,
@@ -127,7 +127,7 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
                 // Мягкое свечение в цвете карточки
                 if (_isHovered)
                   BoxShadow(
-                    color: baseColor.withOpacity(0.1),
+                    color: baseColor.withValues(alpha: 0.1),
                     blurRadius: 24,
                     offset: const Offset(0, 4),
                   ),
@@ -139,8 +139,8 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: widget.onTap,
-                splashColor: baseColor.withOpacity(0.15),
-                highlightColor: baseColor.withOpacity(0.08),
+                splashColor: baseColor.withValues(alpha: 0.15),
+                highlightColor: baseColor.withValues(alpha: 0.08),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -198,15 +198,15 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            baseColor.withOpacity(isDark ? 0.35 : 0.25),
-            baseColor.withOpacity(isDark ? 0.2 : 0.15),
+            baseColor.withValues(alpha: isDark ? 0.35 : 0.25),
+            baseColor.withValues(alpha: isDark ? 0.2 : 0.15),
           ],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: baseColor.withOpacity(0.25), width: 1),
+        border: Border.all(color: baseColor.withValues(alpha: 0.25), width: 1),
         boxShadow: [
           BoxShadow(
-            color: baseColor.withOpacity(0.15),
+            color: baseColor.withValues(alpha: 0.15),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -222,7 +222,7 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
     return PopupMenuButton<String>(
       icon: Icon(
         Icons.more_vert,
-        color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
         size: 20,
       ),
       splashRadius: 18,

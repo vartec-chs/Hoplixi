@@ -93,7 +93,7 @@ class _UpdateMarkerState extends State<UpdateMarker> {
           boxShadow: _isSignaling
               ? [
                   BoxShadow(
-                    color: widget.signalColor.withOpacity(0.5),
+                    color: widget.signalColor.withValues(alpha: 0.5),
                     blurRadius: 4,
                     spreadRadius: 1,
                   ),

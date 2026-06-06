@@ -6,7 +6,6 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
-import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
@@ -90,12 +89,8 @@ class _DashboardDrawerContentState
     super.didUpdateWidget(oldWidget);
     // Если entityType изменился, сбрасываем выбранные фильтры для старого типа
     if (oldWidget.entityType != widget.entityType) {
-      ref
-          .read(drawerCategoryFilterProvider(oldWidget.entityType).notifier)
-          .clearSelection();
-      ref
-          .read(drawerTagFilterProvider(oldWidget.entityType).notifier)
-          .clearSelection();
+      ref.read(drawerCategoryFilterProvider.notifier).clearSelection();
+      ref.read(drawerTagFilterProvider.notifier).clearSelection();
     }
   }
 
@@ -167,12 +162,12 @@ class _DrawerHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasCategorySelections = ref.watch(
-      drawerCategoryFilterProvider(entityType).select(
+      drawerCategoryFilterProvider.select(
         (s) => s.whenOrNull(data: (s) => s.selectedIds.isNotEmpty) ?? false,
       ),
     );
     final hasTagSelections = ref.watch(
-      drawerTagFilterProvider(entityType).select(
+      drawerTagFilterProvider.select(
         (s) => s.whenOrNull(data: (s) => s.selectedIds.isNotEmpty) ?? false,
       ),
     );
@@ -196,11 +191,9 @@ class _DrawerHeader extends ConsumerWidget {
             SmoothButton(
               onPressed: () {
                 ref
-                    .read(drawerCategoryFilterProvider(entityType).notifier)
+                    .read(drawerCategoryFilterProvider.notifier)
                     .clearSelection();
-                ref
-                    .read(drawerTagFilterProvider(entityType).notifier)
-                    .clearSelection();
+                ref.read(drawerTagFilterProvider.notifier).clearSelection();
               },
               label: 'Очистить все',
               size: SmoothButtonSize.small,

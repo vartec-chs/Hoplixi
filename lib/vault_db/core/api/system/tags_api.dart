@@ -6,7 +6,7 @@ import 'package:hoplixi/vault_db/core/repositories/base/system/tag_repository.da
 
 /// Public API boundary for tag queries and commands.
 class TagsApi {
-  const TagsApi({required TagRepository repository}) : _repository = repository;
+  const TagsApi({required this._repository});
 
   final TagRepository _repository;
 

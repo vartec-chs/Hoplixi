@@ -2,22 +2,19 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/logger/app_logger.dart';
-import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/dashboard/providers/filter_providers/filter_providers.dart';
 import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/models/drawer_category_filter_state.dart';
 import 'package:hoplixi/features/password_manager/managers/providers/manager_refresh_trigger_provider.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/session_providers.dart';
 
 const int _kCategoryPageSize = 20;
 const Duration _kCategorySearchDebounce = Duration(milliseconds: 300);
 
-final drawerCategoryFilterProvider = AsyncNotifierProvider.autoDispose
-    .family<
+final drawerCategoryFilterProvider =
+    AsyncNotifierProvider.autoDispose<
       DrawerCategoryFilterNotifier,
-      DrawerCategoryFilterState,
-      EntityType
+      DrawerCategoryFilterState
     >(DrawerCategoryFilterNotifier.new);
 
 class DrawerCategoryFilterNotifier
@@ -26,8 +23,6 @@ class DrawerCategoryFilterNotifier
   Timer? _searchDebounce;
   List<CategoryCardDto> _allCategories = const [];
   List<DrawerCategoryTreeNode> _allRoots = const [];
-
-  DrawerCategoryFilterNotifier(EntityType _);
 
   @override
   Future<DrawerCategoryFilterState> build() async {

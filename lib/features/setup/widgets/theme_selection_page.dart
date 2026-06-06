@@ -216,18 +216,20 @@ class _ThemeSelectionPageState extends ConsumerState<ThemeSelectionPage>
                   decoration: BoxDecoration(
                     color: isSelected
                         ? colorScheme.primaryContainer
-                        : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        : colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.5,
+                          ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
                           ? colorScheme.primary
-                          : colorScheme.outline.withOpacity(0.2),
+                          : colorScheme.outline.withValues(alpha: 0.2),
                       width: isSelected ? 2 : 1,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: colorScheme.primary.withOpacity(0.2),
+                              color: colorScheme.primary.withValues(alpha: 0.2),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),
@@ -247,7 +249,7 @@ class _ThemeSelectionPageState extends ConsumerState<ThemeSelectionPage>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              themeOption.$4.withOpacity(0.8),
+                              themeOption.$4.withValues(alpha: 0.8),
                               themeOption.$4,
                             ],
                           ),
@@ -279,8 +281,9 @@ class _ThemeSelectionPageState extends ConsumerState<ThemeSelectionPage>
                               themeOption.$5,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: isSelected
-                                    ? colorScheme.onPrimaryContainer
-                                          .withOpacity(0.7)
+                                    ? colorScheme.onPrimaryContainer.withValues(
+                                        alpha: 0.7,
+                                      )
                                     : colorScheme.onSurfaceVariant,
                               ),
                             ),

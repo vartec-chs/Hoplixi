@@ -120,7 +120,7 @@ class _ProviderReadinessCard extends StatelessWidget {
     final isReady = providerCredentials.isNotEmpty && providerTokens.isNotEmpty;
 
     return Material(
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.28),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.28),
       borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.all(14),

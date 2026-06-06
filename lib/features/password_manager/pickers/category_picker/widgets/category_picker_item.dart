@@ -33,7 +33,7 @@ class CategoryPickerItem extends StatelessWidget {
 
     return Material(
       color: isSelected
-          ? colorScheme.primaryContainer.withOpacity(0.1)
+          ? colorScheme.primaryContainer.withValues(alpha: 0.1)
           : Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -53,7 +53,7 @@ class CategoryPickerItem extends StatelessWidget {
                   height: 40,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: categoryColor.withOpacity(0.3),
+                      color: categoryColor.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -78,7 +78,7 @@ class CategoryPickerItem extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: categoryColor.withOpacity(0.1),
+                    color: categoryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: IconRefPreview(
@@ -112,13 +112,15 @@ class CategoryPickerItem extends StatelessWidget {
                           Icon(
                             Icons.subdirectory_arrow_right,
                             size: 12,
-                            color: colorScheme.onSurface.withOpacity(0.5),
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                           const SizedBox(width: 2),
                           Text(
                             parentName!,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -127,7 +129,7 @@ class CategoryPickerItem extends StatelessWidget {
                         Text(
                           'Категория',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.6),
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],

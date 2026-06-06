@@ -12,7 +12,6 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/tables.dart';
 import 'package:hoplixi/vault_db/core/services/entities/document_service.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/vault_db/services/other/document_storage_service.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:mime/mime.dart';

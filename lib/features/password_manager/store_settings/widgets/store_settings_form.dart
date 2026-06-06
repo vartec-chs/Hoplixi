@@ -212,10 +212,9 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withOpacity(0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -236,21 +235,17 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
                             children: [
                               Text(
                                 'Параметры компиляции SQLite',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               Icon(
                                 _showCompileOptions
                                     ? Icons.expand_less
                                     : Icons.expand_more,
                                 size: 16,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ],
                           ),
@@ -258,13 +253,11 @@ class _StoreSettingsFormState extends ConsumerState<StoreSettingsForm> {
                             const SizedBox(height: 8),
                             Text(
                               state.pragmaCompileOptions.join(', '),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
+                              style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                     fontSize: 10,
                                   ),
                             ),

@@ -29,11 +29,7 @@ final vaultDBBackupOrchestratorProvider = Provider<VaultDBBackupOrchestrator>((
 });
 
 class VaultDBBackupOrchestrator {
-  VaultDBBackupOrchestrator({
-    required Ref ref,
-    required VaultDBBackupService backupService,
-  }) : _ref = ref,
-       _backupService = backupService;
+  VaultDBBackupOrchestrator({required this._ref, required this._backupService});
 
   static const String _logTag = 'VaultDBBackupOrchestrator';
 

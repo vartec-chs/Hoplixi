@@ -294,12 +294,12 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withOpacity(
-                        0.5,
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.5,
                       ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: colorScheme.outline.withOpacity(0.3),
+                        color: colorScheme.outline.withValues(alpha: 0.3),
                         width: 2,
                         strokeAlign: BorderSide.strokeAlignInside,
                       ),
@@ -383,7 +383,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
           Icon(
             Icons.qr_code_scanner,
             size: 80,
-            color: colorScheme.primary.withOpacity(0.6),
+            color: colorScheme.primary.withValues(alpha: 0.6),
           ),
           const SizedBox(height: 16),
           Text(
@@ -566,7 +566,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
             backgroundColor: colorScheme.surface,
             dimmedLayerColor: Colors.black54,
             cropFrameColor: colorScheme.primary,
-            cropGridColor: colorScheme.primary.withOpacity(0.5),
+            cropGridColor: colorScheme.primary.withValues(alpha: 0.5),
             aspectRatioPresets: [
               CropAspectRatioPreset.original,
               CropAspectRatioPreset.square,
@@ -727,7 +727,7 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -775,7 +775,9 @@ class _QrScannerWithImageScreenState extends State<QrScannerWithImageScreen> {
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -919,7 +921,7 @@ class _DesktopCropDialogState extends State<_DesktopCropDialog> {
                   image: Image.memory(widget.imageBytes),
                   gridColor: colorScheme.primary,
                   gridCornerColor: colorScheme.primary,
-                  gridInnerColor: colorScheme.primary.withOpacity(0.5),
+                  gridInnerColor: colorScheme.primary.withValues(alpha: 0.5),
                   scrimColor: Colors.black54,
                   alwaysShowThirdLines: true,
                   minimumImageSize: 50,
@@ -1074,7 +1076,7 @@ class _AspectRatioButton extends StatelessWidget {
             border: Border.all(
               color: isSelected
                   ? colorScheme.primary
-                  : colorScheme.outline.withOpacity(0.5),
+                  : colorScheme.outline.withValues(alpha: 0.5),
             ),
             borderRadius: BorderRadius.circular(8),
           ),

@@ -58,7 +58,7 @@ class _CompactActionTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Material(
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.42),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),

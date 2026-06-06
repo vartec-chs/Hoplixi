@@ -388,7 +388,7 @@ class _IconPackPickerIconPageState
     return ChoiceChip(
       label: Text(label),
       avatar: _PreviewColorDot(color: color),
-      selected: selectedPreviewColor?.value == color.value,
+      selected: selectedPreviewColor?.toARGB32() == color.toARGB32(),
       onSelected: (_) {
         widget.previewColor.value = color;
       },

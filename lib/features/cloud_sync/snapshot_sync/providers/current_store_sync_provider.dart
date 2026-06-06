@@ -429,7 +429,7 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
       throw StateError('Cloud sync is not connected.');
     }
 
-    final manager = await ref.read(vaultDBManagerStateProvider.notifier);
+    final manager = ref.read(vaultDBManagerStateProvider.notifier);
     final storeInfoResult = await manager.storeInfo;
     final storeInfo = storeInfoResult.fold(
       (info) => info,
@@ -662,8 +662,8 @@ class CurrentStoreSyncNotifier extends AsyncNotifier<StoreSyncStatus> {
     }
 
     final manager = useWatch
-        ? await ref.watch(vaultDBManagerStateProvider.notifier)
-        : await ref.read(vaultDBManagerStateProvider.notifier);
+        ? ref.watch(vaultDBManagerStateProvider.notifier)
+        : ref.read(vaultDBManagerStateProvider.notifier);
 
     final storeInfoResult = await manager.storeInfo;
     final storeInfo = storeInfoResult.fold(

@@ -15,14 +15,16 @@ class BackgroundShowcaseScreen extends StatelessWidget {
             padding: const EdgeInsets.all(32),
             margin: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: Theme.of(context).colorScheme.outlineVariant,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),

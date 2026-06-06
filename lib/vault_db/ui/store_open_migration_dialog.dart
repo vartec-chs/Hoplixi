@@ -4,7 +4,6 @@ import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/providers/main_store_backup_orchestrator_provider.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
 
 bool isStoreMigrationRequiredError(AppError? error) {

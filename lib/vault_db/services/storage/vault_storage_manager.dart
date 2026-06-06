@@ -9,10 +9,9 @@ class VaultStorageManager implements IVaultStorageManager {
   final VaultDBFileService _storageService;
 
   VaultStorageManager({
-    required IVaultSessionHolder sessionHolder,
-    required VaultDBFileService storageService,
-  }) : _sessionHolder = sessionHolder,
-       _storageService = storageService;
+    required this._sessionHolder,
+    required this._storageService,
+  });
 
   @override
   String? getAttachmentsPath() {

@@ -67,9 +67,11 @@ class _OtpTotpFormWidgetState extends ConsumerState<OtpTotpFormWidget> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withOpacity(0.3),
+                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+                border: Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -264,7 +266,9 @@ class _OtpDividerWithText extends StatelessWidget {
 
     return Row(
       children: [
-        Expanded(child: Divider(color: colorScheme.outline.withOpacity(0.3))),
+        Expanded(
+          child: Divider(color: colorScheme.outline.withValues(alpha: 0.3)),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
@@ -274,7 +278,9 @@ class _OtpDividerWithText extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(child: Divider(color: colorScheme.outline.withOpacity(0.3))),
+        Expanded(
+          child: Divider(color: colorScheme.outline.withValues(alpha: 0.3)),
+        ),
       ],
     );
   }

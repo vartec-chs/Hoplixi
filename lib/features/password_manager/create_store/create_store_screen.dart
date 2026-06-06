@@ -349,7 +349,7 @@ class _ProgressIndicator extends StatelessWidget {
         // color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -378,7 +378,7 @@ class _ProgressIndicator extends StatelessWidget {
                               ? Theme.of(context).colorScheme.primary
                               : Theme.of(
                                   context,
-                                ).colorScheme.outline.withOpacity(0.3),
+                                ).colorScheme.outline.withValues(alpha: 0.3),
                         ),
                       ),
                   ],
@@ -464,7 +464,9 @@ class _StepIndicator extends StatelessWidget {
             border: Border.all(
               color: isActive
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
               width: 2,
             ),
           ),
@@ -538,7 +540,7 @@ class _NavigationButtons extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),

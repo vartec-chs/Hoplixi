@@ -271,14 +271,14 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
         decoration: BoxDecoration(
           border: Border.all(
             color: value != null
-                ? colorScheme.primary.withOpacity(0.5)
-                : colorScheme.outline.withOpacity(0.3),
+                ? colorScheme.primary.withValues(alpha: 0.5)
+                : colorScheme.outline.withValues(alpha: 0.3),
           ),
           borderRadius: BorderRadius.circular(8),
           color: value == true
-              ? colorScheme.primary.withOpacity(0.1)
+              ? colorScheme.primary.withValues(alpha: 0.1)
               : value == false
-              ? colorScheme.error.withOpacity(0.1)
+              ? colorScheme.error.withValues(alpha: 0.1)
               : null,
         ),
         child: Row(
@@ -290,7 +290,7 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
                   ? colorScheme.primary
                   : value == false
                   ? colorScheme.error
-                  : colorScheme.onSurface.withOpacity(0.6),
+                  : colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -299,7 +299,7 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: value != null
                       ? colorScheme.onSurface
-                      : colorScheme.onSurface.withOpacity(0.6),
+                      : colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -465,7 +465,9 @@ class _BaseFilterSectionState extends State<BaseFilterSection> {
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: date != null
                 ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       ),

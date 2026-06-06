@@ -30,7 +30,7 @@ class CategoryTreePlaceholder extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.10),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 34, color: theme.colorScheme.primary),

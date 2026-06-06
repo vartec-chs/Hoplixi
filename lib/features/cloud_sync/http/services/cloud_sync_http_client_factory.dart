@@ -4,10 +4,9 @@ import 'package:hoplixi/features/cloud_sync/http/services/cloud_sync_token_resol
 
 class CloudSyncHttpClientFactory {
   const CloudSyncHttpClientFactory({
-    required CloudSyncTokenResolver tokenResolver,
-    required CloudSyncTokenRefreshService tokenRefreshService,
-  }) : _tokenResolver = tokenResolver,
-       _tokenRefreshService = tokenRefreshService;
+    required this._tokenResolver,
+    required this._tokenRefreshService,
+  });
 
   final CloudSyncTokenResolver _tokenResolver;
   final CloudSyncTokenRefreshService _tokenRefreshService;

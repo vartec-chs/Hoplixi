@@ -73,7 +73,7 @@ class _IconListViewState extends ConsumerState<IconListView> {
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.10),
+                        ).colorScheme.primary.withValues(alpha: 0.10),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

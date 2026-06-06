@@ -366,7 +366,7 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     color: _isHovered && widget.enabled
-                        ? colorScheme.onSurface.withOpacity(0.04)
+                        ? colorScheme.onSurface.withValues(alpha: 0.04)
                         : Colors.transparent,
                   ),
                   child: InputDecorator(
@@ -395,7 +395,9 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
                               Icons.arrow_drop_down,
                               color: widget.enabled
                                   ? colorScheme.onSurface
-                                  : colorScheme.onSurface.withOpacity(0.38),
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.38,
+                                    ),
                             ),
                           ),
                         ],
@@ -429,8 +431,8 @@ class _CategoryPickerFieldState extends ConsumerState<CategoryPickerField> {
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     color: hasValue
                                         ? colorScheme.onSurface
-                                        : colorScheme.onSurface.withOpacity(
-                                            0.6,
+                                        : colorScheme.onSurface.withValues(
+                                            alpha: 0.6,
                                           ),
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -475,8 +477,8 @@ class _CategoryChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: enabled
-              ? colorScheme.secondary.withOpacity(0.3)
-              : colorScheme.outline.withOpacity(0.2),
+              ? colorScheme.secondary.withValues(alpha: 0.3)
+              : colorScheme.outline.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -488,7 +490,7 @@ class _CategoryChip extends StatelessWidget {
             size: 14,
             color: enabled
                 ? colorScheme.onSecondaryContainer
-                : colorScheme.onSurface.withOpacity(0.6),
+                : colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 4),
           Text(
@@ -496,7 +498,7 @@ class _CategoryChip extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: enabled
                   ? colorScheme.onSecondaryContainer
-                  : colorScheme.onSurface.withOpacity(0.6),
+                  : colorScheme.onSurface.withValues(alpha: 0.6),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -510,7 +512,7 @@ class _CategoryChip extends StatelessWidget {
                 size: 16,
                 color: enabled
                     ? colorScheme.onSecondaryContainer
-                    : colorScheme.onSurface.withOpacity(0.6),
+                    : colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],

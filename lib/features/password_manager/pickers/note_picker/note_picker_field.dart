@@ -249,7 +249,9 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
                               Icons.arrow_drop_down,
                               color: widget.enabled
                                   ? colorScheme.onSurface
-                                  : colorScheme.onSurface.withOpacity(0.38),
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.38,
+                                    ),
                             ),
                           ),
                         ],
@@ -265,7 +267,9 @@ class _NotePickerFieldState extends ConsumerState<NotePickerField> {
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: hasValue
                                   ? colorScheme.onSurface
-                                  : colorScheme.onSurface.withOpacity(0.6),
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

@@ -13,7 +13,6 @@ import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/custom_icons.da
 import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
 import 'package:image/image.dart' as img;
-import 'package:drift/drift.dart' show Value;
 
 /// Экран для создания/редактирования иконки
 class IconFormScreen extends ConsumerStatefulWidget {

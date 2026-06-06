@@ -81,13 +81,13 @@ class _PermissionsPageState extends ConsumerState<PermissionsPage>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            colorScheme.tertiary.withOpacity(0.8),
+                            colorScheme.tertiary.withValues(alpha: 0.8),
                             colorScheme.tertiary,
                           ],
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: colorScheme.tertiary.withOpacity(0.3),
+                            color: colorScheme.tertiary.withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 6),
                           ),
@@ -165,9 +165,11 @@ class _PermissionsPageState extends ConsumerState<PermissionsPage>
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -245,13 +247,13 @@ class _PermissionTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isGranted
-            ? Colors.green.withOpacity(0.1)
-            : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            ? Colors.green.withValues(alpha: 0.1)
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isGranted
-              ? Colors.green.withOpacity(0.3)
-              : colorScheme.outline.withOpacity(0.2),
+              ? Colors.green.withValues(alpha: 0.3)
+              : colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Row(

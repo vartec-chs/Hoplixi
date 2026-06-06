@@ -261,7 +261,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<WifiSecurityType>(
-                  value:
+                  initialValue:
                       WifiSecurityType.values
                           .map((e) => e.name)
                           .contains(state.securityType)
@@ -298,7 +298,7 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 ],
                 const SizedBox(height: 12),
                 DropdownButtonFormField<WifiEncryptionType>(
-                  value:
+                  initialValue:
                       WifiEncryptionType.values
                           .map((e) => e.name)
                           .contains(state.encryption)

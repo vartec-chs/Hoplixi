@@ -27,18 +27,13 @@ class FileStorageService {
   final FileMetadataRepository _fileMetadataRepository;
 
   FileStorageService({
-    required VaultDB db,
-    required String attachmentsPath,
-    required String decryptedAttachmentsPath,
-    required FileService fileService,
-    required FileRepository fileRepository,
-    required FileMetadataRepository fileMetadataRepository,
-  }) : _db = db,
-       _attachmentsPath = attachmentsPath,
-       _decryptedAttachmentsPath = decryptedAttachmentsPath,
-       _fileService = fileService,
-       _fileRepository = fileRepository,
-       _fileMetadataRepository = fileMetadataRepository;
+    required this._db,
+    required this._attachmentsPath,
+    required this._decryptedAttachmentsPath,
+    required this._fileService,
+    required this._fileRepository,
+    required this._fileMetadataRepository,
+  });
 
   /// Получить ключ шифрования из метаданных хранилища.
   Future<String> _getAttachmentKey() async {

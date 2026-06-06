@@ -6,8 +6,7 @@ import 'package:hoplixi/vault_db/core/services/document_versions/document_versio
 
 /// Public API boundary for document versions.
 class VaultDocumentsApi {
-  const VaultDocumentsApi({required DocumentVersionService versionService})
-    : _versionService = versionService;
+  const VaultDocumentsApi({required this._versionService});
 
   final DocumentVersionService _versionService;
 

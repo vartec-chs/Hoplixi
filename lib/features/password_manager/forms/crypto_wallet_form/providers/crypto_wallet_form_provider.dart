@@ -6,7 +6,6 @@ import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/m
 import 'package:hoplixi/generated/l10n/translations.g.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/crypto_wallet/crypto_wallet_items.dart';
 
 import '../models/crypto_wallet_form_state.dart';

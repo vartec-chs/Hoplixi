@@ -8,7 +8,6 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/loyalty_card/loyalty_card_items.dart'
     show LoyaltyBarcodeType;
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/service_providers.dart';
 
 import '../models/loyalty_card_form_state.dart';
 

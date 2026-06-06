@@ -180,7 +180,7 @@ class _TagPickerFieldState extends State<TagPickerField> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     color: _isHovered && widget.enabled
-                        ? colorScheme.onSurface.withOpacity(0.04)
+                        ? colorScheme.onSurface.withValues(alpha: 0.04)
                         : Colors.transparent,
                   ),
                   child: InputDecorator(
@@ -207,7 +207,9 @@ class _TagPickerFieldState extends State<TagPickerField> {
                               Icons.arrow_drop_down,
                               color: widget.enabled
                                   ? colorScheme.onSurface
-                                  : colorScheme.onSurface.withOpacity(0.38),
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.38,
+                                    ),
                             ),
                           ),
                         ],
@@ -237,8 +239,8 @@ class _TagPickerFieldState extends State<TagPickerField> {
                                 child: Text(
                                   effectiveHintText,
                                   style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: colorScheme.onSurface.withOpacity(
-                                      0.6,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
                                     ),
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -274,13 +276,13 @@ class _TagChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
       decoration: BoxDecoration(
         color: enabled
-            ? colorScheme.primaryContainer.withOpacity(0.15)
+            ? colorScheme.primaryContainer.withValues(alpha: 0.15)
             : colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: enabled
-              ? colorScheme.primary.withOpacity(0.3)
-              : colorScheme.outline.withOpacity(0.2),
+              ? colorScheme.primary.withValues(alpha: 0.3)
+              : colorScheme.outline.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -293,7 +295,7 @@ class _TagChip extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: enabled
                   ? colorScheme.onSecondary
-                  : colorScheme.onSurface.withOpacity(0.6),
+                  : colorScheme.onSurface.withValues(alpha: 0.6),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -307,7 +309,7 @@ class _TagChip extends StatelessWidget {
                 size: 14,
                 color: enabled
                     ? colorScheme.onPrimaryContainer
-                    : colorScheme.onSurface.withOpacity(0.6),
+                    : colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],

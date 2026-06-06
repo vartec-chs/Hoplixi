@@ -24,30 +24,19 @@ class VaultEntityTypeApi<
   TCard extends Object
 > {
   const VaultEntityTypeApi({
-    required VaultEntityCreate<TCreate> create,
-    required VaultEntityUpdate<TPatch> update,
-    required VaultEntityGetView<TView> getView,
-    required VaultEntityGetCard<TCard> getCard,
-    required VaultEntityListCards<TCard> listCards,
-    required VaultEntityStateMutation softDelete,
-    required VaultEntityStateMutation recover,
-    required VaultEntityStateMutation archive,
-    required VaultEntityStateMutation restoreArchived,
-    required VaultEntityBoolStateMutation setFavorite,
-    required VaultEntityBoolStateMutation setPinned,
-    required VaultEntityStateMutation deletePermanently,
-  }) : _create = create,
-       _update = update,
-       _getView = getView,
-       _getCard = getCard,
-       _listCards = listCards,
-       _softDelete = softDelete,
-       _recover = recover,
-       _archive = archive,
-       _restoreArchived = restoreArchived,
-       _setFavorite = setFavorite,
-       _setPinned = setPinned,
-       _deletePermanently = deletePermanently;
+    required this._create,
+    required this._update,
+    required this._getView,
+    required this._getCard,
+    required this._listCards,
+    required this._softDelete,
+    required this._recover,
+    required this._archive,
+    required this._restoreArchived,
+    required this._setFavorite,
+    required this._setPinned,
+    required this._deletePermanently,
+  });
 
   final VaultEntityCreate<TCreate> _create;
   final VaultEntityUpdate<TPatch> _update;

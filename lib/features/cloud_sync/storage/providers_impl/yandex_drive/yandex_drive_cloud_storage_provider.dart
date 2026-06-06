@@ -22,8 +22,8 @@ import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provi
 class YandexDriveCloudStorageProvider implements CloudStorageProvider {
   YandexDriveCloudStorageProvider({
     required this.tokenId,
-    required CloudSyncHttpTransport httpClient,
-  }) : _httpClient = httpClient;
+    required this._httpClient,
+  });
 
   static const String _baseUrl = 'https://cloud-api.yandex.net/v1/disk';
   static const Duration _operationPollInterval = Duration(milliseconds: 500);

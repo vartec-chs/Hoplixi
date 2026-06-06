@@ -267,7 +267,9 @@ class _VaultItemPickerFieldState extends ConsumerState<VaultItemPickerField> {
                               Icons.arrow_drop_down,
                               color: widget.enabled
                                   ? colorScheme.onSurface
-                                  : colorScheme.onSurface.withOpacity(0.38),
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.38,
+                                    ),
                             ),
                           ),
                         ],
@@ -333,7 +335,7 @@ class _VaultItemPickerFieldState extends ConsumerState<VaultItemPickerField> {
       return Text(
         isLoading ? 'Загрузка...' : hintText,
         style: theme.textTheme.bodyLarge?.copyWith(
-          color: colorScheme.onSurface.withOpacity(0.6),
+          color: colorScheme.onSurface.withValues(alpha: 0.6),
         ),
         overflow: TextOverflow.ellipsis,
       );

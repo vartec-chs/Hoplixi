@@ -65,7 +65,7 @@ class _MobileCloudSyncOverlayState
                   elevation: 6,
                   color: Theme.of(
                     context,
-                  ).colorScheme.surface.withOpacity(0.96),
+                  ).colorScheme.surface.withValues(alpha: 0.96),
                   borderRadius: BorderRadius.circular(18),
                   child: Container(
                     width: double.infinity,
@@ -78,7 +78,7 @@ class _MobileCloudSyncOverlayState
                       border: Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.16),
+                        ).colorScheme.primary.withValues(alpha: 0.16),
                       ),
                     ),
                     child: Row(

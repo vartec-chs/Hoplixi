@@ -23,8 +23,8 @@ import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provi
 class DropboxCloudStorageProvider implements CloudStorageProvider {
   DropboxCloudStorageProvider({
     required this.tokenId,
-    required CloudSyncHttpTransport httpClient,
-  }) : _httpClient = httpClient;
+    required this._httpClient,
+  });
 
   static const String _apiBaseUrl = 'https://api.dropboxapi.com/2/files';
   static const String _contentBaseUrl =

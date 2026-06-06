@@ -40,16 +40,12 @@ class DocumentStorageService {
   final VaultItemRelationsService _relationsService;
 
   DocumentStorageService({
-    required VaultDB db,
-    required FileStorageService fileStorageService,
-    required DocumentService documentService,
-    required DocumentVersionService documentVersionService,
-    required VaultItemRelationsService relationsService,
-  }) : _db = db,
-       _fileStorageService = fileStorageService,
-       _documentService = documentService,
-       _documentVersionService = documentVersionService,
-       _relationsService = relationsService;
+    required this._db,
+    required this._fileStorageService,
+    required this._documentService,
+    required this._documentVersionService,
+    required this._relationsService,
+  });
 
   /// Создать документ с несколькими страницами
   /// Возвращает ID созданного документа

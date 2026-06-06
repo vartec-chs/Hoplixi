@@ -23,8 +23,8 @@ import 'package:hoplixi/features/cloud_sync/storage/services/cloud_storage_provi
 class GoogleDriveCloudStorageProvider implements CloudStorageProvider {
   GoogleDriveCloudStorageProvider({
     required this.tokenId,
-    required CloudSyncHttpTransport httpClient,
-  }) : _httpClient = httpClient;
+    required this._httpClient,
+  });
 
   static const String _apiBaseUrl = 'https://www.googleapis.com/drive/v3';
   static const String _uploadBaseUrl =
