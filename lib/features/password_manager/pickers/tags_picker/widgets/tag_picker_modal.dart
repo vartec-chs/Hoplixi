@@ -230,7 +230,7 @@ class _TagPickerContentState extends ConsumerState<_TagPickerContent> {
       for (final tagId in _selectedTagIds) {
         try {
           final selectedTag = allTags.firstWhere((t) => t.id == tagId);
-          selectedTagNames.add(selectedTag.name as String);
+          selectedTagNames.add(selectedTag.name);
         } catch (e) {
           // Тег не найден в списке, пропускаем
           continue;

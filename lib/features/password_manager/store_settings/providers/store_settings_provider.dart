@@ -6,7 +6,6 @@ import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/vault_db/core/config/store_settings_keys.dart';
 import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/vault_db/providers/providers.dart';
 import 'package:hoplixi/vault_db/services/db_key_derivation_service.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
@@ -40,17 +39,14 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
       try {
         final db = ref.watch(requiredVaultDBProvider);
 
-        final pragmaRows = await db.customSelect('PRAGMA cipher;').get();
+        final pragmaRows = await db.storeMetaDao.getCipher().getOrThrow();
         if (pragmaRows.isNotEmpty) {
-          final rawValue = pragmaRows.first.data.values.isNotEmpty
-              ? pragmaRows.first.data.values.first
-              : null;
-          final cipherValue = rawValue
-              ?.toString()
+          final cipherValue = pragmaRows
+              .toString()
               .replaceAll('"', '')
               .trim()
               .toLowerCase();
-          if (cipherValue!.isNotEmpty) {
+          if (cipherValue.isNotEmpty) {
             currentDbCipher = cipherValue;
             currentDbCipherDescription = dbCipherDescriptions[cipherValue];
           }

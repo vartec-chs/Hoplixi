@@ -5,7 +5,6 @@ import 'package:hoplixi/features/password_manager/pickers/otp_picker/models/otp_
 import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
-import 'package:result_dart/result_dart.dart';
 
 const int pageSize = 20;
 

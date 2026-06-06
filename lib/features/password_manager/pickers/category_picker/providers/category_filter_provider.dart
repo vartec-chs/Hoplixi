@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/core/logger/logger.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
 
 /// Провайдер для управления состоянием фильтра категорий

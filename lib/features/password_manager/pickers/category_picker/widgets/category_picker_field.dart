@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/pickers/category_picker/models/category_picker_filter.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/providers/category_info_provider.dart';
 import 'package:hoplixi/features/password_manager/pickers/category_picker/widgets/category_picker_modal.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';

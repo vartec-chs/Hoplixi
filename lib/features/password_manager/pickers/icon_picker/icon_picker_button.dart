@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
-import 'package:hoplixi/vault_db/core/models/dto/system/icon_ref_dto.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:result_dart/result_dart.dart';
 
 import 'widgets/icon_picker_modal.dart';
 

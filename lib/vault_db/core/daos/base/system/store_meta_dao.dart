@@ -188,4 +188,20 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
             ),
     );
   }
+
+  /// Получения текущей стратегии шифрования (PRAGMA cipher).
+  AsyncDBResult<String> getCipher() {
+    return tryCatchAsync(
+      () async {
+        final result = await customSelect('PRAGMA cipher;').getSingle();
+        final cipher = result.data.values.first as String;
+        return cipher;
+      },
+      (e, st) => DBCoreError.sqlite(
+        message: 'Не удалось получить текущую стратегию шифрования: $e',
+        cause: e,
+        stackTrace: st,
+      ),
+    );
+  }
 }

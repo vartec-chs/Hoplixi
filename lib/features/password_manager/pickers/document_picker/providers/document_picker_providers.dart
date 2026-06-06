@@ -4,7 +4,6 @@ import 'package:hoplixi/features/password_manager/pickers/document_picker/models
 import 'package:hoplixi/vault_db/core/models/filters/filters.dart';
 import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
 import 'package:hoplixi/vault_db/providers/service_providers.dart';
-import 'package:result_dart/result_dart.dart';
 
 const int _pageSize = 20;
 

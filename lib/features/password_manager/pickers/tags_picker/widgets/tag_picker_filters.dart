@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hoplixi/features/password_manager/pickers/tags_picker/models/tag_picker_filter.dart';
 import 'package:hoplixi/features/password_manager/pickers/tags_picker/providers/tag_filter_provider.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
-import 'package:hoplixi/shared/ui/type_chip.dart';
 
 /// Панель фильтров для пикера тегов
 class TagPickerFilters extends ConsumerWidget {
