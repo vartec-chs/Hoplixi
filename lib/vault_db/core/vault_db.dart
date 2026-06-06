@@ -172,10 +172,7 @@ class VaultDB extends _$VaultDB {
       logWarning(
         'Failed to checkpoint WAL before closing database',
         tag: _logTag,
-        data: {
-          'error': error.toString(),
-          'stackTrace': stackTrace.toString(),
-        },
+        data: {'error': error.toString(), 'stackTrace': stackTrace.toString()},
       );
     } finally {
       await super.close();

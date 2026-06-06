@@ -173,7 +173,10 @@ class _PasswordFormScreenState extends ConsumerState<PasswordFormScreen> {
     final recordResult = await repos.otp.getViewById(otpId);
     final record = recordResult.getOrNull()?.getOrNull();
     if (mounted && record != null) {
-      setState(() => _otpName = record.otp.issuer ?? record.otp.accountName ?? record.item.name);
+      setState(
+        () => _otpName =
+            record.otp.issuer ?? record.otp.accountName ?? record.item.name,
+      );
     }
   }
 

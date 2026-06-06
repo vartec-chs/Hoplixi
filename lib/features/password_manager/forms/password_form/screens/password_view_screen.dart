@@ -272,9 +272,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
         leading: Icon(LucideIcons.lock, color: t.colorScheme.primary),
         title: Text('Пароль', style: t.textTheme.bodySmall),
         subtitle: Text(
-          _obscurePassword
-              ? '••••••••••••'
-              : _password!.password.password,
+          _obscurePassword ? '••••••••••••' : _password!.password.password,
           style: t.textTheme.bodyLarge,
         ),
         trailing: Row(
@@ -289,8 +287,7 @@ class _PasswordViewScreenState extends ConsumerState<PasswordViewScreen> {
             ),
             IconButton(
               icon: const Icon(LucideIcons.copy),
-              onPressed: () =>
-                  _copy(_password!.password.password, 'Пароль'),
+              onPressed: () => _copy(_password!.password.password, 'Пароль'),
             ),
           ],
         ),

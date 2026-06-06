@@ -297,7 +297,9 @@ class _OtpViewScreenState extends ConsumerState<OtpViewScreen> {
                                   width: 24,
                                   height: 24,
                                   child: CircularProgressIndicator(
-                                    value: _remainingSeconds / (_otp!.otp.period ?? 30),
+                                    value:
+                                        _remainingSeconds /
+                                        (_otp!.otp.period ?? 30),
                                     strokeWidth: 3,
                                     color: _remainingSeconds <= 5
                                         ? cs.error

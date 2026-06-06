@@ -40,14 +40,8 @@ class CustomIconsDao extends DatabaseAccessor<VaultDB>
     final stmt = select(customIcons)
       ..where((_) => _buildSearchExpression(query))
       ..orderBy([
-        (t) => OrderingTerm(
-          expression: t.modifiedAt,
-          mode: OrderingMode.desc,
-        ),
-        (t) => OrderingTerm(
-          expression: t.name,
-          mode: OrderingMode.asc,
-        ),
+        (t) => OrderingTerm(expression: t.modifiedAt, mode: OrderingMode.desc),
+        (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
       ])
       ..limit(normalizedLimit, offset: normalizedOffset);
 

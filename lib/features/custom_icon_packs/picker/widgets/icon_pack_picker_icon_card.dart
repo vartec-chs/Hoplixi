@@ -5,7 +5,6 @@ import 'package:hoplixi/features/custom_icon_packs/models/icon_pack_entry.dart';
 
 import '../../providers/icon_packs_provider.dart';
 
-
 class IconPackPickerIconCard extends StatelessWidget {
   const IconPackPickerIconCard({
     super.key,

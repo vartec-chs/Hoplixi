@@ -14,28 +14,45 @@ class NoteLinksData {
   const NoteLinksData({required this.outgoing, required this.incoming});
 }
 
-final noteLinksProvider = FutureProvider.family<NoteLinksData, String>((ref, noteId) async {
+final noteLinksProvider = FutureProvider.family<NoteLinksData, String>((
+  ref,
+  noteId,
+) async {
   final repos = await ref.watch(vaultRepositories.future);
 
-  final outgoingLinksResult = await repos.vaultItemRelations.getLinksFromItem(noteId);
-  final incomingLinksResult = await repos.vaultItemRelations.getLinksToItem(noteId);
+  final outgoingLinksResult = await repos.vaultItemRelations.getLinksFromItem(
+    noteId,
+  );
+  final incomingLinksResult = await repos.vaultItemRelations.getLinksToItem(
+    noteId,
+  );
 
   final outgoingLinks = outgoingLinksResult.getOrElse((_) => []);
   final incomingLinks = incomingLinksResult.getOrElse((_) => []);
 
-  final outgoingFutures = outgoingLinks.map((link) => repos.vaultItem.getById(link.targetItemId));
-  final incomingFutures = incomingLinks.map((link) => repos.vaultItem.getById(link.sourceItemId));
+  final outgoingFutures = outgoingLinks.map(
+    (link) => repos.vaultItem.getById(link.targetItemId),
+  );
+  final incomingFutures = incomingLinks.map(
+    (link) => repos.vaultItem.getById(link.sourceItemId),
+  );
 
   final outgoingResults = await Future.wait(outgoingFutures);
   final incomingResults = await Future.wait(incomingFutures);
 
   final outgoingItems = outgoingResults
-      .map((res) => res.getOrElse((_) => const None<VaultItemViewDto>()).getOrNull())
+      .map(
+        (res) =>
+            res.getOrElse((_) => const None<VaultItemViewDto>()).getOrNull(),
+      )
       .whereType<VaultItemViewDto>()
       .toList();
 
   final incomingItems = incomingResults
-      .map((res) => res.getOrElse((_) => const None<VaultItemViewDto>()).getOrNull())
+      .map(
+        (res) =>
+            res.getOrElse((_) => const None<VaultItemViewDto>()).getOrNull(),
+      )
       .whereType<VaultItemViewDto>()
       .toList();
 
@@ -60,9 +77,7 @@ class NoteLinksSection extends ConsumerWidget {
         final outgoing = data.outgoing;
         final incoming = data.incoming;
         final hasLinks =
-            outgoing.isNotEmpty ||
-            incoming.isNotEmpty ||
-            currentLinksCount > 0;
+            outgoing.isNotEmpty || incoming.isNotEmpty || currentLinksCount > 0;
 
         if (!hasLinks) {
           return Padding(
@@ -123,10 +138,8 @@ class NoteLinksSection extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   ...outgoing.map(
-                    (note) => _NoteLinkTile(
-                      item: note,
-                      icon: Icons.arrow_forward,
-                    ),
+                    (note) =>
+                        _NoteLinkTile(item: note, icon: Icons.arrow_forward),
                   ),
                 ],
                 if (incoming.isNotEmpty) ...[
@@ -137,8 +150,7 @@ class NoteLinksSection extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   ...incoming.map(
-                    (note) =>
-                        _NoteLinkTile(item: note, icon: Icons.arrow_back),
+                    (note) => _NoteLinkTile(item: note, icon: Icons.arrow_back),
                   ),
                 ],
               ],
@@ -147,7 +159,8 @@ class NoteLinksSection extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => const Center(child: Text('Ошибка загрузки ссылок')),
+      error: (error, stack) =>
+          const Center(child: Text('Ошибка загрузки ссылок')),
     );
   }
 }

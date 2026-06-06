@@ -104,9 +104,7 @@ final class VaultDashboardRepository implements DashboardRepository {
   final Ref _ref;
 
   @override
-  Future<ResultDart<DashboardLoadResult, AppError>> load(
-    DashboardQuery query,
-  ) {
+  Future<ResultDart<DashboardLoadResult, AppError>> load(DashboardQuery query) {
     return _guard(() async {
       final service = await _ref.read(vaultCardFilterServiceProvider.future);
       final base = _buildBaseFilter(query);
@@ -123,30 +121,35 @@ final class VaultDashboardRepository implements DashboardRepository {
     required String id,
     required bool value,
   }) {
-    return _guardBool(() => _runStateOperation(
-      entityType,
-      (service) => switch (entityType) {
-        EntityType.password => service.password.setFavorite(id, value),
-        EntityType.note => service.note.setFavorite(id, value),
-        EntityType.otp => service.otp.setFavorite(id, value),
-        EntityType.bankCard => service.bankCard.setFavorite(id, value),
-        EntityType.file => service.file.setFavorite(id, value),
-        EntityType.document => service.document.setFavorite(id, value),
-        EntityType.contact => service.contact.setFavorite(id, value),
-        EntityType.apiKey => service.apiKey.setFavorite(id, value),
-        EntityType.sshKey => service.sshKey.setFavorite(id, value),
-        EntityType.certificate => service.certificate.setFavorite(id, value),
-        EntityType.cryptoWallet => service.cryptoWallet.setFavorite(id, value),
-        EntityType.wifi => service.wifi.setFavorite(id, value),
-        EntityType.identity => service.identity.setFavorite(id, value),
-        EntityType.licenseKey => service.licenseKey.setFavorite(id, value),
-        EntityType.recoveryCodes => service.recoveryCodes.setFavorite(
-          id,
-          value,
-        ),
-        EntityType.loyaltyCard => service.loyaltyCard.setFavorite(id, value),
-      },
-    ));
+    return _guardBool(
+      () => _runStateOperation(
+        entityType,
+        (service) => switch (entityType) {
+          EntityType.password => service.password.setFavorite(id, value),
+          EntityType.note => service.note.setFavorite(id, value),
+          EntityType.otp => service.otp.setFavorite(id, value),
+          EntityType.bankCard => service.bankCard.setFavorite(id, value),
+          EntityType.file => service.file.setFavorite(id, value),
+          EntityType.document => service.document.setFavorite(id, value),
+          EntityType.contact => service.contact.setFavorite(id, value),
+          EntityType.apiKey => service.apiKey.setFavorite(id, value),
+          EntityType.sshKey => service.sshKey.setFavorite(id, value),
+          EntityType.certificate => service.certificate.setFavorite(id, value),
+          EntityType.cryptoWallet => service.cryptoWallet.setFavorite(
+            id,
+            value,
+          ),
+          EntityType.wifi => service.wifi.setFavorite(id, value),
+          EntityType.identity => service.identity.setFavorite(id, value),
+          EntityType.licenseKey => service.licenseKey.setFavorite(id, value),
+          EntityType.recoveryCodes => service.recoveryCodes.setFavorite(
+            id,
+            value,
+          ),
+          EntityType.loyaltyCard => service.loyaltyCard.setFavorite(id, value),
+        },
+      ),
+    );
   }
 
   @override
@@ -155,27 +158,32 @@ final class VaultDashboardRepository implements DashboardRepository {
     required String id,
     required bool value,
   }) {
-    return _guardBool(() => _runStateOperation(
-      entityType,
-      (service) => switch (entityType) {
-        EntityType.password => service.password.setPinned(id, value),
-        EntityType.note => service.note.setPinned(id, value),
-        EntityType.otp => service.otp.setPinned(id, value),
-        EntityType.bankCard => service.bankCard.setPinned(id, value),
-        EntityType.file => service.file.setPinned(id, value),
-        EntityType.document => service.document.setPinned(id, value),
-        EntityType.contact => service.contact.setPinned(id, value),
-        EntityType.apiKey => service.apiKey.setPinned(id, value),
-        EntityType.sshKey => service.sshKey.setPinned(id, value),
-        EntityType.certificate => service.certificate.setPinned(id, value),
-        EntityType.cryptoWallet => service.cryptoWallet.setPinned(id, value),
-        EntityType.wifi => service.wifi.setPinned(id, value),
-        EntityType.identity => service.identity.setPinned(id, value),
-        EntityType.licenseKey => service.licenseKey.setPinned(id, value),
-        EntityType.recoveryCodes => service.recoveryCodes.setPinned(id, value),
-        EntityType.loyaltyCard => service.loyaltyCard.setPinned(id, value),
-      },
-    ));
+    return _guardBool(
+      () => _runStateOperation(
+        entityType,
+        (service) => switch (entityType) {
+          EntityType.password => service.password.setPinned(id, value),
+          EntityType.note => service.note.setPinned(id, value),
+          EntityType.otp => service.otp.setPinned(id, value),
+          EntityType.bankCard => service.bankCard.setPinned(id, value),
+          EntityType.file => service.file.setPinned(id, value),
+          EntityType.document => service.document.setPinned(id, value),
+          EntityType.contact => service.contact.setPinned(id, value),
+          EntityType.apiKey => service.apiKey.setPinned(id, value),
+          EntityType.sshKey => service.sshKey.setPinned(id, value),
+          EntityType.certificate => service.certificate.setPinned(id, value),
+          EntityType.cryptoWallet => service.cryptoWallet.setPinned(id, value),
+          EntityType.wifi => service.wifi.setPinned(id, value),
+          EntityType.identity => service.identity.setPinned(id, value),
+          EntityType.licenseKey => service.licenseKey.setPinned(id, value),
+          EntityType.recoveryCodes => service.recoveryCodes.setPinned(
+            id,
+            value,
+          ),
+          EntityType.loyaltyCard => service.loyaltyCard.setPinned(id, value),
+        },
+      ),
+    );
   }
 
   @override
@@ -184,53 +192,55 @@ final class VaultDashboardRepository implements DashboardRepository {
     required String id,
     required bool value,
   }) {
-    return _guardBool(() => _runStateOperation(
-      entityType,
-      (service) => value
-          ? switch (entityType) {
-              EntityType.password => service.password.archive(id),
-              EntityType.note => service.note.archive(id),
-              EntityType.otp => service.otp.archive(id),
-              EntityType.bankCard => service.bankCard.archive(id),
-              EntityType.file => service.file.archive(id),
-              EntityType.document => service.document.archive(id),
-              EntityType.contact => service.contact.archive(id),
-              EntityType.apiKey => service.apiKey.archive(id),
-              EntityType.sshKey => service.sshKey.archive(id),
-              EntityType.certificate => service.certificate.archive(id),
-              EntityType.cryptoWallet => service.cryptoWallet.archive(id),
-              EntityType.wifi => service.wifi.archive(id),
-              EntityType.identity => service.identity.archive(id),
-              EntityType.licenseKey => service.licenseKey.archive(id),
-              EntityType.recoveryCodes => service.recoveryCodes.archive(id),
-              EntityType.loyaltyCard => service.loyaltyCard.archive(id),
-            }
-          : switch (entityType) {
-              EntityType.password => service.password.restoreArchived(id),
-              EntityType.note => service.note.restoreArchived(id),
-              EntityType.otp => service.otp.restoreArchived(id),
-              EntityType.bankCard => service.bankCard.restoreArchived(id),
-              EntityType.file => service.file.restoreArchived(id),
-              EntityType.document => service.document.restoreArchived(id),
-              EntityType.contact => service.contact.restoreArchived(id),
-              EntityType.apiKey => service.apiKey.restoreArchived(id),
-              EntityType.sshKey => service.sshKey.restoreArchived(id),
-              EntityType.certificate => service.certificate.restoreArchived(
-                id,
-              ),
-              EntityType.cryptoWallet => service.cryptoWallet.restoreArchived(
-                id,
-              ),
-              EntityType.wifi => service.wifi.restoreArchived(id),
-              EntityType.identity => service.identity.restoreArchived(id),
-              EntityType.licenseKey => service.licenseKey.restoreArchived(id),
-              EntityType.recoveryCodes => service.recoveryCodes
-                  .restoreArchived(id),
-              EntityType.loyaltyCard => service.loyaltyCard.restoreArchived(
-                id,
-              ),
-            },
-    ));
+    return _guardBool(
+      () => _runStateOperation(
+        entityType,
+        (service) => value
+            ? switch (entityType) {
+                EntityType.password => service.password.archive(id),
+                EntityType.note => service.note.archive(id),
+                EntityType.otp => service.otp.archive(id),
+                EntityType.bankCard => service.bankCard.archive(id),
+                EntityType.file => service.file.archive(id),
+                EntityType.document => service.document.archive(id),
+                EntityType.contact => service.contact.archive(id),
+                EntityType.apiKey => service.apiKey.archive(id),
+                EntityType.sshKey => service.sshKey.archive(id),
+                EntityType.certificate => service.certificate.archive(id),
+                EntityType.cryptoWallet => service.cryptoWallet.archive(id),
+                EntityType.wifi => service.wifi.archive(id),
+                EntityType.identity => service.identity.archive(id),
+                EntityType.licenseKey => service.licenseKey.archive(id),
+                EntityType.recoveryCodes => service.recoveryCodes.archive(id),
+                EntityType.loyaltyCard => service.loyaltyCard.archive(id),
+              }
+            : switch (entityType) {
+                EntityType.password => service.password.restoreArchived(id),
+                EntityType.note => service.note.restoreArchived(id),
+                EntityType.otp => service.otp.restoreArchived(id),
+                EntityType.bankCard => service.bankCard.restoreArchived(id),
+                EntityType.file => service.file.restoreArchived(id),
+                EntityType.document => service.document.restoreArchived(id),
+                EntityType.contact => service.contact.restoreArchived(id),
+                EntityType.apiKey => service.apiKey.restoreArchived(id),
+                EntityType.sshKey => service.sshKey.restoreArchived(id),
+                EntityType.certificate => service.certificate.restoreArchived(
+                  id,
+                ),
+                EntityType.cryptoWallet => service.cryptoWallet.restoreArchived(
+                  id,
+                ),
+                EntityType.wifi => service.wifi.restoreArchived(id),
+                EntityType.identity => service.identity.restoreArchived(id),
+                EntityType.licenseKey => service.licenseKey.restoreArchived(id),
+                EntityType.recoveryCodes =>
+                  service.recoveryCodes.restoreArchived(id),
+                EntityType.loyaltyCard => service.loyaltyCard.restoreArchived(
+                  id,
+                ),
+              },
+      ),
+    );
   }
 
   @override
@@ -238,27 +248,29 @@ final class VaultDashboardRepository implements DashboardRepository {
     required EntityType entityType,
     required String id,
   }) {
-    return _guardBool(() => _runStateOperation(
-      entityType,
-      (service) => switch (entityType) {
-        EntityType.password => service.password.softDelete(id),
-        EntityType.note => service.note.softDelete(id),
-        EntityType.otp => service.otp.softDelete(id),
-        EntityType.bankCard => service.bankCard.softDelete(id),
-        EntityType.file => service.file.softDelete(id),
-        EntityType.document => service.document.softDelete(id),
-        EntityType.contact => service.contact.softDelete(id),
-        EntityType.apiKey => service.apiKey.softDelete(id),
-        EntityType.sshKey => service.sshKey.softDelete(id),
-        EntityType.certificate => service.certificate.softDelete(id),
-        EntityType.cryptoWallet => service.cryptoWallet.softDelete(id),
-        EntityType.wifi => service.wifi.softDelete(id),
-        EntityType.identity => service.identity.softDelete(id),
-        EntityType.licenseKey => service.licenseKey.softDelete(id),
-        EntityType.recoveryCodes => service.recoveryCodes.softDelete(id),
-        EntityType.loyaltyCard => service.loyaltyCard.softDelete(id),
-      },
-    ));
+    return _guardBool(
+      () => _runStateOperation(
+        entityType,
+        (service) => switch (entityType) {
+          EntityType.password => service.password.softDelete(id),
+          EntityType.note => service.note.softDelete(id),
+          EntityType.otp => service.otp.softDelete(id),
+          EntityType.bankCard => service.bankCard.softDelete(id),
+          EntityType.file => service.file.softDelete(id),
+          EntityType.document => service.document.softDelete(id),
+          EntityType.contact => service.contact.softDelete(id),
+          EntityType.apiKey => service.apiKey.softDelete(id),
+          EntityType.sshKey => service.sshKey.softDelete(id),
+          EntityType.certificate => service.certificate.softDelete(id),
+          EntityType.cryptoWallet => service.cryptoWallet.softDelete(id),
+          EntityType.wifi => service.wifi.softDelete(id),
+          EntityType.identity => service.identity.softDelete(id),
+          EntityType.licenseKey => service.licenseKey.softDelete(id),
+          EntityType.recoveryCodes => service.recoveryCodes.softDelete(id),
+          EntityType.loyaltyCard => service.loyaltyCard.softDelete(id),
+        },
+      ),
+    );
   }
 
   @override
@@ -266,27 +278,29 @@ final class VaultDashboardRepository implements DashboardRepository {
     required EntityType entityType,
     required String id,
   }) {
-    return _guardBool(() => _runStateOperation(
-      entityType,
-      (service) => switch (entityType) {
-        EntityType.password => service.password.recover(id),
-        EntityType.note => service.note.recover(id),
-        EntityType.otp => service.otp.recover(id),
-        EntityType.bankCard => service.bankCard.recover(id),
-        EntityType.file => service.file.recover(id),
-        EntityType.document => service.document.recover(id),
-        EntityType.contact => service.contact.recover(id),
-        EntityType.apiKey => service.apiKey.recover(id),
-        EntityType.sshKey => service.sshKey.recover(id),
-        EntityType.certificate => service.certificate.recover(id),
-        EntityType.cryptoWallet => service.cryptoWallet.recover(id),
-        EntityType.wifi => service.wifi.recover(id),
-        EntityType.identity => service.identity.recover(id),
-        EntityType.licenseKey => service.licenseKey.recover(id),
-        EntityType.recoveryCodes => service.recoveryCodes.recover(id),
-        EntityType.loyaltyCard => service.loyaltyCard.recover(id),
-      },
-    ));
+    return _guardBool(
+      () => _runStateOperation(
+        entityType,
+        (service) => switch (entityType) {
+          EntityType.password => service.password.recover(id),
+          EntityType.note => service.note.recover(id),
+          EntityType.otp => service.otp.recover(id),
+          EntityType.bankCard => service.bankCard.recover(id),
+          EntityType.file => service.file.recover(id),
+          EntityType.document => service.document.recover(id),
+          EntityType.contact => service.contact.recover(id),
+          EntityType.apiKey => service.apiKey.recover(id),
+          EntityType.sshKey => service.sshKey.recover(id),
+          EntityType.certificate => service.certificate.recover(id),
+          EntityType.cryptoWallet => service.cryptoWallet.recover(id),
+          EntityType.wifi => service.wifi.recover(id),
+          EntityType.identity => service.identity.recover(id),
+          EntityType.licenseKey => service.licenseKey.recover(id),
+          EntityType.recoveryCodes => service.recoveryCodes.recover(id),
+          EntityType.loyaltyCard => service.loyaltyCard.recover(id),
+        },
+      ),
+    );
   }
 
   @override
@@ -304,11 +318,10 @@ final class VaultDashboardRepository implements DashboardRepository {
     required bool value,
   }) {
     return _guard(
-      () => _runBulk(ids, (id) => setFavorite(
-        entityType: entityType,
-        id: id,
-        value: value,
-      )),
+      () => _runBulk(
+        ids,
+        (id) => setFavorite(entityType: entityType, id: id, value: value),
+      ),
     );
   }
 
@@ -319,11 +332,10 @@ final class VaultDashboardRepository implements DashboardRepository {
     required bool value,
   }) {
     return _guard(
-      () => _runBulk(ids, (id) => setPinned(
-        entityType: entityType,
-        id: id,
-        value: value,
-      )),
+      () => _runBulk(
+        ids,
+        (id) => setPinned(entityType: entityType, id: id, value: value),
+      ),
     );
   }
 
@@ -334,11 +346,10 @@ final class VaultDashboardRepository implements DashboardRepository {
     required bool value,
   }) {
     return _guard(
-      () => _runBulk(ids, (id) => setArchived(
-        entityType: entityType,
-        id: id,
-        value: value,
-      )),
+      () => _runBulk(
+        ids,
+        (id) => setArchived(entityType: entityType, id: id, value: value),
+      ),
     );
   }
 
@@ -348,10 +359,7 @@ final class VaultDashboardRepository implements DashboardRepository {
     required List<String> ids,
   }) {
     return _guard(
-      () => _runBulk(
-        ids,
-        (id) => softDelete(entityType: entityType, id: id),
-      ),
+      () => _runBulk(ids, (id) => softDelete(entityType: entityType, id: id)),
     );
   }
 
@@ -383,8 +391,7 @@ final class VaultDashboardRepository implements DashboardRepository {
         (await relations.changeCategory(
           itemId: id,
           categoryId: categoryId,
-        ))
-            .getOrThrow();
+        )).getOrThrow();
         changed++;
       }
       return changed;
@@ -415,100 +422,52 @@ final class VaultDashboardRepository implements DashboardRepository {
     return switch (query.entityType) {
       EntityType.password => (await service.getPasswords(
         _passwordFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.note => (await service.getNotes(
         _noteFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.otp => (await service.getOtps(
         _otpFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.bankCard => (await service.getBankCards(
         _bankCardFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.file => (await service.getFiles(
         _fileFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.document => (await service.getDocuments(
         _documentFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.contact => (await service.getContacts(
         _contactFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.apiKey => (await service.getApiKeys(
         _apiKeyFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.sshKey => (await service.getSshKeys(
         _sshKeyFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.certificate => (await service.getCertificates(
         _certificateFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.cryptoWallet => (await service.getCryptoWallets(
         _cryptoWalletFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.wifi => (await service.getWifis(
         _wifiFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.identity => (await service.getIdentities(
         _identityFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.licenseKey => (await service.getLicenseKeys(
         _licenseKeyFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.recoveryCodes => (await service.getRecoveryCodes(
         _recoveryCodesFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
       EntityType.loyaltyCard => (await service.getLoyaltyCards(
         _loyaltyCardFilter(query.entityFilter, base),
-      ))
-          .getOrThrow()
-          .map((item) => wrapCard(item))
-          .toList(),
+      )).getOrThrow().map((item) => wrapCard(item)).toList(),
     };
   }
 
@@ -521,68 +480,52 @@ final class VaultDashboardRepository implements DashboardRepository {
     return switch (query.entityType) {
       EntityType.password => (await service.countPasswords(
         _passwordFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.note => (await service.countNotes(
         _noteFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.otp => (await service.countOtps(
         _otpFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.bankCard => (await service.countBankCards(
         _bankCardFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.file => (await service.countFiles(
         _fileFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.document => (await service.countDocuments(
         _documentFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.contact => (await service.countContacts(
         _contactFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.apiKey => (await service.countApiKeys(
         _apiKeyFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.sshKey => (await service.countSshKeys(
         _sshKeyFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.certificate => (await service.countCertificates(
         _certificateFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.cryptoWallet => (await service.countCryptoWallets(
         _cryptoWalletFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.wifi => (await service.countWifis(
         _wifiFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.identity => (await service.countIdentities(
         _identityFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.licenseKey => (await service.countLicenseKeys(
         _licenseKeyFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.recoveryCodes => (await service.countRecoveryCodes(
         _recoveryCodesFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
       EntityType.loyaltyCard => (await service.countLoyaltyCards(
         _loyaltyCardFilter(query.entityFilter, countBase),
-      ))
-          .getOrThrow(),
+      )).getOrThrow(),
     };
   }
 
@@ -653,31 +596,45 @@ final class VaultDashboardRepository implements DashboardRepository {
   }
 
   PasswordFilter _passwordFilter(Object filter, BaseFilter base) =>
-      filter is PasswordFilter ? filter.copyWith(base: base) : PasswordFilter(base: base);
+      filter is PasswordFilter
+      ? filter.copyWith(base: base)
+      : PasswordFilter(base: base);
 
-  NoteFilter _noteFilter(Object filter, BaseFilter base) =>
-      filter is NoteFilter ? filter.copyWith(base: base) : NoteFilter(base: base);
+  NoteFilter _noteFilter(Object filter, BaseFilter base) => filter is NoteFilter
+      ? filter.copyWith(base: base)
+      : NoteFilter(base: base);
 
   OtpFilter _otpFilter(Object filter, BaseFilter base) =>
       filter is OtpFilter ? filter.copyWith(base: base) : OtpFilter(base: base);
 
   BankCardFilter _bankCardFilter(Object filter, BaseFilter base) =>
-      filter is BankCardFilter ? filter.copyWith(base: base) : BankCardFilter(base: base);
+      filter is BankCardFilter
+      ? filter.copyWith(base: base)
+      : BankCardFilter(base: base);
 
-  FileFilter _fileFilter(Object filter, BaseFilter base) =>
-      filter is FileFilter ? filter.copyWith(base: base) : FileFilter(base: base);
+  FileFilter _fileFilter(Object filter, BaseFilter base) => filter is FileFilter
+      ? filter.copyWith(base: base)
+      : FileFilter(base: base);
 
   DocumentFilter _documentFilter(Object filter, BaseFilter base) =>
-      filter is DocumentFilter ? filter.copyWith(base: base) : DocumentFilter(base: base);
+      filter is DocumentFilter
+      ? filter.copyWith(base: base)
+      : DocumentFilter(base: base);
 
   ContactFilter _contactFilter(Object filter, BaseFilter base) =>
-      filter is ContactFilter ? filter.copyWith(base: base) : ContactFilter(base: base);
+      filter is ContactFilter
+      ? filter.copyWith(base: base)
+      : ContactFilter(base: base);
 
   ApiKeyFilter _apiKeyFilter(Object filter, BaseFilter base) =>
-      filter is ApiKeyFilter ? filter.copyWith(base: base) : ApiKeyFilter(base: base);
+      filter is ApiKeyFilter
+      ? filter.copyWith(base: base)
+      : ApiKeyFilter(base: base);
 
   SshKeyFilter _sshKeyFilter(Object filter, BaseFilter base) =>
-      filter is SshKeyFilter ? filter.copyWith(base: base) : SshKeyFilter(base: base);
+      filter is SshKeyFilter
+      ? filter.copyWith(base: base)
+      : SshKeyFilter(base: base);
 
   CertificateFilter _certificateFilter(Object filter, BaseFilter base) =>
       filter is CertificateFilter
@@ -689,11 +646,14 @@ final class VaultDashboardRepository implements DashboardRepository {
       ? filter.copyWith(base: base)
       : CryptoWalletFilter(base: base);
 
-  WifiFilter _wifiFilter(Object filter, BaseFilter base) =>
-      filter is WifiFilter ? filter.copyWith(base: base) : WifiFilter(base: base);
+  WifiFilter _wifiFilter(Object filter, BaseFilter base) => filter is WifiFilter
+      ? filter.copyWith(base: base)
+      : WifiFilter(base: base);
 
   IdentityFilter _identityFilter(Object filter, BaseFilter base) =>
-      filter is IdentityFilter ? filter.copyWith(base: base) : IdentityFilter(base: base);
+      filter is IdentityFilter
+      ? filter.copyWith(base: base)
+      : IdentityFilter(base: base);
 
   LicenseKeyFilter _licenseKeyFilter(Object filter, BaseFilter base) =>
       filter is LicenseKeyFilter

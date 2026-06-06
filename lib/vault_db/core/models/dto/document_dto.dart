@@ -91,7 +91,6 @@ sealed class DocumentCardDto
 
 // --- Live Pages ---
 
-
 @freezed
 sealed class DocumentPageDataDto with _$DocumentPageDataDto {
   const factory DocumentPageDataDto({

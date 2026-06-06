@@ -8,7 +8,7 @@ Future<List<CustomFieldEntry>> loadCustomFields(
   Object ref,
   String itemId,
 ) async {
-  final db =  _readVaultDb(ref);
+  final db = _readVaultDb(ref);
   final rows = await db.vaultItemCustomFieldsDao.getCustomFieldsByItemId(
     itemId,
   );
@@ -23,7 +23,7 @@ Future<void> saveCustomFields(
   String itemId,
   List<CustomFieldEntry> fields,
 ) async {
-  final db =  _readVaultDb(ref);
+  final db = _readVaultDb(ref);
   await db.vaultItemCustomFieldsDao.replaceCustomFieldsForItem(
     itemId: itemId,
     fields: fields.asMap().entries.map((e) {

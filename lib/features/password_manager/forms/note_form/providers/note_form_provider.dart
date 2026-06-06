@@ -402,8 +402,7 @@ class NoteFormNotifier extends Notifier<NoteFormState> {
           relationType: ItemLinkType.note,
           sortOrder: sortOrder,
         ),
-      ))
-          .getOrThrow();
+      )).getOrThrow();
       sortOrder++;
     }
   }

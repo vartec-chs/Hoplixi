@@ -259,9 +259,12 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                   ),
                   onChanged: notifier.setPassword,
                 ),
-                 const SizedBox(height: 12),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<WifiSecurityType>(
-                  value: WifiSecurityType.values.map((e) => e.name).contains(state.securityType)
+                  value:
+                      WifiSecurityType.values
+                          .map((e) => e.name)
+                          .contains(state.securityType)
                       ? WifiSecurityType.values.byName(state.securityType)
                       : null,
                   decoration: primaryInputDecoration(
@@ -295,7 +298,10 @@ class _WifiFormScreenState extends ConsumerState<WifiFormScreen> {
                 ],
                 const SizedBox(height: 12),
                 DropdownButtonFormField<WifiEncryptionType>(
-                  value: WifiEncryptionType.values.map((e) => e.name).contains(state.encryption)
+                  value:
+                      WifiEncryptionType.values
+                          .map((e) => e.name)
+                          .contains(state.encryption)
                       ? WifiEncryptionType.values.byName(state.encryption)
                       : null,
                   decoration: primaryInputDecoration(

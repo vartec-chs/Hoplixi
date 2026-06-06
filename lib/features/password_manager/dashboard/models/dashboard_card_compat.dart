@@ -121,54 +121,48 @@ abstract class _CardEntry<T extends VaultEntityCardDto> extends BaseCardDto {
 BaseCardDto wrapCard<T extends VaultEntityCardDto>(FilteredCardDto<T> data) {
   return switch (data.card) {
     PasswordCardDto() => PasswordCardEntry(
-        data: data as FilteredCardDto<PasswordCardDto>,
-      ),
-    NoteCardDto() => NoteCardEntry(
-        data: data as FilteredCardDto<NoteCardDto>,
-      ),
+      data: data as FilteredCardDto<PasswordCardDto>,
+    ),
+    NoteCardDto() => NoteCardEntry(data: data as FilteredCardDto<NoteCardDto>),
     BankCardCardDto() => BankCardEntry(
-        data: data as FilteredCardDto<BankCardCardDto>,
-      ),
-    FileCardDto() => FileCardEntry(
-        data: data as FilteredCardDto<FileCardDto>,
-      ),
-    OtpCardDto() => OtpCardEntry(
-        data: data as FilteredCardDto<OtpCardDto>,
-      ),
+      data: data as FilteredCardDto<BankCardCardDto>,
+    ),
+    FileCardDto() => FileCardEntry(data: data as FilteredCardDto<FileCardDto>),
+    OtpCardDto() => OtpCardEntry(data: data as FilteredCardDto<OtpCardDto>),
     DocumentCardDto() => DocumentCardEntry(
-        data: data as FilteredCardDto<DocumentCardDto>,
-      ),
+      data: data as FilteredCardDto<DocumentCardDto>,
+    ),
     ContactCardDto() => ContactCardEntry(
-        data: data as FilteredCardDto<ContactCardDto>,
-      ),
+      data: data as FilteredCardDto<ContactCardDto>,
+    ),
     ApiKeyCardDto() => ApiKeyCardEntry(
-        data: data as FilteredCardDto<ApiKeyCardDto>,
-      ),
+      data: data as FilteredCardDto<ApiKeyCardDto>,
+    ),
     SshKeyCardDto() => SshKeyCardEntry(
-        data: data as FilteredCardDto<SshKeyCardDto>,
-      ),
+      data: data as FilteredCardDto<SshKeyCardDto>,
+    ),
     CertificateCardDto() => CertificateCardEntry(
-        data: data as FilteredCardDto<CertificateCardDto>,
-      ),
+      data: data as FilteredCardDto<CertificateCardDto>,
+    ),
     CryptoWalletCardDto() => CryptoWalletCardEntry(
-        data: data as FilteredCardDto<CryptoWalletCardDto>,
-      ),
-    WifiCardDto() => WifiCardEntry(
-        data: data as FilteredCardDto<WifiCardDto>,
-      ),
+      data: data as FilteredCardDto<CryptoWalletCardDto>,
+    ),
+    WifiCardDto() => WifiCardEntry(data: data as FilteredCardDto<WifiCardDto>),
     IdentityCardDto() => IdentityCardEntry(
-        data: data as FilteredCardDto<IdentityCardDto>,
-      ),
+      data: data as FilteredCardDto<IdentityCardDto>,
+    ),
     LicenseKeyCardDto() => LicenseKeyCardEntry(
-        data: data as FilteredCardDto<LicenseKeyCardDto>,
-      ),
+      data: data as FilteredCardDto<LicenseKeyCardDto>,
+    ),
     RecoveryCodesCardDto() => RecoveryCodesCardEntry(
-        data: data as FilteredCardDto<RecoveryCodesCardDto>,
-      ),
+      data: data as FilteredCardDto<RecoveryCodesCardDto>,
+    ),
     LoyaltyCardCardDto() => LoyaltyCardEntry(
-        data: data as FilteredCardDto<LoyaltyCardCardDto>,
-      ),
-    _ => throw UnimplementedError('Unknown card type: ${data.card.runtimeType}'),
+      data: data as FilteredCardDto<LoyaltyCardCardDto>,
+    ),
+    _ => throw UnimplementedError(
+      'Unknown card type: ${data.card.runtimeType}',
+    ),
   };
 }
 
@@ -178,7 +172,11 @@ final class PasswordCardEntry extends _CardEntry<PasswordCardDto> {
   final FilteredCardDto<PasswordCardDto> data;
 
   @override
-  PasswordCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  PasswordCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return PasswordCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -194,7 +192,11 @@ final class NoteCardEntry extends _CardEntry<NoteCardDto> {
   final FilteredCardDto<NoteCardDto> data;
 
   @override
-  NoteCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  NoteCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return NoteCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -210,7 +212,11 @@ final class BankCardEntry extends _CardEntry<BankCardCardDto> {
   final FilteredCardDto<BankCardCardDto> data;
 
   @override
-  BankCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  BankCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return BankCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -226,7 +232,11 @@ final class FileCardEntry extends _CardEntry<FileCardDto> {
   final FilteredCardDto<FileCardDto> data;
 
   @override
-  FileCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  FileCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return FileCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -242,7 +252,11 @@ final class OtpCardEntry extends _CardEntry<OtpCardDto> {
   final FilteredCardDto<OtpCardDto> data;
 
   @override
-  OtpCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  OtpCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return OtpCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -258,7 +272,11 @@ final class DocumentCardEntry extends _CardEntry<DocumentCardDto> {
   final FilteredCardDto<DocumentCardDto> data;
 
   @override
-  DocumentCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  DocumentCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return DocumentCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -274,7 +292,11 @@ final class ContactCardEntry extends _CardEntry<ContactCardDto> {
   final FilteredCardDto<ContactCardDto> data;
 
   @override
-  ContactCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  ContactCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return ContactCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -290,7 +312,11 @@ final class ApiKeyCardEntry extends _CardEntry<ApiKeyCardDto> {
   final FilteredCardDto<ApiKeyCardDto> data;
 
   @override
-  ApiKeyCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  ApiKeyCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return ApiKeyCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -306,7 +332,11 @@ final class SshKeyCardEntry extends _CardEntry<SshKeyCardDto> {
   final FilteredCardDto<SshKeyCardDto> data;
 
   @override
-  SshKeyCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  SshKeyCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return SshKeyCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -322,7 +352,11 @@ final class CertificateCardEntry extends _CardEntry<CertificateCardDto> {
   final FilteredCardDto<CertificateCardDto> data;
 
   @override
-  CertificateCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  CertificateCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return CertificateCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -338,7 +372,11 @@ final class CryptoWalletCardEntry extends _CardEntry<CryptoWalletCardDto> {
   final FilteredCardDto<CryptoWalletCardDto> data;
 
   @override
-  CryptoWalletCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  CryptoWalletCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return CryptoWalletCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -354,7 +392,11 @@ final class WifiCardEntry extends _CardEntry<WifiCardDto> {
   final FilteredCardDto<WifiCardDto> data;
 
   @override
-  WifiCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  WifiCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return WifiCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -370,7 +412,11 @@ final class IdentityCardEntry extends _CardEntry<IdentityCardDto> {
   final FilteredCardDto<IdentityCardDto> data;
 
   @override
-  IdentityCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  IdentityCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return IdentityCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -386,7 +432,11 @@ final class LicenseKeyCardEntry extends _CardEntry<LicenseKeyCardDto> {
   final FilteredCardDto<LicenseKeyCardDto> data;
 
   @override
-  LicenseKeyCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  LicenseKeyCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return LicenseKeyCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -402,7 +452,11 @@ final class RecoveryCodesCardEntry extends _CardEntry<RecoveryCodesCardDto> {
   final FilteredCardDto<RecoveryCodesCardDto> data;
 
   @override
-  RecoveryCodesCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  RecoveryCodesCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return RecoveryCodesCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),
@@ -418,7 +472,11 @@ final class LoyaltyCardEntry extends _CardEntry<LoyaltyCardCardDto> {
   final FilteredCardDto<LoyaltyCardCardDto> data;
 
   @override
-  LoyaltyCardEntry _rebuildWith({required VaultItemCardDto newItem, required CategoryInCardDto? category, required List<TagInCardDto> tags}) {
+  LoyaltyCardEntry _rebuildWith({
+    required VaultItemCardDto newItem,
+    required CategoryInCardDto? category,
+    required List<TagInCardDto> tags,
+  }) {
     return LoyaltyCardEntry(
       data: data.copyWith(
         card: data.card.copyWith(item: newItem),

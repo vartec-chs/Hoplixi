@@ -25,10 +25,10 @@ typedef VaultDBManager = VaultDBFacade;
 class VaultDBManagerFactory {
   VaultDBManagerFactory({required this.dbHistoryService})
     : createVaultDB = CreateVaultDB(),
-       openVaultDB = OpenVaultDB(),
-       closeVaultDB = CloseVaultDB(),
-       updateVaultDB = UpdateVaultDB(),
-       storageService = const VaultDBFileService();
+      openVaultDB = OpenVaultDB(),
+      closeVaultDB = CloseVaultDB(),
+      updateVaultDB = UpdateVaultDB(),
+      storageService = const VaultDBFileService();
 
   final DatabaseHistoryService dbHistoryService;
   final CreateVaultDB createVaultDB;

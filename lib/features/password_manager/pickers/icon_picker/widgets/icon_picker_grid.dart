@@ -42,8 +42,9 @@ class _IconPickerGridState extends ConsumerState<IconPickerGrid> {
   }
 
   void _loadMore() {
-    final notifier =
-        ref.read(iconPickerListProvider(widget.searchQuery).notifier);
+    final notifier = ref.read(
+      iconPickerListProvider(widget.searchQuery).notifier,
+    );
     notifier.loadMore();
   }
 
@@ -126,7 +127,9 @@ class _IconPickerGridState extends ConsumerState<IconPickerGrid> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                ref.read(iconPickerListProvider(widget.searchQuery).notifier).refresh();
+                ref
+                    .read(iconPickerListProvider(widget.searchQuery).notifier)
+                    .refresh();
               },
               child: const Text('Повторить'),
             ),

@@ -141,7 +141,8 @@ class IconRepository {
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message: 'Ошибка при получении пользовательских иконок для picker',
+              message:
+                  'Ошибка при получении пользовательских иконок для picker',
               cause: e,
               stackTrace: st,
             ),
@@ -156,8 +157,7 @@ class IconRepository {
       (e, st) => e is DBCoreError
           ? e
           : DBCoreError.unknown(
-              message:
-                  'Ошибка при подсчёте пользовательских иконок для picker',
+              message: 'Ошибка при подсчёте пользовательских иконок для picker',
               cause: e,
               stackTrace: st,
             ),
