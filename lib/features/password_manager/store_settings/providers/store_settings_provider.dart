@@ -35,10 +35,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
     try {
       String? currentDbCipher;
       String? currentDbCipherDescription;
+      final db = ref.watch(requiredVaultDBProvider);
 
       try {
-        final db = ref.watch(requiredVaultDBProvider);
-
         final pragmaRows = await db.storeMetaDao.getCipher().getOrThrow();
         if (pragmaRows.isNotEmpty) {
           final cipherValue = pragmaRows
@@ -57,6 +56,9 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           tag: _logTag,
         );
       }
+
+      final pragmaCompileOptions =
+          await db.storeMetaDao.getCompileOptions().getOrNull() ?? [];
 
       state = state.copyWith(
         currentDbCipher: currentDbCipher,
@@ -118,6 +120,7 @@ class StoreSettingsNotifier extends Notifier<StoreSettingsState> {
           keyFileId: manifest?.keyFileId,
           keyFileHint: manifest?.keyFileHint,
           useDeviceKey: manifest?.keyConfig?.useDeviceKey ?? false,
+          pragmaCompileOptions: pragmaCompileOptions,
         );
       }
     } catch (e, s) {

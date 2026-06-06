@@ -204,4 +204,28 @@ class StoreMetaDao extends DatabaseAccessor<VaultDB> with _$StoreMetaDaoMixin {
       ),
     );
   }
+
+  /// compile_options or pragma_compile_options
+
+  AsyncDBResult<List<String>> getCompileOptions() {
+    return tryCatchAsync(
+      () async {
+        final results = await customSelect('PRAGMA compile_options;').get();
+        final results2 = await customSelect(
+          'PRAGMA pragma_compile_options;',
+        ).get();
+        results.addAll(results2);
+        final options = results
+            .map((row) => row.data.values.first as String)
+            .toSet()
+            .toList();
+        return options;
+      },
+      (e, st) => DBCoreError.sqlite(
+        message: 'Не удалось получить compile options: $e',
+        cause: e,
+        stackTrace: st,
+      ),
+    );
+  }
 }

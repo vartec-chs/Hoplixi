@@ -22,6 +22,9 @@ sealed class StoreSettingsState with _$StoreSettingsState {
     /// Ошибка валидации имени
     String? nameError,
 
+    /// pragma_compile_options
+    @Default([]) List<String> pragmaCompileOptions,
+
     /// Лимит истории
     @Default(100) int historyLimit,
 
