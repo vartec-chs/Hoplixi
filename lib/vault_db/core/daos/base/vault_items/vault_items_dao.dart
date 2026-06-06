@@ -59,6 +59,59 @@ class VaultItemsDao extends DatabaseAccessor<VaultDB>
     return row != null;
   }
 
+  Future<List<VaultItemsData>> searchActiveVaultItems({
+    required String query,
+    String? excludeItemId,
+    List<VaultItemType> types = const [],
+    List<String> categoryIds = const [],
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final normalizedQuery = query.trim();
+    final normalizedCategoryIds = categoryIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+
+    Expression<bool> whereExpr =
+        vaultItems.isDeleted.equals(false) &
+        vaultItems.isArchived.equals(false);
+
+    if (excludeItemId != null && excludeItemId.trim().isNotEmpty) {
+      whereExpr &= vaultItems.id.equals(excludeItemId).not();
+    }
+
+    if (normalizedQuery.isNotEmpty) {
+      whereExpr &=
+          vaultItems.name.contains(normalizedQuery) |
+          vaultItems.description.contains(normalizedQuery);
+    }
+
+    if (types.isNotEmpty) {
+      Expression<bool> typeExpr = const Constant(false);
+      for (final type in types) {
+        typeExpr |= vaultItems.type.equalsValue(type);
+      }
+      whereExpr &= typeExpr;
+    }
+
+    if (normalizedCategoryIds.isNotEmpty) {
+      whereExpr &= vaultItems.categoryId.isIn(normalizedCategoryIds);
+    }
+
+    return (select(vaultItems)
+          ..where((_) => whereExpr)
+          ..orderBy([
+            (tbl) => OrderingTerm(
+              expression: tbl.modifiedAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(limit, offset: offset))
+        .get();
+  }
+
   Future<int> touchModifiedAt(String itemId, DateTime modifiedAt) {
     return (update(vaultItems)..where((tbl) => tbl.id.equals(itemId))).write(
       VaultItemsCompanion(modifiedAt: Value(modifiedAt)),

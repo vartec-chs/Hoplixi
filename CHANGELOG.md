@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 2026-06-06
+
+### password_manager
+
+- `showVaultItemPickerModal` расширен фильтрами по поиску, типам объектов и
+  категориям через существующий `CategoryPickerField`, а список объектов теперь
+  подгружается постранично при прокрутке.
+- Добавлен `VaultItemPickerField` и модульный экспорт `vault_item_picker.dart`
+  для выбора объектов хранилища при создании связей.
+- Добавлен `README.md` для `vault_item_picker` с примерами использования поля,
+  модального окна, фильтрации и пагинации.
+
+### vault_db
+
+- `VaultItemsDao` и `VaultItemRepository.searchLinkableItems` получили
+  SQL-фильтрацию по типам/категориям и поддержку `LIMIT/OFFSET` для picker
+  сценариев.
+
 ## 2026-06-05
 
 ### password_manager

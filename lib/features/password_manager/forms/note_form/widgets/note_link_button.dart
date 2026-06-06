@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
-import 'package:hoplixi/features/password_manager/pickers/vault_item_picker/vault_item_picker_modal.dart';
+import 'package:hoplixi/features/password_manager/pickers/vault_item_picker/vault_item_picker.dart';
 import 'package:hoplixi/shared/utils/vault_link_utils.dart';
 
 /// Кастомная кнопка для вставки ссылки на vault item в Quill редактор.

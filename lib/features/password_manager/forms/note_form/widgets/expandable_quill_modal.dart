@@ -128,7 +128,7 @@ class _ExpandableQuillModalState extends State<ExpandableQuillModal> {
             child: Material(
               borderRadius: BorderRadius.circular(16),
               clipBehavior: Clip.antiAlias,
-              color: theme.colorScheme.surface,
+              color: theme.colorScheme.surfaceContainer,
               child: SizedBox(
                 width: width,
                 height: height,
