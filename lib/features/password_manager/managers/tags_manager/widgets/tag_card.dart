@@ -82,11 +82,7 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
         ? colorScheme.surfaceContainerHigh
         : colorScheme.surfaceContainerLowest;
     final gradientStart = Color.alphaBlend(
-      baseColor.withValues(alpha: isDark ? 0.3 : 0.15),
-      cardBackground,
-    );
-    final gradientMiddle = Color.alphaBlend(
-      baseColor.withValues(alpha: isDark ? 0.15 : 0.08),
+      baseColor.withValues(alpha: isDark ? 0.35 : 0.2),
       cardBackground,
     );
     final gradientEnd = cardBackground;
@@ -112,8 +108,7 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [gradientStart, gradientMiddle, gradientEnd],
-                stops: const [0.0, 0.5, 1.0],
+                colors: [gradientStart, gradientEnd],
               ),
               boxShadow: [
                 BoxShadow(
@@ -128,8 +123,8 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
                 if (_isHovered)
                   BoxShadow(
                     color: baseColor.withValues(alpha: 0.1),
-                    blurRadius: 24,
-                    offset: const Offset(0, 4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 2),
                   ),
               ],
             ),
@@ -143,8 +138,8 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
                 highlightColor: baseColor.withValues(alpha: 0.08),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+                    horizontal: 14,
+                    vertical: 12,
                   ),
                   child: Row(
                     children: [
@@ -152,26 +147,17 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
                       _buildTagIcon(baseColor, isDark),
                       const SizedBox(width: 14),
 
-                      // Название и информация
+                      // Название тега
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Название тега
-                            Text(
-                              widget.tag.name,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-
-                            // Информация о типе удалена т.к. нет в новом DTO
-                          ],
+                        child: Text(
+                          widget.tag.name,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
 
@@ -191,29 +177,15 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
   Widget _buildTagIcon(Color baseColor, bool isDark) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      width: 48,
-      height: 48,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            baseColor.withValues(alpha: isDark ? 0.35 : 0.25),
-            baseColor.withValues(alpha: isDark ? 0.2 : 0.15),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: baseColor.withValues(alpha: 0.25), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: baseColor.withValues(alpha: 0.15),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: baseColor.withValues(alpha: isDark ? 0.25 : 0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: baseColor.withValues(alpha: 0.2), width: 1),
       ),
       child: Center(
-        child: Icon(Icons.label_rounded, color: baseColor, size: 24),
+        child: Icon(Icons.label_rounded, color: baseColor, size: 22),
       ),
     );
   }
@@ -226,7 +198,7 @@ class _TagCardState extends State<TagCard> with SingleTickerProviderStateMixin {
         size: 20,
       ),
       splashRadius: 18,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       offset: const Offset(0, 40),
       itemBuilder: (context) => [
         PopupMenuItem(

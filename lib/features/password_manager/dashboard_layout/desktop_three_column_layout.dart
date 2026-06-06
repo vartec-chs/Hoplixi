@@ -5,6 +5,8 @@ import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 
 import 'config/dashboard_layout_constants.dart';
 
+const double _kCollapsedLeftPanelWidth = 48;
+
 class DesktopThreeColumnLayout extends StatefulWidget {
   final EntityType entityType;
   final Widget? rightPanel;
@@ -30,6 +32,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
 
   Widget? _displayedRightPanel;
   String? _displayedPanelIdentity;
+  bool _isLeftPanelOpen = true;
 
   @override
   void initState() {
@@ -105,11 +108,17 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
     final screenWidth = MediaQuery.sizeOf(context).width;
     final showDrawerAsPanel = screenWidth >= MainConstants.kDesktopBreakpoint;
     final canShowBoth = screenWidth >= kBothPanelsBreakpoint;
+    final canToggleLeftPanel =
+        showDrawerAsPanel && (canShowBoth || widget.rightPanel == null);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final leftPanelFootprint = showDrawerAsPanel && canShowBoth
-            ? kLeftPanelWidth + 1
+        final leftPanelWidth = canToggleLeftPanel && !_isLeftPanelOpen
+            ? _kCollapsedLeftPanelWidth
+            : kLeftPanelWidth;
+        final leftPanelFootprint =
+            showDrawerAsPanel && (canShowBoth || widget.rightPanel == null)
+            ? leftPanelWidth + 1
             : 0.0;
         final contentWidth = (constraints.maxWidth - leftPanelFootprint).clamp(
           0.0,
@@ -119,7 +128,11 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
 
         return Row(
           children: [
-            _buildLeftPanel(context, canShowBoth),
+            _buildLeftPanel(
+              context,
+              canShowBoth,
+              canToggleLeftPanel: canToggleLeftPanel,
+            ),
             Expanded(
               child: DashboardHomeScreen(
                 key: ValueKey('desktop_home_${widget.entityType.id}'),
@@ -167,15 +180,41 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
     );
   }
 
-  Widget _buildLeftPanel(BuildContext context, bool canShowBoth) {
-    final panel = Container(
-      width: kLeftPanelWidth,
+  Widget _buildLeftPanel(
+    BuildContext context,
+    bool canShowBoth, {
+    required bool canToggleLeftPanel,
+  }) {
+    final isPanelOpen = !canToggleLeftPanel || _isLeftPanelOpen;
+    final panelWidth = isPanelOpen
+        ? kLeftPanelWidth
+        : _kCollapsedLeftPanelWidth;
+    final panel = AnimatedContainer(
+      duration: kPanelAnimationDuration,
+      curve: Curves.easeOutCubic,
+      width: panelWidth,
       decoration: BoxDecoration(
         border: Border(
           right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
-      child: DashboardDrawerContent(entityType: widget.entityType),
+      child: ClipRect(
+        child: OverflowBox(
+          alignment: Alignment.centerLeft,
+          minWidth: panelWidth,
+          maxWidth: panelWidth,
+          child: SizedBox(
+            width: panelWidth,
+            child: DashboardDrawerContent(
+              entityType: widget.entityType,
+              isDesktopPanelOpen: isPanelOpen,
+              onToggleDesktopPanel: canToggleLeftPanel
+                  ? () => setState(() => _isLeftPanelOpen = !_isLeftPanelOpen)
+                  : null,
+            ),
+          ),
+        ),
+      ),
     );
 
     if (canShowBoth) {
@@ -186,7 +225,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
       animation: _panelAnimation,
       builder: (context, child) {
         final progress = 1.0 - _panelAnimation.value;
-        final width = progress * kLeftPanelWidth;
+        final width = progress * panelWidth;
         if (width < 1) {
           return const SizedBox.shrink();
         }

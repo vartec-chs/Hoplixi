@@ -45,9 +45,12 @@ Future<void> showCategoryManagerFilterSheet(
             'Фильтрация категорий',
             style: Theme.of(modalSheetContext).textTheme.titleMedium,
           ),
-          leadingNavBarWidget: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.of(modalSheetContext).pop(),
+          trailingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(modalSheetContext).pop(),
+            ),
           ),
           child: StatefulBuilder(
             builder: (context, setModalState) {

@@ -121,7 +121,12 @@ class _TagsManagerScreenState extends ConsumerState<TagsManagerScreen> {
               }
 
               return SliverPadding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.only(
+                  left: 12,
+                  right: 12,
+                  top: 4,
+                  bottom: 96,
+                ),
                 sliver: SliverList.separated(
                   itemBuilder: (context, index) {
                     final tag = state.items[index];

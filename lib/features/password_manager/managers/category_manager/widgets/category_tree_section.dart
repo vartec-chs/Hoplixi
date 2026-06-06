@@ -30,7 +30,6 @@ class CategoryTreeSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final iconColor = Color(0xFF000000 | node.category.color);
 
     return Column(
@@ -185,7 +184,7 @@ class _CategoryTreeRow extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
@@ -194,7 +193,7 @@ class _CategoryTreeRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               color: highlight,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
 import 'package:hoplixi/features/password_manager/managers/category_manager/providers/category_tree_provider.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
 import 'category_tree_placeholder.dart';
 import 'category_tree_section.dart';
@@ -71,9 +72,9 @@ class CategoryTreeView extends ConsumerWidget {
           icon: Icons.error_outline,
           title: 'Ошибка загрузки категорий',
           description: 'Не удалось построить дерево категорий.',
-          action: ElevatedButton(
+          action: SmoothButton.text(
             onPressed: onRefresh,
-            child: const Text('Повторить'),
+            label: 'Попробовать снова',
           ),
         ),
       ),

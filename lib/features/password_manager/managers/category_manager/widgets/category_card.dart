@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/category_dto.dart';
 import 'package:hoplixi/vault_db/core/models/dto/system/icon_dto.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/system/icons/icon_refs.dart';
-import 'package:hoplixi/shared/widgets/icon_ref_preview.dart';
 
 /// Современная карточка категории с градиентным фоном и анимациями.
 ///
@@ -110,7 +110,7 @@ class _CategoryCardState extends State<CategoryCard>
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               color: cardBackground,
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -120,69 +120,56 @@ class _CategoryCardState extends State<CategoryCard>
               boxShadow: [
                 BoxShadow(
                   color: isDark
-                      ? Colors.black.withValues(alpha: _isHovered ? 0.4 : 0.25)
-                      : baseColor.withValues(alpha: _isHovered ? 0.2 : 0.1),
-                  blurRadius: _isHovered ? 20 : 12,
-                  offset: Offset(0, _isHovered ? 8 : 4),
-                  spreadRadius: _isHovered ? 2 : 0,
+                      ? Colors.black.withValues(alpha: _isHovered ? 0.35 : 0.2)
+                      : baseColor.withValues(alpha: _isHovered ? 0.15 : 0.08),
+                  blurRadius: _isHovered ? 16 : 8,
+                  offset: Offset(0, _isHovered ? 6 : 3),
+                  spreadRadius: _isHovered ? 1 : 0,
                 ),
                 // Мягкое свечение в цвете карточки
-                BoxShadow(
-                  color: baseColor.withValues(alpha: _isHovered ? 0.15 : 0.08),
-                  blurRadius: 24,
-                  offset: const Offset(0, 2),
-                ),
+                if (_isHovered)
+                  BoxShadow(
+                    color: baseColor.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 2),
+                  ),
               ],
             ),
             child: Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               child: InkWell(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
                 onTap: widget.onTap,
-                splashColor: baseColor.withValues(alpha: 0.2),
-                highlightColor: baseColor.withValues(alpha: 0.1),
+                splashColor: baseColor.withValues(alpha: 0.15),
+                highlightColor: baseColor.withValues(alpha: 0.08),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Row(
                     children: [
-                      // Верхняя часть: иконка и меню
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Иконка категории
-                          _buildIconContainer(baseColor, isDark),
-                          const Spacer(),
-                          // Меню действий
-                          _buildPopupMenu(colorScheme),
-                        ],
-                      ),
-
-                      const SizedBox(height: 18),
+                      // Иконка категории
+                      _buildIconContainer(baseColor, isDark),
+                      const SizedBox(width: 14),
 
                       // Название категории
-                      Text(
-                        widget.category.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                          height: 1.2,
+                      Expanded(
+                        child: Text(
+                          widget.category.name,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
 
-                      const SizedBox(height: 8),
-
-                      // Информация о типе (заглушка или удалена)
-                      const Row(
-                        children: [
-                          Spacer(),
-                          // Можно добавить счетчик элементов если будет реализован
-                        ],
-                      ),
+                      // Меню действий
+                      _buildPopupMenu(colorScheme),
                     ],
                   ),
                 ),
@@ -197,30 +184,22 @@ class _CategoryCardState extends State<CategoryCard>
   Widget _buildIconContainer(Color baseColor, bool isDark) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      width: 52,
-      height: 52,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: baseColor.withValues(alpha: isDark ? 0.3 : 0.2),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: baseColor.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: baseColor.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: baseColor.withValues(alpha: isDark ? 0.25 : 0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: baseColor.withValues(alpha: 0.2), width: 1),
       ),
       child: Center(
         child: widget.category.iconRefId != null
             ? IconRefPreview(
                 iconRef: IconRefDto(
                   id: widget.category.iconRefId,
-                  iconSourceType: IconSourceType
-                      .pack, // Заглушка, нужно грузить реальный IconRef
+                  iconSourceType: IconSourceType.pack,
                 ),
                 fallbackIcon: Icons.folder,
-                size: 26,
+                size: 22,
                 color: baseColor,
               )
             : Text(
@@ -229,7 +208,7 @@ class _CategoryCardState extends State<CategoryCard>
                     : '?',
                 style: TextStyle(
                   color: baseColor,
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -241,11 +220,11 @@ class _CategoryCardState extends State<CategoryCard>
     return PopupMenuButton<String>(
       icon: Icon(
         Icons.more_vert,
-        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
         size: 20,
       ),
-      splashRadius: 20,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      splashRadius: 18,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       offset: const Offset(0, 40),
       itemBuilder: (context) => [
         PopupMenuItem(

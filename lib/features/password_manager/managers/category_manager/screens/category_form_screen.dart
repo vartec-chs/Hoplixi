@@ -36,7 +36,6 @@ class CategoryFormScreen extends ConsumerStatefulWidget {
 class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
-  String? _description;
   Color? _selectedColor;
   IconRefDto? _iconRef;
   String? _parentId;
@@ -91,7 +90,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 
           setState(() {
             _name = category.name;
-            _description = null; // В CategoryViewDto нет описания? Проверим.
             _iconRef = iconRef;
             _parentId = category.parentId;
             _parentName = parentName;
@@ -108,7 +106,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
       }
     } else {
       _name = '';
-      _description = null;
       _iconRef = null;
       _selectedColor = null;
       _parentId = null;
@@ -311,21 +308,6 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Описание (если будет добавлено в DTO, пока пропустим или оставим для будущего)
-                  // TextFormField(
-                  //   initialValue: _description,
-                  //   decoration: primaryInputDecoration(
-                  //     context,
-                  //     labelText: 'Описание',
-                  //     hintText: 'Введите описание категории (необязательно)',
-                  //   ),
-                  //   maxLines: 3,
-                  //   onChanged: (value) {
-                  //     _description = value.isEmpty ? null : value;
-                  //   },
-                  // ),
-                  // const SizedBox(height: 16),
 
                   // Выбор цвета
                   InputDecorator(
