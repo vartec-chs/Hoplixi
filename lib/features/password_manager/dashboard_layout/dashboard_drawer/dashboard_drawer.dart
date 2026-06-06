@@ -37,11 +37,15 @@ class DashboardDrawerContent extends ConsumerStatefulWidget {
     super.key,
     required this.entityType,
     this.isDesktopPanelOpen = true,
+    this.showDesktopPanelToggle = false,
+    this.isDesktopPanelToggleEnabled = true,
     this.onToggleDesktopPanel,
   });
 
   final EntityType entityType;
   final bool isDesktopPanelOpen;
+  final bool showDesktopPanelToggle;
+  final bool isDesktopPanelToggleEnabled;
   final VoidCallback? onToggleDesktopPanel;
 
   @override
@@ -107,13 +111,17 @@ class _DashboardDrawerContentState
     final theme = Theme.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
     final canToggleDesktopPanel =
-        !isMobile && widget.onToggleDesktopPanel != null;
+        !isMobile &&
+        (widget.showDesktopPanelToggle || widget.onToggleDesktopPanel != null);
+    final toggleDesktopPanel = widget.isDesktopPanelToggleEnabled
+        ? widget.onToggleDesktopPanel
+        : null;
 
     if (!widget.isDesktopPanelOpen && canToggleDesktopPanel) {
       return _DrawerPanelToggleRail(
         icon: LucideIcons.panelRightOpen,
         tooltip: 'Открыть фильтры',
-        onPressed: widget.onToggleDesktopPanel!,
+        onPressed: toggleDesktopPanel,
       );
     }
 
@@ -129,7 +137,7 @@ class _DashboardDrawerContentState
               entityType: widget.entityType,
               theme: theme,
               onToggleDesktopPanel: canToggleDesktopPanel
-                  ? widget.onToggleDesktopPanel
+                  ? toggleDesktopPanel
                   : null,
             ),
           ),
@@ -249,19 +257,26 @@ class _DrawerPanelToggleRail extends StatelessWidget {
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: _DrawerPanelIconButton(
-            icon: icon,
-            tooltip: tooltip,
-            onPressed: onPressed,
+    return Align(
+      alignment: Alignment.topLeft,
+      child: SafeArea(
+        child: SizedBox(
+          height: 50,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                _DrawerPanelIconButton(
+                  icon: icon,
+                  tooltip: tooltip,
+                  onPressed: onPressed,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -278,7 +293,7 @@ class _DrawerPanelIconButton extends StatelessWidget {
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

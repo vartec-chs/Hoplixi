@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hoplixi/core/constants/main_constants.dart';
-import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/dashboard_drawer.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
+import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_drawer/dashboard_drawer.dart';
 
 import 'config/dashboard_layout_constants.dart';
 
-const double _kCollapsedLeftPanelWidth = 48;
+const double _kCollapsedLeftPanelWidth = 60;
 
 class DesktopThreeColumnLayout extends StatefulWidget {
   final EntityType entityType;
@@ -108,73 +108,88 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
     final screenWidth = MediaQuery.sizeOf(context).width;
     final showDrawerAsPanel = screenWidth >= MainConstants.kDesktopBreakpoint;
     final canShowBoth = screenWidth >= kBothPanelsBreakpoint;
+    final rightPanelTakesExclusiveSpace =
+        showDrawerAsPanel && !canShowBoth && widget.rightPanel != null;
     final canToggleLeftPanel =
         showDrawerAsPanel && (canShowBoth || widget.rightPanel == null);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final leftPanelWidth = canToggleLeftPanel && !_isLeftPanelOpen
+        final targetLeftPanelWidth =
+            rightPanelTakesExclusiveSpace ||
+                (canToggleLeftPanel && !_isLeftPanelOpen)
             ? _kCollapsedLeftPanelWidth
             : kLeftPanelWidth;
-        final leftPanelFootprint =
-            showDrawerAsPanel && (canShowBoth || widget.rightPanel == null)
-            ? leftPanelWidth + 1
-            : 0.0;
-        final contentWidth = (constraints.maxWidth - leftPanelFootprint).clamp(
-          0.0,
-          constraints.maxWidth,
-        );
-        final panelMaxWidth = (contentWidth / 2);
 
-        return Row(
-          children: [
-            _buildLeftPanel(
-              context,
-              canShowBoth,
-              canToggleLeftPanel: canToggleLeftPanel,
-            ),
-            Expanded(
-              child: DashboardHomeScreen(
-                key: ValueKey('desktop_home_${widget.entityType.id}'),
-                initialEntityType: EntityType.fromId(widget.entityType.id)!,
-              ),
-            ),
-            AnimatedBuilder(
-              animation: _panelAnimation,
-              builder: (context, child) {
-                final width = _panelAnimation.value * panelMaxWidth;
-                if (width < 1 || _displayedRightPanel == null) {
-                  return const SizedBox.shrink();
-                }
+        return TweenAnimationBuilder<double>(
+          tween: Tween<double>(end: targetLeftPanelWidth),
+          duration: kPanelAnimationDuration,
+          curve: Curves.easeOutCubic,
+          builder: (context, animatedLeftPanelWidth, _) {
+            final leftPanelFootprint =
+                showDrawerAsPanel &&
+                    (canShowBoth ||
+                        widget.rightPanel == null ||
+                        rightPanelTakesExclusiveSpace)
+                ? animatedLeftPanelWidth + 1
+                : 0.0;
+            final contentWidth = (constraints.maxWidth - leftPanelFootprint)
+                .clamp(0.0, constraints.maxWidth);
+            final panelMaxWidth = (contentWidth / 2);
 
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const VerticalDivider(width: 1, thickness: 1),
-                    SizedBox(
-                      width: width - 1,
-                      child: ClipRect(
-                        child: OverflowBox(
-                          alignment: Alignment.centerLeft,
-                          maxWidth: panelMaxWidth - 1,
-                          child: child,
+            return Row(
+              children: [
+                _buildLeftPanel(
+                  context,
+                  canShowBoth,
+                  width: animatedLeftPanelWidth,
+                  canToggleLeftPanel: canToggleLeftPanel,
+                  forceCollapsed: rightPanelTakesExclusiveSpace,
+                ),
+                Expanded(
+                  child: DashboardHomeScreen(
+                    key: ValueKey('desktop_home_${widget.entityType.id}'),
+                    initialEntityType: EntityType.fromId(widget.entityType.id)!,
+                  ),
+                ),
+                AnimatedBuilder(
+                  animation: _panelAnimation,
+                  builder: (context, child) {
+                    final width = _panelAnimation.value * panelMaxWidth;
+                    if (width < 1 || _displayedRightPanel == null) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const VerticalDivider(width: 1, thickness: 1),
+                        SizedBox(
+                          width: width - 1,
+                          child: ClipRect(
+                            child: OverflowBox(
+                              alignment: Alignment.centerLeft,
+                              maxWidth: panelMaxWidth - 1,
+                              child: child,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-              child: _displayedRightPanel == null
-                  ? null
-                  : FadeTransition(
-                      opacity: _fadeController,
-                      child: KeyedSubtree(
-                        key: ValueKey(_displayedPanelIdentity),
-                        child: _displayedRightPanel!,
-                      ),
-                    ),
-            ),
-          ],
+                      ],
+                    );
+                  },
+                  child: _displayedRightPanel == null
+                      ? null
+                      : FadeTransition(
+                          opacity: _fadeController,
+                          child: KeyedSubtree(
+                            key: ValueKey(_displayedPanelIdentity),
+                            child: _displayedRightPanel!,
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -183,16 +198,17 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
   Widget _buildLeftPanel(
     BuildContext context,
     bool canShowBoth, {
+    required double width,
     required bool canToggleLeftPanel,
+    required bool forceCollapsed,
   }) {
-    final isPanelOpen = !canToggleLeftPanel || _isLeftPanelOpen;
+    final isPanelOpen =
+        !forceCollapsed && (!canToggleLeftPanel || _isLeftPanelOpen);
     final panelWidth = isPanelOpen
         ? kLeftPanelWidth
         : _kCollapsedLeftPanelWidth;
-    final panel = AnimatedContainer(
-      duration: kPanelAnimationDuration,
-      curve: Curves.easeOutCubic,
-      width: panelWidth,
+    final panel = Container(
+      width: width,
       decoration: BoxDecoration(
         border: Border(
           right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
@@ -208,6 +224,8 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
             child: DashboardDrawerContent(
               entityType: widget.entityType,
               isDesktopPanelOpen: isPanelOpen,
+              showDesktopPanelToggle: forceCollapsed || canToggleLeftPanel,
+              isDesktopPanelToggleEnabled: !forceCollapsed,
               onToggleDesktopPanel: canToggleLeftPanel
                   ? () => setState(() => _isLeftPanelOpen = !_isLeftPanelOpen)
                   : null,
@@ -217,7 +235,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
       ),
     );
 
-    if (canShowBoth) {
+    if (forceCollapsed || canShowBoth || widget.rightPanel == null) {
       return panel;
     }
 
