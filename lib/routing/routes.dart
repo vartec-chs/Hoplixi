@@ -63,6 +63,10 @@ Page<void> buildResponsivePage({
     return MaterialPage<void>(key: state.pageKey, child: child);
   }
 
+  if (isBaseRoute) {
+    return NoTransitionPage<void>(key: state.pageKey, child: child);
+  }
+
   return CustomTransitionPage<void>(
     key: state.pageKey,
     child: child,
@@ -207,13 +211,18 @@ final List<RouteBase> appRoutes = [
         name: 'entity',
         pageBuilder: (context, state) {
           final entity = EntityType.fromId(state.pathParameters['entity']!)!;
+          final isMobile =
+              MediaQuery.sizeOf(context).width <
+              MainConstants.kMobileBreakpoint;
           return buildResponsivePage(
             context: context,
             state: state,
             isBaseRoute: true,
-            child: DashboardHomeScreen(
-              initialEntityType: EntityType.fromId(entity.id)!,
-            ),
+            child: isMobile
+                ? DashboardHomeScreen(
+                    initialEntityType: EntityType.fromId(entity.id)!,
+                  )
+                : const SizedBox.shrink(),
           );
         },
         routes: [
