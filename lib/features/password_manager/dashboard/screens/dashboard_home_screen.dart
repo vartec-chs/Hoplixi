@@ -24,11 +24,19 @@ final class DashboardHomeScreen extends ConsumerStatefulWidget {
     this.initialEntityType = EntityType.password,
     this.onOpenItem,
     this.onCreateItem,
+    this.isDesktopDrawerOpen = true,
+    this.showDesktopDrawerToggle = false,
+    this.isDesktopDrawerToggleEnabled = true,
+    this.onToggleDesktopDrawer,
   });
 
   final EntityType initialEntityType;
   final void Function(EntityType entityType, String id)? onOpenItem;
   final void Function(EntityType entityType)? onCreateItem;
+  final bool isDesktopDrawerOpen;
+  final bool showDesktopDrawerToggle;
+  final bool isDesktopDrawerToggleEnabled;
+  final VoidCallback? onToggleDesktopDrawer;
 
   @override
   ConsumerState<DashboardHomeScreen> createState() =>
@@ -66,6 +74,11 @@ final class _DashboardHomeScreenState
               entityType: _entityType,
               onEntityTypeChanged: _setEntityType,
               onMenuPressed: drawerScope?.openDrawer,
+              isDesktopDrawerOpen: widget.isDesktopDrawerOpen,
+              showDesktopDrawerToggle: widget.showDesktopDrawerToggle,
+              isDesktopDrawerToggleEnabled:
+                  widget.isDesktopDrawerToggleEnabled,
+              onToggleDesktopDrawer: widget.onToggleDesktopDrawer,
 
               onFilterApplied: () => ref
                   .read(dashboardListControllerProvider(_entityType).notifier)

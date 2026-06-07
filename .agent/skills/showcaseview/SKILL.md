@@ -1,11 +1,20 @@
 ---
 name: showcaseview
-description: Use this skill when implementing in-app onboarding, guided product tours, feature discovery, tooltip walkthroughs, highlighted UI targets, multi-step tutorials, skip/next/previous controls, accessibility-enabled showcases, auto-scroll tours, scoped showcase configurations, or custom showcase tooltips in Flutter apps with the showcaseview package. Keywords: Flutter, showcaseview, ShowcaseView, Showcase, Showcase.withWidget, guided tour, onboarding, tutorial overlay, tooltip, highlight widget, GlobalKey, autoPlay, autoScroll, scope, Riverpod, post frame callback.
+description:
+  'Use this skill when implementing in-app onboarding, guided product tours,
+  feature discovery, tooltip walkthroughs, highlighted UI targets, multi-step
+  tutorials, skip/next/previous controls, accessibility-enabled showcases,
+  auto-scroll tours, scoped showcase configurations, or custom showcase tooltips
+  in Flutter apps with the showcaseview package. Keywords: Flutter,
+  showcaseview, ShowcaseView, Showcase, Showcase.withWidget, guided tour,
+  onboarding, tutorial overlay, tooltip, highlight widget, GlobalKey, autoPlay,
+  autoScroll, scope, Riverpod, post frame callback.'
 ---
 
 # ShowcaseView Flutter Skill
 
-Use this skill when an agent needs to add, refactor, debug, or review guided onboarding/tutorial overlays in a Flutter app using the `showcaseview` package.
+Use this skill when an agent needs to add, refactor, debug, or review guided
+onboarding/tutorial overlays in a Flutter app using the `showcaseview` package.
 
 Package import:
 
@@ -20,21 +29,26 @@ dependencies:
   showcaseview: ^5.0.0
 ```
 
-> Check the currently installed version in `pubspec.yaml` / `pubspec.lock` before generating code. APIs in this skill are based on the newer `ShowcaseView.register()` style API.
+> Check the currently installed version in `pubspec.yaml` / `pubspec.lock`
+> before generating code. APIs in this skill are based on the newer
+> `ShowcaseView.register()` style API.
 
 ---
 
 ## Core Concepts
 
-`showcaseview` highlights one or more widgets and displays tooltip content around them.
+`showcaseview` highlights one or more widgets and displays tooltip content
+around them.
 
 Main pieces:
 
-- `ShowcaseView.register(...)` — registers global or scoped showcase configuration.
+- `ShowcaseView.register(...)` — registers global or scoped showcase
+  configuration.
 - `ShowcaseView.get()` — gets the default showcase controller.
 - `ShowcaseView.get(scope: 'profile')` — gets a scoped showcase controller.
 - `Showcase(...)` — wraps a target widget with default tooltip UI.
-- `Showcase.withWidget(...)` — wraps a target widget with a fully custom tooltip widget.
+- `Showcase.withWidget(...)` — wraps a target widget with a fully custom tooltip
+  widget.
 - `GlobalKey` — identifies each showcase target.
 - `startShowCase([...])` — starts a sequence of target keys.
 - `next()`, `previous()`, `dismiss()` — controls the running showcase.
@@ -108,7 +122,8 @@ class _MyScreenState extends State<MyScreen> {
 Important rules:
 
 - Register before starting a showcase.
-- Start showcase after first frame with `WidgetsBinding.instance.addPostFrameCallback`.
+- Start showcase after first frame with
+  `WidgetsBinding.instance.addPostFrameCallback`.
 - Check `mounted` before starting from async/post-frame code.
 - Unregister in `dispose` for screen-specific registrations.
 - Keep `GlobalKey`s as state fields, not local variables inside `build`.
@@ -247,7 +262,8 @@ Showcase.withWidget(
 )
 ```
 
-Prefer `Showcase.withWidget` for branded onboarding, complex layout, illustrations, or custom action rows.
+Prefer `Showcase.withWidget` for branded onboarding, complex layout,
+illustrations, or custom action rows.
 
 ---
 
@@ -282,7 +298,8 @@ Showcase(
 )
 ```
 
-For app-wide actions, prefer `globalTooltipActions` in `ShowcaseView.register(...)`.
+For app-wide actions, prefer `globalTooltipActions` in
+`ShowcaseView.register(...)`.
 
 ---
 
@@ -308,7 +325,8 @@ Showcase(
 )
 ```
 
-Use `targetPadding` and `targetBorderRadius` to make highlights feel less cramped.
+Use `targetPadding` and `targetBorderRadius` to make highlights feel less
+cramped.
 
 ---
 
@@ -324,7 +342,8 @@ ShowcaseView.register(
 );
 ```
 
-Good for passive demos. Avoid forcing auto-play for important onboarding if the user needs time to read.
+Good for passive demos. Avoid forcing auto-play for important onboarding if the
+user needs time to read.
 
 ---
 
@@ -376,7 +395,8 @@ ListView.builder(
 
 ## Multi-Showcase
 
-Use the same key for multiple `Showcase` widgets when several targets should be displayed simultaneously.
+Use the same key for multiple `Showcase` widgets when several targets should be
+displayed simultaneously.
 
 ```dart
 final GlobalKey _multiKey = GlobalKey();
@@ -399,7 +419,8 @@ Showcase(
 Caveats:
 
 - Auto-scroll does not work with multi-showcase.
-- Common settings such as barrier tap and colors are taken from the first initialized showcase.
+- Common settings such as barrier tap and colors are taken from the first
+  initialized showcase.
 - Use multi-showcase sparingly; it can overwhelm users.
 
 ---
@@ -453,7 +474,8 @@ Unregister scoped config when it is no longer needed:
 ShowcaseView.get(scope: 'profile').unregister();
 ```
 
-If multiple scopes are registered with the same name, the last registration wins.
+If multiple scopes are registered with the same name, the last registration
+wins.
 
 ---
 
@@ -507,7 +529,8 @@ Use callbacks to:
 
 ## Dynamic Callbacks
 
-Use dynamic callbacks when widgets deeper in the tree need to listen to showcase events.
+Use dynamic callbacks when widgets deeper in the tree need to listen to showcase
+events.
 
 ```dart
 void onStepStarted(int index, GlobalKey key) {
@@ -534,13 +557,17 @@ ShowcaseView.get(scope: 'profile').addOnFinishCallback(() {
 });
 ```
 
-Always remove callbacks if they are tied to a widget lifecycle and may outlive the widget.
+Always remove callbacks if they are tied to a widget lifecycle and may outlive
+the widget.
 
 ---
 
 ## Riverpod Integration Pattern
 
-For apps using Riverpod, avoid putting `GlobalKey` objects in long-lived global providers unless the keys truly belong to app-level UI. Usually, keys belong to the widget `State`, while completed/seen flags belong to providers or persistent storage.
+For apps using Riverpod, avoid putting `GlobalKey` objects in long-lived global
+providers unless the keys truly belong to app-level UI. Usually, keys belong to
+the widget `State`, while completed/seen flags belong to providers or persistent
+storage.
 
 Example state provider:
 
@@ -626,7 +653,8 @@ Riverpod guidance:
 - Do not mutate providers directly inside `build` to start a showcase.
 - Use `initState`, `ref.listen`, or post-frame callbacks for side effects.
 - Store durable “seen/completed” state in storage-backed providers.
-- Keep showcase controller calls near UI layer because they depend on widget lifecycle and layout.
+- Keep showcase controller calls near UI layer because they depend on widget
+  lifecycle and layout.
 
 ---
 
@@ -634,12 +662,15 @@ Riverpod guidance:
 
 Recommended responsibility split:
 
-- Widget layer: owns `GlobalKey`s, wraps widgets with `Showcase`, starts the visual tour.
+- Widget layer: owns `GlobalKey`s, wraps widgets with `Showcase`, starts the
+  visual tour.
 - Application/use case layer: decides whether a tour should be shown.
 - Storage/repository layer: persists completed/skipped tutorial flags.
-- Analytics layer: receives events from `onStart`, `onComplete`, `onFinish`, `onDismiss`.
+- Analytics layer: receives events from `onStart`, `onComplete`, `onFinish`,
+  `onDismiss`.
 
-Avoid placing package-specific calls like `ShowcaseView.get().startShowCase(...)` in repositories or domain services.
+Avoid placing package-specific calls like
+`ShowcaseView.get().startShowCase(...)` in repositories or domain services.
 
 ---
 
@@ -704,7 +735,9 @@ ShowcaseView.get(scope: 'profile').unregister();
 
 ### Lazy list target is not mounted
 
-Auto-scroll can only scroll to widgets already attached to the widget tree. For `ListView.builder`, scroll manually to a position where the target gets built, then start or continue the showcase.
+Auto-scroll can only scroll to widgets already attached to the widget tree. For
+`ListView.builder`, scroll manually to a position where the target gets built,
+then start or continue the showcase.
 
 ### Multiple scopes confusion
 
@@ -746,14 +779,16 @@ When a showcase does not appear:
 
 1. Confirm `ShowcaseView.register()` was called before `startShowCase`.
 2. Confirm target widgets are wrapped with `Showcase` or `Showcase.withWidget`.
-3. Confirm the same `GlobalKey` instance is used in both the widget and `startShowCase`.
+3. Confirm the same `GlobalKey` instance is used in both the widget and
+   `startShowCase`.
 4. Confirm keys are not recreated in `build`.
 5. Confirm `startShowCase` runs after first frame.
 6. Confirm the target widget is currently mounted and visible/attached.
 7. Confirm scope names match if scoped configuration is used.
 8. Confirm `unregister()` was not called before starting.
 9. For scrollable/lazy content, confirm the target item has been built.
-10. Check console logs from `onStart`, `onComplete`, `onFinish`, and `onDismiss`.
+10. Check console logs from `onStart`, `onComplete`, `onFinish`, and
+    `onDismiss`.
 
 ---
 
@@ -850,12 +885,14 @@ class _ExampleShowcaseScreenState extends State<ExampleShowcaseScreen> {
 When helping with `showcaseview` tasks:
 
 1. Ask for the installed package version only if the API mismatch matters.
-2. Prefer code compatible with `ShowcaseView.register()` if the project uses the new API.
+2. Prefer code compatible with `ShowcaseView.register()` if the project uses the
+   new API.
 3. Never recreate `GlobalKey`s inside `build`.
 4. Always account for widget lifecycle and layout timing.
 5. Use `addPostFrameCallback` for auto-start.
 6. Use `mounted` checks after post-frame, async, or delayed code.
 7. Mention auto-scroll limitations for lazy lists.
 8. Use scopes when multiple independent tutorials exist.
-9. Keep package-specific code in the UI/application layer, not in repositories/domain services.
+9. Keep package-specific code in the UI/application layer, not in
+   repositories/domain services.
 10. For Riverpod apps, avoid provider mutation during widget build.

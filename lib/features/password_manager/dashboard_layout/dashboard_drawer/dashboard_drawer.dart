@@ -7,7 +7,6 @@ import 'package:hoplixi/setup/di_init.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/widgets/close_database_button.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:typed_prefs/typed_prefs.dart';
 
 import 'providers/drawer_category_filter_provider.dart';
@@ -33,20 +32,9 @@ class DashboardDrawer extends ConsumerWidget {
 
 /// Контент панели фильтрации (может использоваться как в Drawer, так и как постоянная панель)
 class DashboardDrawerContent extends ConsumerStatefulWidget {
-  const DashboardDrawerContent({
-    super.key,
-    required this.entityType,
-    this.isDesktopPanelOpen = true,
-    this.showDesktopPanelToggle = false,
-    this.isDesktopPanelToggleEnabled = true,
-    this.onToggleDesktopPanel,
-  });
+  const DashboardDrawerContent({super.key, required this.entityType});
 
   final EntityType entityType;
-  final bool isDesktopPanelOpen;
-  final bool showDesktopPanelToggle;
-  final bool isDesktopPanelToggleEnabled;
-  final VoidCallback? onToggleDesktopPanel;
 
   @override
   ConsumerState<DashboardDrawerContent> createState() =>
@@ -110,20 +98,6 @@ class _DashboardDrawerContentState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
-    final canToggleDesktopPanel =
-        !isMobile &&
-        (widget.showDesktopPanelToggle || widget.onToggleDesktopPanel != null);
-    final toggleDesktopPanel = widget.isDesktopPanelToggleEnabled
-        ? widget.onToggleDesktopPanel
-        : null;
-
-    if (!widget.isDesktopPanelOpen && canToggleDesktopPanel) {
-      return _DrawerPanelToggleRail(
-        icon: LucideIcons.panelRightOpen,
-        tooltip: 'Открыть фильтры',
-        onPressed: toggleDesktopPanel,
-      );
-    }
 
     return SafeArea(
       child: Column(
@@ -133,13 +107,7 @@ class _DashboardDrawerContentState
           // Заголовок
           SizedBox(
             height: 50,
-            child: _DrawerHeader(
-              entityType: widget.entityType,
-              theme: theme,
-              onToggleDesktopPanel: canToggleDesktopPanel
-                  ? toggleDesktopPanel
-                  : null,
-            ),
+            child: _DrawerHeader(entityType: widget.entityType, theme: theme),
           ),
           const Divider(height: 1),
 
@@ -186,15 +154,10 @@ class _DashboardDrawerContentState
 }
 
 class _DrawerHeader extends ConsumerWidget {
-  const _DrawerHeader({
-    required this.entityType,
-    required this.theme,
-    this.onToggleDesktopPanel,
-  });
+  const _DrawerHeader({required this.entityType, required this.theme});
 
   final EntityType entityType;
   final ThemeData theme;
-  final VoidCallback? onToggleDesktopPanel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -215,12 +178,6 @@ class _DrawerHeader extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (onToggleDesktopPanel != null)
-            _DrawerPanelIconButton(
-              icon: LucideIcons.panelRightClose,
-              tooltip: 'Скрыть фильтры',
-              onPressed: onToggleDesktopPanel!,
-            ),
           Expanded(
             child: Center(
               child: Text(
@@ -243,68 +200,6 @@ class _DrawerHeader extends ConsumerWidget {
               type: SmoothButtonType.text,
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _DrawerPanelToggleRail extends StatelessWidget {
-  const _DrawerPanelToggleRail({
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: SafeArea(
-        child: SizedBox(
-          height: 50,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                _DrawerPanelIconButton(
-                  icon: icon,
-                  tooltip: tooltip,
-                  onPressed: onPressed,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DrawerPanelIconButton extends StatelessWidget {
-  const _DrawerPanelIconButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: IconButton(
-        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-        iconSize: 20,
-        visualDensity: VisualDensity.compact,
-        onPressed: onPressed,
-        icon: Icon(icon),
       ),
     );
   }

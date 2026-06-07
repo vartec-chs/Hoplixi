@@ -46,6 +46,10 @@ final class DashboardSliverAppBar extends ConsumerStatefulWidget {
     this.additionalActions,
     this.onFilterPressed,
     this.onFilterApplied,
+    this.isDesktopDrawerOpen = true,
+    this.showDesktopDrawerToggle = false,
+    this.isDesktopDrawerToggleEnabled = true,
+    this.onToggleDesktopDrawer,
     this.isScrolled = false,
   });
 
@@ -62,6 +66,10 @@ final class DashboardSliverAppBar extends ConsumerStatefulWidget {
   final List<Widget>? additionalActions;
   final VoidCallback? onFilterPressed;
   final VoidCallback? onFilterApplied;
+  final bool isDesktopDrawerOpen;
+  final bool showDesktopDrawerToggle;
+  final bool isDesktopDrawerToggleEnabled;
+  final VoidCallback? onToggleDesktopDrawer;
 
   @override
   ConsumerState<DashboardSliverAppBar> createState() =>
@@ -119,7 +127,22 @@ final class _DashboardSliverAppBarState
       floating: widget.floating,
       snap: widget.snap,
       elevation: 0,
-      leading: widget.onMenuPressed != null
+      leading: widget.showDesktopDrawerToggle
+          ? IconButton(
+              icon: Icon(
+                widget.isDesktopDrawerOpen
+                    ? LucideIcons.panelRightClose
+                    : LucideIcons.panelRightOpen,
+                size: 22,
+              ),
+              onPressed: widget.isDesktopDrawerToggleEnabled
+                  ? widget.onToggleDesktopDrawer
+                  : null,
+              tooltip: widget.isDesktopDrawerOpen
+                  ? 'Скрыть фильтры'
+                  : 'Открыть фильтры',
+            )
+          : widget.onMenuPressed != null
           ? IconButton(
               icon: const Icon(Icons.menu),
               onPressed: widget.onMenuPressed,

@@ -27,7 +27,7 @@ class ThemeWindowSyncService {
     final controller = await WindowController.fromCurrentEngine();
     await controller.setWindowMethodHandler((call) async {
       if (call.method == _methodGetTheme) {
-        return _mainNotifier?.state.value?.name;
+        return _mainNotifier?.currentTheme?.name;
       }
       if (call.method != _methodSetTheme) return null;
 

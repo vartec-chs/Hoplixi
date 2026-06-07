@@ -93,4 +93,6 @@ class ThemeProvider extends AsyncNotifier<ThemeMode> {
         break;
     }
   }
+
+  ThemeMode? get currentTheme => state.value;
 }
