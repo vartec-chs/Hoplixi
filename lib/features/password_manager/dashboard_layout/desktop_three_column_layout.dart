@@ -129,8 +129,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
                     (canShowBoth ||
                         widget.rightPanel == null ||
                         rightPanelTakesExclusiveSpace)
-                ? animatedLeftPanelWidth +
-                      (animatedLeftPanelWidth >= 1 ? 1 : 0)
+                ? animatedLeftPanelWidth + (animatedLeftPanelWidth >= 1 ? 1 : 0)
                 : 0.0;
             final contentWidth = (constraints.maxWidth - leftPanelFootprint)
                 .clamp(0.0, constraints.maxWidth);
@@ -163,46 +162,51 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
                         : null,
                   ),
                 ),
-                AnimatedBuilder(
-                  animation: _panelAnimation,
-                  builder: (context, child) {
-                    final width = _panelAnimation.value * panelMaxWidth;
-                    if (width < 1 || _displayedRightPanel == null) {
-                      return const SizedBox.shrink();
-                    }
-
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const VerticalDivider(width: 1, thickness: 1),
-                        SizedBox(
-                          width: width - 1,
-                          child: ClipRect(
-                            child: OverflowBox(
-                              alignment: Alignment.centerLeft,
-                              maxWidth: panelMaxWidth - 1,
-                              child: child,
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                  child: _displayedRightPanel == null
-                      ? null
-                      : FadeTransition(
-                          opacity: _fadeController,
-                          child: KeyedSubtree(
-                            key: ValueKey(_displayedPanelIdentity),
-                            child: _displayedRightPanel!,
-                          ),
-                        ),
-                ),
+                _buildRightPanel(panelMaxWidth),
               ],
             );
           },
         );
       },
+    );
+  }
+
+  Widget _buildRightPanel(double panelMaxWidth) {
+    return AnimatedBuilder(
+      animation: _panelAnimation,
+      builder: (context, child) {
+        final width = _panelAnimation.value * panelMaxWidth;
+        if (width < 1 || _displayedRightPanel == null) {
+          return const SizedBox.shrink();
+        }
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const VerticalDivider(width: 1, thickness: 1),
+            SizedBox(
+              width: width - 1,
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.centerLeft,
+                  minWidth: panelMaxWidth - 1,
+                  maxWidth: panelMaxWidth - 1,
+                  child: SizedBox(width: panelMaxWidth - 1, child: child),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      child: _displayedRightPanel == null
+          ? null
+          : FadeTransition(
+              opacity: _fadeController,
+              child: KeyedSubtree(
+                key: ValueKey(_displayedPanelIdentity),
+                child: _displayedRightPanel!,
+              ),
+            ),
     );
   }
 
@@ -231,9 +235,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
           maxWidth: kLeftPanelWidth,
           child: SizedBox(
             width: kLeftPanelWidth,
-            child: DashboardDrawerContent(
-              entityType: widget.entityType,
-            ),
+            child: DashboardDrawerContent(entityType: widget.entityType),
           ),
         ),
       ),
