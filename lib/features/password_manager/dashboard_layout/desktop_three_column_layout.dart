@@ -213,8 +213,6 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
     required bool canToggleLeftPanel,
     required bool forceCollapsed,
   }) {
-    final isPanelOpen =
-        !forceCollapsed && (!canToggleLeftPanel || _isLeftPanelOpen);
     if (width < 1) {
       return const SizedBox.shrink();
     }
@@ -226,21 +224,19 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
           right: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
-      child: isPanelOpen
-          ? ClipRect(
-              child: OverflowBox(
-                alignment: Alignment.centerLeft,
-                minWidth: kLeftPanelWidth,
-                maxWidth: kLeftPanelWidth,
-                child: SizedBox(
-                  width: kLeftPanelWidth,
-                  child: DashboardDrawerContent(
-                    entityType: widget.entityType,
-                  ),
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
+      child: ClipRect(
+        child: OverflowBox(
+          alignment: Alignment.centerLeft,
+          minWidth: kLeftPanelWidth,
+          maxWidth: kLeftPanelWidth,
+          child: SizedBox(
+            width: kLeftPanelWidth,
+            child: DashboardDrawerContent(
+              entityType: widget.entityType,
+            ),
+          ),
+        ),
+      ),
     );
 
     if (forceCollapsed || canShowBoth || widget.rightPanel == null) {
