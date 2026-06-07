@@ -31,6 +31,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
   Widget? _displayedRightPanel;
   String? _displayedPanelIdentity;
   bool _isLeftPanelOpen = true;
+  double? _rightPanelContentWidth;
 
   @override
   void initState() {
@@ -87,6 +88,7 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
       setState(() {
         _displayedRightPanel = null;
         _displayedPanelIdentity = null;
+        _rightPanelContentWidth = null;
       });
       _fadeController.value = 0.0;
     }
@@ -172,14 +174,22 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
   }
 
   Widget _buildRightPanel(double panelMaxWidth) {
+    if (widget.rightPanel != null && panelMaxWidth >= 1) {
+      _rightPanelContentWidth = panelMaxWidth;
+    }
+    final effectivePanelMaxWidth = widget.rightPanel == null
+        ? (_rightPanelContentWidth ?? panelMaxWidth)
+        : panelMaxWidth;
+
     return AnimatedBuilder(
       animation: _panelAnimation,
       builder: (context, child) {
-        final width = _panelAnimation.value * panelMaxWidth;
+        final width = _panelAnimation.value * effectivePanelMaxWidth;
         if (width < 1 || _displayedRightPanel == null) {
           return const SizedBox.shrink();
         }
 
+        final contentWidth = effectivePanelMaxWidth - 1;
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -189,9 +199,9 @@ class _DesktopThreeColumnLayoutState extends State<DesktopThreeColumnLayout>
               child: ClipRect(
                 child: OverflowBox(
                   alignment: Alignment.centerLeft,
-                  minWidth: panelMaxWidth - 1,
-                  maxWidth: panelMaxWidth - 1,
-                  child: SizedBox(width: panelMaxWidth - 1, child: child),
+                  minWidth: contentWidth,
+                  maxWidth: contentWidth,
+                  child: SizedBox(width: contentWidth, child: child),
                 ),
               ),
             ),

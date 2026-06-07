@@ -22,8 +22,8 @@ import 'package:hoplixi/features/local_send/screens/local_send_transfer_screen.d
 import 'package:hoplixi/features/logs_viewer/screens/logs_tabs_screen.dart';
 import 'package:hoplixi/features/password_manager/close_store/close_store_sync_screen.dart';
 import 'package:hoplixi/features/password_manager/create_store/create_store_screen.dart';
-import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_layout.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
+import 'package:hoplixi/features/password_manager/dashboard_layout/dashboard_layout.dart';
 import 'package:hoplixi/features/password_manager/duplicate_passwords/screen/duplicate_passwords_screen.dart';
 import 'package:hoplixi/features/password_manager/forms/entity_add_edit.dart';
 import 'package:hoplixi/features/password_manager/forms/entity_view.dart';
@@ -63,7 +63,18 @@ Page<void> buildResponsivePage({
     return MaterialPage<void>(key: state.pageKey, child: child);
   }
 
-  return NoTransitionPage<void>(key: state.pageKey, child: child);
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 200),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+        child: child,
+      );
+    },
+  );
 }
 
 final String _dashboardEntityRoutePattern =
