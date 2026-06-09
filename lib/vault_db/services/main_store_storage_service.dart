@@ -3,34 +3,11 @@ import 'dart:io';
 import 'package:hoplixi/core/constants/main_constants.dart';
 import 'package:hoplixi/core/errors/errors.dart';
 import 'package:hoplixi/core/logger/logger.dart';
+import 'package:hoplixi/core/utils/file_name_validator.dart';
 import 'package:path/path.dart' as p;
 
 class VaultDBFileService {
   static const String _logTag = 'VaultDBFileService';
-  static const Set<String> _reservedWindowsNames = {
-    'con',
-    'prn',
-    'aux',
-    'nul',
-    'com1',
-    'com2',
-    'com3',
-    'com4',
-    'com5',
-    'com6',
-    'com7',
-    'com8',
-    'com9',
-    'lpt1',
-    'lpt2',
-    'lpt3',
-    'lpt4',
-    'lpt5',
-    'lpt6',
-    'lpt7',
-    'lpt8',
-    'lpt9',
-  };
 
   static const String attachmentsFolder = 'attachments';
   static const String decryptedAttachmentsFolder = 'attachments_decrypted';
@@ -176,24 +153,17 @@ class VaultDBFileService {
   }
 
   String normalizeStorageName(String name) {
-    var normalized = name.trim();
-    normalized = normalized.replaceAll(RegExp(r'\s+'), '_');
-    normalized = normalized.replaceAll(RegExp(r'[<>:"/\\|?*]'), '');
-    normalized = normalized.replaceAll(RegExp(r'^\.+|\.+$'), '');
-
-    if (normalized.isEmpty ||
-        normalized == '.' ||
-        normalized == '..' ||
-        _reservedWindowsNames.contains(normalized.toLowerCase())) {
+    final validationError = FileNameValidator.validate(name);
+    if (validationError != null) {
       throw AppError.validation(
         code: ValidationErrorCode.invalidInput,
-        message: 'Имя хранилища содержит только недопустимые символы',
+        message: validationError,
         data: {'originalName': name},
         timestamp: DateTime.now(),
       );
     }
 
-    return normalized;
+    return name.trim();
   }
 
   Future<void> _moveDirectoryWithoutDatabase({

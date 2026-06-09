@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hoplixi/core/utils/file_name_validator.dart';
 import 'package:hoplixi/features/password_manager/create_store/models/create_store_state.dart';
-import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
+import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 
 /// Провайдер для управления состоянием формы создания хранилища
 final createStoreFormProvider =
@@ -144,21 +145,14 @@ class CreateStoreFormNotifier extends Notifier<CreateStoreFormState> {
   // Валидация
 
   String? _validateName(String name) {
-    if (name.trim().isEmpty) {
-      return 'Имя хранилища не может быть пустым';
-    }
     if (name.trim().length < 4) {
+      if (name.trim().isEmpty) {
+        return 'Имя хранилища не может быть пустым';
+      }
       return 'Имя должно содержать минимум 4 символа';
     }
-    if (name.trim().length > 50) {
-      return 'Имя не может быть длиннее 50 символов';
-    }
-    // Проверка на недопустимые символы
-    final invalidChars = RegExp(r'[<>:"/\\|?*]');
-    if (invalidChars.hasMatch(name)) {
-      return 'Имя содержит недопустимые символы';
-    }
-    return null;
+
+    return FileNameValidator.validate(name);
   }
 
   String? _validatePath(String? path) {

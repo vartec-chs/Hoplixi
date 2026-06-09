@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
-import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/core/models/db_ciphers.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 /// Шаг 1: Имя и описание хранилища
@@ -80,6 +80,10 @@ class _Step1NameAndDescriptionState
             TextField(
               controller: _nameController,
               focusNode: _nameFocusNode,
+              maxLines: 3,
+              minLines: 1,
+              maxLength: 255,
+              autofocus: true,
 
               decoration: primaryInputDecoration(
                 context,
@@ -92,7 +96,7 @@ class _Step1NameAndDescriptionState
               textInputAction: TextInputAction.next,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Поле описания
           TextField(
@@ -104,7 +108,8 @@ class _Step1NameAndDescriptionState
               prefixIcon: const Icon(Icons.description),
             ),
             onChanged: notifier.updateDescription,
-            maxLines: 3,
+            maxLines: 6,
+            minLines: 2,
             maxLength: 500,
             textInputAction: TextInputAction.done,
           ),
@@ -178,35 +183,6 @@ class _Step1NameAndDescriptionState
             ),
           ),
           const SizedBox(height: 16),
-
-          // Подсказка
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Имя должно быть уникальным и содержать от 3 до 50 символов',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

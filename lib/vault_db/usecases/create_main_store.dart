@@ -22,36 +22,13 @@ import 'package:hoplixi/vault_db/services/main_store_storage_service.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
 import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:hoplixi/vault_db/usecases/utils/error_handling.dart';
+import 'package:hoplixi/core/utils/file_name_validator.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:result_dart/result_dart.dart';
 
 class CreateVaultDB {
   static const String _logTag = 'CreateVaultDB';
-  static const Set<String> _reservedWindowsNames = {
-    'con',
-    'prn',
-    'aux',
-    'nul',
-    'com1',
-    'com2',
-    'com3',
-    'com4',
-    'com5',
-    'com6',
-    'com7',
-    'com8',
-    'com9',
-    'lpt1',
-    'lpt2',
-    'lpt3',
-    'lpt4',
-    'lpt5',
-    'lpt6',
-    'lpt7',
-    'lpt8',
-    'lpt9',
-  };
 
   final VaultDBConnectionService _connectionService;
   final DbKeyDerivationService _keyService;
@@ -149,6 +126,7 @@ class CreateVaultDB {
         store: store,
         dto: dto,
         masterPassword: masterPassword,
+        normalizedName: normalizedName,
       );
 
       await _writeStoreManifest(
@@ -191,37 +169,31 @@ class CreateVaultDB {
   }
 
   String normalizeStorageName(String name) {
-    var normalized = name.trim();
-    normalized = normalized.replaceAll(RegExp(r'\s+'), '_');
-    normalized = normalized.replaceAll(RegExp(r'[<>:"/\\|?*]'), '');
-    normalized = normalized.replaceAll(RegExp(r'^\.+|\.+$'), '');
-
-    if (normalized.isEmpty ||
-        normalized == '.' ||
-        normalized == '..' ||
-        _reservedWindowsNames.contains(normalized.toLowerCase())) {
+    final validationError = FileNameValidator.validate(name);
+    if (validationError != null) {
       throw AppError.validation(
         code: ValidationErrorCode.invalidInput,
-        message: 'Имя хранилища содержит только недопустимые символы',
+        message: validationError,
         data: {'originalName': name},
         timestamp: DateTime.now(),
       );
     }
 
-    return normalized;
+    return name.trim();
   }
 
   Future<StoreInfoDto> _createStoreMetadata({
     required VaultDB store,
     required CreateStoreDto dto,
     required String masterPassword,
+    required String normalizedName,
   }) async {
     final passwordSalt = _generateSecureToken();
     final passwordHash = _hashPassword(masterPassword, passwordSalt);
     final attachmentKey = _generateSecureToken();
 
     final createMetaDto = CreateStoreMetaDto(
-      name: dto.name,
+      name: normalizedName,
       description: dto.description,
       passwordHash: passwordHash,
       passwordSalt: passwordSalt,

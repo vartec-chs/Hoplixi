@@ -18,7 +18,8 @@ class StoreMetaTable extends Table {
   TextColumn get name => text().withLength(min: 1, max: 255)();
 
   /// Описание хранилища.
-  TextColumn get description => text().nullable()();
+  TextColumn get description =>
+      text().nullable().withLength(min: 1, max: 500)();
 
   /// Хэш/верификатор мастер-пароля.
   TextColumn get passwordHash => text()();
