@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-06-09
+
+### home / recent_database
+
+- Выполнен строгий рефакторинг виджета `RecentDatabaseCard` с разделением UI и логики.
+- Логика Cloud Sync вынесена в отдельный `RecentDatabaseCloudSyncController`.
+- Логика открытия БД (включая biometric auth, key file, limiter) вынесена в `RecentDatabaseOpenController`.
+- Логика истории вынесена в `RecentDatabaseHistoryController`.
+- Слой отображения разделен на переиспользуемые мелкие виджеты: `RecentDatabaseHeader`, `RecentDatabaseInfo`, `RecentDatabaseCloudSyncInfo`, `RecentDatabaseActions` и `CloudLockStatusBanner`.
+
 ## 2026-06-06
 
 ### password_manager
