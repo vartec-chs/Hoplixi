@@ -76,8 +76,7 @@ final class _DashboardHomeScreenState
               onMenuPressed: drawerScope?.openDrawer,
               isDesktopDrawerOpen: widget.isDesktopDrawerOpen,
               showDesktopDrawerToggle: widget.showDesktopDrawerToggle,
-              isDesktopDrawerToggleEnabled:
-                  widget.isDesktopDrawerToggleEnabled,
+              isDesktopDrawerToggleEnabled: widget.isDesktopDrawerToggleEnabled,
               onToggleDesktopDrawer: widget.onToggleDesktopDrawer,
 
               onFilterApplied: () => ref

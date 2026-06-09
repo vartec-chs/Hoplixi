@@ -32,11 +32,6 @@ import 'models/cloud_version_check_data.dart';
 import 'widgets/cloud_sync_progress_panel.dart';
 import 'widgets/password_dialog.dart';
 
-final _recentDatabaseManifestProvider = FutureProvider.family
-    .autoDispose<StoreManifest?, String>((ref, path) {
-      return StoreManifestService.readFrom(path);
-    });
-
 class RecentDatabaseCard extends ConsumerStatefulWidget {
   const RecentDatabaseCard({super.key});
 
@@ -67,9 +62,7 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
     final dbStateAsync = ref.watch(vaultDBManagerStateProvider);
     final dbState = dbStateAsync.value;
     final lockState = ref.watch(currentStoreCloudLockProvider);
-    final manifestAsync = ref.watch(
-      _recentDatabaseManifestProvider(entry.path),
-    );
+    final manifestAsync = ref.watch(vaultDBManifestProvider);
     final isOpening = dbState?.isOpening ?? false;
     final lockValue = lockState.value;
     final isCurrentStoreCard =
@@ -387,7 +380,6 @@ class _RecentDatabaseCardState extends ConsumerState<RecentDatabaseCard> {
             _updateCloudSyncProgress(progress);
           },
         );
-        ref.invalidate(_recentDatabaseManifestProvider(entry.path));
         Toaster.success(
           title: 'Cloud Sync',
           description:

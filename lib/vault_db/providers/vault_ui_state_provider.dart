@@ -11,11 +11,24 @@ import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/vault_db.dart';
 import 'package:hoplixi/vault_db/models/db_state.dart';
 import 'package:hoplixi/vault_db/models/session.dart';
-import 'service_providers.dart';
 import 'package:hoplixi/vault_db/services/main_store_manager.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/model/store_manifest.dart';
+import 'package:hoplixi/vault_db/services/store_manifest_service/store_manifest_service.dart';
 import 'package:result_dart/result_dart.dart';
 
 import '../../../features/cloud_sync/snapshot_sync/providers/close_sync_tracking_provider.dart';
+import 'service_providers.dart';
+
+final vaultDBManifestProvider = FutureProvider<StoreManifest?>((ref) async {
+  final dbState = await ref.watch(vaultDBManagerStateProvider.future);
+  final path = dbState.path;
+
+  if (path == null || path.isEmpty) {
+    return null;
+  }
+
+  return StoreManifestService.readFrom(path);
+});
 
 /// Внутренний provider фасада vault database.
 ///
