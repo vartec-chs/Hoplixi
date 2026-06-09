@@ -1,7 +1,8 @@
-part of '../open_store_cloud_import_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
+class ErrorBanner extends StatelessWidget {
+  const ErrorBanner({super.key, required this.message});
 
   final String message;
 

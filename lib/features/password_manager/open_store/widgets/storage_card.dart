@@ -93,7 +93,7 @@ class StorageCard extends StatelessWidget {
                   if (onDelete != null) ...[
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(LucideIcons.delete),
+                      icon: const Icon(LucideIcons.trash2),
                       tooltip: 'Удалить с диска',
                       onPressed: onDelete,
                       color: colorScheme.error,

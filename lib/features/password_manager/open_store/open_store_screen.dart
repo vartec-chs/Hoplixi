@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/password_manager/open_store/models/open_store_cloud_import_state.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
+import 'package:hoplixi/features/password_manager/open_store/providers/open_store_cloud_import_provider.dart';
 import 'package:hoplixi/features/password_manager/open_store/providers/open_store_form_provider.dart';
 import 'package:hoplixi/features/password_manager/open_store/services/store_password_attempt_limiter_service.dart';
+import 'package:hoplixi/features/password_manager/open_store/widgets/cloud_import_body.dart';
 import 'package:hoplixi/features/password_manager/open_store/widgets/index.dart';
 import 'package:hoplixi/routing/paths.dart';
 import 'package:hoplixi/setup/di_init.dart';
@@ -121,76 +124,96 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
       });
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Открыть хранилище'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            ref
-                .read(titlebarStateProvider.notifier)
-                .setBackgroundTransparent(true);
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(AppRoutesPaths.home);
-            }
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: asyncState.isLoading
-                ? null
-                : () async => notifier.loadStorages(),
-            tooltip: 'Обновить список',
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Открыть хранилище'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              ref
+                  .read(titlebarStateProvider.notifier)
+                  .setBackgroundTransparent(true);
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoutesPaths.home);
+              }
+            },
           ),
-        ],
-      ),
-      body: asyncState.when(
-        data: (state) => _buildBody(context, state, notifier),
-        loading: () => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Инициализация...'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: asyncState.isLoading
+                  ? null
+                  : () async {
+                      await notifier.loadStorages();
+                      // Также обновим Cloud Sync, если он инициализирован
+                      await ref
+                          .read(openStoreCloudImportProvider.notifier)
+                          .reloadCloudOptions();
+                    },
+              tooltip: 'Обновить список',
+            ),
+          ],
+          bottom: const TabBar(
+            tabAlignment: TabAlignment.fill,
+            tabs: [
+              Tab(text: 'Локальные', icon: Icon(Icons.storage_outlined)),
+              Tab(text: 'Бэкапы', icon: Icon(Icons.backup_outlined)),
+              Tab(
+                text: 'Cloud Sync',
+                icon: Icon(Icons.cloud_download_outlined),
+              ),
             ],
           ),
         ),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Ошибка инициализации',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  error.toString(),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+        body: asyncState.when(
+          data: (state) => _buildBody(context, state, notifier),
+          loading: () => const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Инициализация...'),
+              ],
+            ),
+          ),
+          error: (error, _) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Ошибка инициализации',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Text(
+                    error.toString(),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              SmoothButton(
-                onPressed: () => ref.invalidate(openStoreFormProvider),
-                icon: const Icon(Icons.refresh),
-                label: 'Повторить',
-              ),
-            ],
+                const SizedBox(height: 24),
+                SmoothButton(
+                  onPressed: () => ref.invalidate(openStoreFormProvider),
+                  icon: const Icon(Icons.refresh),
+                  label: 'Повторить',
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -209,162 +232,145 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
         .where((storage) => storage.path.contains('_backup_'))
         .toList(growable: false);
 
-    if (state.isLoading && state.storages.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Загрузка хранилищ...'),
-          ],
-        ),
-      );
-    }
-
-    if (state.error != null && state.storages.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Ошибка загрузки',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                state.error!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SmoothButton(
-              onPressed: () => notifier.loadStorages(),
-              icon: const Icon(Icons.refresh),
-              label: 'Повторить',
-            ),
-          ],
-        ),
-      );
-    }
-
     return Column(
       children: [
         if (state.error != null) _buildErrorBanner(context, state.error!),
-        _buildCloudImportEntry(context),
-        const Divider(height: 1),
         Expanded(
-          child: backupStorages.isEmpty
-              ? StorageList(
-                  storages: regularStorages,
-                  selectedStorage: state.selectedStorage,
-                  onStorageSelected: notifier.selectStorage,
-                  onStorageDelete: (storage) =>
-                      _handleDeleteStorage(storage, ref),
-                )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: StorageList(
-                        storages: regularStorages,
-                        selectedStorage: state.selectedStorage,
-                        onStorageSelected: notifier.selectStorage,
-                        onStorageDelete: (storage) =>
-                            _handleDeleteStorage(storage, ref),
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Бэкапы',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: StorageList(
-                              storages: backupStorages,
-                              selectedStorage: state.selectedStorage,
-                              onStorageSelected: notifier.selectStorage,
-                              onStorageDelete: (storage) =>
-                                  _handleDeleteBackup(storage, ref),
-                              showCreateButton: false,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          child: TabBarView(
+            children: [
+              _buildLocalTab(context, state, notifier, regularStorages),
+              _buildBackupsTab(context, state, notifier, backupStorages),
+              _buildCloudSyncTab(context),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildCloudImportEntry(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Card(
+  Widget _buildLocalTab(
+    BuildContext context,
+    OpenStoreState state,
+    OpenStoreFormNotifier notifier,
+    List<StorageInfo> regularStorages,
+  ) {
+    if (state.isLoading && regularStorages.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (regularStorages.isEmpty) {
+      return Center(
         child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Icon(
-                  Icons.cloud_download_outlined,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+              Icon(
+                Icons.storage_outlined,
+                size: 64,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Локальных хранилищ не найдено',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Скачать snapshot из Cloud Sync',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Выберите удалённый store и скачайте его как локальную копию.',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+              const SizedBox(height: 8),
+              Text(
+                'Создайте новое хранилище, чтобы начать работу.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(width: 12),
-              SmoothButton(
-                onPressed: () =>
-                    context.push(AppRoutesPaths.openStoreCloudImport),
-                icon: const Icon(Icons.arrow_forward_outlined),
-                label: 'Открыть',
-                size: SmoothButtonSize.small,
+            ],
+          ),
+        ),
+      );
+    }
+
+    return StorageList(
+      storages: regularStorages,
+      selectedStorage: state.selectedStorage,
+      onStorageSelected: notifier.selectStorage,
+      onStorageDelete: (storage) => _handleDeleteStorage(storage, ref),
+    );
+  }
+
+  Widget _buildBackupsTab(
+    BuildContext context,
+    OpenStoreState state,
+    OpenStoreFormNotifier notifier,
+    List<StorageInfo> backupStorages,
+  ) {
+    if (state.isLoading && backupStorages.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (backupStorages.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.backup_outlined,
+                size: 64,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Резервных копий не найдено',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Здесь будут отображаться резервные копии ваших хранилищ.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return StorageList(
+      storages: backupStorages,
+      selectedStorage: state.selectedStorage,
+      onStorageSelected: notifier.selectStorage,
+      onStorageDelete: (storage) => _handleDeleteBackup(storage, ref),
+      showCreateButton: false,
+    );
+  }
+
+  Widget _buildCloudSyncTab(BuildContext context) {
+    final asyncCloudState = ref.watch(openStoreCloudImportProvider);
+
+    return asyncCloudState.when(
+      data: (cloudState) => CloudImportBody(state: cloudState),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Не удалось загрузить данные Cloud Sync',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(error.toString(), textAlign: TextAlign.center),
             ],
           ),
         ),
@@ -505,11 +511,6 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
     }
 
     Navigator.of(dialogContext).pop();
-    // Toaster.success(
-    //   context: context,
-    //   title: 'Успешно',
-    //   description: 'Хранилище открыто',
-    // );
     context.go(AppRoutesPaths.home);
     ref.read(titlebarStateProvider.notifier).setBackgroundTransparent(true);
   }

@@ -1,7 +1,11 @@
-part of '../open_store_cloud_import_screen.dart';
+import 'package:flutter/material.dart';
 
-class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.icon, required this.text});
+class CloudImportPlaceholder extends StatelessWidget {
+  const CloudImportPlaceholder({
+    super.key,
+    required this.icon,
+    required this.text,
+  });
 
   final IconData icon;
   final String text;

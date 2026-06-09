@@ -1,15 +1,30 @@
-part of '../open_store_cloud_import_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hoplixi/core/utils/toastification.dart';
+import 'package:hoplixi/features/cloud_sync/auth/widgets/show_cloud_sync_auth_sheet.dart';
+import 'package:hoplixi/features/cloud_sync/auth_tokens/models/auth_token_entry.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/password_manager/open_store/models/open_store_cloud_import_state.dart';
+import 'package:hoplixi/features/password_manager/open_store/providers/open_store_cloud_import_provider.dart';
+import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/button.dart';
+import 'package:hoplixi/shared/ui/text_field.dart';
 
-class _CloudImportBody extends ConsumerStatefulWidget {
-  const _CloudImportBody({required this.state});
+import 'cloud_import_placeholder.dart';
+import 'error_banner.dart';
+import 'remote_snapshot_card.dart';
+
+class CloudImportBody extends ConsumerStatefulWidget {
+  const CloudImportBody({super.key, required this.state});
 
   final OpenStoreCloudImportState state;
 
   @override
-  ConsumerState<_CloudImportBody> createState() => _CloudImportBodyState();
+  ConsumerState<CloudImportBody> createState() => _CloudImportBodyState();
 }
 
-class _CloudImportBodyState extends ConsumerState<_CloudImportBody> {
+class _CloudImportBodyState extends ConsumerState<CloudImportBody> {
   String? _deletingRemoteStoreUuid;
 
   @override
@@ -168,7 +183,7 @@ class _CloudImportBodyState extends ConsumerState<_CloudImportBody> {
                 ),
                 if (state.remoteSnapshotsError != null) ...[
                   const SizedBox(height: 16),
-                  _ErrorBanner(message: state.remoteSnapshotsError!),
+                  ErrorBanner(message: state.remoteSnapshotsError!),
                 ],
                 const SizedBox(height: 16),
                 if (state.isLoadingRemoteSnapshots)
@@ -179,14 +194,14 @@ class _CloudImportBodyState extends ConsumerState<_CloudImportBody> {
                     ),
                   )
                 else if (state.selectedCloudTokenId == null)
-                  _Placeholder(
+                  CloudImportPlaceholder(
                     icon: Icons.cloud_queue_outlined,
                     text: providerTokens.isEmpty
                         ? 'Добавьте OAuth токен для выбранного провайдера.'
                         : 'Выберите OAuth токен, чтобы загрузить список remote stores.',
                   )
                 else if (state.remoteSnapshots.isEmpty)
-                  const _Placeholder(
+                  const CloudImportPlaceholder(
                     icon: Icons.inventory_2_outlined,
                     text:
                         'В cloud_manifest нет доступных snapshot stores для выбранного токена.',
@@ -201,7 +216,7 @@ class _CloudImportBodyState extends ConsumerState<_CloudImportBody> {
                       final entry = state.remoteSnapshots[index];
                       final isDeleting =
                           _deletingRemoteStoreUuid == entry.storeUuid;
-                      return _RemoteSnapshotCard(
+                      return RemoteSnapshotCard(
                         entry: entry,
                         provider: selectedProvider!,
                         accountLabel: selectedToken?.displayLabel ?? '-',
@@ -291,11 +306,7 @@ class _CloudImportBodyState extends ConsumerState<_CloudImportBody> {
     try {
       return GoRouter.of(context).state.uri.toString();
     } catch (_) {
-      return AppRoutesPaths.openStoreCloudImport;
+      return AppRoutesPaths.openStore;
     }
   }
-}
-
-extension _IterableFirstOrNullX<T> on Iterable<T> {
-  T? get firstOrNull => isEmpty ? null : first;
 }

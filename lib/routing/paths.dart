@@ -18,7 +18,6 @@ class AppRoutesPaths {
   // Add other route paths as needed
   static const String createStore = '/create-store';
   static const String openStore = '/open-store';
-  static const String openStoreCloudImport = '/open-store/cloud-import';
   static const String lockStore = '/lock-store';
   static const String closeStoreSync = '/close-store-sync';
   static const String archiveStore = '/archive-store';

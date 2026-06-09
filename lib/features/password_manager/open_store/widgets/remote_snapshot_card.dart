@@ -1,7 +1,11 @@
-part of '../open_store_cloud_import_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:hoplixi/features/cloud_sync/common/models/cloud_sync_provider.dart';
+import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/cloud_manifest.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 
-class _RemoteSnapshotCard extends StatelessWidget {
-  const _RemoteSnapshotCard({
+class RemoteSnapshotCard extends StatelessWidget {
+  const RemoteSnapshotCard({
+    super.key,
     required this.entry,
     required this.provider,
     required this.accountLabel,

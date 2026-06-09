@@ -2,6 +2,15 @@
 
 ## 2026-06-09
 
+### password_manager
+
+- Выполнен рефакторинг экрана открытия хранилища `OpenStoreScreen` с переходом на вкладки (табы).
+- Вкладки (Tabs) разделяют контент на: «Локальные» (список локальных баз), «Бэкапы» (список резервных копий) и «Cloud Sync» (импорт из облака через `CloudImportBody`).
+- Удалены ставшие избыточными отдельные экраны `OpenStoreBackupsScreen` и `OpenStoreCloudImportScreen`, а также их пути и маршруты в `GoRouter`.
+- Переиспользуемые виджеты (`CloudImportBody`, `ErrorBanner`, `CloudImportPlaceholder` и `RemoteSnapshotCard`) теперь подключены непосредственно к вкладкам `OpenStoreScreen`.
+- Исправлена ошибка во Flutter `tabAlignment is only valid for scrollable tab bars` путём явного указания `tabAlignment: TabAlignment.fill` в непрокручиваемом `TabBar`.
+- Проведено форматирование кода и статический анализ.
+
 ### home / recent_database
 
 - Выполнен строгий рефакторинг виджета `RecentDatabaseCard` с разделением UI и логики.
