@@ -7,19 +7,38 @@ class CardUtils {
   /// Парсит цвет (HEX-строка или ARGB int) в Color
   static Color parseColor(Object? color) {
     if (color == null) return Colors.grey;
+
+    int? value;
+
     if (color is int) {
-      return Color(color);
-    }
-    if (color is String) {
+      value = color;
+    } else if (color is String) {
       if (color.isEmpty) return Colors.grey;
-      try {
-        final hex = color.replaceAll('#', '');
-        return Color(int.parse('FF$hex', radix: 16));
-      } catch (e) {
-        return Colors.grey;
+
+      // Если это HEX с решеткой
+      if (color.startsWith('#')) {
+        final hex = color.substring(1);
+        if (hex.length == 6) {
+          value = int.tryParse('FF$hex', radix: 16);
+        } else {
+          value = int.tryParse(hex, radix: 16);
+        }
+      } else {
+        // Пробуем как десятичное число
+        value = int.tryParse(color);
+        // Если не вышло, пробуем как HEX
+        value ??= int.tryParse(color, radix: 16);
       }
     }
-    return Colors.grey;
+
+    if (value == null || value == 0) return Colors.grey;
+
+    // Если это 24-битный цвет (RRGGBB), добавляем альфа-канал FF
+    if (value > 0 && value <= 0xFFFFFF) {
+      value |= 0xFF000000;
+    }
+
+    return Color(value);
   }
 
   /// Форматирует дату в человекочитаемый формат

@@ -56,14 +56,6 @@ class CardCategoryBadge extends StatelessWidget {
   }
 
   Color _resolveColor(Object? raw) {
-    if (raw == null) return Colors.grey;
-    if (raw is int) {
-      if (raw == 0) return Colors.grey;
-      return Color(raw);
-    }
-    if (raw is String) {
-      return CardUtils.parseColor(raw);
-    }
-    return Colors.grey;
+    return CardUtils.parseColor(raw);
   }
 }
