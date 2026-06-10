@@ -1,4 +1,3 @@
-import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -430,7 +429,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
         config: QuillSimpleToolbarConfig(
           showClipboardPaste: true,
           multiRowsDisplay: false,
-          decoration: const BoxDecoration(color: Colors.transparent),
+          // decoration: const BoxDecoration(color: Colors.transparent),
           toolbarSize: 40,
           dialogTheme: QuillDialogTheme(
             shape: RoundedRectangleBorder(
@@ -508,7 +507,7 @@ class _NoteFormScreenState extends ConsumerState<NoteFormScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: getScreenBackgroundColor(context, ref),
+        // backgroundColor: getScreenBackgroundColor(context, ref),
         appBar: AppBar(
           title: Text(
             isEditMode

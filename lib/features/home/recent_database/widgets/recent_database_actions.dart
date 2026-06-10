@@ -77,7 +77,7 @@ class RecentDatabaseActions extends ConsumerWidget {
         else
           SmoothButton(
             label: viewState.isOpening ? 'Открытие...' : 'Открыть',
-            type: SmoothButtonType.tonal,
+
             isFullWidth: true,
             icon: const Icon(LucideIcons.folderOpen),
             loading: viewState.isOpening,

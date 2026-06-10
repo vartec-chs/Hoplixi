@@ -121,7 +121,7 @@ class ErrorNotificationCard extends StatelessWidget {
     required this.text,
     this.icon,
     this.padding = const EdgeInsets.all(16),
-    this.borderRadius = 12,
+    this.borderRadius = 16,
     this.onDismiss,
   });
 
@@ -151,7 +151,7 @@ class SuccessNotificationCard extends StatelessWidget {
     required this.text,
     this.icon,
     this.padding = const EdgeInsets.all(16),
-    this.borderRadius = 12,
+    this.borderRadius = 16,
     this.onDismiss,
   });
 
@@ -181,7 +181,7 @@ class InfoNotificationCard extends StatelessWidget {
     required this.text,
     this.icon,
     this.padding = const EdgeInsets.all(16),
-    this.borderRadius = 12,
+    this.borderRadius = 16,
     this.onDismiss,
   });
 
@@ -211,7 +211,7 @@ class WarningNotificationCard extends StatelessWidget {
     required this.text,
     this.icon,
     this.padding = const EdgeInsets.all(16),
-    this.borderRadius = 12,
+    this.borderRadius = 16,
     this.onDismiss,
   });
 

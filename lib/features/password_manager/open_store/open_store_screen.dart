@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/theme/theme.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
-import 'package:hoplixi/features/password_manager/open_store/models/open_store_cloud_import_state.dart';
 import 'package:hoplixi/features/password_manager/open_store/models/open_store_state.dart';
 import 'package:hoplixi/features/password_manager/open_store/providers/open_store_cloud_import_provider.dart';
 import 'package:hoplixi/features/password_manager/open_store/providers/open_store_form_provider.dart';
@@ -158,6 +157,8 @@ class _OpenStoreScreenState extends ConsumerState<OpenStoreScreen> {
             ),
           ],
           bottom: const TabBar(
+            splashBorderRadius: BorderRadius.all(Radius.circular(16)),
+
             tabAlignment: TabAlignment.fill,
             tabs: [
               Tab(text: 'Локальные', icon: Icon(Icons.storage_outlined)),

@@ -47,9 +47,7 @@ class ActionButton extends StatelessWidget {
     final isDisabled = disabled || !enabled;
 
     // Определяем цвета в зависимости от типа кнопки
-    final backgroundColor = isPrimary
-        ? colorScheme.primary
-        : colorScheme.surfaceContainerLow;
+    final backgroundColor = colorScheme.surfaceContainerLow;
     final foregroundColor = isPrimary
         ? colorScheme.onPrimary
         : colorScheme.onSurface;
@@ -64,6 +62,9 @@ class ActionButton extends StatelessWidget {
     return Container(
       height: buttonHeight,
       decoration: BoxDecoration(
+        border: isPrimary
+            ? Border.all(color: colorScheme.primary, width: 2)
+            : null,
         borderRadius: BorderRadius.circular(16),
         boxShadow: isPrimary && !isDisabled
             ? [

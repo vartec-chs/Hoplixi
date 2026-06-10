@@ -531,8 +531,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               modalContext,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
-          leadingNavBarWidget: Padding(
-            padding: const EdgeInsets.only(left: 8),
+          trailingNavBarWidget: Padding(
+            padding: const EdgeInsets.only(right: 8),
             child: IconButton(
               icon: const Icon(Icons.close),
               tooltip: 'Закрыть',

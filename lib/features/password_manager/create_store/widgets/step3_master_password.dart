@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/theme/constants.dart';
+import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/features/password_manager/create_store/providers/create_store_form_provider.dart';
-import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/shared/ui/notification_card.dart';
-import 'package:hoplixi/features/password_generator/password_generator_widget.dart';
 import 'package:hoplixi/shared/ui/password_strength_indicator.dart';
 import 'package:hoplixi/shared/ui/text_field.dart';
+import 'package:hoplixi/vault_db/services/vault_key_file_service.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// Шаг 3: Мастер пароль
@@ -249,7 +249,7 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: Theme.of(
                   context,
@@ -337,7 +337,7 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: Theme.of(
                   context,
@@ -447,7 +447,7 @@ class _Step3MasterPasswordState extends ConsumerState<Step3MasterPassword> {
               color: Theme.of(
                 context,
               ).colorScheme.primaryContainer.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

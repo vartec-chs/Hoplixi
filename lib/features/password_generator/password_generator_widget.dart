@@ -410,25 +410,46 @@ class _PasswordGeneratorWidgetState extends State<PasswordGeneratorWidget> {
             ),
           ),
           actions: [
-            SmoothButton(
-              onPressed: () => controller.text = defaultValue,
-              label: 'Сбросить',
-              type: .text,
-            ),
-            SmoothButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              label: 'Отмена',
-              type: .text,
-            ),
-            SmoothButton(
-              onPressed: () => Navigator.pop(dialogContext, controller.text),
-              label: 'Сохранить',
+            Column(
+              spacing: 8,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  spacing: 8,
+                  children: [
+                    Expanded(
+                      child: SmoothButton(
+                        onPressed: () => controller.text = defaultValue,
+                        label: 'Сбросить',
+                        type: .text,
+                        variant: .error,
+                      ),
+                    ),
+                    Expanded(
+                      child: SmoothButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        label: 'Отмена',
+                        type: .text,
+                      ),
+                    ),
+                  ],
+                ),
+                SmoothButton(
+                  onPressed: () =>
+                      Navigator.pop(dialogContext, controller.text),
+                  label: 'Сохранить',
+                  isFullWidth: true,
+                ),
+              ],
             ),
           ],
         );
       },
     );
-    controller.dispose();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
 
     if (result == null) {
       return;
