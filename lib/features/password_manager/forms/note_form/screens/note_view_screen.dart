@@ -1,21 +1,24 @@
-import 'package:hoplixi/shared/ui/background_utils.dart';
 import 'dart:convert';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/features/password_manager/dashboard/dashboard.dart';
+import 'package:hoplixi/features/password_manager/forms/note_form/services/note_markdown_export_service.dart';
 import 'package:hoplixi/features/password_manager/forms/shared/share/share_fields_helpers.dart';
 import 'package:hoplixi/features/password_manager/forms/shared/share/shareable_field.dart';
 import 'package:hoplixi/features/password_manager/shared/utils/copy_usage_utils.dart';
 import 'package:hoplixi/features/password_manager/shared/widgets/custom_fields/widgets/custom_fields_view_section.dart';
 import 'package:hoplixi/generated/l10n/translations.g.dart';
+import 'package:hoplixi/routing/paths.dart';
+import 'package:hoplixi/shared/ui/background_utils.dart';
+import 'package:hoplixi/shared/ui/button.dart';
 import 'package:hoplixi/vault_db/core/models/dto/note_dto.dart';
 import 'package:hoplixi/vault_db/core/repositories/vault_repositories.dart';
 import 'package:hoplixi/vault_db/providers/providers.dart';
-import 'package:hoplixi/routing/paths.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Экран просмотра заметки (только чтение)
@@ -29,6 +32,8 @@ class NoteViewScreen extends ConsumerStatefulWidget {
 }
 
 class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
+  static const _markdownExportService = NoteMarkdownExportService();
+
   NoteViewDto? _note;
   bool _isDeleted = false;
   bool _isLoading = true;
@@ -131,6 +136,45 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
     AppRoutesPaths.dashboardEntityEdit(EntityType.note, widget.noteId),
   );
 
+  Future<void> _exportMarkdown() async {
+    final record = _note;
+    if (record == null) return;
+
+    try {
+      final export = _markdownExportService.build(
+        title: record.item.name,
+        description: record.item.description,
+        deltaJson: record.note.deltaJson,
+        fallbackContent: record.note.content,
+        categoryName: _categoryName,
+        tagNames: _tagNames,
+        createdAt: record.item.createdAt,
+        modifiedAt: record.item.modifiedAt,
+      );
+
+      final path = await FilePicker.saveFile(
+        dialogTitle: 'Сохранить Markdown заметку',
+        fileName: export.fileName,
+        type: FileType.custom,
+        allowedExtensions: const ['md'],
+        bytes: export.bytes,
+      );
+
+      if (path == null || path.trim().isEmpty) return;
+      if (!mounted) return;
+      Toaster.success(
+        title: 'Markdown создан',
+        description: 'Файл ${export.fileName} сохранён',
+      );
+    } catch (_) {
+      if (!mounted) return;
+      Toaster.error(
+        title: 'Не удалось создать Markdown',
+        description: 'Попробуйте повторить экспорт заметки',
+      );
+    }
+  }
+
   Future<void> _share() async {
     final record = _note;
     if (record == null) return;
@@ -189,6 +233,11 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
             onPressed: _copyContent,
           ),
           IconButton(
+            icon: const Icon(LucideIcons.fileDown),
+            tooltip: 'Создать Markdown файл',
+            onPressed: _isLoading || _note == null ? null : _exportMarkdown,
+          ),
+          IconButton(
             icon: const Icon(LucideIcons.pencil),
             tooltip: 'Редактировать',
             onPressed: _isDeleted ? null : _edit,
@@ -210,7 +259,7 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
+                        color: theme.colorScheme.surface,
                         border: Border(
                           bottom: BorderSide(color: theme.dividerColor),
                         ),
@@ -234,17 +283,21 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
                     ),
                   Expanded(
                     child: _quillController != null
-                        ? QuillEditor(
-                            controller: _quillController!,
-                            scrollController: ScrollController(),
-                            focusNode: FocusNode(),
-                            config: QuillEditorConfig(
-                              padding: const EdgeInsets.all(12),
-                              expands: true,
-                              customStyles: DefaultStyles(
-                                link: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  decoration: TextDecoration.underline,
+                        ? Container(
+                            color: theme.colorScheme.surface,
+                            child: QuillEditor(
+                              controller: _quillController!,
+                              scrollController: ScrollController(),
+                              focusNode: FocusNode(),
+                              config: QuillEditorConfig(
+                                padding: const EdgeInsets.all(12),
+                                expands: true,
+
+                                customStyles: DefaultStyles(
+                                  link: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    decoration: TextDecoration.underline,
+                                  ),
                                 ),
                               ),
                             ),
@@ -254,10 +307,10 @@ class _NoteViewScreenState extends ConsumerState<NoteViewScreen> {
                   CustomFieldsViewSection(itemId: widget.noteId),
                   Padding(
                     padding: const EdgeInsets.all(12),
-                    child: FilledButton.icon(
+                    child: SmoothButton(
                       onPressed: _isDeleted ? null : _edit,
                       icon: const Icon(LucideIcons.pencil),
-                      label: Text(context.t.dashboard_forms.edit),
+                      label: context.t.dashboard_forms.edit,
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
                       ),
