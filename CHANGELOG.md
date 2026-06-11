@@ -14,11 +14,15 @@
   OTP constraints/triggers через текущий `VaultDB.onUpgrade`.
 - Добавлен сервисный метод получения OTP secret по `itemId` без включения
   секрета в карточечный список.
+- Модель `ItemLinksGraph` разделена на отдельные файлы graph/node/edge с
+  сохранением прежнего barrel entrypoint.
 
 ### password_manager
 
 - `TotpListCard` теперь загружает OTP secret только при раскрытии карточки и
   очищает его при сворачивании.
+- Экран графа связей разделен на providers и отдельные widgets; title вершин
+  теперь явно рисуется над узлами графа.
 
 ## 2026-06-09
 
