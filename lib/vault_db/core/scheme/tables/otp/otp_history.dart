@@ -66,7 +66,7 @@ class OtpHistory extends Table {
     CONSTRAINT ${OtpHistoryConstraint.typeConfigConsistency.constraintName}
     CHECK (
       (
-        type = 'otp'
+        type = 'totp'
         AND period IS NOT NULL
         AND counter IS NULL
       )

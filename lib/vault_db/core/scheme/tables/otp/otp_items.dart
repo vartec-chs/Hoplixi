@@ -220,7 +220,7 @@ final List<String> otpItemsTableTriggers = [
     SELECT 1
     FROM vault_items
     WHERE id = NEW.item_id
-      AND type = 'totp'
+      AND type = '${VaultItemType.otp.name}'
   )
   BEGIN
     SELECT RAISE(
@@ -238,7 +238,7 @@ final List<String> otpItemsTableTriggers = [
     SELECT 1
     FROM vault_items
     WHERE id = NEW.item_id
-      AND type = 'totp'
+      AND type = '${VaultItemType.otp.name}'
   )
   BEGIN
     SELECT RAISE(

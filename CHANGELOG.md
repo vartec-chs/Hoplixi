@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 2026-06-11
+
+### vault_db
+
+- Исправлены OTP-триггеры `otp_items`: проверка связанного `vault_items`
+  теперь ожидает тип `otp`, а не режим OTP `totp`, из-за чего создание TOTP
+  падало на constraint `otp_items.item_id`.
+- Исправлен constraint `otp_history`: TOTP-snapshot теперь проверяется по
+  режиму `totp`, а не по типу vault item `otp`, из-за чего запись истории OTP
+  падала на `chk_otp_history_type_config_consistency`.
+- Версия схемы базы поднята до `2`, чтобы локальные dev-хранилища пересоздали
+  OTP constraints/triggers через текущий `VaultDB.onUpgrade`.
+- Добавлен сервисный метод получения OTP secret по `itemId` без включения
+  секрета в карточечный список.
+
+### password_manager
+
+- `TotpListCard` теперь загружает OTP secret только при раскрытии карточки и
+  очищает его при сворачивании.
+
 ## 2026-06-09
 
 ### vault_db

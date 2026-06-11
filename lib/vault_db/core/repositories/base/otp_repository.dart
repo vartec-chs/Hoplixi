@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:drift/drift.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/otp/otp_items.dart';
@@ -225,6 +227,22 @@ class OtpRepository {
           ? e
           : DBCoreError.unknown(
               message: 'Ошибка при получении OTP',
+              cause: e,
+              stackTrace: st,
+            ),
+    );
+  }
+
+  AsyncDBResult<Optional<Uint8List>> getSecretByItemId(String itemId) {
+    return tryCatchAsync(
+      () async {
+        final secret = await db.otpItemsDao.getOtpSecretByItemId(itemId);
+        return secret == null ? const None() : Some(secret);
+      },
+      (e, st) => e is DBCoreError
+          ? e
+          : DBCoreError.unknown(
+              message: 'Ошибка при получении секрета OTP',
               cause: e,
               stackTrace: st,
             ),

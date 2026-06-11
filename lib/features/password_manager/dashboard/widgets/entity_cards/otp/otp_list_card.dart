@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/core/utils/toastification.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
+import 'package:hoplixi/vault_db/providers/service_providers.dart';
 import 'package:otp/otp.dart';
 
 import '../shared/shared.dart';
@@ -40,6 +41,7 @@ class TotpListCard extends ConsumerStatefulWidget {
 class _TotpListCardState extends ConsumerState<TotpListCard> {
   bool _codeCopied = false;
   bool _isLoadingSecret = false;
+  bool _isExpanded = false;
 
   Uint8List? _secret;
   String? _currentCode;
@@ -56,6 +58,7 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
   }
 
   Future<void> _onExpandedChanged(bool expanded) async {
+    _isExpanded = expanded;
     if (expanded) {
       await _loadSecretAndStartTimer();
     } else {
@@ -63,11 +66,16 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
     }
   }
 
+  void _wipeSecret(Uint8List? secret) {
+    if (secret == null) return;
+    for (int i = 0; i < secret.length; i++) {
+      secret[i] = 0;
+    }
+  }
+
   void _clearSecret() {
     if (_secret != null) {
-      for (int i = 0; i < _secret!.length; i++) {
-        _secret![i] = 0;
-      }
+      _wipeSecret(_secret);
       _secret = null;
     }
     _currentCode = null;
@@ -83,7 +91,15 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
     setState(() => _isLoadingSecret = true);
 
     try {
-      final value = null;
+      final services = await ref.read(vaultEntityServices.future);
+      final value = (await services.otp.getSecretByItemId(_itemId))
+          .getOrThrow()
+          .getOrNull();
+
+      if (!mounted || !_isExpanded) {
+        _wipeSecret(value);
+        return;
+      }
 
       if (value != null && mounted) {
         setState(() {
@@ -113,10 +129,14 @@ class _TotpListCardState extends ConsumerState<TotpListCard> {
 
     if (!updateState || !mounted) {
       _remainingSeconds = 0;
+      _isLoadingSecret = false;
       return;
     }
 
-    setState(() => _remainingSeconds = 0);
+    setState(() {
+      _remainingSeconds = 0;
+      _isLoadingSecret = false;
+    });
   }
 
   void _startTimer() {

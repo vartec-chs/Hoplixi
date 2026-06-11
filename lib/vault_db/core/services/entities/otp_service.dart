@@ -1,11 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:hoplixi/vault_db/core/errors/db_error.dart';
 import 'package:hoplixi/vault_db/core/errors/db_exception_mapper.dart';
 import 'package:hoplixi/vault_db/core/errors/db_result.dart';
 import 'package:hoplixi/vault_db/core/models/dto/dto.dart';
 import 'package:hoplixi/vault_db/core/repositories/base/otp_repository.dart';
-import 'package:hoplixi/vault_db/core/services/entities/base_vault_entity_service.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_events_history.dart';
 import 'package:hoplixi/vault_db/core/scheme/tables/vault_items/vault_items.dart';
+import 'package:hoplixi/vault_db/core/services/entities/base_vault_entity_service.dart';
 import 'package:hoplixi/vault_db/core/validators/otp_validator.dart';
 import 'package:result_dart/result_dart.dart';
 
@@ -108,6 +110,10 @@ class OtpService extends BaseVaultEntityService<OtpRepository> {
     } catch (e, st) {
       return Failure(mapDbException(e, st));
     }
+  }
+
+  Future<DBResult<Optional<Uint8List>>> getSecretByItemId(String itemId) {
+    return repository.getSecretByItemId(itemId);
   }
 
   Future<DBResult<Unit>> update(PatchOtpDto dto) async {
