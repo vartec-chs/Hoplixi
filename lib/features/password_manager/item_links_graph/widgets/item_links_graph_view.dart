@@ -222,6 +222,19 @@ final class _VertexTitleCircleShape extends VertexCircleShape {
     : super(textRenderer: _VertexTitleAboveTextRenderer()) {
     textRenderer?.shape = this;
   }
+
+  @override
+  void render(Vertex vertex, ui.Canvas canvas, paint, paintLayers) {
+    canvas.drawCircle(ui.Offset.zero, vertex.radiusZoom, paint);
+
+    if (vertex.g?.options?.showText ?? true) {
+      textRenderer?.render(vertex, canvas, paint);
+    }
+
+    decorators?.forEach((decorator) {
+      decorator.decorate(vertex, canvas, paint, paintLayers);
+    });
+  }
 }
 
 final class _VertexTitleAboveTextRenderer extends VertexTextRenderer {
