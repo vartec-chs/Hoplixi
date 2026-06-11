@@ -64,6 +64,8 @@ sealed class StoreManifestSyncMetadata with _$StoreManifestSyncMetadata {
       'providerRevisionTag': providerRevisionTag,
     };
   }
+
+  bool get hasCloudSync => provider != null;
 }
 
 @freezed
@@ -369,6 +371,10 @@ sealed class StoreManifest with _$StoreManifest {
   String get storeId => storeUuid;
 
   int get lastModified => updatedAt.millisecondsSinceEpoch;
+
+  bool get hasCloudSync => sync?.hasCloudSync ?? false;
+
+  CloudSyncProvider? get cloudProvider => sync?.provider;
 }
 
 typedef StoreManifestKeyFileSettingsRecord = ({

@@ -15,9 +15,17 @@ class CloudStoreLockDialogHost extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lockState = ref.watch(currentStoreCloudLockProvider);
     final storeState = ref.watch(vaultDBManagerStateProvider).value;
-    _scheduleLockCheck(ref, lockState, storeState);
+    final manifest = ref.watch(vaultDBManifestProvider).value;
+
+    final hasCloudSync = manifest?.hasCloudSync ?? false;
+
+    if (hasCloudSync) {
+      _scheduleLockCheck(ref, lockState, storeState);
+    }
+
     final isStoreOpen = storeState?.isOpen ?? false;
-    final visible = isStoreOpen && _shouldShow(lockState);
+    final visible = isStoreOpen && hasCloudSync && _shouldShow(lockState);
+
 
     return PopScope(
       canPop: !visible,

@@ -47,7 +47,9 @@ class ActionButton extends StatelessWidget {
     final isDisabled = disabled || !enabled;
 
     // Определяем цвета в зависимости от типа кнопки
-    final backgroundColor = colorScheme.surfaceContainerLow;
+    final backgroundColor = isPrimary
+        ? colorScheme.surfaceContainer
+        : colorScheme.surfaceContainerLow;
     final foregroundColor = isPrimary
         ? colorScheme.onPrimary
         : colorScheme.onSurface;
@@ -62,19 +64,19 @@ class ActionButton extends StatelessWidget {
     return Container(
       height: buttonHeight,
       decoration: BoxDecoration(
-        border: isPrimary
-            ? Border.all(color: colorScheme.primary, width: 2)
-            : null,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: isPrimary && !isDisabled
-            ? [
-                BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : [],
+        // border: isPrimary
+        //     ? Border.all(color: colorScheme.primary, width: 2)
+        //     : null,
+        borderRadius: BorderRadius.circular(18),
+        // boxShadow: isPrimary && !isDisabled
+        //     ? [
+        //         BoxShadow(
+        //           color: colorScheme.primary.withValues(alpha: 0.3),
+        //           blurRadius: 12,
+        //           offset: const Offset(0, 4),
+        //         ),
+        //       ]
+        //     : [],
       ),
       child: Material(
         elevation: 0,

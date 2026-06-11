@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/models/snapshot_sync_models.dart';
 import 'package:hoplixi/features/cloud_sync/snapshot_sync/providers/current_store_sync_provider.dart';
+import 'package:hoplixi/vault_db/providers/vault_ui_state_provider.dart';
 
 class MobileCloudSyncOverlay extends ConsumerStatefulWidget {
   const MobileCloudSyncOverlay({super.key});
@@ -40,10 +41,17 @@ class _MobileCloudSyncOverlayState
 
     final syncState = ref.watch(currentStoreSyncProvider);
     final cachedStatus = ref.watch(cachedCurrentStoreSyncStatusProvider);
+    final manifest = ref.watch(vaultDBManifestProvider).value;
+    final hasCloudSync = manifest?.hasCloudSync ?? false;
+
     _handleInitialSnapshot(syncState);
-    final message = _messageForState(syncState, cachedStatus: cachedStatus);
+    final message = _messageForState(
+      syncState,
+      cachedStatus: cachedStatus,
+      hasCloudSync: hasCloudSync,
+    );
     final systemPadding = MediaQuery.of(context).viewPadding;
-    final visible = message != null;
+    final visible = hasCloudSync && message != null;
 
     return IgnorePointer(
       ignoring: true,
@@ -247,7 +255,12 @@ class _MobileCloudSyncOverlayState
   String? _messageForState(
     AsyncValue<StoreSyncStatus> syncState, {
     StoreSyncStatus? cachedStatus,
+    required bool hasCloudSync,
   }) {
+    if (!hasCloudSync) {
+      return null;
+    }
+
     final status = syncState.hasValue ? syncState.requireValue : null;
 
     if (status?.isSyncInProgress == true && status?.syncProgress != null) {
