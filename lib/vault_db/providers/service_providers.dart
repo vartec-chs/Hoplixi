@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hoplixi/vault_db/core/services/document_versions/document_version_service.dart';
 import 'package:hoplixi/vault_db/core/services/entities/vault_card_filter_service.dart';
 import 'package:hoplixi/vault_db/core/services/history/vault_history_service_assembly.dart';
+import 'package:hoplixi/vault_db/core/services/relations/load_item_links_graph_service.dart';
 import 'package:hoplixi/vault_db/core/services/relations/vault_item_relations_service.dart';
 import 'package:hoplixi/vault_db/core/services/system/store_meta_service.dart';
 import 'package:hoplixi/vault_db/core/services/vault_entity_services.dart';
@@ -51,6 +52,12 @@ final vaultItemRelationsServiceProvider =
     FutureProvider<VaultItemRelationsService>((ref) async {
       final db = ref.watch(requiredVaultDBProvider);
       return VaultItemRelationsService(db);
+    });
+
+final loadItemLinksGraphServiceProvider =
+    FutureProvider<LoadItemLinksGraphService>((ref) async {
+      final repos = await ref.watch(vaultRepositories.future);
+      return LoadItemLinksGraphService(repository: repos.itemLinksGraph);
     });
 
 final vaultHistoryServiceAssemblyProvider =

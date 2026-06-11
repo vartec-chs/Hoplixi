@@ -27,7 +27,10 @@ import 'widgets/fab/fab_builder.dart';
 import 'widgets/nav_bar/floating_nav_bar.dart';
 import 'widgets/mobile_cloud_sync_overlay.dart';
 
-const List<String> _fullCenterPaths = [AppRoutesPaths.notesGraph];
+bool _isGraphPath(String location) {
+  final segments = Uri.parse(location).pathSegments;
+  return segments.length == kMinPathSegmentsForPanel && segments[2] == 'graph';
+}
 
 class AppNavigationShell extends StatefulWidget {
   final GoRouterState state;
@@ -76,7 +79,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
         : EntityType.values.first.id;
   }
 
-  bool _isFullCenter(String location) => _fullCenterPaths.contains(location);
+  bool _isFullCenter(String location) => _isGraphPath(location);
 
   bool _isBaseRoute(String location) {
     final segments = Uri.parse(location).pathSegments;
@@ -121,8 +124,6 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
         return kCategoriesIndex;
       case 'tags':
         return kTagsIndex;
-      case 'icons':
-        return kIconsIndex;
       case 'graph':
         return kGraphIndex;
       case 'duplicates':
@@ -141,13 +142,11 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
   }
 
   List<NavigationRailDestination> _destinations(String entity) {
-    if (entity == EntityType.note.id) {
-      return [...kBaseDestinations, kGraphDestination];
-    }
+    final destinations = [...kBaseDestinations, kGraphDestination];
     if (entity == EntityType.password.id) {
-      return [...kBaseDestinations, kPasswordDuplicatesDestination];
+      return [...destinations, kPasswordDuplicatesDestination];
     }
-    return kBaseDestinations;
+    return destinations;
   }
 
   void _openDrawer() {
@@ -160,10 +159,13 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
 
     if (index == kHomeIndex) {
       targetPath = '/dashboard/$entity';
-    } else if (index >= kCategoriesIndex && index <= kIconsIndex) {
+    } else if (index >= kCategoriesIndex &&
+        index < kCategoriesIndex + kDashboardActions.length) {
       targetPath = '/dashboard/$entity/${kDashboardActions[index - 1]}';
-    } else if (index == kGraphIndex && entity == EntityType.note.id) {
-      targetPath = AppRoutesPaths.notesGraph;
+    } else if (index == kGraphIndex) {
+      final entityType = EntityType.fromId(entity);
+      if (entityType == null) return;
+      targetPath = AppRoutesPaths.dashboardEntityGraph(entityType);
     } else if (index == kPasswordDuplicatesIndex &&
         entity == EntityType.password.id) {
       targetPath = AppRoutesPaths.passwordDuplicates;

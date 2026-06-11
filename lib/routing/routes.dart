@@ -38,7 +38,7 @@ import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_for
 import 'package:hoplixi/features/password_manager/managers/icon_manager/icon_manager_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tag_form_screen.dart';
 import 'package:hoplixi/features/password_manager/managers/tags_manager/tags_manager_screen.dart';
-import 'package:hoplixi/features/password_manager/notes_graph/notes_graph_screen.dart';
+import 'package:hoplixi/features/password_manager/item_links_graph/item_links_graph_screen.dart';
 import 'package:hoplixi/features/password_manager/open_store/open_store_screen.dart';
 import 'package:hoplixi/features/settings/screens/settings_screen.dart';
 import 'package:hoplixi/features/setup/screens/setup_screen.dart';
@@ -399,17 +399,12 @@ final List<RouteBase> appRoutes = [
           ),
           GoRoute(
             path: 'graph',
-            name: 'entity_notes_graph',
-            redirect: (context, state) {
-              final ent = state.pathParameters['entity'];
-              if (ent != 'notes') return '/dashboard/$ent';
-              return null;
-            },
+            name: 'entity_item_links_graph',
             pageBuilder: (context, state) {
               return buildResponsivePage(
                 context: context,
                 state: state,
-                child: const NotesGraphScreen(),
+                child: const ItemLinksGraphScreen(),
               );
             },
           ),

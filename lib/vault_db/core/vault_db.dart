@@ -90,6 +90,7 @@ part 'vault_db.g.dart';
     TagsDao,
     ItemTagsDao,
     ItemLinksDao,
+    ItemLinksGraphDao,
     CustomIconsDao,
     IconRefsDao,
     StoreSettingsDao,

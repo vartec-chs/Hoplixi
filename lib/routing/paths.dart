@@ -57,7 +57,8 @@ class AppRoutesPaths {
   static const String notes = '/dashboard/notes';
   static const String noteAdd = '/dashboard/notes/add';
   static const String noteEdit = '/dashboard/notes/edit/:id';
-  static const String notesGraph = '/dashboard/notes/graph';
+  static String dashboardEntityGraph(EntityType entity) =>
+      '/dashboard/${entity.id}/graph';
 
   /// - passwords
   static String passwords = '/dashboard/${EntityType.password.id}';

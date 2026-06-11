@@ -20,6 +20,7 @@ export 'base/recovery_codes_repository.dart';
 export 'base/ssh_key_repository.dart';
 export 'base/system/category_repository.dart';
 export 'base/system/icon_repository.dart';
+export 'base/system/item_links_graph_repository.dart';
 export 'base/system/snapshot_relations_repository.dart';
 export 'base/system/store_meta_repository.dart';
 export 'base/system/store_settings_repository.dart';

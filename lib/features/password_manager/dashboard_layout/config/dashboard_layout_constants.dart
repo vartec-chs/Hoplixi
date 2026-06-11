@@ -183,11 +183,8 @@ const int kCategoriesIndex = 1;
 /// Индекс пункта "Теги"
 const int kTagsIndex = 2;
 
-/// Индекс пункта "Иконки"
-const int kIconsIndex = 3;
-
 /// Индекс пункта "Граф"
-const int kGraphIndex = 4;
+const int kGraphIndex = 3;
 
 /// Индекс пункта "Дубли"
 const int kPasswordDuplicatesIndex = 4;
@@ -204,10 +201,9 @@ const List<NavigationRailDestination> kBaseDestinations = [
     label: Text('Категории'),
   ),
   NavigationRailDestination(icon: Icon(Icons.tag), label: Text('Теги')),
-  NavigationRailDestination(icon: Icon(Icons.image), label: Text('Иконки')),
 ];
 
-/// Destination для графа (только для notes)
+/// Destination для графа связей
 const NavigationRailDestination kGraphDestination = NavigationRailDestination(
   icon: Icon(Icons.bubble_chart),
   label: Text('Граф'),
@@ -225,9 +221,4 @@ const NavigationRailDestination kPasswordDuplicatesDestination =
 // =============================================================================
 
 /// Действия панели справа и нижнего меню
-const List<String> kDashboardActions = [
-  'categories',
-  'tags',
-  'icons',
-  'duplicates',
-];
+const List<String> kDashboardActions = ['categories', 'tags'];

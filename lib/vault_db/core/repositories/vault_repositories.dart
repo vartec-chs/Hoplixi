@@ -34,6 +34,7 @@ class VaultRepositories {
   late final storeMeta = StoreMetaRepository(db);
   late final storeSettings = StoreSettingsRepository(db);
   late final snapshotRelations = SnapshotRelationsRepository(db);
+  late final itemLinksGraph = DriftItemLinksGraphRepository(db);
   late final vaultItemRelations = VaultItemRelationsRepository(db);
 
   late final vaultItem = VaultItemRepository(db);
